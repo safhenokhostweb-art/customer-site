@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Helpers\Module;
 use App\Helpers\SiteHelper;
 use Tests\TestCase;
 
