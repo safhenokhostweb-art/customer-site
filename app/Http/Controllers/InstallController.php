@@ -75,7 +75,21 @@ class InstallController extends Controller
             return back()->withErrors(['db' => 'اتصال به دیتابیس برقرار نشد: ' . $e->getMessage()]);
         }
 
-        Artisan::call('migrate', ['--force' => true]);
+        try {
+            // Use graceful migrate so installer does not hard-crash on existing schemas.
+            Artisan::call('migrate', ['--force' => true, '--graceful' => true]);
+            $migrateExitCode = Artisan::output();
+        } catch (\Throwable $e) {
+            return back()->withErrors([
+                'db' => 'اجرای مایگریشن انجام نشد. لطفا از خالی بودن دیتابیس مطمئن شوید یا یک دیتابیس جدید بسازید. جزئیات: ' . $e->getMessage(),
+            ]);
+        }
+
+        if (str_contains(strtolower($migrateExitCode), 'already exists')) {
+            return back()->withErrors([
+                'db' => 'این دیتابیس از قبل جدول دارد و برای نصب اولیه مناسب نیست. لطفا یک دیتابیس خالی معرفی کنید.',
+            ]);
+        }
 
         return redirect()->route('install.admin');
     }

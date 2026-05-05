@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(prepend: [
+            \App\Http\Middleware\UseFileSessionWhenNotInstalled::class,
+        ]);
+
         $middleware->alias([
             'install.check' => \App\Http\Middleware\CheckInstalled::class,
             'redirect.if.not.installed' => \App\Http\Middleware\RedirectIfNotInstalled::class,

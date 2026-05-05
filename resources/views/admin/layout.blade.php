@@ -7,41 +7,77 @@
     <title>@yield('title', 'پنل مدیریت') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { theme: { extend: { fontFamily: { vazir: ['Vazirmatn', 'Tahoma', 'sans-serif'] } } } };</script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @include('partials.platform-styles')
     <style>
-        body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; }
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: local('Vazirmatn'), local('Vazirmatn Regular'),
+                 url('/assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: local('Vazirmatn Medium'),
+                 url('/assets/fonts/vazirmatn/Vazirmatn-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: local('Vazirmatn Bold'),
+                 url('/assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        :root {
+            --admin-bg: #f1f5f9;
+            --admin-surface: #ffffff;
+            --admin-surface-soft: #f8fafc;
+            --admin-text: #0f172a;
+            --admin-muted: #64748b;
+            --admin-primary: #4f46e5;
+            --admin-primary-hover: #4338ca;
+            --admin-border: #e2e8f0;
+            --admin-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            --admin-radius: 14px;
+        }
+        body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; color: var(--admin-text); background: var(--admin-bg); }
         .sidebar-link { display: flex; align-items: center; padding: 0.65rem 1rem; font-size: 0.9rem; font-weight: 500; color: #374151; border-radius: 0.5rem; transition: all 0.15s; }
         .sidebar-link svg { width: 1.125rem; height: 1.125rem; min-width: 1.125rem; }
-        .sidebar-link:hover { background: #eef2ff; color: #4f46e5; }
-        .sidebar-link.active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+        .sidebar-link:hover { background: #eef2ff; color: var(--admin-primary); }
+        .sidebar-link.active { background: #eef2ff; color: var(--admin-primary); font-weight: 600; }
         #admin-sidebar[data-collapsed="true"] { width: 5rem; min-width: 5rem; }
         #admin-sidebar[data-collapsed="true"] .admin-sidebar-inner { width: 5rem; min-width: 5rem; }
         #admin-sidebar[data-collapsed="true"] .sidebar-text { display: none; }
         #admin-sidebar[data-collapsed="true"] .sidebar-group-label { display: none; }
-        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; transition: all 0.15s; }
-        .btn-primary { background: #4f46e5; color: #fff; border: none; }
-        .btn-primary:hover { background: #4338ca; }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.6rem; font-weight: 500; font-size: 0.875rem; transition: all 0.15s; }
+        .btn-primary { background: var(--admin-primary); color: #fff; border: none; }
+        .btn-primary:hover { background: var(--admin-primary-hover); }
         .btn-secondary { background: #e2e8f0; color: #475569; }
         .btn-secondary:hover { background: #cbd5e1; }
         .btn-danger { background: #dc2626; color: #fff; border: none; }
         .btn-danger:hover { background: #b91c1c; }
         .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
-        .card { background: #fff; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; overflow: hidden; }
-        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; background: #f8fafc; font-weight: 600; }
+        .card { background: var(--admin-surface); border-radius: var(--admin-radius); box-shadow: var(--admin-shadow); border: 1px solid var(--admin-border); overflow: hidden; }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-border); background: var(--admin-surface-soft); font-weight: 600; }
         .card-body { padding: 1.25rem 1.5rem; }
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.75rem 1rem; text-align: right; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; font-weight: 600; font-size: 0.8rem; color: #64748b; }
-        tr:hover td { background: #f8fafc; }
+        th, td { padding: 0.8rem 1rem; text-align: right; border-bottom: 1px solid var(--admin-border); }
+        th { position: sticky; top: 0; background: var(--admin-surface-soft); font-weight: 600; font-size: 0.8rem; color: var(--admin-muted); }
+        tbody tr:nth-child(even) td { background: #fcfdff; }
+        tr:hover td { background: #f8faff; }
         .badge { display: inline-flex; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
         .badge-success { background: #dcfce7; color: #166534; }
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-danger { background: #fee2e2; color: #991b1b; }
         .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.4rem; }
-        input[type="text"], input[type="email"], input[type="number"], input[type="url"], input[type="tel"], input[type="password"], textarea, select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-family: inherit; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+        input[type="text"], input[type="email"], input[type="number"], input[type="url"], input[type="tel"], input[type="password"], textarea, select { width: 100%; padding: 0.55rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 0.6rem; font-family: inherit; background: #fff; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.18); }
         .form-group { margin-bottom: 1rem; }
     </style>
     @stack('head')
