@@ -173,6 +173,7 @@
 | `sitemap` | `/sitemap.xml` | نقشهٔ سایت (کش از config/seo؛ برای موتورهای جستجو) |
 | `sitemap.part` | `/sitemap-part-{n}.xml` | بخش sitemap (برای سایت‌های بزرگ با بیش از ۵۰٬۰۰۰ URL) |
 | `guide.search` | GET `/guide-search?q=` | جستجو در راهنما (JSON) |
+| `install.*` | `/install/*` | ویزارد نصب اولیه؛ در مرحلهٔ دیتابیس، migration به‌شکل graceful اجرا می‌شود و اگر دیتابیس خالی نباشد پیام خطای قابل‌فهم نمایش داده می‌شود. |
 
 **جستجو:** `routes` ، `customer-site` ، `admin` ، `sitemap`
 
@@ -231,6 +232,9 @@
 | `app/Models/License.php` | `license_key` ، `domain` ، `expires_at` ، `modules` (آرایه) ، `support_expires_at` ، `support_starts_at` ، `support_level` ؛ متد `current()` |
 | `config/site.php` | `platform_url` ، `platform_config_cache_ttl` ، `name` ، `theme` ، `locale` |
 | `config/modules.php` | تعریف ماژول‌های blog و shop و env مربوطه |
+| `app/Http/Middleware/UseFileSessionWhenNotInstalled.php` | هنگام نصب‌نشده بودن سایت، درایور session را موقتاً `file` می‌کند تا ویزارد نصب حتی قبل از آماده شدن دیتابیس/جدول sessions قابل استفاده باشد. |
+| `resources/views/admin/layout.blade.php` | استایل پنل ادمین (sidebar/header/card/table/form) + فونت فارسی self-hosted بدون نیاز به Google Fonts. |
+| `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
 | `resources/views/layouts/auth.blade.php` | لایهٔ ورود با لوگو و نام پلتفرم |
 | `resources/views/admin/dashboard.blade.php` | داشبورد + بلوک «ماژول‌ها و امکانات از پلتفرم» |
@@ -373,4 +377,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۵ — علاوه بر enforce شدن `license.valid` و اعتبارسنجی callback پرداخت و RBAC granular، در customer-site بهینه‌سازی `currentPage`، لاگ امنیتی رد دسترسی/لایسنس، اسکریپت پایدار اجرای تست (`scripts/test.ps1`)، lint سراسری CI (`scripts/ci-lint.php`)، الگوی `.env.testing.example` و workflow گیت‌هاب (`.github/workflows/php-tests.yml`) اضافه شد.*
+*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۵ — علاوه بر enforce شدن `license.valid` و اعتبارسنجی callback پرداخت و RBAC granular، در customer-site بهینه‌سازی `currentPage`، لاگ امنیتی رد دسترسی/لایسنس، اسکریپت پایدار اجرای تست (`scripts/test.ps1`)، lint سراسری CI (`scripts/ci-lint.php`)، الگوی `.env.testing.example` و workflow گیت‌هاب (`.github/workflows/php-tests.yml`) اضافه شد؛ middleware `UseFileSessionWhenNotInstalled` برای جلوگیری از خطای `sessions` در ویزارد نصب اعمال شد؛ و در پنل ادمین فونت فارسی self-hosted (بدون وابستگی اینترنت) و بهبود CSS پایه پیاده‌سازی شد.*
