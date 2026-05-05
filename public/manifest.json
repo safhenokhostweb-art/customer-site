@@ -1,0 +1,12 @@
+{
+  "name": "سایت شرکتی",
+  "short_name": "سایت",
+  "description": "سایت شرکتی و فروشگاهی",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl"
+}
