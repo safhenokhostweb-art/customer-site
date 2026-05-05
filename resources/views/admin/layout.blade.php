@@ -47,7 +47,41 @@
         }
         body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; color: var(--admin-text); background: var(--admin-bg); }
         .sidebar-link { display: flex; align-items: center; padding: 0.65rem 1rem; font-size: 0.9rem; font-weight: 500; color: #374151; border-radius: 0.5rem; transition: all 0.15s; }
-        .sidebar-link svg { width: 1.125rem; height: 1.125rem; min-width: 1.125rem; }
+        /*
+         * CDN Tailwind injects utilities after this block, so w-5/h-5 would win without !important.
+         * Keep admin chrome icons compact and consistent.
+         */
+        #admin-sidebar .sidebar-link svg {
+            width: 1.125rem !important;
+            height: 1.125rem !important;
+            min-width: 1.125rem !important;
+            max-width: 1.125rem !important;
+            max-height: 1.125rem !important;
+        }
+        #admin-sidebar .admin-sidebar-brand-icon {
+            width: 1.375rem !important;
+            height: 1.375rem !important;
+            min-width: 1.375rem !important;
+            max-width: 1.375rem !important;
+            max-height: 1.375rem !important;
+        }
+        #admin-layout-root aside + div > header button svg {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            max-width: 1.25rem !important;
+            max-height: 1.25rem !important;
+        }
+        #admin-layout-root aside + div > header details summary svg {
+            width: 1.375rem !important;
+            height: 1.375rem !important;
+            max-width: 1.375rem !important;
+            max-height: 1.375rem !important;
+        }
+        #admin-layout-root main .mb-6.flex.items-center.gap-2 > svg {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            flex-shrink: 0;
+        }
         .sidebar-link:hover { background: #eef2ff; color: var(--admin-primary); }
         .sidebar-link.active { background: #eef2ff; color: var(--admin-primary); font-weight: 600; }
         #admin-sidebar[data-collapsed="true"] { width: 5rem; min-width: 5rem; }
@@ -91,7 +125,7 @@
                 <div class="flex flex-col flex-grow overflow-y-auto overflow-x-hidden">
                     {{-- برند --}}
                     <div class="flex items-center flex-shrink-0 px-4 py-5 border-b border-slate-200 min-h-[4rem]">
-                        <svg class="w-7 h-7 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="admin-sidebar-brand-icon text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
                         <span class="sidebar-text mr-3 text-lg font-bold text-slate-800 whitespace-nowrap overflow-hidden">{{ \App\Helpers\SiteHelper::siteName() }}</span>
