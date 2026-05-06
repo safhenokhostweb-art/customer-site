@@ -6,7 +6,7 @@
     <div class="admin-page-head">
         <p class="text-slate-600 text-sm">مدیریت نظرات و امتیازهای ثبت‌شده برای مطالب و محصولات.</p>
         <form method="get" class="admin-page-tools">
-            <select name="approved" onchange="this.form.submit()" class="w-auto min-w-[140px]">
+            <select name="approved" onchange="this.form.submit()" class="w-auto min-w-35">
                 <option value="">همه نظرات</option>
                 <option value="1" {{ request('approved') === '1' ? 'selected' : '' }}>تایید شده</option>
                 <option value="0" {{ request('approved') === '0' ? 'selected' : '' }}>در انتظار تایید</option>
