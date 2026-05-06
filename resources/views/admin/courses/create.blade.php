@@ -2,7 +2,7 @@
 @section('title', 'دوره جدید')
 @section('header', 'دوره جدید')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">اطلاعات دوره</div>
         <div class="card-body">
@@ -31,7 +31,7 @@
                         <span>دوره فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره دوره</button>
                     <a href="{{ route('admin.courses.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

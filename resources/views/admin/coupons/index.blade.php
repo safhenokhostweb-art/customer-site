@@ -2,20 +2,23 @@
 @section('title', 'کوپن‌ها')
 @section('header', 'کوپن‌ها')
 @section('content')
-<div class="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-sm">
-    <strong>راهنما:</strong> کدهای تخفیف در صفحهٔ سبد خرید و هنگام تکمیل سفارش قابل استفاده‌اند. حداقل مبلغ سفارش (اختیاری) تعیین می‌کند کوپن فقط برای سفارش‌های بالاتر از آن مبلغ اعمال شود.
-</div>
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت کدهای تخفیف برای مشتریان.</p>
-    <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        کوپن جدید
-    </a>
-</div>
+<div class="admin-page">
+    <div class="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-sm">
+        <strong>راهنما:</strong> کدهای تخفیف در صفحهٔ سبد خرید و هنگام تکمیل سفارش قابل استفاده‌اند. حداقل مبلغ سفارش (اختیاری) تعیین می‌کند کوپن فقط برای سفارش‌های بالاتر از آن مبلغ اعمال شود.
+    </div>
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت کدهای تخفیف برای مشتریان.</p>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                کوپن جدید
+            </a>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>کد</th>
@@ -55,14 +58,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center py-12 text-slate-500">هنوز کوپنی ثبت نشده است. <a href="{{ route('admin.coupons.create') }}" class="text-indigo-600 hover:underline">اولین کوپن را ایجاد کنید</a></td>
+                        <td colspan="8" class="admin-empty">هنوز کوپنی ثبت نشده است. <a href="{{ route('admin.coupons.create') }}" class="text-indigo-600 hover:underline">اولین کوپن را ایجاد کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($coupons->hasPages())
+        <div class="admin-pagination">{{ $coupons->links() }}</div>
+    @endif
 </div>
-@if($coupons->hasPages())
-    <div class="mt-4">{{ $coupons->links() }}</div>
-@endif
 @endsection

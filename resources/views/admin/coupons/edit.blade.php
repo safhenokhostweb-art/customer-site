@@ -2,7 +2,7 @@
 @section('title', 'ویرایش کوپن')
 @section('header', 'ویرایش کوپن')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">ویرایش کوپن {{ $coupon->code }}</div>
         <div class="card-body">
@@ -82,7 +82,7 @@
                     </label>
                 </div>
                 <p class="text-sm text-slate-500 mt-2">تعداد استفاده شده: {{ $coupon->used_count }}</p>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
                     <a href="{{ route('admin.coupons.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

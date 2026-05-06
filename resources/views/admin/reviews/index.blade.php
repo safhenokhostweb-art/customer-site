@@ -2,20 +2,21 @@
 @section('title', 'نظرات و امتیازدهی')
 @section('header', 'نظرات و امتیازدهی')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت نظرات و امتیازهای ثبت‌شده برای مطالب و محصولات.</p>
-    <form method="get" class="flex gap-2">
-        <select name="approved" onchange="this.form.submit()" class="w-auto min-w-[140px]">
-            <option value="">همه نظرات</option>
-            <option value="1" {{ request('approved') === '1' ? 'selected' : '' }}>تایید شده</option>
-            <option value="0" {{ request('approved') === '0' ? 'selected' : '' }}>در انتظار تایید</option>
-        </select>
-    </form>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت نظرات و امتیازهای ثبت‌شده برای مطالب و محصولات.</p>
+        <form method="get" class="admin-page-tools">
+            <select name="approved" onchange="this.form.submit()" class="w-auto min-w-[140px]">
+                <option value="">همه نظرات</option>
+                <option value="1" {{ request('approved') === '1' ? 'selected' : '' }}>تایید شده</option>
+                <option value="0" {{ request('approved') === '0' ? 'selected' : '' }}>در انتظار تایید</option>
+            </select>
+        </form>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>منبع</th>
@@ -63,14 +64,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-12 text-slate-500">هنوز نظری ثبت نشده است.</td>
+                        <td colspan="5" class="admin-empty">هنوز نظری ثبت نشده است.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($reviews->hasPages())
+        <div class="admin-pagination">{{ $reviews->links() }}</div>
+    @endif
 </div>
-@if($reviews->hasPages())
-    <div class="mt-4">{{ $reviews->links() }}</div>
-@endif
 @endsection

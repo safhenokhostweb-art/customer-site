@@ -2,17 +2,20 @@
 @section('title', 'دوره‌ها و کلاس‌ها')
 @section('header', 'دوره‌ها و کلاس‌ها')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت دوره‌ها و کلاس‌های آموزشی با امکان ثبت‌نام.</p>
-    <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        دوره جدید
-    </a>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت دوره‌ها و کلاس‌های آموزشی با امکان ثبت‌نام.</p>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                دوره جدید
+            </a>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>عنوان</th>
@@ -46,14 +49,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center py-12 text-slate-500">هنوز دوره‌ای ثبت نشده است. <a href="{{ route('admin.courses.create') }}" class="text-indigo-600 hover:underline">اولین دوره را ایجاد کنید</a></td>
+                        <td colspan="4" class="admin-empty">هنوز دوره‌ای ثبت نشده است. <a href="{{ route('admin.courses.create') }}" class="text-indigo-600 hover:underline">اولین دوره را ایجاد کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($courses->hasPages())
+        <div class="admin-pagination">{{ $courses->links() }}</div>
+    @endif
 </div>
-@if($courses->hasPages())
-    <div class="mt-4">{{ $courses->links() }}</div>
-@endif
 @endsection
