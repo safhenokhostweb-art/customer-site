@@ -2,17 +2,20 @@
 @section('title', 'کارت‌های ویزیت')
 @section('header', 'کارت ویزیت دیجیتال')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت کارت‌های ویزیت دیجیتال با لینک اختصاصی.</p>
-    <a href="{{ route('admin.business-cards.create') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        کارت جدید
-    </a>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت کارت‌های ویزیت دیجیتال با لینک اختصاصی.</p>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.business-cards.create') }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                کارت جدید
+            </a>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>نام</th>
@@ -54,14 +57,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-12 text-slate-500">هنوز کارتی ثبت نشده است. <a href="{{ route('admin.business-cards.create') }}" class="text-indigo-600 hover:underline">اولین کارت را ایجاد کنید</a></td>
+                        <td colspan="6" class="admin-empty">هنوز کارتی ثبت نشده است. <a href="{{ route('admin.business-cards.create') }}" class="text-indigo-600 hover:underline">اولین کارت را ایجاد کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($cards->hasPages())
+        <div class="admin-pagination">{{ $cards->links() }}</div>
+    @endif
 </div>
-@if($cards->hasPages())
-    <div class="mt-4">{{ $cards->links() }}</div>
-@endif
 @endsection

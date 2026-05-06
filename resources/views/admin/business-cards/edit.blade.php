@@ -2,7 +2,7 @@
 @section('title', 'ویرایش کارت ویزیت')
 @section('header', 'ویرایش کارت ویزیت')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">ویرایش {{ $businessCard->name }}</div>
         <div class="card-body">
@@ -53,7 +53,7 @@
                     </label>
                 </div>
                 <p class="text-sm text-slate-500 mt-2">لینک: <a href="{{ route('business-card.show', $businessCard->slug) }}" target="_blank" class="text-indigo-600">/card/{{ $businessCard->slug }}</a></p>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
                     <a href="{{ route('admin.business-cards.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

@@ -2,13 +2,14 @@
 @section('title', 'معرفی دوستان')
 @section('header', 'معرفی دوستان')
 @section('content')
-<div class="mb-6">
-    <p class="text-slate-600 text-sm">کدهای معرفی و ردیابی معرفی‌های انجام‌شده توسط کاربران.</p>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">کدهای معرفی و ردیابی معرفی‌های انجام‌شده توسط کاربران.</p>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>کد</th>
@@ -33,14 +34,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center py-12 text-slate-500">هنوز کد معرفی ثبت نشده است.</td>
+                        <td colspan="4" class="admin-empty">هنوز کد معرفی ثبت نشده است.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($codes->hasPages())
+        <div class="admin-pagination">{{ $codes->links() }}</div>
+    @endif
 </div>
-@if($codes->hasPages())
-    <div class="mt-4">{{ $codes->links() }}</div>
-@endif
 @endsection

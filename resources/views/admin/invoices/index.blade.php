@@ -2,17 +2,20 @@
 @section('title', 'فاکتورها')
 @section('header', 'فاکتورهای آنلاین')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت فاکتورها و لینک پرداخت آنلاین.</p>
-    <a href="{{ route('admin.invoices.create') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        فاکتور جدید
-    </a>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت فاکتورها و لینک پرداخت آنلاین.</p>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.invoices.create') }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                فاکتور جدید
+            </a>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>شماره</th>
@@ -50,14 +53,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-12 text-slate-500">هنوز فاکتوری ثبت نشده است. <a href="{{ route('admin.invoices.create') }}" class="text-indigo-600 hover:underline">اولین فاکتور را ایجاد کنید</a></td>
+                        <td colspan="5" class="admin-empty">هنوز فاکتوری ثبت نشده است. <a href="{{ route('admin.invoices.create') }}" class="text-indigo-600 hover:underline">اولین فاکتور را ایجاد کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($invoices->hasPages())
+        <div class="admin-pagination">{{ $invoices->links() }}</div>
+    @endif
 </div>
-@if($invoices->hasPages())
-    <div class="mt-4">{{ $invoices->links() }}</div>
-@endif
 @endsection

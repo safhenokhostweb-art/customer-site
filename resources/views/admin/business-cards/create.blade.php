@@ -2,7 +2,7 @@
 @section('title', 'کارت ویزیت جدید')
 @section('header', 'کارت ویزیت جدید')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">اطلاعات کارت ویزیت</div>
         <div class="card-body">
@@ -51,7 +51,7 @@
                         <span>کارت فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره کارت</button>
                     <a href="{{ route('admin.business-cards.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

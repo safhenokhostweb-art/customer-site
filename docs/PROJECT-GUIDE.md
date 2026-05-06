@@ -239,6 +239,8 @@
 | `resources/views/admin/{products,pages,posts}/{create,edit}.blade.php` | فرم‌های ایجاد/ویرایش پرتردد با الگوی یکسان کارت + `form-group` + اکشن‌های استاندارد بازآرایی شده‌اند. |
 | `resources/views/admin/{categories,product-categories}/{index,create,edit}.blade.php` | چرخه کامل CRUD دسته‌بندی‌های وبلاگ/محصولات با همان الگوی واحد لیست و فرم یکدست شده است. |
 | `resources/views/admin/{courses,coupons,reviews}/*.blade.php` | صفحات مدیریتی دوره‌ها، کوپن‌ها و نظرات با الگوی `admin-page` و جدول/فرم یکدست هماهنگ شده‌اند. |
+| `resources/views/admin/{invoices,business-cards,social-links,advertisements}/*.blade.php` | بلوک بعدی ماژول‌های پرتردد ادمین با الگوی واحد `admin-page`، empty-state یکدست، pagination استاندارد و فرم‌های هم‌ساختار (`admin-page-tools`) هماهنگ شده‌اند. |
+| `resources/views/admin/{subscriptions,referrals,sms}/*.blade.php` | صفحات اشتراک، معرفی دوستان و تنظیمات پیامک نیز وارد الگوی یکپارچهٔ ادمین شدند (هدر/ابزار، empty-state، pagination و اکشن فرم استاندارد). |
 | `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
 | `resources/views/layouts/auth.blade.php` | لایهٔ ورود با لوگو و نام پلتفرم |

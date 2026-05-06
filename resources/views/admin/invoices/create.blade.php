@@ -2,7 +2,7 @@
 @section('title', 'فاکتور جدید')
 @section('header', 'فاکتور جدید')
 @section('content')
-<div class="max-w-3xl">
+<div class="admin-page max-w-3xl">
     <div class="card">
         <div class="card-header">اطلاعات فاکتور</div>
         <div class="card-body">
@@ -45,7 +45,7 @@
                     افزودن آیتم
                 </button>
                 <hr class="my-6 border-slate-200">
-                <div class="flex gap-3">
+                <div class="admin-page-tools">
                     <button type="submit" class="btn btn-primary">ذخیره فاکتور</button>
                     <a href="{{ route('admin.invoices.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

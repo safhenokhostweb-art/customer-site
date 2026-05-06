@@ -2,7 +2,7 @@
 @section('title', 'لینک شبکه اجتماعی جدید')
 @section('header', 'لینک شبکه اجتماعی جدید')
 @section('content')
-<div class="max-w-xl">
+<div class="admin-page max-w-xl">
     <div class="card">
         <div class="card-header">افزودن لینک</div>
         <div class="card-body">
@@ -27,7 +27,7 @@
                         <span>لینک فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره لینک</button>
                     <a href="{{ route('admin.social-links.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

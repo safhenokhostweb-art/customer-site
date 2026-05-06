@@ -2,7 +2,7 @@
 @section('title', 'ویرایش پلن اشتراک')
 @section('header', 'ویرایش پلن اشتراک')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">ویرایش پلن {{ $subscription->name }}</div>
         <div class="card-body">
@@ -40,7 +40,7 @@
                         <span>پلن فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
                     <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

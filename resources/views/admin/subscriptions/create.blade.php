@@ -2,7 +2,7 @@
 @section('title', 'پلن اشتراک جدید')
 @section('header', 'پلن اشتراک جدید')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">اطلاعات پلن</div>
         <div class="card-body">
@@ -39,7 +39,7 @@
                         <span>پلن فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره پلن</button>
                     <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

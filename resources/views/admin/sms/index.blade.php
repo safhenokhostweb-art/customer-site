@@ -2,7 +2,7 @@
 @section('title', 'تنظیمات پیامک')
 @section('header', 'یکپارچه‌سازی پیامک')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">تنظیمات سرویس پیامک</div>
         <div class="card-body">
@@ -21,7 +21,9 @@
                     <label class="form-label">شماره خط</label>
                     <input type="text" name="sms_line_number" value="{{ old('sms_line_number', $lineNumber) }}" placeholder="شماره خط ارسال">
                 </div>
-                <button type="submit" class="btn btn-primary mt-4">ذخیره تنظیمات</button>
+                <div class="admin-page-tools mt-4">
+                    <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
+                </div>
             </form>
         </div>
     </div>

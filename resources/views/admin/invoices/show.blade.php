@@ -2,7 +2,7 @@
 @section('title', 'فاکتور ' . $invoice->invoice_number)
 @section('header', 'فاکتور ' . $invoice->invoice_number)
 @section('content')
-<div class="max-w-3xl">
+<div class="admin-page max-w-3xl">
     <div class="card">
         <div class="card-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <span>جزئیات فاکتور</span>
@@ -61,7 +61,7 @@
             </div>
         </div>
     </div>
-    <div class="mt-4">
+    <div class="admin-page-tools">
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-secondary">بازگشت به لیست</a>
     </div>
 </div>

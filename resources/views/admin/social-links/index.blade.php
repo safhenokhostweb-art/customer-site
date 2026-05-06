@@ -2,17 +2,20 @@
 @section('title', 'شبکه‌های اجتماعی')
 @section('header', 'لینک‌های شبکه‌های اجتماعی')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <p class="text-slate-600 text-sm">مدیریت لینک‌های شبکه‌های اجتماعی (خارجی و ایرانی) برای نمایش در سایت.</p>
-    <a href="{{ route('admin.social-links.create') }}" class="btn btn-primary">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        لینک جدید
-    </a>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <p class="text-slate-600 text-sm">مدیریت لینک‌های شبکه‌های اجتماعی (خارجی و ایرانی) برای نمایش در سایت.</p>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.social-links.create') }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                لینک جدید
+            </a>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>پلتفرم</th>
@@ -50,14 +53,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center py-12 text-slate-500">هنوز لینکی ثبت نشده است. <a href="{{ route('admin.social-links.create') }}" class="text-indigo-600 hover:underline">اولین لینک را اضافه کنید</a></td>
+                        <td colspan="4" class="admin-empty">هنوز لینکی ثبت نشده است. <a href="{{ route('admin.social-links.create') }}" class="text-indigo-600 hover:underline">اولین لینک را اضافه کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
+    @if($links->hasPages())
+        <div class="admin-pagination">{{ $links->links() }}</div>
+    @endif
 </div>
-@if($links->hasPages())
-    <div class="mt-4">{{ $links->links() }}</div>
-@endif
 @endsection

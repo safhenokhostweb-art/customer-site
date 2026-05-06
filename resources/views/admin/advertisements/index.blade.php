@@ -2,27 +2,30 @@
 @section('title', 'تبلیغات')
 @section('header', 'تبلیغات')
 @section('content')
-<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <a href="{{ route('admin.advertisements.create') }}" class="btn btn-primary">تبلیغ جدید</a>
-    <form method="get" class="flex gap-2 flex-wrap">
-        <select name="type" class="w-auto" onchange="this.form.submit()">
-            <option value="">همه انواع</option>
-            @foreach(\App\Models\Advertisement::typeLabels() as $k => $v)
-                <option value="{{ $k }}" {{ request('type') === $k ? 'selected' : '' }}>{{ $v }}</option>
-            @endforeach
-        </select>
-        <select name="position" class="w-auto" onchange="this.form.submit()">
-            <option value="">همه موقعیت‌ها</option>
-            @foreach(\App\Models\Advertisement::positionLabels() as $k => $v)
-                <option value="{{ $k }}" {{ request('position') === $k ? 'selected' : '' }}>{{ $v }}</option>
-            @endforeach
-        </select>
-    </form>
-</div>
+<div class="admin-page">
+    <div class="admin-page-head">
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.advertisements.create') }}" class="btn btn-primary">تبلیغ جدید</a>
+        </div>
+        <form method="get" class="admin-page-tools">
+            <select name="type" class="w-auto" onchange="this.form.submit()">
+                <option value="">همه انواع</option>
+                @foreach(\App\Models\Advertisement::typeLabels() as $k => $v)
+                    <option value="{{ $k }}" {{ request('type') === $k ? 'selected' : '' }}>{{ $v }}</option>
+                @endforeach
+            </select>
+            <select name="position" class="w-auto" onchange="this.form.submit()">
+                <option value="">همه موقعیت‌ها</option>
+                @foreach(\App\Models\Advertisement::positionLabels() as $k => $v)
+                    <option value="{{ $k }}" {{ request('position') === $k ? 'selected' : '' }}>{{ $v }}</option>
+                @endforeach
+            </select>
+        </form>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
             <thead>
                 <tr>
                     <th>عنوان</th>
@@ -58,14 +61,15 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-12 text-slate-500">هنوز تبلیغی ثبت نشده است. <a href="{{ route('admin.advertisements.create') }}" class="text-indigo-600 hover:underline">اولین تبلیغ را ایجاد کنید</a></td>
+                        <td colspan="6" class="admin-empty">هنوز تبلیغی ثبت نشده است. <a href="{{ route('admin.advertisements.create') }}" class="text-indigo-600 hover:underline">اولین تبلیغ را ایجاد کنید</a></td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
     @if($advertisements->hasPages())
-        <div class="p-4 border-t">{{ $advertisements->links() }}</div>
+        <div class="admin-pagination">{{ $advertisements->links() }}</div>
     @endif
 </div>
 @endsection
