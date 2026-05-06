@@ -2,7 +2,7 @@
 @section('title', 'اعلان جدید')
 @section('header', 'اعلان جدید')
 @section('content')
-<div class="max-w-2xl">
+<div class="admin-page max-w-2xl">
     <div class="card">
         <div class="card-header">اطلاعات اعلان</div>
         <div class="card-body">
@@ -81,7 +81,7 @@
                         <span>اعلان فعال است</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-6">
+                <div class="admin-page-tools mt-6">
                     <button type="submit" class="btn btn-primary">ذخیره اعلان</button>
                     <a href="{{ route('admin.notifications.index') }}" class="btn btn-secondary">انصراف</a>
                 </div>

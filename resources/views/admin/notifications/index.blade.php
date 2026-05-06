@@ -2,33 +2,34 @@
 @section('title', 'اعلان‌ها')
 @section('header', 'اعلان‌ها')
 @section('content')
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <div>
-        <p class="text-slate-600 text-sm">مدیریت اعلان‌های نوار اطلاع‌رسانی (تولبار) برای بازدیدکنندگان سایت و اعلان‌های داخلی کاربران.</p>
-        <p class="text-slate-500 text-xs mt-1">
-            اعلان‌های ادمین این سایت از پلتفرم اصلی (saas-platform) در دکمهٔ زنگولهٔ پایین راست پنل مدیریت نمایش داده می‌شوند.
-            برای همگام‌سازی اعلان‌های ادمین از پلتفرم، در
-            <a href="{{ route('admin.license.index') }}" class="text-indigo-600 hover:underline">صفحهٔ لایسنس</a>
-            روی «بازخوانی تنظیمات و اعلان‌ها» کلیک کنید.
-        </p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-        <a href="{{ route('admin.notifications.send-users.form') }}" class="btn btn-secondary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
-            ارسال اعلان به کاربران
-        </a>
-        @if($canManage)
-            <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                اعلان جدید (تولبار)
+<div class="admin-page">
+    <div class="admin-page-head">
+        <div>
+            <p class="text-slate-600 text-sm">مدیریت اعلان‌های نوار اطلاع‌رسانی (تولبار) برای بازدیدکنندگان سایت و اعلان‌های داخلی کاربران.</p>
+            <p class="text-slate-500 text-xs mt-1">
+                اعلان‌های ادمین این سایت از پلتفرم اصلی (saas-platform) در دکمهٔ زنگولهٔ پایین راست پنل مدیریت نمایش داده می‌شوند.
+                برای همگام‌سازی اعلان‌های ادمین از پلتفرم، در
+                <a href="{{ route('admin.license.index') }}" class="text-indigo-600 hover:underline">صفحهٔ لایسنس</a>
+                روی «بازخوانی تنظیمات و اعلان‌ها» کلیک کنید.
+            </p>
+        </div>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.notifications.send-users.form') }}" class="btn btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+                ارسال اعلان به کاربران
             </a>
-        @else
-            <button type="button" class="btn btn-primary opacity-60 cursor-not-allowed" disabled>
-                اعلان جدید (لایسنس منقضی)
-            </button>
-        @endif
+            @if($canManage)
+                <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    اعلان جدید (تولبار)
+                </a>
+            @else
+                <button type="button" class="btn btn-primary opacity-60 cursor-not-allowed" disabled>
+                    اعلان جدید (لایسنس منقضی)
+                </button>
+            @endif
+        </div>
     </div>
-</div>
 
 <details class="mb-6 bg-white border border-slate-200 rounded-xl">
     <summary class="px-4 py-3 cursor-pointer flex items-center justify-between">
@@ -216,7 +217,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-12 text-slate-500">
+                            <td colspan="9" class="admin-empty">
                                 هنوز اعلانی ثبت نشده است.
                                 @if($canManage)
                                     <a href="{{ route('admin.notifications.create') }}" class="text-indigo-600 hover:underline">اولین اعلان را ایجاد کنید</a>
@@ -230,7 +231,8 @@
         </form>
     </div>
 </div>
-@if($notifications->hasPages())
-    <div class="mt-4">{{ $notifications->links() }}</div>
-@endif
+    @if($notifications->hasPages())
+        <div class="admin-pagination">{{ $notifications->links() }}</div>
+    @endif
+</div>
 @endsection
