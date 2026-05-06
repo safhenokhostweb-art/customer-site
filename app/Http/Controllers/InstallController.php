@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class InstallController extends Controller
 {
@@ -101,12 +102,44 @@ class InstallController extends Controller
 
     public function storeAdmin(Request $request)
     {
+        $existingByEmail = User::query()->where('email', $request->input('email'))->first();
+
+        if ($existingByEmail && ! $existingByEmail->is_admin) {
+            return back()->withErrors([
+                'email' => 'این ایمیل برای یک کاربر عادی ثبت شده و نمی‌توان به‌عنوان مدیر اولیهٔ نصب استفاده کرد.',
+            ])->withInput();
+        }
+
+        $emailRules = ['required', 'email'];
+        if (! $existingByEmail) {
+            $emailRules[] = Rule::unique('users', 'email');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'mobile' => ['required', 'string', 'regex:/^09[0-9]{9}$/'],
-            'email' => 'required|email',
+            'mobile' => [
+                'required',
+                'string',
+                'regex:/^09[0-9]{9}$/',
+                Rule::unique('users', 'mobile')->ignore($existingByEmail?->id),
+            ],
+            'email' => $emailRules,
             'password' => 'required|min:6|confirmed',
         ]);
+
+        if ($existingByEmail) {
+            $existingByEmail->update([
+                'name' => $request->name,
+                'mobile' => $request->mobile,
+                'password' => Hash::make($request->password),
+                'is_admin' => true,
+            ]);
+
+            return redirect()->route('install.settings')->with(
+                'success',
+                'حساب مدیر از قبل وجود داشت؛ اطلاعات و رمز عبور به‌روزرسانی شد. ادامه دهید.'
+            );
+        }
 
         User::create([
             'name' => $request->name,

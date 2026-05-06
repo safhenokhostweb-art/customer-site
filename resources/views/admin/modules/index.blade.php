@@ -2,11 +2,12 @@
 @section('title', 'ماژول‌ها')
 @section('header', 'ماژول‌ها و امکانات')
 @section('content')
+<div class="admin-modules-page">
 
 @if(!$license || empty($license->license_key))
     <div class="card p-6 mb-6 bg-amber-50 border-amber-200">
         <p class="text-amber-800">
-            برای مشاهده ماژول‌های خریداری‌شده، ابتدا <a href="{{ route('admin.license.index') }}" class="font-medium underline">لایسنس</a> را فعال کنید.
+            برای مشاهده ماژول‌های خریداری‌شده، ابتدا <a href="{{ route('admin.license.index') }}" class="font-medium">لایسنس</a> را فعال کنید.
         </p>
     </div>
 @endif
@@ -167,4 +168,5 @@
         </div>
     </div>
 @endif
+</div>
 @endsection

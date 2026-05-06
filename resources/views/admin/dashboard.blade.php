@@ -2,6 +2,7 @@
 @section('title', 'داشبورد')
 @section('header', 'داشبورد')
 @section('content')
+<div class="admin-dashboard-page">
 
 @php
     $license = $license ?? null;
@@ -62,12 +63,6 @@
     </div>
 @endif
 
-<style>
-@media (max-width: 768px) {
-    .dashboard-modules-block .dashboard-modules-header { max-width: none; width: 100%; border-left: none; border-bottom: 1px solid #e5e7eb; }
-    .dashboard-modules-block .dashboard-modules-content { width: 100%; }
-}
-</style>
 <p class="text-slate-600 text-sm mb-6">خلاصهٔ محتوا و وضعیت سایت.</p>
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -116,15 +111,15 @@
 @endif
 
 {{-- وضعیت ماژول‌ها و امکانات از پلتفرم: عنوان و توضیح در یک سمت، جدول محتوا روبرو (در RTL کنار هم) --}}
-<div class="dashboard-modules-block" style="margin-top:2rem; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); border:1px solid #e5e7eb; overflow:hidden;">
-    <div style="display:flex; flex-wrap:wrap; width:100%; min-height:0;">
-        <div class="dashboard-modules-header" style="flex:0 0 auto; width:100%; max-width:320px; padding:1.25rem; border-left:1px solid #e5e7eb;">
-            <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem;">ماژول‌ها و امکانات از پلتفرم</h2>
-            <p style="color:#64748b; font-size:.875rem; margin-bottom:1rem;">
+<div class="dashboard-modules-block">
+    <div class="dashboard-modules-shell">
+        <div class="dashboard-modules-header">
+            <h2 class="dashboard-modules-title">ماژول‌ها و امکانات از پلتفرم</h2>
+            <p class="dashboard-modules-lead">
                 مقایسهٔ ماژول‌های دریافتی از پلتفرم با وضعیت فعال بودن در این سایت. ماژول‌های پلتفرم از صفحهٔ
-                <a href="{{ route('admin.license.index') }}" class="text-blue-600 hover:underline">لایسنس</a>
+                <a href="{{ route('admin.license.index') }}">لایسنس</a>
                 یا
-                <a href="{{ route('admin.modules.index') }}" class="text-blue-600 hover:underline">ماژول‌ها</a>
+                <a href="{{ route('admin.modules.index') }}">ماژول‌ها</a>
                 با «بروزرسانی ماژول‌ها» به‌روز می‌شوند. اگر ماژولی از پلتفرم نیامد، در saas-platform آن را به سایت تخصیص دهید.
                 برای ماژول‌های محلی می‌توانید در <code>.env</code> فعال کنید. اعلان‌های ویژهٔ بازدیدکنندگان و کاربران این سایت
                 از طریق ماژول «اعلان‌ها» در همین پنل مدیریت تنظیم می‌شوند؛ اعلان‌های ادمین برای این سایت همچنان از پلتفرم اصلی (saas-platform) ارسال می‌شوند.
@@ -134,29 +129,29 @@
                 $modulesFromPlatform = $modulesFromPlatform ?? [];
                 $localModules = $localModules ?? [];
             @endphp
-            <div style="margin-bottom:0;">
+            <div class="dashboard-license-state">
                 <strong>وضعیت لایسنس:</strong>
                 @if(!$license || empty($license->license_key))
-                    <span style="color:#b45309;">تنظیم نشده</span> — در <a href="{{ route('admin.license.index') }}" class="text-blue-600 hover:underline">صفحهٔ لایسنس</a> کلید را وارد کنید.
+                    <span class="dashboard-license-license-warning">تنظیم نشده</span> — در <a href="{{ route('admin.license.index') }}">صفحهٔ لایسنس</a> کلید را وارد کنید.
                 @elseif(!$license->isValid())
-                    <span style="color:#dc2626;">نامعتبر یا منقضی</span> — دامنه یا انقضا را بررسی کنید.
+                    <span class="dashboard-license-license-danger">نامعتبر یا منقضی</span> — دامنه یا انقضا را بررسی کنید.
                 @else
-                    <span style="color:#15803d;">فعال</span>
+                    <span class="dashboard-license-license-success">فعال</span>
                     @if(!empty($license->modules))
                         — ماژول‌های دریافتی: {{ implode('، ', $license->modules) }}
                     @endif
                 @endif
             </div>
         </div>
-        <div class="dashboard-modules-content" style="flex:1; min-width:0; padding:1.25rem; overflow-x:auto;">
+        <div class="dashboard-modules-content">
             @if(count($localModules) > 0)
-                <table style="width:100%; border-collapse:collapse; text-align:right;">
+                <table class="dashboard-modules-table">
                     <thead>
-                        <tr style="border-bottom:1px solid #e5e7eb;">
-                            <th style="padding:0.5rem 0.75rem; font-weight:600;">ماژول</th>
-                            <th style="padding:0.5rem 0.75rem; font-weight:600;">از پلتفرم</th>
-                            <th style="padding:0.5rem 0.75rem; font-weight:600;">فعال در این سایت</th>
-                            <th style="padding:0.5rem 0.75rem; font-weight:600;">وضعیت</th>
+                        <tr>
+                            <th>ماژول</th>
+                            <th>از پلتفرم</th>
+                            <th>فعال در این سایت</th>
+                            <th>وضعیت</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,29 +163,29 @@
                                 $ok = $fromPlatform && $enabledLocally;
                                 $needEnable = $fromPlatform && !$enabledLocally;
                             @endphp
-                            <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:0.5rem 0.75rem;">{{ $info['name'] ?? $key }}</td>
-                                <td style="padding:0.5rem 0.75rem;">
+                            <tr>
+                                <td>{{ $info['name'] ?? $key }}</td>
+                                <td>
                                     @if($fromPlatform)
-                                        <span style="display:inline-flex; padding:0.15rem 0.5rem; border-radius:4px; background:#dcfce7; color:#166534; font-size:.8rem;">✓ فعال</span>
+                                        <span class="dashboard-pill dashboard-pill-success">✓ فعال</span>
                                     @else
-                                        <span style="color:#94a3b8;">—</span>
+                                        <span class="dashboard-pill dashboard-pill-muted">—</span>
                                     @endif
                                 </td>
-                                <td style="padding:0.5rem 0.75rem;">
+                                <td>
                                     @if($enabledLocally)
-                                        <span style="display:inline-flex; padding:0.15rem 0.5rem; border-radius:4px; background:#dcfce7; color:#166534; font-size:.8rem;">✓ فعال</span>
+                                        <span class="dashboard-pill dashboard-pill-success">✓ فعال</span>
                                     @else
-                                        <span style="color:#94a3b8;">غیرفعال</span>
+                                        <span class="dashboard-pill dashboard-pill-muted">غیرفعال</span>
                                     @endif
                                 </td>
-                                <td style="padding:0.5rem 0.75rem;">
+                                <td>
                                     @if($ok)
-                                        <span style="color:#15803d; font-size:.85rem;">هماهنگ</span>
+                                        <span class="dashboard-license-license-success">هماهنگ</span>
                                     @elseif($needEnable)
-                                        <span style="color:#b45309; font-size:.85rem;">پلتفرم داده، در سایت غیرفعال است</span>
+                                        <span class="dashboard-license-license-warning">پلتفرم داده، در سایت غیرفعال است</span>
                                     @else
-                                        <span style="color:#64748b; font-size:.85rem;">—</span>
+                                        <span class="dashboard-license-license-muted">—</span>
                                     @endif
                                 </td>
                             </tr>
@@ -198,9 +193,10 @@
                     </tbody>
                 </table>
             @else
-                <p style="color:#64748b; font-size:.875rem;">ماژولی در تنظیمات این نصب تعریف نشده است.</p>
+                <p class="dashboard-license-license-muted">ماژولی در تنظیمات این نصب تعریف نشده است.</p>
             @endif
         </div>
     </div>
 </div>
+ </div>
 @endsection
