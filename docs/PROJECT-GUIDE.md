@@ -235,6 +235,9 @@
 | `app/Http/Middleware/UseFileSessionWhenNotInstalled.php` | هنگام نصب‌نشده بودن سایت، درایور session را موقتاً `file` می‌کند تا ویزارد نصب حتی قبل از آماده شدن دیتابیس/جدول sessions قابل استفاده باشد. |
 | `resources/views/admin/layout.blade.php` | قالب پنل ادمین؛ استایل پوسته از `public/css/customer-admin-layout.css` (بدون CDN)؛ صفحات داخلی از `resources/css/app.css` ساخته‌شده با Vite روی همان هاست. |
 | `public/css/customer-admin-layout.css` | CSS محلی منو، هدر، فلش‌ها، کارت/جدول/فرم پایهٔ ادمین (بدون Tailwind CDN). |
+| `resources/views/admin/{products,orders,forms,pages,posts}/index.blade.php` | صفحات پرتردد ادمین با الگوی یکدست `admin-page` (هدر ابزار، کارت جدول، empty-state، pagination) استاندارد شده‌اند. |
+| `resources/views/admin/{products,pages,posts}/{create,edit}.blade.php` | فرم‌های ایجاد/ویرایش پرتردد با الگوی یکسان کارت + `form-group` + اکشن‌های استاندارد بازآرایی شده‌اند. |
+| `resources/views/admin/{categories,product-categories}/{index,create,edit}.blade.php` | چرخه کامل CRUD دسته‌بندی‌های وبلاگ/محصولات با همان الگوی واحد لیست و فرم یکدست شده است. |
 | `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
 | `resources/views/layouts/auth.blade.php` | لایهٔ ورود با لوگو و نام پلتفرم |
@@ -378,4 +381,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۶ — علاوه بر موارد قبلی، در ویزارد نصب `customer-site` اگر مدیر با همان ایمیل از قبل وجود داشته باشد، به‌جای خطای تکراری، همان کاربر به‌روزرسانی می‌شود؛ و یادآوری `storage/installed.lock` برای تشخیص نصب‌شده بودن.*
+*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۶ — علاوه بر موارد قبلی، در ویزارد نصب `customer-site` اگر مدیر با همان ایمیل از قبل وجود داشته باشد، به‌جای خطای تکراری، همان کاربر به‌روزرسانی می‌شود؛ یادآوری `storage/installed.lock` برای تشخیص نصب‌شده بودن اضافه شد؛ مرحلهٔ اول یکدست‌سازی UI ادمین روی صفحات پرتردد (products/orders/forms/pages/posts) اعمال شد؛ فرم‌های create/edit ماژول‌های products/pages/posts نیز به الگوی واحد منتقل شدند؛ و CRUD دسته‌بندی‌های وبلاگ/محصولات هم با همین الگو استاندارد شد.*

@@ -96,7 +96,9 @@
                     <div class="p-4 rounded-xl border {{ $info['enabled'] ? 'bg-green-50 border-green-100' : 'bg-slate-50 border-slate-200' }}">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex items-center gap-2">
-                                @include('admin.partials.sidebar-icon', ['key' => $iconKey])
+                                <span class="module-menu-icon" aria-hidden="true">
+                                    @include('admin.partials.sidebar-icon', ['key' => $iconKey])
+                                </span>
                                 <div>
                                     <div class="font-semibold text-slate-900">
                                         {{ $info['name'] ?? $slug }}
