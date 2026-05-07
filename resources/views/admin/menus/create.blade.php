@@ -3,10 +3,11 @@
 @section('header', 'ایجاد منو')
 @section('content')
 <div class="admin-page max-w-2xl">
+    <p class="admin-section-lead">برای هر موقعیت فقط یک منو قابل تعریف است. اینجا ساختار اولیه منو را می‌سازید و سپس آیتم‌ها را در صفحه ویرایش مدیریت می‌کنید.</p>
     <div class="card">
         <div class="card-header">اطلاعات منو</div>
         <div class="card-body">
-            <form action="{{ route('admin.menus.store') }}" method="post">
+            <form action="{{ route('admin.menus.store') }}" method="post" class="admin-form-stack">
                 @csrf
                 <div class="form-group">
                     <label class="form-label">نام منو</label>
@@ -19,7 +20,7 @@
                             <option value="{{ $key }}" {{ old('location') === $key ? 'selected' : '' }}>{{ $label }}{{ in_array($key, $existingLocations ?? []) ? ' (قبلاً استفاده شده)' : '' }}</option>
                         @endforeach
                     </select>
-                    <small class="text-slate-500">هر موقعیت فقط یک منو می‌تواند داشته باشد.</small>
+                    <small class="admin-muted-note">هر موقعیت فقط یک منو می‌تواند داشته باشد.</small>
                 </div>
                 <div class="admin-page-tools">
                     <button type="submit" class="btn btn-primary">ذخیره</button>

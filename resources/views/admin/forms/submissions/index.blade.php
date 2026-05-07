@@ -3,7 +3,7 @@
 @section('header', 'گزارش ارسال فرم‌ها')
 @section('content')
 <div class="admin-page">
-<div class="card">
+<div class="card admin-sticky-filters admin-hover-lift">
     <div class="card-body">
     <form method="GET" action="{{ route('admin.forms.submissions.index') }}" class="flex flex-wrap items-end gap-3">
         <div>
@@ -32,11 +32,10 @@
             <a href="{{ route('admin.forms.submissions.index') }}" class="btn btn-secondary">پاک کردن</a>
         </div>
         <div class="admin-page-tools mr-auto">
-        <input type="hidden" name="form_id" value="{{ request('form_id') }}">
-        <input type="hidden" name="from" value="{{ request('from') }}">
-        <input type="hidden" name="to" value="{{ request('to') }}">
-        <input type="hidden" name="q" value="{{ request('q') }}">
-        <button type="submit" class="btn btn-secondary">خروجی CSV</button>
+        <button type="submit"
+                formaction="{{ route('admin.forms.submissions.export') }}"
+                formmethod="GET"
+                class="btn btn-secondary">خروجی CSV</button>
         </div>
     </form>
     </div>
@@ -49,7 +48,7 @@
                 <tr class="bg-gray-50 border-b" id="submission-header-row">
                     @foreach($columnOrder as $col)
                         @if($col === 'id' || $col === 'form' || $col === 'date' || $col === 'ip' || in_array($col, $dataKeys, true))
-                            <th class="p-3 font-bold cursor-grab active:cursor-grabbing border-l border-gray-200 select-none hover:bg-gray-100" data-column-id="{{ $col }}">
+                            <th class="p-3 font-bold border-l border-gray-200 hover:bg-gray-100 admin-draggable-head" data-column-id="{{ $col }}">
                                 @if($col === 'id') # @elseif($col === 'form') فرم @elseif($col === 'date') تاریخ @elseif($col === 'ip') IP @else {{ $col }} @endif
                             </th>
                         @endif
@@ -97,18 +96,26 @@ document.addEventListener('DOMContentLoaded', function() {
         th.setAttribute('draggable', 'true');
         th.addEventListener('dragstart', function() {
             dragging = th;
-            th.classList.add('opacity-60');
+            th.classList.add('is-dragging');
         });
         th.addEventListener('dragend', function() {
-            th.classList.remove('opacity-60');
+            th.classList.remove('is-dragging');
+            row.querySelectorAll('th[data-column-id]').forEach(function(cell) { cell.classList.remove('is-over'); });
             dragging = null;
         });
         th.addEventListener('dragover', function(e) {
             e.preventDefault();
+            if (dragging && dragging !== th) {
+                th.classList.add('is-over');
+            }
+        });
+        th.addEventListener('dragleave', function() {
+            th.classList.remove('is-over');
         });
         th.addEventListener('drop', function(e) {
             e.preventDefault();
             if (!dragging || dragging === th) return;
+            th.classList.remove('is-over');
             var rect = th.getBoundingClientRect();
             var placeAfter = e.clientX < (rect.left + rect.width / 2);
             row.insertBefore(dragging, placeAfter ? th : th.nextSibling);

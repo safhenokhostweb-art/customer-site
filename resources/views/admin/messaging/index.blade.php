@@ -6,7 +6,7 @@
     <div class="card mb-6">
         <div class="card-header">لوگوی ویجت صفحهٔ اصلی</div>
         <div class="card-body">
-            <p class="text-slate-600 text-sm mb-4">لوگوی دکمهٔ ارتباط در گوشهٔ صفحه. در صورت خالی بودن، آیکون پیش‌فرض نمایش داده می‌شود.</p>
+            <p class="admin-section-lead mb-4">لوگوی دکمهٔ ارتباط در گوشهٔ صفحه. در صورت خالی بودن، آیکون پیش‌فرض نمایش داده می‌شود.</p>
             <form action="{{ route('admin.messaging.widget-logo') }}" method="post">
                 @csrf
                 @include('components.image-picker', ['name' => 'widget_logo', 'value' => $widgetLogo ?? '', 'context' => 'icon', 'label' => 'لوگوی ویجت'])
@@ -19,7 +19,7 @@
     <div class="card">
         <div class="card-header">کانال‌های ارتباطی</div>
         <div class="card-body">
-            <p class="text-slate-600 text-sm mb-6">کاربران با کلیک روی لوگوی ویجت، شبکهٔ مورد نظر (واتساپ، تلگرام، ایتا، بله، سروش، گپ، آی‌گپ، روبیکا یا شبکهٔ سفارشی) را انتخاب و چت را شروع می‌کنند.</p>
+            <p class="admin-section-lead mb-6">کاربران با کلیک روی لوگوی ویجت، شبکهٔ مورد نظر (واتساپ، تلگرام، ایتا، بله، سروش، گپ، آی‌گپ، روبیکا یا شبکهٔ سفارشی) را انتخاب و چت را شروع می‌کنند.</p>
 
             <div class="space-y-4 mb-6">
                 @foreach($channels as $ch)
@@ -51,7 +51,7 @@
 
             <hr class="my-6">
             <h3 class="font-semibold mb-4">افزودن کانال</h3>
-            <form action="{{ route('admin.messaging.store') }}" method="post">
+            <form action="{{ route('admin.messaging.store') }}" method="post" class="admin-form-stack">
                 @csrf
                 <div class="form-group">
                     <label class="form-label">شبکه</label>
@@ -84,7 +84,7 @@
                     @include('components.image-picker', ['name' => 'custom_image', 'value' => '', 'context' => 'icon', 'label' => 'لوگو'])
                 </div>
                 <div class="form-group">
-                    <label class="flex items-center gap-2 cursor-pointer">
+                    <label class="admin-form-inline-check cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" checked>
                         <span>فعال</span>
                     </label>

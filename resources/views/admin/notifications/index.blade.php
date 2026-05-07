@@ -82,7 +82,7 @@
     </div>
 </div>
 
-<div class="card mb-4">
+<div class="card mb-4 admin-sticky-filters admin-hover-lift">
     <div class="card-body">
         <form method="get" action="{{ route('admin.notifications.index') }}" class="flex flex-wrap items-end gap-4">
             <div class="form-group mb-0">

@@ -242,6 +242,8 @@
 | `resources/views/admin/{invoices,business-cards,social-links,advertisements}/*.blade.php` | بلوک بعدی ماژول‌های پرتردد ادمین با الگوی واحد `admin-page`، empty-state یکدست، pagination استاندارد و فرم‌های هم‌ساختار (`admin-page-tools`) هماهنگ شده‌اند. |
 | `resources/views/admin/{subscriptions,referrals,sms}/*.blade.php` | صفحات اشتراک، معرفی دوستان و تنظیمات پیامک نیز وارد الگوی یکپارچهٔ ادمین شدند (هدر/ابزار، empty-state، pagination و اکشن فرم استاندارد). |
 | `resources/views/admin/notifications/*.blade.php` | ماژول اعلان‌ها (تولبار، ارسال به کاربران، آرشیو) با الگوی `admin-page` یکدست شد؛ صفحات `archive` و `send-users` دیگر jQuery/persian-datepicker را از CDN بارگذاری نمی‌کنند (ورودی تاریخ شمسی با `x-persian-date-input` به‌صورت متنی و بدون وابستگی بیرونی). |
+| `resources/views/admin/{messaging,menus}/*.blade.php` | صفحات مدیریت پیام‌رسان‌ها و منوها با الگوی `admin-page` بازآرایی شد (کارت‌بندی، اکشن‌بار، فرم استاندارد و اسکریپت‌های درون `@push('scripts')`). |
+| `resources/views/admin/forms/submissions/index.blade.php` | گزارش ارسال فرم‌ها با فیلتر/خروجی یکپارچه شد؛ وابستگی CDN برای datepicker و sortable حذف شد، جابه‌جایی ستون‌ها با Drag & Drop بومی (`HTML5 DnD`) انجام می‌شود، و بازخورد بصری Drag (hover/drag states) اضافه شد. |
 | `public/css/customer-admin-layout.css` (مرحله ۲) | ارتقای سیستم طراحی مشترک ادمین: توکن‌های رنگ/feedback، حلقهٔ فوکوس یکنواخت (`focus-visible`)، بهبود دکمه‌ها (border + state)، یکدست‌سازی badgeها و رعایت `prefers-reduced-motion` برای UX بهتر و حرفه‌ای‌تر. |
 | `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
@@ -386,4 +388,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۷ — علاوه بر موارد قبلی، مرحلهٔ ۲ ارتقای UX ادمین شروع شد: سیستم طراحی مرکزی در `customer-admin-layout.css` بهبود یافت (focus ring استاندارد، badge/button state یکپارچه، motion-reduction، و تنظیمات ظریف جدول/فرم) تا همهٔ صفحات فعلی و آتی بدون وابستگی خارجی کیفیت بصری یکدست‌تری داشته باشند.*
+*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۷ — علاوه بر موارد قبلی، مرحلهٔ ۲ ارتقای UX ادمین شروع شد: سیستم طراحی مرکزی در `customer-admin-layout.css` بهبود یافت (focus ring استاندارد، badge/button state یکپارچه، motion-reduction، استیکی شدن فیلترهای سنگین، تنظیمات ظریف جدول/فرم، و کلاس‌های تایپوگرافی/فرم مانند `admin-section-lead`, `admin-form-stack`, `admin-form-inline-check`)؛ همچنین صفحهٔ `forms/submissions` از CDNهای datepicker/sortable جدا شد و Drag & Drop بومی همراه بازخورد بصری بهبود یافت، و فرم‌های چندبخشی `menus/create` و `messaging/edit` نیز با همین زبان طراحی یکدست شدند.*

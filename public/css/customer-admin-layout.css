@@ -797,6 +797,10 @@ button:focus-visible {
     flex-wrap: wrap;
 }
 
+.admin-page-tools > .btn {
+    min-height: 2.25rem;
+}
+
 .admin-empty {
     text-align: center;
     color: #64748b;
@@ -806,6 +810,65 @@ button:focus-visible {
 
 .admin-pagination {
     margin-top: 0.5rem;
+}
+
+.admin-sticky-filters {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+}
+
+.admin-sticky-filters .card-body {
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.admin-hover-lift {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.admin-draggable-head {
+    cursor: grab;
+    user-select: none;
+}
+
+.admin-draggable-head.is-dragging {
+    opacity: 0.6;
+}
+
+.admin-draggable-head.is-over {
+    background: #e0e7ff !important;
+}
+
+.admin-section-lead {
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.9;
+    margin: 0;
+}
+
+.admin-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.admin-form-inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #334155;
+    font-size: 0.875rem;
+}
+
+.admin-muted-note {
+    color: #64748b;
+    font-size: 0.82rem;
 }
 
 /* Fallback for Tailwind size utilities used in admin content when build css is unavailable/stale */

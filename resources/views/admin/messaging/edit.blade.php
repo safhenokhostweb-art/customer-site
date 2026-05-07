@@ -3,10 +3,11 @@
 @section('header', 'ویرایش کانال')
 @section('content')
 <div class="admin-page max-w-xl">
+    <p class="admin-section-lead">تنظیمات این کانال ارتباطی را ویرایش کنید. تغییرات بلافاصله روی ویجت ارتباطی سایت اعمال می‌شود.</p>
     <div class="card">
         <div class="card-header">{{ $platforms[$channel->platform]['name'] ?? $channel->platform }}</div>
         <div class="card-body">
-            <form action="{{ route('admin.messaging.update', $channel) }}" method="post">
+            <form action="{{ route('admin.messaging.update', $channel) }}" method="post" class="admin-form-stack">
                 @csrf
                 @method('PUT')
                 @if($channel->platform === 'whatsapp')
@@ -32,11 +33,11 @@
                 @endif
                 <div class="form-group">
                     <label class="form-label">لوگوی سفارشی (اختیاری)</label>
-                    <p class="text-slate-500 text-sm mb-2">در صورت خالی بودن، لوگوی پیش‌فرض شبکه نمایش داده می‌شود.</p>
+                    <p class="admin-muted-note mb-2">در صورت خالی بودن، لوگوی پیش‌فرض شبکه نمایش داده می‌شود.</p>
                     @include('components.image-picker', ['name' => 'custom_image', 'value' => old('custom_image', $channel->custom_image ?? ''), 'context' => 'icon', 'label' => 'تصویر'])
                 </div>
                 <div class="form-group">
-                    <label class="flex items-center gap-2 cursor-pointer">
+                    <label class="admin-form-inline-check cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', $channel->is_active) ? 'checked' : '' }}>
                         <span>فعال</span>
                     </label>

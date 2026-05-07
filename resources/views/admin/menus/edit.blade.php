@@ -3,7 +3,7 @@
 @section('header', 'ویرایش منو')
 @section('content')
 <div class="admin-page">
-    <p class="text-slate-500">ویرایش «{{ $menu->name }}» — موقعیت: {{ \App\Models\Menu::locations()[$menu->location] ?? $menu->location }}</p>
+    <p class="admin-section-lead">ویرایش «{{ $menu->name }}» — موقعیت: {{ \App\Models\Menu::locations()[$menu->location] ?? $menu->location }}</p>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div class="xl:col-span-2 card">
@@ -23,7 +23,7 @@
         <div class="card">
             <div class="card-header">افزودن آیتم</div>
             <div class="card-body">
-                <form action="{{ route('admin.menus.items.store', $menu) }}" method="post">
+                <form action="{{ route('admin.menus.items.store', $menu) }}" method="post" class="admin-form-stack">
             @csrf
             <div class="form-group">
                 <label class="form-label">والد (زیرمنو)</label>
@@ -69,7 +69,7 @@
                 <input type="text" name="url" placeholder="https://... یا #">
             </div>
             <div class="form-group">
-                <label><input type="checkbox" name="open_in_new_tab" value="1"> باز شدن در تب جدید</label>
+                <label class="admin-form-inline-check"><input type="checkbox" name="open_in_new_tab" value="1"> باز شدن در تب جدید</label>
             </div>
             <div class="admin-page-tools">
                 <button type="submit" class="btn btn-primary">افزودن</button>
@@ -82,7 +82,7 @@
     <div class="card max-w-md">
         <div class="card-header">به‌روزرسانی نام منو</div>
         <div class="card-body">
-            <form action="{{ route('admin.menus.update', $menu) }}" method="post">
+            <form action="{{ route('admin.menus.update', $menu) }}" method="post" class="admin-form-stack">
                 @csrf
                 @method('PUT')
                 <div class="form-group">
