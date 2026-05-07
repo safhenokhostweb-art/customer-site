@@ -242,6 +242,7 @@
 | `resources/views/admin/{invoices,business-cards,social-links,advertisements}/*.blade.php` | بلوک بعدی ماژول‌های پرتردد ادمین با الگوی واحد `admin-page`، empty-state یکدست، pagination استاندارد و فرم‌های هم‌ساختار (`admin-page-tools`) هماهنگ شده‌اند. |
 | `resources/views/admin/{subscriptions,referrals,sms}/*.blade.php` | صفحات اشتراک، معرفی دوستان و تنظیمات پیامک نیز وارد الگوی یکپارچهٔ ادمین شدند (هدر/ابزار، empty-state، pagination و اکشن فرم استاندارد). |
 | `resources/views/admin/notifications/*.blade.php` | ماژول اعلان‌ها (تولبار، ارسال به کاربران، آرشیو) با الگوی `admin-page` یکدست شد؛ صفحات `archive` و `send-users` دیگر jQuery/persian-datepicker را از CDN بارگذاری نمی‌کنند (ورودی تاریخ شمسی با `x-persian-date-input` به‌صورت متنی و بدون وابستگی بیرونی). |
+| `public/css/customer-admin-layout.css` (مرحله ۲) | ارتقای سیستم طراحی مشترک ادمین: توکن‌های رنگ/feedback، حلقهٔ فوکوس یکنواخت (`focus-visible`)، بهبود دکمه‌ها (border + state)، یکدست‌سازی badgeها و رعایت `prefers-reduced-motion` برای UX بهتر و حرفه‌ای‌تر. |
 | `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
 | `resources/views/layouts/auth.blade.php` | لایهٔ ورود با لوگو و نام پلتفرم |
@@ -385,4 +386,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۶ — علاوه بر موارد قبلی، در ویزارد نصب `customer-site` اگر مدیر با همان ایمیل از قبل وجود داشته باشد، به‌جای خطای تکراری، همان کاربر به‌روزرسانی می‌شود؛ یادآوری `storage/installed.lock` برای تشخیص نصب‌شده بودن اضافه شد؛ مرحلهٔ اول یکدست‌سازی UI ادمین روی صفحات پرتردد (products/orders/forms/pages/posts) اعمال شد؛ فرم‌های create/edit ماژول‌های products/pages/posts نیز به الگوی واحد منتقل شدند؛ CRUD دسته‌بندی‌های وبلاگ/محصولات با همین الگو استاندارد شد؛ صفحات courses/coupons/reviews نیز به الگوی واحد لیست/فرم هماهنگ شدند؛ بلوک‌های invoices/business-cards/social-links/advertisements و subscriptions/referrals/sms یکدست شدند؛ و صفحات اعلان‌ها (شامل آرشیو/ارسال گروهی) بدون CDN اضافی برای datepicker با همان الگو هماهنگ شدند.*
+*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۷ — علاوه بر موارد قبلی، مرحلهٔ ۲ ارتقای UX ادمین شروع شد: سیستم طراحی مرکزی در `customer-admin-layout.css` بهبود یافت (focus ring استاندارد، badge/button state یکپارچه، motion-reduction، و تنظیمات ظریف جدول/فرم) تا همهٔ صفحات فعلی و آتی بدون وابستگی خارجی کیفیت بصری یکدست‌تری داشته باشند.*

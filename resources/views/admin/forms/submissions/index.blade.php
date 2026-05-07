@@ -2,8 +2,9 @@
 @section('title', 'گزارش ارسال فرم‌ها')
 @section('header', 'گزارش ارسال فرم‌ها')
 @section('content')
-
-<div class="mb-6 flex flex-wrap items-end gap-3">
+<div class="admin-page">
+<div class="card">
+    <div class="card-body">
     <form method="GET" action="{{ route('admin.forms.submissions.index') }}" class="flex flex-wrap items-end gap-3">
         <div>
             <label class="form-label text-xs">جستجو</label>
@@ -26,16 +27,19 @@
             <label class="form-label text-xs">تا تاریخ (شمسی)</label>
             <x-persian-date-input name="to" placeholder="۱۴۰۳/۱۲/۲۹" :value="request('to')" class="form-input w-44" />
         </div>
-        <button type="submit" class="btn btn-primary">فیلتر</button>
-        <a href="{{ route('admin.forms.submissions.index') }}" class="btn btn-secondary">پاک کردن</a>
-    </form>
-    <form method="GET" action="{{ route('admin.forms.submissions.export') }}" class="mr-auto flex items-end gap-2">
+        <div class="admin-page-tools">
+            <button type="submit" class="btn btn-primary">فیلتر</button>
+            <a href="{{ route('admin.forms.submissions.index') }}" class="btn btn-secondary">پاک کردن</a>
+        </div>
+        <div class="admin-page-tools mr-auto">
         <input type="hidden" name="form_id" value="{{ request('form_id') }}">
         <input type="hidden" name="from" value="{{ request('from') }}">
         <input type="hidden" name="to" value="{{ request('to') }}">
         <input type="hidden" name="q" value="{{ request('q') }}">
         <button type="submit" class="btn btn-secondary">خروجی CSV</button>
+        </div>
     </form>
+    </div>
 </div>
 
 <div class="card overflow-hidden">
@@ -71,46 +75,52 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ count($columnOrder) }}" class="p-6 text-center text-gray-500">ارسالی یافت نشد.</td>
+                        <td colspan="{{ count($columnOrder) }}" class="admin-empty">ارسالی یافت نشد.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="p-3 border-t">
-        {{ $submissions->links() }}
-    </div>
 </div>
-
-@push('head')
-<link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
-@endpush
+@if($submissions->hasPages())
+    <div class="admin-pagination">{{ $submissions->links() }}</div>
+@endif
+</div>
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
-<script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof jQuery !== 'undefined' && jQuery.fn.persianDatepicker) {
-        jQuery('.persian-date-input').persianDatepicker({ format: 'YYYY/MM/DD', persianDigit: true, initialValueType: 'persian' });
-    }
     var row = document.getElementById('submission-header-row');
-    if (row && typeof Sortable !== 'undefined') {
-        new Sortable(row, {
-            animation: 150,
-            handle: 'th',
-            onEnd: function() {
-                var order = [];
-                row.querySelectorAll('th[data-column-id]').forEach(function(th) { order.push(th.getAttribute('data-column-id')); });
-                fetch('{{ route("admin.forms.submissions.column-order") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
-                    body: JSON.stringify({ order: order })
-                }).then(function() { window.location.reload(); });
-            }
+    if (!row) return;
+
+    var dragging = null;
+    row.querySelectorAll('th[data-column-id]').forEach(function(th) {
+        th.setAttribute('draggable', 'true');
+        th.addEventListener('dragstart', function() {
+            dragging = th;
+            th.classList.add('opacity-60');
         });
-    }
+        th.addEventListener('dragend', function() {
+            th.classList.remove('opacity-60');
+            dragging = null;
+        });
+        th.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+        th.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (!dragging || dragging === th) return;
+            var rect = th.getBoundingClientRect();
+            var placeAfter = e.clientX < (rect.left + rect.width / 2);
+            row.insertBefore(dragging, placeAfter ? th : th.nextSibling);
+            var order = [];
+            row.querySelectorAll('th[data-column-id]').forEach(function(cell) { order.push(cell.getAttribute('data-column-id')); });
+            fetch('{{ route("admin.forms.submissions.column-order") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                body: JSON.stringify({ order: order })
+            }).then(function() { window.location.reload(); });
+        });
+    });
 });
 </script>
 @endpush

@@ -2,7 +2,7 @@
 @section('title', 'پاسخگویی شبکه‌های اجتماعی')
 @section('header', 'پاسخگویی از طریق شبکه‌های اجتماعی')
 @section('content')
-<div class="max-w-3xl">
+<div class="admin-page max-w-3xl">
     <div class="card mb-6">
         <div class="card-header">لوگوی ویجت صفحهٔ اصلی</div>
         <div class="card-body">
@@ -10,7 +10,9 @@
             <form action="{{ route('admin.messaging.widget-logo') }}" method="post">
                 @csrf
                 @include('components.image-picker', ['name' => 'widget_logo', 'value' => $widgetLogo ?? '', 'context' => 'icon', 'label' => 'لوگوی ویجت'])
-                <button type="submit" class="btn btn-primary mt-2">ذخیره لوگو</button>
+                <div class="admin-page-tools mt-2">
+                    <button type="submit" class="btn btn-primary">ذخیره لوگو</button>
+                </div>
             </form>
         </div>
     </div>
@@ -87,17 +89,27 @@
                         <span>فعال</span>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary">افزودن کانال</button>
+                <div class="admin-page-tools">
+                    <button type="submit" class="btn btn-primary">افزودن کانال</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+@push('scripts')
 <script>
-document.getElementById('new-platform').addEventListener('change', function() {
-    var v = this.value;
-    document.getElementById('whatsapp-fields').classList.toggle('hidden', v !== 'whatsapp');
-    document.getElementById('url-field').classList.toggle('hidden', v === 'whatsapp' || !v);
-    document.getElementById('custom-fields').classList.toggle('hidden', v !== 'custom');
+document.addEventListener('DOMContentLoaded', function() {
+    var platformSelect = document.getElementById('new-platform');
+    if (!platformSelect) return;
+    function toggleMessagingFields() {
+        var v = platformSelect.value;
+        document.getElementById('whatsapp-fields').classList.toggle('hidden', v !== 'whatsapp');
+        document.getElementById('url-field').classList.toggle('hidden', v === 'whatsapp' || !v);
+        document.getElementById('custom-fields').classList.toggle('hidden', v !== 'custom');
+    }
+    platformSelect.addEventListener('change', toggleMessagingFields);
+    toggleMessagingFields();
 });
 </script>
+@endpush
 @endsection

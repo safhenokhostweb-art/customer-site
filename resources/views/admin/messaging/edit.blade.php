@@ -2,7 +2,7 @@
 @section('title', 'ویرایش کانال')
 @section('header', 'ویرایش کانال')
 @section('content')
-<div class="max-w-xl">
+<div class="admin-page max-w-xl">
     <div class="card">
         <div class="card-header">{{ $platforms[$channel->platform]['name'] ?? $channel->platform }}</div>
         <div class="card-body">
@@ -41,7 +41,7 @@
                         <span>فعال</span>
                     </label>
                 </div>
-                <div class="flex gap-3 mt-4">
+                <div class="admin-page-tools mt-4">
                     <button type="submit" class="btn btn-primary">ذخیره</button>
                     <a href="{{ route('admin.whatsapp.index') }}" class="btn btn-secondary">بازگشت</a>
                 </div>
