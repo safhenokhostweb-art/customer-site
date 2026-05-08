@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Module as ConfigModule;
 use App\Helpers\SiteHelper;
 use App\Models\License;
+use App\Models\ModuleVersion;
 use App\Models\Setting;
 use App\Services\UpdateCheckService;
 use Illuminate\Http\Request;
@@ -45,11 +46,14 @@ class ModuleController extends Controller
             }
         }
 
+        $installedVersions = ModuleVersion::allVersions();
+
         return view('admin.modules.index', compact(
             'license',
             'modulesFromPlatform',
             'localModules',
-            'moduleUpdates'
+            'moduleUpdates',
+            'installedVersions'
         ));
     }
 

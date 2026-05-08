@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>صفحه یافت نشد | {{ config('app.name', 'سایت') }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        @include('partials.vazirmatn-font-faces-inline')
         * { box-sizing: border-box; }
         body { font-family: Vazirmatn, Tahoma, sans-serif; margin: 0; background: #f9fafb; color: #1f2937; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
         .box { text-align: center; max-width: 28rem; }

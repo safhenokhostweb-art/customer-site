@@ -1,15 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>ویرایش صفحه: {{ $page->title }} — سازنده بصری</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { theme: { extend: { fontFamily: { vazir: ['Vazirmatn', 'Tahoma', 'sans-serif'] } } } };</script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    {{-- فونت آفلاین Vazirmatn --}}
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
+    <style>@include('partials.vazirmatn-font-faces-inline')</style>
+    @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
+    @endif
+    <script defer src="{{ asset('vendor/alpinejs/alpinejs.min.js') }}"></script>
+    <script defer src="{{ asset('vendor/sortablejs/Sortable.min.js') }}"></script>
     <style>
         body { font-family: Vazirmatn, Tahoma, sans-serif; margin: 0; direction: rtl; overflow: hidden; }
         .builder-panel { overflow-y: auto; }
@@ -752,7 +758,7 @@ function pageBuilder(config) {
                     if (iframe && data.html !== undefined) {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         doc.open();
-                        doc.write('<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:Vazirmatn,Tahoma,sans-serif;margin:0;padding:1rem;direction:rtl;background:#f9fafb}.tb-section{padding:1.5rem 0}.tb-container{max-width:80rem;margin:0 auto;padding:0 1rem}.tb-row{display:flex;flex-wrap:wrap;gap:1rem}.tb-column{min-width:0}.tb-col-full{flex:1 1 100%}.tb-col-1-2{flex:1 1 calc(50% - 0.5rem)}.tb-col-1-3{flex:1 1 calc(33.333% - 0.67rem)}.tb-col-2-3{flex:1 1 calc(66.666% - 0.67rem)}.tb-hero{padding:2rem;text-align:center;border-radius:0.5rem;background:#4f46e5;color:#fff}.tb-hero-title{font-size:1.75rem;margin:0 0 0.5rem}.tb-heading{margin:0 0 0.5rem;font-weight:700}.tb-text{line-height:1.7}.tb-image{display:block;max-width:100%;margin:0 auto 1.5rem}.tb-image .tb-img{display:block;max-width:100%;height:auto;margin:0 auto;max-height:480px;object-fit:contain}.tb-btn{display:inline-block;padding:0.5rem 1rem;border-radius:0.5rem;text-decoration:none;font-weight:600}.tb-btn-primary{background:#4338ca;color:#fff}.tb-radius-sm{border-radius:0.5rem}.tb-radius-md{border-radius:0.75rem}.tb-radius-lg{border-radius:1rem}.tb-shadow-sm{box-shadow:0 1px 3px rgba(15,23,42,0.16)}.tb-shadow-md{box-shadow:0 4px 12px rgba(15,23,42,0.18)}.tb-shadow-lg{box-shadow:0 12px 30px rgba(15,23,42,0.22)}.tb-hover-lift{transition:transform .2s,box-shadow .2s}.tb-hover-lift:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(15,23,42,0.22)}@media(max-width:767px){.tb-col-1-2,.tb-col-1-3,.tb-col-2-3{flex:1 1 100%}}</style></head><body>' + data.html + '</body></html>');
+                        doc.write('<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="utf-8"><style>@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Regular.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Bold.woff2) format("woff2");font-weight:700;font-display:swap}body{font-family:Vazirmatn,Tahoma,sans-serif;margin:0;padding:1rem;direction:rtl;background:#f9fafb}.tb-section{padding:1.5rem 0}.tb-container{max-width:80rem;margin:0 auto;padding:0 1rem}.tb-row{display:flex;flex-wrap:wrap;gap:1rem}.tb-column{min-width:0}.tb-col-full{flex:1 1 100%}.tb-col-1-2{flex:1 1 calc(50% - 0.5rem)}.tb-col-1-3{flex:1 1 calc(33.333% - 0.67rem)}.tb-col-2-3{flex:1 1 calc(66.666% - 0.67rem)}.tb-hero{padding:2rem;text-align:center;border-radius:0.5rem;background:#4f46e5;color:#fff}.tb-hero-title{font-size:1.75rem;margin:0 0 0.5rem}.tb-heading{margin:0 0 0.5rem;font-weight:700}.tb-text{line-height:1.7}.tb-image{display:block;max-width:100%;margin:0 auto 1.5rem}.tb-image .tb-img{display:block;max-width:100%;height:auto;margin:0 auto;max-height:480px;object-fit:contain}.tb-btn{display:inline-block;padding:0.5rem 1rem;border-radius:0.5rem;text-decoration:none;font-weight:600}.tb-btn-primary{background:#4338ca;color:#fff}.tb-radius-sm{border-radius:0.5rem}.tb-radius-md{border-radius:0.75rem}.tb-radius-lg{border-radius:1rem}.tb-shadow-sm{box-shadow:0 1px 3px rgba(15,23,42,0.16)}.tb-shadow-md{box-shadow:0 4px 12px rgba(15,23,42,0.18)}.tb-shadow-lg{box-shadow:0 12px 30px rgba(15,23,42,0.22)}.tb-hover-lift{transition:transform .2s,box-shadow .2s}.tb-hover-lift:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(15,23,42,0.22)}@media(max-width:767px){.tb-col-1-2,.tb-col-1-3,.tb-col-2-3{flex:1 1 100%}}</style></head><body>' + data.html + '</body></html>');
                         doc.close();
                     }
                 }).catch(() => {});

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'پنل مدیریت') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
     {{-- قالب و منو: فقط فایل محلی؛ ابزارهای صفحات داخلی از build محلی Vite (بدون CDN) --}}
-    <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @vite(['resources/css/app.css'])
     @include('partials.platform-styles')
     @stack('head')
@@ -30,9 +30,19 @@
                                 $visibleKeys = array_filter($keys, fn($k) => \App\Helpers\AdminMenu::isVisible($k));
                             @endphp
                             @if(count($visibleKeys) > 0)
-                                <div class="admin-sidebar-group">
-                                    <div class="sidebar-group-label sidebar-text">{{ $groupLabel }}</div>
-                                    <div class="admin-sidebar-item-list">
+                                <div class="admin-sidebar-group" data-group-index="{{ $loop->index }}">
+                                    <button
+                                        type="button"
+                                        class="sidebar-group-toggle"
+                                        data-group-toggle="{{ $loop->index }}"
+                                        aria-expanded="false"
+                                    >
+                                        <span class="sidebar-group-label sidebar-text">{{ $groupLabel }}</span>
+                                        <svg class="sidebar-group-caret" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <div class="admin-sidebar-item-list sidebar-group-items is-collapsed" data-group-items="{{ $loop->index }}">
                                         @foreach($visibleKeys as $key)
                                             @php $routeName = \App\Helpers\AdminMenu::getRoute($key); $routeParams = \App\Helpers\AdminMenu::getRouteParams($key); @endphp
                                             <a href="{{ route($routeName, $routeParams) }}" class="sidebar-link {{ \App\Helpers\AdminMenu::isActive($key) ? 'active' : '' }}">
@@ -149,6 +159,43 @@
                 apply();
             });
         }
+    })();
+    // Sidebar menu groups accordion (collapse/expand)
+    (function(){
+        var toggles = document.querySelectorAll('[data-group-toggle]');
+        toggles.forEach(function(btn){
+            var idx = btn.getAttribute('data-group-toggle');
+            var group = btn.closest('.admin-sidebar-group');
+            if (!group) return;
+
+            var items = group.querySelector('[data-group-items]');
+            var caret = group.querySelector('.sidebar-group-caret');
+            if (!items || !caret) return;
+
+            var storageKey = 'customer-admin-group-open-' + idx;
+            var open = localStorage.getItem(storageKey) === 'true';
+
+            function setOpen(isOpen){
+                if (isOpen) {
+                    items.classList.remove('is-collapsed');
+                    btn.setAttribute('aria-expanded', 'true');
+                    caret.classList.add('is-open');
+                } else {
+                    items.classList.add('is-collapsed');
+                    btn.setAttribute('aria-expanded', 'false');
+                    caret.classList.remove('is-open');
+                }
+            }
+
+            setOpen(open);
+
+            btn.addEventListener('click', function(e){
+                e.preventDefault();
+                open = items.classList.contains('is-collapsed');
+                localStorage.setItem(storageKey, open ? 'true' : 'false');
+                setOpen(open);
+            });
+        });
     })();
     </script>
     @stack('scripts')

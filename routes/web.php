@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Admin\ModuleController as AdminModuleController;
+use App\Http\Controllers\Admin\ModuleChangeLogController as AdminModuleChangeLogController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\GuideSearchController;
 use App\Http\Controllers\Front\SitemapController;
@@ -232,6 +233,7 @@ Route::middleware('install.check')->group(function () {
             Route::get('license', [AdminLicenseController::class, 'index'])->name('license.index');
             Route::get('module-store', [\App\Http\Controllers\Admin\ModuleStoreController::class, 'index'])->name('module-store.index');
             Route::get('modules', [AdminModuleController::class, 'index'])->name('modules.index');
+            Route::get('modules/changelog', [AdminModuleChangeLogController::class, 'index'])->name('modules.changelog');
             Route::get('modules/{slug}', [AdminModuleController::class, 'show'])->name('modules.show')->where('slug', '[a-z0-9_]+');
             Route::post('modules/{slug}', [AdminModuleController::class, 'update'])->name('modules.update')->where('slug', '[a-z0-9_]+');
             Route::post('license', [AdminLicenseController::class, 'update'])->name('license.update');

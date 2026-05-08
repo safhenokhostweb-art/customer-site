@@ -34,10 +34,10 @@
     --admin-surface-soft: #f8fafc;
     --admin-text: #0f172a;
     --admin-muted: #64748b;
-    --admin-primary: #4f46e5;
-    --admin-primary-hover: #4338ca;
-    --admin-primary-soft: #eef2ff;
-    --admin-ring: rgba(79, 70, 229, 0.22);
+    --admin-primary: #2563eb;
+    --admin-primary-hover: #1d4ed8;
+    --admin-primary-soft: #eff6ff;
+    --admin-ring: rgba(37, 99, 235, 0.22);
     --admin-success-soft: #dcfce7;
     --admin-success-text: #166534;
     --admin-warning-soft: #fef3c7;
@@ -122,6 +122,8 @@ body.admin-body {
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* برند */
@@ -149,6 +151,10 @@ body.admin-body {
     display: none;
 }
 
+#admin-sidebar[data-collapsed="true"] .sidebar-group-caret {
+    display: none;
+}
+
 /* ناوبری */
 .admin-sidebar-nav {
     flex: 1;
@@ -166,20 +172,88 @@ body.admin-body {
 
 .sidebar-group-label {
     display: block;
-    padding: 0.35rem 0.65rem 0.5rem;
-    margin-bottom: 0.35rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    padding: 0.35rem 0.75rem 0.45rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     color: var(--admin-muted);
-    text-transform: none;
-    border-bottom: 1px solid #f1f5f9;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.sidebar-group-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-group-toggle:hover {
+    background: rgba(37, 99, 235, 0.06);
+}
+
+.sidebar-group-toggle[aria-expanded="true"] .sidebar-group-label {
+    color: var(--admin-primary);
+    border-bottom-color: rgba(37, 99, 235, 0.35);
+}
+
+.sidebar-group-caret {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--admin-muted);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-group-caret.is-open {
+    transform: rotate(180deg);
+    color: var(--admin-primary);
+}
+
+.sidebar-group-items.is-collapsed {
+    display: none;
 }
 
 .admin-sidebar-item-list {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    /* اسکرول داخلی برای زیرمنوهای طولانی (مثل ماژول‌های پلتفرم) */
+    max-height: 50vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(37, 99, 235, 0.35) transparent;
+    padding-right: 2px;
+}
+
+.admin-sidebar-item-list::-webkit-scrollbar {
+    width: 6px;
+}
+.admin-sidebar-item-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.admin-sidebar-item-list::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.25);
+    border-radius: 6px;
+}
+.admin-sidebar-item-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(37, 99, 235, 0.45);
+}
+
+/* در حالت جمع‌شدهٔ سایدبار، اسکرول داخلی غیرفعال */
+#admin-sidebar[data-collapsed="true"] .admin-sidebar-item-list {
+    max-height: none;
+    overflow: visible;
 }
 
 /* لینک‌های منو: بدون زیرخط، RTL درست */
@@ -187,8 +261,8 @@ a.sidebar-link,
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    padding: 0.55rem 0.75rem;
+    gap: 0.7rem;
+    padding: 0.7rem 0.9rem;
     font-size: 0.875rem;
     font-weight: 500;
     color: #334155;
@@ -273,7 +347,7 @@ a.sidebar-link:hover,
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.25rem;
+    padding: 1rem 1.5rem;
     background: var(--admin-surface);
     border-bottom: 1px solid var(--admin-border);
 }
@@ -395,7 +469,7 @@ a.sidebar-link:hover,
 
 .admin-page-title {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.3;
@@ -403,7 +477,7 @@ a.sidebar-link:hover,
 
 @media (min-width: 768px) {
     .admin-page-title {
-        font-size: 1.35rem;
+        font-size: 1.5rem;
     }
 }
 
@@ -426,12 +500,12 @@ a.sidebar-link:hover,
 .admin-main {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem 1.25rem;
+    padding: 1.25rem 1.5rem;
 }
 
 @media (min-width: 768px) {
     .admin-main {
-        padding: 1.25rem 1.5rem;
+        padding: 1.5rem;
     }
 }
 
@@ -508,6 +582,10 @@ a.sidebar-link:hover,
 .btn-danger { background: #dc2626; color: #fff; border-color: #dc2626; }
 .btn-danger:hover { background: #b91c1c; }
 .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+.btn-outline-primary { background: transparent; color: var(--admin-primary); border-color: var(--admin-primary); }
+.btn-outline-primary:hover { background: var(--admin-primary-soft); }
+.btn-outline-secondary { background: transparent; color: #475569; border-color: #94a3b8; }
+.btn-outline-secondary:hover { background: #f8fafc; }
 
 .card {
     background: var(--admin-surface);
@@ -561,20 +639,63 @@ tr:hover td { background: #f8faff; }
     color: #374151;
     margin-bottom: 0.4rem;
 }
+.form-control,
+.form-select,
 input[type="text"], input[type="email"], input[type="number"], input[type="url"], input[type="tel"], input[type="password"], textarea, select {
     width: 100%;
-    padding: 0.55rem 0.8rem;
+    padding: 0.6rem 0.85rem;
     border: 1px solid #cbd5e1;
     border-radius: 0.6rem;
     font-family: inherit;
     background: #fff;
+    color: #0f172a;
+    text-align: right;
+}
+
+.form-select {
+    appearance: none;
+}
+
+.form-check-input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--admin-primary);
+}
+
+input[type="text"], input[type="email"], input[type="number"], input[type="url"], input[type="tel"], input[type="password"], textarea, select {
+    text-align: right;
 }
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--admin-primary);
     box-shadow: 0 0 0 3px var(--admin-ring);
 }
 .form-group { margin-bottom: 1rem; }
+
+.alert {
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.alert-danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
 
 .btn:focus-visible,
 a.sidebar-link:focus-visible,

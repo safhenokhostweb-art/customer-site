@@ -151,6 +151,8 @@ class LicenseController extends Controller
             'support_level' => $result['support_level'] ?? 'basic',
         ]);
         PlatformUx::clearCache();
+        app(UpdateCheckService::class)->reportModuleVersions();
+        app(UpdateCheckService::class)->syncModuleChangeLogs();
 
         return back()->with('success', 'ماژول‌ها از پلتفرم بروزرسانی شدند: ' . implode('، ', $result['modules'] ?? []));
     }

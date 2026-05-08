@@ -35,10 +35,13 @@
 
 {{-- بروزرسانی ماژول‌ها از پلتفرم --}}
 @if($license && $license->license_key)
-    <form action="{{ route('admin.license.refresh-modules') }}" method="post" class="mb-6">
-        @csrf
-        <button type="submit" class="btn btn-secondary">بروزرسانی لیست ماژول‌ها از پلتفرم</button>
-    </form>
+    <div class="mb-6 flex items-center gap-2">
+        <form action="{{ route('admin.license.refresh-modules') }}" method="post">
+            @csrf
+            <button type="submit" class="btn btn-secondary">بروزرسانی لیست ماژول‌ها از پلتفرم</button>
+        </form>
+        <a href="{{ route('admin.modules.changelog') }}" class="btn btn-secondary">تاریخچه نسخه و تغییرات</a>
+    </div>
 @endif
 
 {{-- لیست ماژول‌های خریداری‌شده --}}
@@ -50,7 +53,10 @@
                 @foreach($modulesFromPlatform as $slug)
                     @php
                         $info = $localModules[$slug] ?? ['name' => $slug, 'enabled' => false];
-                        $hasUpdate = collect($moduleUpdates ?? [])->contains('slug', $slug);
+                        $updateRow = collect($moduleUpdates ?? [])->firstWhere('slug', $slug);
+                        $hasUpdate = !empty($updateRow);
+                        $installedVersion = $installedVersions[$slug] ?? ($updateRow['installed_version'] ?? '1.0.0');
+                        $availableVersion = $updateRow['available_version'] ?? $installedVersion;
 
                         // نگاشت slug ماژول به کلید منو برای آیکن
                         $iconMap = [
@@ -126,6 +132,13 @@
                         </div>
                         <div class="mt-3 text-xs text-slate-700 leading-relaxed">
                             {{ $usageText }}
+                        </div>
+                        <div class="mt-2 text-xs text-slate-600">
+                            نسخه نصب‌شده: <code>{{ $installedVersion ?: '—' }}</code>
+                            @if($hasUpdate)
+                                <span class="mx-1">→</span>
+                                نسخه قابل دریافت: <code>{{ $availableVersion }}</code>
+                            @endif
                         </div>
                     </div>
                 @endforeach

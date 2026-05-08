@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -31,7 +31,10 @@
     <script type="application/ld+json">@json(\App\Helpers\JsonLd::organization())</script>
     <script type="application/ld+json">@json(\App\Helpers\JsonLd::webSite(\App\Helpers\SiteHelper::moduleEnabled('advanced_search') ? route('search.index') : null))</script>
     @stack('json-ld')
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- فونت آفلاین Vazirmatn (یکسان با پنل ادمین مشتری) --}}
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
+    <style>@include('partials.vazirmatn-font-faces-inline')</style>
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     @include('partials.platform-styles')
     @php
@@ -56,8 +59,8 @@
     @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>tailwind.config = { theme: { extend: { fontFamily: { vazir: ['Vazirmatn', 'Tahoma', 'sans-serif'] } } } };</script>
+        {{-- بدون CDN: لطفاً قبل از انتشار، `npm run build` را اجرا کنید تا public/build ساخته شود --}}
+        <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @endif
     <style>
         * { box-sizing: border-box; }

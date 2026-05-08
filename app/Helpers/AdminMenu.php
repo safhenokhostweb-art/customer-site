@@ -39,6 +39,7 @@ class AdminMenu
         'currency_reform' => 'حذف ۴ صفر پول',
         'license' => 'لایسنس',
         'modules' => 'ماژول‌ها',
+        'modules_changelog' => 'تاریخچه ماژول‌ها',
         'module_store' => 'فروشگاه ماژول',
         'support' => 'پشتیبانی',
         'advanced_search' => 'جستجوی پیشرفته',
@@ -113,6 +114,7 @@ class AdminMenu
         'currency_reform' => 'admin.currency-reform.index',
         'license' => 'admin.license.index',
         'modules' => 'admin.modules.index',
+        'modules_changelog' => 'admin.modules.changelog',
         'module_store' => 'admin.module-store.index',
         'support' => 'admin.support.index',
         'advanced_search' => 'admin.modules.show',
@@ -203,6 +205,7 @@ class AdminMenu
         'currency_reform' => 'admin.currency-reform.*',
         'license' => 'admin.license.*',
         'modules' => 'admin.modules.*',
+        'modules_changelog' => 'admin.modules.changelog',
         'module_store' => 'admin.module-store.index',
         'support' => 'admin.support.*',
         'advanced_search' => 'admin.modules.show',
@@ -273,7 +276,7 @@ class AdminMenu
             'اشتراک و دوره' => ['subscription', 'courses'],
             'مالی و تماس' => ['invoice', 'business_card', 'social_links', 'advertisements'],
             'فرم و محتوا' => ['forms', 'forms_submissions'],
-            'سیستم' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform', 'license', 'modules', 'module_store', 'support', 'bank_gateway'],
+            'سیستم' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform', 'license', 'modules', 'modules_changelog', 'module_store', 'support', 'bank_gateway'],
         ];
     }
 
@@ -337,7 +340,7 @@ class AdminMenu
         if (in_array($key, self::getDynamicPlatformMenuKeys(), true)) {
             return true;
         }
-        if ($key === 'dashboard' || $key === 'pages' || $key === 'captcha' || $key === 'theme_design' || $key === 'builder_health' || $key === 'settings' || $key === 'license' || $key === 'modules' || $key === 'support') {
+        if ($key === 'dashboard' || $key === 'pages' || $key === 'captcha' || $key === 'theme_design' || $key === 'builder_health' || $key === 'settings' || $key === 'license' || $key === 'modules' || $key === 'modules_changelog' || $key === 'support') {
             return true;
         }
         if ($key === 'module_store') {

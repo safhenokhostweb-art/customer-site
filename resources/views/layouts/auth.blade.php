@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ورود') — {{ \App\Helpers\PlatformUx::platformName() }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- فونت آفلاین Vazirmatn (یکسان با پنل ادمین مشتری) --}}
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
+    <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
+    <style>@include('partials.vazirmatn-font-faces-inline')</style>
     @include('partials.platform-styles')
     <style>
+        body { font-family: Vazirmatn, Tahoma, sans-serif; }
         body { direction: rtl; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); padding: 1rem; }
         .auth-bar { width: 100%; max-width: 28rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
         .auth-bar img { height: 2rem; width: auto; }
