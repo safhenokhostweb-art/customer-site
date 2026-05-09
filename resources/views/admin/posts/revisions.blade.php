@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card admin-table-wrap">
         <div class="table-responsive">
             <table>
                 <thead>
@@ -29,9 +29,9 @@
                             <td>{{ $rev->user?->name ?? '—' }}</td>
                             <td>{{ $snap['title'] ?? '—' }}</td>
                             <td>
-                                <details class="text-xs">
-                                    <summary class="cursor-pointer text-indigo-600">مشاهده خلاصه</summary>
-                                    <pre class="mt-2 p-2 bg-slate-50 rounded text-xs overflow-auto max-h-48" dir="ltr">{{ json_encode($snap, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
+                                <details class="admin-revision-details">
+                                    <summary>مشاهده خلاصه</summary>
+                                    <pre dir="ltr">{{ json_encode($snap, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
                                 </details>
                                 @if(auth()->user()->hasPermission('posts_moderate'))
                                     <form method="post" action="{{ route('admin.posts.revisions.restore', [$post, $rev]) }}" class="mt-2" onsubmit="return confirm('این نسخه جایگزین محتوای فعلی شود؟');">
@@ -42,7 +42,17 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="admin-empty">نسخه‌ای ثبت نشده است.</td></tr>
+                        <tr>
+                            <td colspan="4" class="p-0">
+                                <div class="admin-empty-state">
+                                    <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <p class="admin-empty-state__title">نسخه‌ای ثبت نشده</p>
+                                    <p class="admin-empty-state__text">با ذخیرهٔ مطلب، نسخه‌ها به‌مرور در اینجا فهرست می‌شوند.</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

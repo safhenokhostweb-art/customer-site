@@ -1,41 +1,66 @@
+@push('head')
+<link rel="stylesheet" href="{{ asset('vendor/persian-datepicker/persian-datepicker.min.css') }}?v={{ @filemtime(public_path('vendor/persian-datepicker/persian-datepicker.min.css')) ?: time() }}">
+@endpush
+
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js" referrerpolicy="origin"></script>
+@include('admin.partials.tinymce-professional-base')
+<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ asset('vendor/persian-date/persian-date.min.js') }}"></script>
+<script src="{{ asset('vendor/persian-datepicker/persian-datepicker.min.js') }}"></script>
+<script src="{{ asset('vendor/tinymce/tinymce.min.js') }}?v={{ @filemtime(public_path('vendor/tinymce/tinymce.min.js')) ?: time() }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (typeof tinymce === 'undefined') return;
-    var el = document.getElementById('post-body-editor');
-    if (!el) return;
-    tinymce.init({
-        selector: '#post-body-editor',
-        height: 480,
-        menubar: false,
-        directionality: 'rtl',
-        plugins: 'link lists image autoresize code',
-        toolbar: 'undo redo | blocks | bold italic underline | alignright aligncenter alignleft | bullist numlist | link image | code',
-        relative_urls: false,
-        convert_urls: true,
-        images_upload_handler: function (blobInfo, progress) {
-            return new Promise(function (resolve, reject) {
-                var fd = new FormData();
-                fd.append('file', blobInfo.blob(), blobInfo.filename());
-                fd.append('context', 'featured');
-                fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-                fetch('{{ route('admin.image.upload') }}', {
-                    method: 'POST',
-                    body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-                .then(function (res) {
-                    if (!res.ok || !res.data.path) {
-                        reject(res.data && res.data.message ? res.data.message : 'آپلود ناموفق');
-                        return;
-                    }
-                    var url = res.data.url || res.data.path;
-                    resolve(url);
-                }).catch(function () { reject('خطا در آپلود'); });
-            });
+    var tinymceBase = @json(rtrim(asset('vendor/tinymce'), '/'));
+
+    if (typeof tinymce !== 'undefined' && window.AdminTinyMCE) {
+        var sel = '#post-body-editor';
+        if (document.querySelector(sel)) {
+            tinymce.init(Object.assign({}, window.AdminTinyMCE.baseOptions('featured', 480), {
+                selector: sel,
+                base_url: tinymceBase,
+                suffix: '.min'
+            }));
+        }
+    }
+
+    var disp = document.getElementById('post-published-at-display');
+    var hidden = document.getElementById('post-published-at');
+    if (!disp || !hidden || typeof jQuery === 'undefined' || !jQuery.fn.persianDatepicker || typeof persianDate === 'undefined') {
+        return;
+    }
+
+    function pad(n) {
+        return n < 10 ? '0' + n : String(n);
+    }
+
+    function isoFromUnix(unix) {
+        var g = new persianDate(unix).toDate();
+        return g.getFullYear() + '-' + pad(g.getMonth() + 1) + '-' + pad(g.getDate()) + ' ' + pad(g.getHours()) + ':' + pad(g.getMinutes()) + ':00';
+    }
+
+    jQuery(disp).persianDatepicker({
+        format: 'YYYY/MM/DD HH:mm',
+        initialValueType: 'persian',
+        persianDigit: true,
+        autoClose: true,
+        calendar: { persian: { locale: 'fa' } },
+        timePicker: {
+            enabled: true,
+            meridiem: { enabled: true }
+        },
+        onSelect: function (unix) {
+            hidden.value = isoFromUnix(unix);
         }
     });
+
+    var form = disp.closest('form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            if (!String(disp.value || '').trim()) {
+                hidden.value = '';
+            }
+        });
+    }
 });
 </script>
 @endpush

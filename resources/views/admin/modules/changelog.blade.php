@@ -3,12 +3,12 @@
 @section('header', 'تاریخچه نسخه ماژول‌ها')
 @section('content')
 <div class="admin-page">
-    <div class="card mb-6">
-        <div class="card-body flex items-center justify-between">
-            <p class="text-sm text-slate-600">
-                در این صفحه تمام تغییرات منتشرشدهٔ ماژول‌ها از پلتفرم نمایش داده می‌شود.
+    <div class="card mb-6 admin-table-wrap">
+        <div class="card-body flex flex-wrap items-center justify-between gap-3">
+            <p class="admin-section-lead" style="margin:0;max-width:42rem">
+                در این صفحه تمام تغییرات منتشرشدهٔ ماژول‌ها از پلتفرم نمایش داده می‌شود. با همگام‌سازی، آخرین لاگ‌ها از سرور دریافت می‌شود.
             </p>
-            <a href="{{ route('admin.modules.changelog', array_filter(['sync' => 1, 'module' => $moduleSlug ?? null])) }}" class="btn btn-secondary">همگام‌سازی لاگ‌ها</a>
+            <a href="{{ route('admin.modules.changelog', array_filter(['sync' => 1, 'module' => $moduleSlug ?? null])) }}" class="btn btn-secondary shrink-0">همگام‌سازی لاگ‌ها</a>
         </div>
     </div>
 
@@ -25,7 +25,13 @@
         <div class="card-header">لاگ تغییرات ماژول‌ها</div>
         <div class="card-body">
             @if($logs->count() === 0)
-                <p class="text-sm text-slate-500">هنوز لاگی برای ماژول‌ها ثبت نشده است.</p>
+                <div class="admin-empty-state" role="status">
+                    <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="admin-empty-state__title">لاگی ثبت نشده</p>
+                    <p class="admin-empty-state__text">هنوز لاگی برای ماژول‌ها ثبت نشده است. از دکمهٔ همگام‌سازی بالا برای دریافت از پلتفرم استفاده کنید.</p>
+                </div>
             @else
                 <div class="space-y-4">
                     @foreach($logs as $log)

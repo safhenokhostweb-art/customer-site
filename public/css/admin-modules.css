@@ -1,0 +1,875 @@
+/**
+ * UI ماژول‌های پرتردد ادمین — فقط با layout ادمین بارگذاری می‌شود.
+ */
+
+:root {
+    --am-card-radius: 14px;
+    --am-border: #e2e8f0;
+    --am-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+/* ——— وضعیت انتشار یکنواخت ——— */
+.badge-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+.badge-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+.badge-draft {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+.badge-published {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+.badge-scheduled {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
+.badge-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+.badge-approved {
+    background: #ccfbf1;
+    color: #115e59;
+    border: 1px solid #99f6e4;
+}
+
+/* ——— کارت‌های وضعیت حرفه‌ای ماژول ——— */
+.admin-pro-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    border-radius: var(--am-card-radius);
+    border: 1px solid var(--am-border);
+    background: var(--admin-surface, #fff);
+    box-shadow: var(--am-shadow);
+    margin-bottom: 1.25rem;
+}
+.admin-pro-banner__icon {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #4f46e5;
+    margin-top: 0.1rem;
+}
+.admin-pro-banner--updates {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+}
+.admin-pro-banner--license {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.admin-pro-module-card {
+    border-radius: var(--am-card-radius);
+    border: 1px solid var(--am-border);
+    padding: 1.15rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--am-shadow);
+    background: #fff;
+}
+.admin-pro-module-card--blog {
+    background: linear-gradient(135deg, #f0f9ff 0%, #fff 48%);
+    border-color: #bae6fd;
+}
+.admin-pro-module-card--shop {
+    background: linear-gradient(135deg, #ecfdf5 0%, #fff 48%);
+    border-color: #a7f3d0;
+}
+.admin-pro-module-card--menu {
+    background: linear-gradient(135deg, #f5f3ff 0%, #fff 48%);
+    border-color: #ddd6fe;
+}
+.admin-pro-module-card__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.admin-pro-module-card__title {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.admin-pro-module-card__meta {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #334155;
+    line-height: 1.7;
+}
+.admin-pro-module-card__meta code {
+    font-size: 0.8em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+.admin-pro-module-card__note {
+    margin: 0.35rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.65;
+}
+.admin-pro-module-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+.admin-pro-module-card__logs {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.admin-pro-log-entry {
+    border-radius: 0.65rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+    padding: 0.75rem 0.85rem;
+}
+.admin-pro-log-entry__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.admin-module-tile {
+    border-radius: 0.85rem;
+    border: 1px solid var(--am-border);
+    padding: 1rem;
+    background: #f8fafc;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.admin-module-tile--enabled {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+.admin-module-tile--disabled {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+.admin-module-tile:hover {
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+.admin-module-tile__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.admin-module-tile__title {
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+.admin-module-tile__slug {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin: 0.2rem 0 0;
+}
+.admin-module-tile__usage {
+    margin-top: 0.65rem;
+    font-size: 0.75rem;
+    color: #334155;
+    line-height: 1.75;
+}
+.admin-module-tile__badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+.admin-module-category-pill {
+    display: inline-flex;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+.admin-modules-page .admin-module-category-pill.bg-sky-100 { background: #e0f2fe; color: #075985; }
+.admin-modules-page .admin-module-category-pill.bg-emerald-100 { background: #d1fae5; color: #065f46; }
+.admin-modules-page .admin-module-category-pill.bg-amber-100 { background: #fef3c7; color: #92400e; }
+.admin-modules-page .admin-module-category-pill.bg-indigo-100 { background: #e0e7ff; color: #3730a3; }
+.admin-modules-page .admin-module-category-pill.bg-slate-100 { background: #f1f5f9; color: #334155; }
+
+.admin-module-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+    .admin-module-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 1024px) {
+    .admin-module-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.admin-toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ——— فیلتر و فرم ——— */
+.admin-filter-bar {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+    .admin-filter-bar {
+        grid-template-columns: 2fr 1fr auto;
+        align-items: end;
+    }
+}
+
+.admin-fieldset {
+    border: 1px solid var(--am-border);
+    border-radius: var(--am-card-radius);
+    padding: 1rem 1.15rem 1.1rem;
+    margin: 0 0 1.25rem;
+    background: #fafbfc;
+}
+.admin-fieldset__legend {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+    padding: 0 0.5rem;
+}
+
+.admin-field-hint {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.65;
+}
+
+.admin-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding-top: 0.5rem;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--am-border);
+}
+.admin-form-actions--sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    margin-top: 1.25rem;
+    margin-right: -0.25rem;
+    margin-left: -0.25rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--am-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.06);
+}
+
+/* ——— جدول واکنش‌گرا ——— */
+.admin-table-wrap .table-responsive,
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 0 var(--am-card-radius) var(--am-card-radius);
+}
+.admin-table-wrap table,
+.table-responsive table {
+    min-width: 720px;
+}
+
+/* ——— حالت خالی ——— */
+.admin-empty-state {
+    text-align: center;
+    padding: 2rem 1.25rem;
+    color: #64748b;
+}
+.admin-empty-state__icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.75rem;
+    color: #94a3b8;
+    display: block;
+}
+.admin-empty-state__title {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #475569;
+}
+.admin-empty-state__text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.8;
+    max-width: 28rem;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* ——— ویرایش منو: دو ستون بدون Tailwind ——— */
+.admin-menu-edit-layout {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 1280px) {
+    .admin-menu-edit-layout {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+/* ——— لیست آیتم‌های منو (Sortable) ——— */
+.menu-sort-li {
+    border: 1px solid var(--am-border);
+    border-radius: 0.65rem;
+    background: #fff;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.5rem;
+    cursor: grab;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.menu-sort-li:hover {
+    border-color: #c7d2fe;
+    background: #fafbff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+.menu-sort-li .drag-handle {
+    color: #94a3b8;
+    user-select: none;
+    cursor: grab;
+}
+.menu-nested-children {
+    list-style: none;
+    padding-right: 1rem;
+    margin-top: 0.5rem;
+    border-right: 2px solid var(--am-border);
+}
+.menu-nested-children .menu-nested-children {
+    border-right-color: #cbd5e1;
+}
+.menu-sort-li.sortable-ghost {
+    opacity: 0.5;
+    background: #e0e7ff;
+    border-color: #4f46e5;
+}
+.menu-sort-li.sortable-chosen {
+    cursor: grabbing;
+}
+.menu-sort-li > div .badge,
+.menu-sort-li > div span.text-xs {
+    margin-right: 0.25rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* رنگ‌های متنی پرکاربرد در صفحات ادمین (در صورت نبود build) */
+.admin-page .text-emerald-600,
+.admin-page .text-emerald-700,
+.admin-modules-page .text-emerald-600,
+.admin-modules-page .text-emerald-700 {
+    color: #047857;
+}
+.admin-page .text-amber-700,
+.admin-modules-page .text-amber-700 {
+    color: #b45309;
+}
+.admin-page .text-red-600,
+.admin-page .text-red-700,
+.admin-modules-page .text-red-600,
+.admin-modules-page .text-red-700 {
+    color: #b91c1c;
+}
+.admin-page .text-slate-500,
+.admin-modules-page .text-slate-500 {
+    color: #64748b;
+}
+.admin-page .text-slate-600,
+.admin-modules-page .text-slate-600 {
+    color: #475569;
+}
+.admin-page .text-slate-700,
+.admin-modules-page .text-slate-700 {
+    color: #334155;
+}
+.admin-page .text-slate-900,
+.admin-modules-page .text-slate-900 {
+    color: #0f172a;
+}
+.admin-page .text-indigo-600,
+.admin-modules-page .text-indigo-600 {
+    color: #4f46e5;
+}
+.admin-page .text-blue-600,
+.admin-modules-page .text-blue-600 {
+    color: #2563eb;
+}
+
+/* utility fallbacks ضروری برای صفحات ادمین */
+.admin-page .block,
+.admin-modules-page .block {
+    display: block;
+}
+.admin-page .inline,
+.admin-modules-page .inline {
+    display: inline;
+}
+.admin-page .inline-flex,
+.admin-modules-page .inline-flex {
+    display: inline-flex;
+}
+.admin-page .w-full,
+.admin-modules-page .w-full {
+    width: 100%;
+}
+.admin-page .h-full,
+.admin-modules-page .h-full {
+    height: 100%;
+}
+.admin-page .w-24,
+.admin-modules-page .w-24 {
+    width: 6rem;
+}
+.admin-page .min-w-0,
+.admin-modules-page .min-w-0 {
+    min-width: 0;
+}
+.admin-page .pt-4,
+.admin-modules-page .pt-4 {
+    padding-top: 1rem;
+}
+.admin-page .pb-2,
+.admin-modules-page .pb-2 {
+    padding-bottom: 0.5rem;
+}
+.admin-page .pr-4,
+.admin-modules-page .pr-4 {
+    padding-right: 1rem;
+}
+.admin-page .border-t,
+.admin-modules-page .border-t {
+    border-top-width: 1px;
+    border-top-style: solid;
+}
+.admin-page .border-b,
+.admin-modules-page .border-b {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+.admin-page .border-r-2,
+.admin-modules-page .border-r-2 {
+    border-right-width: 2px;
+    border-right-style: solid;
+}
+.admin-page .border-slate-100,
+.admin-modules-page .border-slate-100 {
+    border-color: #f1f5f9;
+}
+.admin-page .border-slate-200,
+.admin-modules-page .border-slate-200 {
+    border-color: #e2e8f0;
+}
+.admin-page .my-6,
+.admin-modules-page .my-6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.admin-page .ml-2,
+.admin-modules-page .ml-2 {
+    margin-left: 0.5rem;
+}
+.admin-page .text-lg,
+.admin-modules-page .text-lg {
+    font-size: 1.125rem;
+}
+.admin-page .text-base,
+.admin-modules-page .text-base {
+    font-size: 1rem;
+}
+.admin-page .font-bold,
+.admin-modules-page .font-bold {
+    font-weight: 700;
+}
+.admin-page .text-center,
+.admin-modules-page .text-center {
+    text-align: center;
+}
+.admin-page .text-left,
+.admin-modules-page .text-left {
+    text-align: left;
+}
+.admin-page .break-all,
+.admin-modules-page .break-all {
+    word-break: break-all;
+}
+.admin-page .underline,
+.admin-modules-page .underline {
+    text-decoration: underline;
+}
+.admin-page .min-w-\[12rem\],
+.admin-modules-page .min-w-\[12rem\] {
+    min-width: 12rem;
+}
+.admin-page .min-h-\[200px\],
+.admin-modules-page .min-h-\[200px\] {
+    min-height: 200px;
+}
+.admin-page .max-w-2xl,
+.admin-modules-page .max-w-2xl {
+    max-width: 42rem;
+}
+.admin-page .max-h-48,
+.admin-modules-page .max-h-48 {
+    max-height: 12rem;
+}
+.admin-page .overflow-auto,
+.admin-modules-page .overflow-auto {
+    overflow: auto;
+}
+.admin-page .rounded,
+.admin-modules-page .rounded {
+    border-radius: 0.25rem;
+}
+.admin-page .bg-slate-50,
+.admin-modules-page .bg-slate-50 {
+    background: #f8fafc;
+}
+.admin-page .bg-white,
+.admin-modules-page .bg-white {
+    background: #fff;
+}
+.admin-page .cursor-pointer,
+.admin-modules-page .cursor-pointer {
+    cursor: pointer;
+}
+.admin-page .flex-1,
+.admin-modules-page .flex-1 {
+    flex: 1 1 0%;
+}
+.admin-page .grid-cols-1,
+.admin-modules-page .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+@media (min-width: 768px) {
+    .admin-page .md\:grid-cols-3,
+    .admin-modules-page .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.admin-moderation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--am-card-radius);
+}
+
+/* ——— ویرایشگر پست ——— */
+#post-body-editor {
+    min-height: 220px;
+}
+
+/* ——— جزئیات بازبینی نسخه ——— */
+.admin-revision-details summary {
+    cursor: pointer;
+    color: #2563eb;
+    font-weight: 500;
+}
+.admin-revision-details pre {
+    margin-top: 0.5rem;
+    padding: 0.65rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    font-size: 0.7rem;
+    overflow: auto;
+    max-height: 12rem;
+    border: 1px solid var(--am-border);
+}
+
+/* ——— فallbackهای کوچک برای کلاس‌های Tailwind در صفحات بدون build ——— */
+.admin-modules-page .flex,
+.admin-page .flex {
+    display: flex;
+}
+.admin-modules-page .flex-wrap,
+.admin-page .flex-wrap {
+    flex-wrap: wrap;
+}
+.admin-modules-page .items-start,
+.admin-page .items-start {
+    align-items: flex-start;
+}
+.admin-modules-page .items-center,
+.admin-page .items-center {
+    align-items: center;
+}
+.admin-modules-page .items-end,
+.admin-page .items-end {
+    align-items: flex-end;
+}
+.admin-modules-page .justify-between,
+.admin-page .justify-between {
+    justify-content: space-between;
+}
+.admin-modules-page .gap-2,
+.admin-page .gap-2 {
+    gap: 0.5rem;
+}
+.admin-modules-page .gap-3,
+.admin-page .gap-3 {
+    gap: 0.75rem;
+}
+.admin-modules-page .gap-4,
+.admin-page .gap-4 {
+    gap: 1rem;
+}
+.admin-modules-page .gap-6,
+.admin-page .gap-6 {
+    gap: 1.5rem;
+}
+.admin-modules-page .shrink-0,
+.admin-page .shrink-0 {
+    flex-shrink: 0;
+}
+.admin-modules-page .mt-0\.5,
+.admin-page .mt-0\.5 {
+    margin-top: 0.125rem;
+}
+.admin-modules-page .mt-1,
+.admin-page .mt-1 {
+    margin-top: 0.25rem;
+}
+.admin-modules-page .mt-2,
+.admin-page .mt-2 {
+    margin-top: 0.5rem;
+}
+.admin-modules-page .mt-3,
+.admin-page .mt-3 {
+    margin-top: 0.75rem;
+}
+.admin-modules-page .mt-4,
+.admin-page .mt-4 {
+    margin-top: 1rem;
+}
+.admin-modules-page .mb-1,
+.admin-page .mb-1 {
+    margin-bottom: 0.25rem;
+}
+.admin-modules-page .mb-2,
+.admin-page .mb-2 {
+    margin-bottom: 0.5rem;
+}
+.admin-modules-page .mb-3,
+.admin-page .mb-3 {
+    margin-bottom: 0.75rem;
+}
+.admin-modules-page .mb-4,
+.admin-page .mb-4 {
+    margin-bottom: 1rem;
+}
+.admin-modules-page .mb-6,
+.admin-page .mb-6 {
+    margin-bottom: 1.5rem;
+}
+.admin-modules-page .mr-1,
+.admin-page .mr-1 {
+    margin-left: 0.25rem;
+}
+.admin-modules-page .mr-2,
+.admin-page .mr-2 {
+    margin-left: 0.5rem;
+}
+.admin-modules-page .p-3,
+.admin-page .p-3 {
+    padding: 0.75rem;
+}
+.admin-modules-page .p-4,
+.admin-page .p-4 {
+    padding: 1rem;
+}
+.admin-modules-page .p-5,
+.admin-page .p-5 {
+    padding: 1.25rem;
+}
+.admin-modules-page .p-6,
+.admin-page .p-6 {
+    padding: 1.5rem;
+}
+.admin-modules-page .space-y-1 > * + *,
+.admin-page .space-y-1 > * + * {
+    margin-top: 0.25rem;
+}
+.admin-modules-page .space-y-2 > * + *,
+.admin-page .space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+.admin-modules-page .space-y-4 > * + *,
+.admin-page .space-y-4 > * + * {
+    margin-top: 1rem;
+}
+.admin-modules-page .space-y-6 > * + *,
+.admin-page .space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+.admin-modules-page .rounded-lg,
+.admin-page .rounded-lg {
+    border-radius: 0.5rem;
+}
+.admin-modules-page .rounded-xl,
+.admin-page .rounded-xl {
+    border-radius: 0.75rem;
+}
+.admin-modules-page .border,
+.admin-page .border {
+    border-width: 1px;
+    border-style: solid;
+}
+.admin-modules-page .grid,
+.admin-page .grid {
+    display: grid;
+}
+.admin-modules-page .font-semibold,
+.admin-page .font-semibold {
+    font-weight: 600;
+}
+.admin-modules-page .font-medium,
+.admin-page .font-medium {
+    font-weight: 500;
+}
+.admin-modules-page .font-mono,
+.admin-page .font-mono {
+    font-family: ui-monospace, monospace;
+}
+.admin-modules-page .text-sm,
+.admin-page .text-sm {
+    font-size: 0.875rem;
+}
+.admin-modules-page .text-xs,
+.admin-page .text-xs {
+    font-size: 0.75rem;
+}
+.admin-modules-page .leading-relaxed,
+.admin-page .leading-relaxed {
+    line-height: 1.625;
+}
+.admin-modules-page .whitespace-pre-line,
+.admin-page .whitespace-pre-line {
+    white-space: pre-line;
+}
+
+/* ——— Unified admin uplift helpers ——— */
+.admin-kpi-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    margin-bottom: 1rem;
+}
+@media (min-width: 768px) {
+    .admin-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.admin-kpi-card {
+    border: 1px solid var(--am-border);
+    border-radius: 0.8rem;
+    background: #fff;
+    padding: 0.85rem 0.95rem;
+}
+.admin-kpi-card__label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0 0 0.3rem;
+}
+.admin-kpi-card__value {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.admin-form-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+    .admin-form-grid--2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .admin-form-grid--3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.admin-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.admin-soft-panel {
+    border: 1px solid var(--am-border);
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    padding: 0.85rem 0.95rem;
+}
+
+.admin-segmented {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--am-border);
+    background: #fff;
+}
+.admin-segmented .btn {
+    border-radius: 0.5rem;
+}
+
+.admin-review-snippet {
+    max-width: 32rem;
+    color: #334155;
+    line-height: 1.75;
+}

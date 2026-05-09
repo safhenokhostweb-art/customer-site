@@ -3,16 +3,32 @@
 @section('header', 'ویرایش منو')
 @section('content')
 <div class="admin-page">
-    @if(session('new_preview_token'))
-        <div class="card mb-4 border-blue-200 bg-blue-50 text-sm">توکن جدید: <code>{{ session('new_preview_token') }}</code></div>
-    @endif
-    <p class="admin-section-lead">«{{ $menu->name }}» — {{ \App\Models\Menu::locations()[$menu->location] ?? $menu->location }} — وضعیت:
-        <strong>{{ $menu->status === 'published' ? 'منتشر شده' : 'پیش‌نویس' }}</strong>
-        @if($menu->go_live_at) — زمان انتشار: {{ $menu->go_live_at->format('Y-m-d H:i') }} @endif
-    </p>
+    <div class="admin-page-head">
+        <div>
+            <h1 class="admin-page-title">ویرایش منو: {{ $menu->name }}</h1>
+            <p class="admin-section-lead" style="margin-top:0.35rem">
+                {{ \App\Models\Menu::locations()[$menu->location] ?? $menu->location }} —
+                @if($menu->status === 'published')
+                    <span class="badge badge-published">منتشر شده</span>
+                @else
+                    <span class="badge badge-draft">پیش‌نویس</span>
+                @endif
+                @if($menu->go_live_at)
+                    <span class="text-xs text-slate-500" style="margin-right:0.35rem">زمان انتشار: {{ $menu->go_live_at->format('Y-m-d H:i') }}</span>
+                @endif
+            </p>
+        </div>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.menus.index') }}" class="btn btn-outline-secondary btn-sm">بازگشت به فهرست منوها</a>
+        </div>
+    </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        <div class="xl:col-span-2 space-y-6">
+    @if(session('new_preview_token'))
+        <div class="alert alert-success" role="status">توکن پیش‌نمایش جدید: <code>{{ session('new_preview_token') }}</code></div>
+    @endif
+
+    <div class="admin-menu-edit-layout">
+        <div class="space-y-6">
             <div class="card">
                 <div class="card-header flex flex-wrap justify-between gap-2 items-center">
                     <span>آیتم‌ها (کشیدن و رها کردن)</span>
@@ -23,6 +39,7 @@
                         @csrf
                         <input type="hidden" name="nodes" id="menu-nodes-json" value="">
                         <button type="submit" class="btn btn-secondary btn-sm">ذخیرهٔ ترتیب درخت</button>
+                        <span class="admin-field-hint">پس از جابجایی آیتم‌ها، ذخیره را بزنید تا ترتیب جدید ثبت شود.</span>
                     </form>
                     <ol id="menu-sortable-root" class="menu-nested-children list-none p-0 m-0">
                         @include('admin.menus.partials.item-sortable', [
@@ -50,19 +67,20 @@
                         @csrf
                         @method('PUT')
                         <div class="form-group">
-                            <label class="form-label">نام منو</label>
-                            <input type="text" name="name" value="{{ old('name', $menu->name) }}" required>
+                            <label class="form-label" for="menu-name">نام منو</label>
+                            <input id="menu-name" type="text" name="name" value="{{ old('name', $menu->name) }}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">وضعیت</label>
-                            <select name="status">
+                            <label class="form-label" for="menu-status">وضعیت</label>
+                            <select id="menu-status" name="status">
                                 <option value="draft" @selected(old('status', $menu->status) === 'draft')>پیش‌نویس</option>
                                 <option value="published" @selected(old('status', $menu->status) === 'published')>منتشر شده</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">زمان انتشار (اختیاری — آینده برای زمان‌بندی)</label>
-                            <input type="datetime-local" name="go_live_at" value="{{ old('go_live_at', optional($menu->go_live_at)->format('Y-m-d\TH:i')) }}">
+                            <label class="form-label" for="menu-go-live">زمان انتشار (اختیاری — آینده برای زمان‌بندی)</label>
+                            <input id="menu-go-live" type="datetime-local" name="go_live_at" value="{{ old('go_live_at', optional($menu->go_live_at)->format('Y-m-d\TH:i')) }}">
+                            <span class="admin-field-hint">اگر تاریخ آینده باشد، منو به‌صورت خودکار در همان زمان منتشر می‌شود.</span>
                         </div>
                         <button type="submit" class="btn btn-secondary">ذخیرهٔ وضعیت</button>
                     </form>
@@ -70,8 +88,8 @@
                         @csrf
                         <p class="text-sm text-slate-600">با انتشار، نسخهٔ پشتیبان از درخت فعلی ذخیره می‌شود.</p>
                         <div class="form-group">
-                            <label class="form-label">یادداشت نسخه (اختیاری)</label>
-                            <input type="text" name="revision_note" value="{{ old('revision_note') }}">
+                            <label class="form-label" for="menu-revision-note">یادداشت نسخه (اختیاری)</label>
+                            <input id="menu-revision-note" type="text" name="revision_note" value="{{ old('revision_note') }}">
                         </div>
                         <button type="submit" class="btn btn-primary">انتشار و ذخیرهٔ نسخه</button>
                     </form>
@@ -108,17 +126,17 @@
                 <form action="{{ route('admin.menus.items.store', $menu) }}" method="post" class="admin-form-stack">
                     @csrf
                     <div class="form-group">
-                        <label class="form-label">والد</label>
-                        <select name="parent_id">
+                        <label class="form-label" for="new-parent-id">والد</label>
+                        <select id="new-parent-id" name="parent_id">
                             <option value="">— بدون والد —</option>
                             @foreach($allItems as $i)
                                 <option value="{{ $i->id }}">{{ str_repeat('— ', $depthMap[$i->id] ?? 0) }}{{ $i->title }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group"><label class="form-label">عنوان</label><input type="text" name="title" required></div>
-                    <div class="form-group"><label class="form-label">عنوان انگلیسی</label><input type="text" name="title_en"></div>
-                    <div class="form-group"><label class="form-label">برچسب‌های JSON</label><textarea name="labels_json" rows="2" placeholder='{"en":"..."}'></textarea></div>
+                    <div class="form-group"><label class="form-label" for="new-item-title">عنوان</label><input id="new-item-title" type="text" name="title" required></div>
+                    <div class="form-group"><label class="form-label" for="new-item-title-en">عنوان انگلیسی</label><input id="new-item-title-en" type="text" name="title_en"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-labels">برچسب‌های JSON</label><textarea id="new-item-labels" name="labels_json" rows="2" placeholder='{"en":"..."}'></textarea></div>
                     <div class="form-group">
                         <label class="form-label">نوع</label>
                         <select name="type" id="new-item-type">
@@ -167,15 +185,15 @@
                         <label class="form-label">URL</label>
                         <input type="text" name="url" placeholder="https://... یا /path">
                     </div>
-                    <div class="form-group"><label class="form-label">UTM کوئری</label><input type="text" name="utm_query" placeholder="utm_source=..."></div>
-                    <div class="form-group"><label class="form-label">UTM JSON</label><textarea name="utm_json" rows="2"></textarea></div>
-                    <div class="form-group"><label class="form-label">آیکون</label><input type="text" name="icon"></div>
-                    <div class="form-group"><label class="form-label">Badge</label><input type="text" name="badge_label"></div>
-                    <div class="form-group"><label class="form-label">تصویر مگا</label><input type="text" name="image_url"></div>
-                    <div class="form-group"><label class="form-label">ستون مگا</label><input type="number" name="mega_column" min="0" max="99"></div>
-                    <div class="form-group"><label class="form-label">HTML ویژه</label><textarea name="featured_html" rows="2"></textarea></div>
-                    <div class="form-group"><label class="form-label">کلاس CSS</label><input type="text" name="css_class"></div>
-                    <div class="form-group"><label class="form-label">ماژول‌های لازم JSON</label><textarea name="visible_modules_json" rows="1" placeholder='["shop"]'></textarea></div>
+                    <div class="form-group"><label class="form-label" for="new-item-utm-query">UTM کوئری</label><input id="new-item-utm-query" type="text" name="utm_query" placeholder="utm_source=..."></div>
+                    <div class="form-group"><label class="form-label" for="new-item-utm-json">UTM JSON</label><textarea id="new-item-utm-json" name="utm_json" rows="2"></textarea></div>
+                    <div class="form-group"><label class="form-label" for="new-item-icon">آیکون</label><input id="new-item-icon" type="text" name="icon"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-badge">Badge</label><input id="new-item-badge" type="text" name="badge_label"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-image-url">تصویر مگا</label><input id="new-item-image-url" type="text" name="image_url"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-mega-column">ستون مگا</label><input id="new-item-mega-column" type="number" name="mega_column" min="0" max="99"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-featured-html">HTML ویژه</label><textarea id="new-item-featured-html" name="featured_html" rows="2"></textarea></div>
+                    <div class="form-group"><label class="form-label" for="new-item-css-class">کلاس CSS</label><input id="new-item-css-class" type="text" name="css_class"></div>
+                    <div class="form-group"><label class="form-label" for="new-item-visible-modules">ماژول‌های لازم JSON</label><textarea id="new-item-visible-modules" name="visible_modules_json" rows="1" placeholder='["shop"]'></textarea></div>
                     <label class="admin-form-inline-check"><input type="checkbox" name="open_in_new_tab" value="1"> تب جدید</label>
                     <label class="admin-form-inline-check"><input type="checkbox" name="rel_nofollow" value="1"> nofollow</label>
                     <label class="admin-form-inline-check"><input type="checkbox" name="auto_list_children" value="1"> زیردسته خودکار فروشگاه</label>

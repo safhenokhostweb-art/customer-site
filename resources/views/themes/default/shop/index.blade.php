@@ -9,6 +9,15 @@
 @endsection
 
 @section('content')
+@push('head')
+<style>
+.module-shop-page .module-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem; }
+.module-shop-page .module-filter-card { border:1px solid #e5e7eb; border-radius:.75rem; padding:.85rem; margin-bottom:1rem; background:#fff; }
+.module-shop-page a:focus-visible, .module-shop-page button:focus-visible, .module-shop-page input:focus-visible, .module-shop-page select:focus-visible { outline:2px solid #4f46e5; outline-offset:2px; }
+@media (max-width: 768px){ .module-shop-page .module-filter-grid { grid-template-columns: 1fr !important; } }
+</style>
+@endpush
+<div class="module-shop-page">
 <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">فروشگاه</h1>
 <p style="margin-bottom: 1rem;">
     <a href="{{ route('shop.wishlist') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none; margin-left: 1rem;">علاقه‌مندی‌ها</a>
@@ -34,14 +43,14 @@
 </div>
 @endif
 
-<form method="get" action="{{ route('shop.index') }}" style="margin-bottom: 1.5rem;">
+<form method="get" action="{{ route('shop.index') }}" class="module-filter-card" aria-label="فیلتر محصولات">
     <input type="hidden" name="category" value="{{ request('category') }}">
     <input type="hidden" name="tag" value="{{ request('tag') }}">
     @foreach(request('attr', []) as $ak => $av)
         <input type="hidden" name="attr[{{ $ak }}]" value="{{ $av }}">
     @endforeach
-    <div style="display: grid; gap: 0.5rem; grid-template-columns: 2fr 1fr 1fr 1fr auto;">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در محصولات..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+    <div class="module-filter-grid" style="display: grid; gap: 0.5rem; grid-template-columns: 2fr 1fr 1fr 1fr auto;">
+        <input id="shop-filter-q" type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در محصولات..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;" aria-label="جستجو در محصولات">
         <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="حداقل قیمت" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
         <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="حداکثر قیمت" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
         <select name="sort" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
@@ -146,5 +155,6 @@
 
 <div style="margin-top: 1.5rem;">
     <a href="{{ route('shop.cart') }}" style="display: inline-block; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; color: white; text-decoration: none; background: var(--platform-button-primary-bg, #4f46e5);">مشاهده سبد خرید</a>
+</div>
 </div>
 @endsection

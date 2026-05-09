@@ -143,8 +143,8 @@
 
                 @if($product->warranty_text || $product->guarantee_text)
                     <div style="margin-top:1rem;font-size:0.85rem;color:#4b5563;">
-                        @if($product->warranty_text)<p><strong>گارانتی:</strong> {{ $product->warranty_text }}</p>@endif
-                        @if($product->guarantee_text)<p><strong>تضمین:</strong> {{ $product->guarantee_text }}</p>@endif
+                        @if($product->warranty_text)<p class="product-html-block"><strong>گارانتی:</strong> <span>{!! $product->warranty_text !!}</span></p>@endif
+                        @if($product->guarantee_text)<p class="product-html-block"><strong>تضمین:</strong> <span>{!! $product->guarantee_text !!}</span></p>@endif
                     </div>
                 @endif
 
@@ -164,7 +164,7 @@
         </div>
         <div id="tab-desc" class="product-tab-panel p-4" style="display:block;">
             @if($product->description)
-                <div style="line-height: 1.8; color: #4b5563;">{!! nl2br(e($product->description)) !!}</div>
+                <div class="product-description-html" style="line-height: 1.8; color: #4b5563;">{!! $product->description !!}</div>
             @else
                 <p class="text-gray-500">توضیحی ثبت نشده.</p>
             @endif
@@ -190,15 +190,15 @@
             @endif
         </div>
         <div id="tab-ship" class="product-tab-panel p-4" style="display:none;">
-            @if($product->shipping_text)<div class="mb-3"><strong>ارسال</strong><div class="mt-1 text-gray-700">{!! nl2br(e($product->shipping_text)) !!}</div></div>@endif
-            @if($product->returns_text)<div><strong>بازگشت</strong><div class="mt-1 text-gray-700">{!! nl2br(e($product->returns_text)) !!}</div></div>@endif
+            @if($product->shipping_text)<div class="mb-3"><strong>ارسال</strong><div class="mt-1 text-gray-700 product-html-block">{!! $product->shipping_text !!}</div></div>@endif
+            @if($product->returns_text)<div><strong>بازگشت</strong><div class="mt-1 text-gray-700 product-html-block">{!! $product->returns_text !!}</div></div>@endif
             @if(!$product->shipping_text && !$product->returns_text)<p class="text-gray-500">اطلاعاتی ثبت نشده.</p>@endif
         </div>
         <div id="tab-faq" class="product-tab-panel p-4" style="display:none;">
             @if(is_array($product->faq) && count($product->faq) > 0)
                 @foreach($product->faq as $fq)
                     @if(is_array($fq) && isset($fq['q']))
-                        <div class="mb-3 pb-3 border-b border-gray-100"><strong>{{ $fq['q'] }}</strong><p class="mt-1 text-gray-700">{{ $fq['a'] ?? '' }}</p></div>
+                        <div class="mb-3 pb-3 border-b border-gray-100"><strong>{{ $fq['q'] }}</strong><div class="mt-1 text-gray-700 product-html-block">{!! $fq['a'] ?? '' !!}</div></div>
                     @endif
                 @endforeach
             @else

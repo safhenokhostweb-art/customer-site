@@ -5,6 +5,7 @@
 <div class="admin-page">
     <p class="admin-section-lead">«{{ $menu->name }}» — این صفحه ساختار فعلی آیتم‌ها را بدون اعمال وضعیت انتشار نشان می‌دهد.</p>
     <div class="card">
+        <div class="card-header">درخت پیش‌نمایش منو</div>
         <div class="card-body">
             <ul class="list-disc pr-5 space-y-1 text-sm">
                 @include('admin.menus.partials.preview-tree', ['items' => $tree])

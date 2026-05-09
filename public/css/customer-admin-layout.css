@@ -904,11 +904,18 @@ button:focus-visible {
     flex-wrap: wrap;
 }
 
-.admin-page-title {
+/* عنوان داخل محتوای صفحه — بدون تداخل با .admin-page-title هدر */
+.admin-page .admin-page-head .admin-page-title {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #0f172a;
+}
+
+@media (min-width: 768px) {
+    .admin-page .admin-page-head .admin-page-title {
+        font-size: 1.35rem;
+    }
 }
 
 .admin-page-tools {

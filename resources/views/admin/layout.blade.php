@@ -7,6 +7,7 @@
     <title>@yield('title', 'پنل مدیریت') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
     {{-- قالب و منو: فقط فایل محلی؛ ابزارهای صفحات داخلی از build محلی Vite (بدون CDN) --}}
     <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-modules.css') }}?v={{ @filemtime(public_path('css/admin-modules.css')) ?: time() }}">
     @vite(['resources/css/app.css'])
     @include('partials.platform-styles')
     @stack('head')

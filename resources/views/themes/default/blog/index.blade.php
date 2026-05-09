@@ -11,11 +11,19 @@
 @endsection
 
 @section('content')
+@push('head')
+<style>
+.module-blog-page .module-filter-card { border:1px solid #e5e7eb; border-radius:.75rem; padding:.85rem; margin-bottom:1rem; background:#fff; }
+.module-blog-page a:focus-visible, .module-blog-page button:focus-visible, .module-blog-page input:focus-visible { outline:2px solid #4f46e5; outline-offset:2px; }
+@media (max-width: 768px){ .module-blog-page .module-search-row { flex-direction:column; } }
+</style>
+@endpush
+<div class="module-blog-page">
 <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">{{ isset($category) ? $category->name : 'وبلاگ' }}</h1>
 
-<form method="get" action="{{ isset($category) ? route('blog.category', $category->slug) : route('blog.index') }}" style="margin-bottom: 1.5rem;">
-    <div style="display: flex; gap: 0.5rem;">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در مطالب..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+<form method="get" action="{{ isset($category) ? route('blog.category', $category->slug) : route('blog.index') }}" class="module-filter-card" aria-label="جستجو در وبلاگ">
+    <div class="module-search-row" style="display: flex; gap: 0.5rem;">
+        <input id="blog-filter-q" type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در مطالب..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
         <button type="submit" style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; background: var(--platform-primary, #4f46e5); color: white; border: none; cursor: pointer;">جستجو</button>
     </div>
 </form>
@@ -101,4 +109,5 @@
 </div>
 
 {{ $posts->links() }}
+</div>
 @endsection
