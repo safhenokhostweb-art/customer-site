@@ -38,7 +38,7 @@
     <div class="card admin-table-wrap">
         <div class="table-responsive">
             <table>
-                <thead><tr><th>عنوان</th><th>دسته</th><th>وضعیت</th><th>زمان انتشار / زمان‌بندی</th><th>ثبت</th><th>آخرین ویرایش</th><th>آمار</th><th>کیفیت محتوا</th><th>عملیات</th></tr></thead>
+                <thead><tr><th>عنوان</th><th>دسته</th><th>وضعیت</th><th>زمان انتشار / زمان‌بندی (شمسی)</th><th>ثبت (شمسی)</th><th>آخرین ویرایش (شمسی)</th><th>آمار</th><th>کیفیت محتوا</th><th>عملیات</th></tr></thead>
                 <tbody>
                     @forelse($posts as $p)
                         @php

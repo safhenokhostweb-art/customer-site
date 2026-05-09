@@ -32,7 +32,7 @@
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr><th>عنوان</th><th>قیمت</th><th>موجودی</th><th>وضعیت</th><th>تاریخ‌ها</th><th>عملیات</th></tr>
+                    <tr><th>عنوان</th><th>قیمت</th><th>موجودی</th><th>وضعیت</th><th>تاریخ‌ها (شمسی)</th><th>عملیات</th></tr>
                 </thead>
                 <tbody>
                     @forelse($products as $p)
