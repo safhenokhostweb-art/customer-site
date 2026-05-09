@@ -247,7 +247,9 @@ class ProductController extends Controller
             'video_url' => 'nullable|string|max:500',
             'shipping_text' => 'nullable|string',
             'returns_text' => 'nullable|string',
-            'faq_json' => 'nullable|string',
+            'faq_items' => 'nullable|array',
+            'faq_items.*.q' => 'nullable|string|max:2000',
+            'faq_items.*.a' => 'nullable|string',
             'size_chart_url' => 'nullable|string|max:500',
             'size_chart_html' => 'nullable|string',
             'is_new' => 'nullable|boolean',
@@ -280,11 +282,25 @@ class ProductController extends Controller
         $data['is_bundle'] = $request->boolean('is_bundle');
         $data['min_order_qty'] = max(1, (int) ($data['min_order_qty'] ?? 1));
         $data['faq'] = null;
-        if (! empty($data['faq_json'])) {
-            $decoded = json_decode($data['faq_json'], true);
-            $data['faq'] = is_array($decoded) ? $decoded : null;
+        $faqItems = (array) ($request->input('faq_items', []));
+        $faq = [];
+        foreach ($faqItems as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $q = trim((string) ($row['q'] ?? ''));
+            $a = trim((string) ($row['a'] ?? ''));
+            if ($q === '' && $a === '') {
+                continue;
+            }
+            $faq[] = ['q' => $q, 'a' => $a];
         }
-        unset($data['faq_json']);
+        if (count($faq) > 0) {
+            $data['faq'] = $faq;
+        }
+        unset($data['faq_items']);
+
+        $data['sale_ends_at'] = ! empty($data['sale_ends_at']) ? $data['sale_ends_at'] : null;
 
         return $data;
     }

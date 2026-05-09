@@ -5,6 +5,9 @@
 <div class="admin-page">
     <div class="admin-page-head">
         <h1 class="admin-page-title">ویرایش محصول</h1>
+        <div class="admin-page-tools">
+            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">بازگشت به فهرست</a>
+        </div>
     </div>
     <div class="card">
         <div class="card-body">
@@ -12,12 +15,13 @@
                 @csrf
                 @method('PUT')
                 @include('admin.products.form', ['isEdit' => true])
-                <div class="admin-page-tools">
+                <div class="admin-form-actions admin-form-actions--sticky">
                     <button type="submit" class="btn btn-primary">ذخیره</button>
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">انصراف</a>
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">انصراف</a>
                 </div>
             </form>
         </div>
     </div>
+@include('admin.products._editor_scripts')
 </div>
 @endsection
