@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Installation;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -55,41 +58,57 @@ class InstallController extends Controller
         $envPath = base_path('.env');
         $env = file_exists($envPath) ? file_get_contents($envPath) : file_get_contents(base_path('.env.example'));
 
-        $env = preg_replace('/DB_HOST=.*/', 'DB_HOST=' . $request->db_host, $env);
-        $env = preg_replace('/DB_DATABASE=.*/', 'DB_DATABASE=' . $request->db_name, $env);
-        $env = preg_replace('/DB_USERNAME=.*/', 'DB_USERNAME=' . $request->db_user, $env);
-        $env = preg_replace('/DB_PASSWORD=.*/', 'DB_PASSWORD=' . ($request->db_password ?? ''), $env);
+        $env = $this->patchEnvForMysql(
+            $env,
+            $request->db_host,
+            $request->db_name,
+            $request->db_user,
+            $request->db_password ?? ''
+        );
+        $env = $this->patchEnvValue($env, 'APP_URL', rtrim($request->root(), '/'));
 
         if (! file_put_contents($envPath, $env)) {
             return back()->withErrors(['db' => 'امکان نوشتن فایل .env نیست.']);
         }
 
+        Config::set('database.default', 'mysql');
         config()->set('database.connections.mysql.host', $request->db_host);
         config()->set('database.connections.mysql.database', $request->db_name);
         config()->set('database.connections.mysql.username', $request->db_user);
         config()->set('database.connections.mysql.password', $request->db_password ?? '');
-        DB::purge('mysql');
+        DB::purge();
 
         try {
-            DB::connection()->getPdo();
+            DB::connection('mysql')->getPdo();
         } catch (\Throwable $e) {
             return back()->withErrors(['db' => 'اتصال به دیتابیس برقرار نشد: ' . $e->getMessage()]);
         }
 
         try {
-            // Use graceful migrate so installer does not hard-crash on existing schemas.
-            Artisan::call('migrate', ['--force' => true, '--graceful' => true]);
-            $migrateExitCode = Artisan::output();
-        } catch (\Throwable $e) {
-            return back()->withErrors([
-                'db' => 'اجرای مایگریشن انجام نشد. لطفا از خالی بودن دیتابیس مطمئن شوید یا یک دیتابیس جدید بسازید. جزئیات: ' . $e->getMessage(),
+            $exitCode = Artisan::call('migrate', [
+                '--database' => 'mysql',
+                '--force' => true,
             ]);
+        } catch (QueryException $e) {
+            return back()
+                ->withErrors(['db' => $this->migrationFailureMessage($e)])
+                ->withInput();
+        } catch (\Throwable $e) {
+            return back()
+                ->withErrors([
+                    'db' => 'اجرای مایگریشن ناموفق بود. ' . $e->getMessage(),
+                ])
+                ->withInput();
         }
 
-        if (str_contains(strtolower($migrateExitCode), 'already exists')) {
-            return back()->withErrors([
-                'db' => 'این دیتابیس از قبل جدول دارد و برای نصب اولیه مناسب نیست. لطفا یک دیتابیس خالی معرفی کنید.',
-            ]);
+        $output = trim(Artisan::output());
+        if ($exitCode !== 0) {
+            return back()
+                ->withErrors([
+                    'db' => 'مایگریشن کامل نشد (کد خروج: ' . $exitCode . '). '
+                        . ($output !== '' ? $output : 'لاگ برنامه را برای جزئیات بیشتر بررسی کنید.'),
+                ])
+                ->withInput();
         }
 
         return redirect()->route('install.admin');
@@ -167,13 +186,91 @@ class InstallController extends Controller
         Setting::set('site_name', $request->site_name);
         Setting::set('theme', $request->theme ?? 'default');
 
-        file_put_contents(storage_path('installed.lock'), (string) now());
+        $envPath = base_path('.env');
+        if (file_exists($envPath) && is_writable($envPath)) {
+            $env = file_get_contents($envPath);
+            $env = $this->patchEnvValue($env, 'APP_URL', rtrim($request->root(), '/'));
+            file_put_contents($envPath, $env);
+        }
+
+        if (! Installation::writeLockFile()) {
+            return back()->withErrors([
+                'site_name' => 'فایل installed.lock در storage نوشته نشد. دسترسی نوشتن پوشهٔ storage را بررسی کنید.',
+            ])->withInput();
+        }
 
         return redirect()->route('install.done');
     }
 
     public function done()
     {
+        if (! Installation::isLockPresent()) {
+            return redirect()
+                ->route('install.settings')
+                ->with('install_notice', 'ابتدا در مرحلهٔ «تنظیمات سایت» دکمهٔ «اتمام نصب» را بزنید تا نصب ذخیره شود.');
+        }
+
         return view('install.done');
+    }
+
+    /**
+     * پیام خطای مایگریشن: تفکیک تداخل جدول با خطاهای دیگر (بدون فرض اشتباه «دیتابیس خالی»).
+     */
+    private function migrationFailureMessage(QueryException $e): string
+    {
+        $technical = $e->getMessage();
+        $lower = strtolower($technical);
+        $mysqlDuplicateCode = ($e->errorInfo[1] ?? null) === 1050;
+        $isDuplicate = $mysqlDuplicateCode
+            || str_contains($lower, 'already exists')
+            || str_contains($lower, 'base table or view already exists');
+
+        if ($isDuplicate) {
+            return 'مایگریشن نتوانست جداول را بسازد چون برخی جداول از قبل در این دیتابیس وجود دارند '
+                . '(مثلاً نصب قبلی ناقص، یا حذف جدول migrations در حالی که بقیهٔ جداول مانده‌اند). '
+                . 'برای نصب کاملاً تازه از یک دیتابیس خالی استفاده کنید. '
+                . 'اگر در حال نصب مجدد همان سایت هستید و دیتابیس سالم است، معمولاً بدون این خطا پیش می‌رود؛ '
+                . 'در صورت تردید از پشتیبان یا دیتابیس تمیز کمک بگیرید. '
+                . 'جزئیات فنی: ' . $technical;
+        }
+
+        return 'خطای دیتابیس هنگام اجرای مایگریشن: ' . $technical;
+    }
+
+    private function patchEnvForMysql(string $env, string $host, string $database, string $user, string $password): string
+    {
+        $pairs = [
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => $host,
+            'DB_PORT' => '3306',
+            'DB_DATABASE' => $database,
+            'DB_USERNAME' => $user,
+            'DB_PASSWORD' => $password,
+        ];
+        foreach ($pairs as $key => $value) {
+            $pattern = '/^#?\s*' . preg_quote($key, '/') . '=.*/m';
+            $line = $key . '=' . $value;
+            if (preg_match($pattern, $env)) {
+                $env = preg_replace($pattern, $line, $env, 1);
+            } else {
+                $env = rtrim($env) . "\n" . $line;
+            }
+        }
+
+        return $env;
+    }
+
+    /**
+     * یک کلید ساده در متن .env را set/replace می‌کند (مثل APP_URL).
+     */
+    private function patchEnvValue(string $env, string $key, string $value): string
+    {
+        $pattern = '/^#?\s*' . preg_quote($key, '/') . '=.*/m';
+        $line = $key . '=' . $value;
+        if (preg_match($pattern, $env)) {
+            return (string) preg_replace($pattern, $line, $env, 1);
+        }
+
+        return rtrim($env) . "\n" . $line;
     }
 }

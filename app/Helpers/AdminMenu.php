@@ -14,8 +14,11 @@ class AdminMenu
         'dashboard' => 'داشبورد',
         'pages' => 'صفحات',
         'categories' => 'دسته‌بندی‌های وبلاگ',
+        'post_series' => 'مجموعه‌های مطالب',
         'posts' => 'مطالب وبلاگ',
         'products' => 'محصولات',
+        'product_attributes' => 'ویژگی‌های فنی محصول',
+        'shop_product_reviews' => 'نظرات خریداران (فروشگاه)',
         'product_categories' => 'دسته‌بندی محصولات',
         'orders' => 'سفارشات',
         'coupon' => 'کوپن‌ها',
@@ -89,8 +92,11 @@ class AdminMenu
         'dashboard' => 'admin.dashboard',
         'pages' => 'admin.pages.index',
         'categories' => 'admin.categories.index',
+        'post_series' => 'admin.post-series.index',
         'posts' => 'admin.posts.index',
         'products' => 'admin.products.index',
+        'product_attributes' => 'admin.product-attributes.index',
+        'shop_product_reviews' => 'admin.shop-product-reviews.index',
         'product_categories' => 'admin.product-categories.index',
         'orders' => 'admin.orders.index',
         'coupon' => 'admin.coupons.index',
@@ -180,8 +186,11 @@ class AdminMenu
         'dashboard' => 'admin.dashboard',
         'pages' => 'admin.pages.*',
         'categories' => 'admin.categories.*',
+        'post_series' => 'admin.post-series.*',
         'posts' => 'admin.posts.*',
         'products' => 'admin.products.*',
+        'product_attributes' => 'admin.product-attributes.*',
+        'shop_product_reviews' => 'admin.shop-product-reviews.*',
         'product_categories' => 'admin.product-categories.*',
         'orders' => 'admin.orders.*',
         'coupon' => 'admin.coupons.*',
@@ -270,8 +279,8 @@ class AdminMenu
     {
         return [
             'اصلی' => ['dashboard'],
-            'محتوا' => ['pages', 'categories', 'posts', 'advanced_search', 'menu'],
-            'فروشگاه' => ['product_categories', 'products', 'orders', 'coupon'],
+            'محتوا' => ['pages', 'categories', 'post_series', 'posts', 'advanced_search', 'menu'],
+            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon'],
             'تعامل و اعلان' => ['reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و دوره' => ['subscription', 'courses'],
             'مالی و تماس' => ['invoice', 'business_card', 'social_links', 'advertisements'],
@@ -346,7 +355,7 @@ class AdminMenu
         if ($key === 'module_store') {
             return rtrim((string) config('site.platform_url', ''), '/') !== '';
         }
-        if ($key === 'categories' || $key === 'posts') {
+        if ($key === 'categories' || $key === 'posts' || $key === 'post_series') {
             return SiteHelper::blogEnabled();
         }
         if ($key === 'currency_reform') {
@@ -361,7 +370,7 @@ class AdminMenu
         if ($key === 'forms' || $key === 'forms_submissions') {
             return SiteHelper::moduleEnabled('forms');
         }
-        if ($key === 'products' || $key === 'product_categories' || $key === 'orders') {
+        if ($key === 'products' || $key === 'product_categories' || $key === 'product_attributes' || $key === 'shop_product_reviews' || $key === 'orders') {
             return SiteHelper::shopEnabled();
         }
         if ($key === 'advanced_search') {

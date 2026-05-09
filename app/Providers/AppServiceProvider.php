@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Page;
+use App\Models\Product;
+use App\Observers\ProductObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Product::observe(ProductObserver::class);
+
         View::composer('themes.default.layout', function ($view) {
             $data = $view->getData();
             if (!isset($data['pages']) && \Illuminate\Support\Facades\Schema::hasTable('pages')) {

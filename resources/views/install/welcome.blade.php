@@ -5,7 +5,7 @@
 
 @if($checks['passed'])
     <p class="mb-2">همهٔ پیش‌نیازها برقرار است. برای ادامه روی دکمه زیر کلیک کنید.</p>
-    <form method="get" action="{{ route('install.database') }}">
+    <form method="get" action="{{ route('install.database', [], false) }}">
         <button type="submit">مرحله بعد: دیتابیس</button>
     </form>
 @else

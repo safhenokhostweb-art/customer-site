@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -28,8 +29,25 @@ class ImageUploadController extends Controller
             'context' => 'nullable|string|in:avatar,thumbnail,featured,product,course,icon,messaging,advertisement',
         ]);
         $file = $request->file('file');
-        $context = $request->input('context', 'thumbnail');
-        $path = $this->processAndStore($file, $context);
+        if (!$file || !$file->isValid()) {
+            return response()->json(['message' => 'فایل تصویر معتبر ارسال نشده است.'], 422);
+        }
+        $context = (string) $request->input('context', 'thumbnail');
+        $root = (string) config('filesystems.disks.uploads.root', '');
+        if ($root === '') {
+            return response()->json(['message' => 'مسیر دیسک uploads در config/filesystems.php تنظیم نشده است.'], 500);
+        }
+        File::ensureDirectoryExists($root);
+
+        try {
+            $path = $this->processAndStore($file, $context);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => config('app.debug') ? $e->getMessage() : 'خطا در ذخیرهٔ تصویر.',
+            ], 500);
+        }
         $url = str_starts_with($path, 'http') ? $path : asset('uploads/' . ltrim($path, '/'));
         return response()->json([
             'url' => $url,
@@ -41,13 +59,29 @@ class ImageUploadController extends Controller
     {
         $usePublicUploads = true;
         $dir = $context . '/' . date('Y/m');
-        $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+        $ext = strtolower((string) $file->getClientOriginalExtension());
+        if ($ext === '') {
+            $ext = match ($file->getMimeType()) {
+                'image/jpeg', 'image/jpg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+                default => 'jpg',
+            };
+        }
+        $filename = Str::random(20) . '.' . $ext;
 
         if ($usePublicUploads) {
             $disk = Storage::disk('uploads');
             $disk->makeDirectory($dir);
             $fullPath = $dir . '/' . $filename;
             $tempPath = $file->getRealPath();
+            if (! is_string($tempPath) || $tempPath === '') {
+                $tempPath = $file->getPathname();
+            }
+            if ($tempPath === '' || ! is_readable($tempPath)) {
+                throw new \RuntimeException('امکان خواندن فایل موقت آپلود وجود ندارد (مسیر نامعتبر).');
+            }
             $sizes = self::SIZES[$context] ?? self::SIZES['thumbnail'];
             $resized = $this->resizeImage($tempPath, $sizes[0], $sizes[1]);
             if ($resized) {
@@ -68,6 +102,12 @@ class ImageUploadController extends Controller
         $dir = 'uploads/' . $context . '/' . date('Y/m');
         $fullPath = $dir . '/' . $filename;
         $tempPath = $file->getRealPath();
+        if (! is_string($tempPath) || $tempPath === '') {
+            $tempPath = $file->getPathname();
+        }
+        if ($tempPath === '' || ! is_readable($tempPath)) {
+            throw new \RuntimeException('امکان خواندن فایل موقت آپلود وجود ندارد (مسیر نامعتبر).');
+        }
         $resized = $this->resizeImage($tempPath, $width, $height);
         if ($resized) {
             Storage::disk('public')->put($fullPath, $resized);

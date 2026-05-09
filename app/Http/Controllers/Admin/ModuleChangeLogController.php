@@ -12,17 +12,24 @@ class ModuleChangeLogController extends Controller
 {
     public function index(Request $request, UpdateCheckService $updateCheck)
     {
+        $moduleSlug = trim((string) $request->query('module', ''));
+
         if ($request->boolean('sync')) {
             $updateCheck->syncModuleChangeLogs();
         }
 
-        $logs = ModuleChangeLog::query()
+        $logsQuery = ModuleChangeLog::query();
+        if ($moduleSlug !== '') {
+            $logsQuery->where('module_slug', $moduleSlug);
+        }
+
+        $logs = $logsQuery
             ->orderByDesc('released_at')
             ->orderByDesc('id')
             ->paginate(50);
 
         $installedVersions = ModuleVersion::allVersions();
 
-        return view('admin.modules.changelog', compact('logs', 'installedVersions'));
+        return view('admin.modules.changelog', compact('logs', 'installedVersions', 'moduleSlug'));
     }
 }

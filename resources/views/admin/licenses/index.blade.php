@@ -72,6 +72,7 @@
                         @csrf
                         <button type="submit" class="btn btn-secondary">بروزرسانی ماژول‌ها</button>
                     </form>
+                    <a href="{{ route('admin.modules.changelog') }}" class="btn btn-secondary">تاریخچه نسخه ماژول‌ها</a>
                     <a href="{{ route('admin.license.test-config') }}" target="_blank" class="btn btn-secondary">تست API اعلان‌ها</a>
                 </div>
             @endif

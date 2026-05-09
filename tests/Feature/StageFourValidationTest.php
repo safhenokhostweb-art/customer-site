@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\License;
+use App\Models\ModuleChangeLog;
+use App\Models\ModuleVersion;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -107,5 +109,36 @@ class StageFourValidationTest extends TestCase
         $this->get(route('page.show', ['slug' => 'test-page']))->assertOk();
         $this->get(route('blog.index'))->assertOk();
         $this->get(route('shop.index'))->assertOk();
+    }
+
+    public function test_admin_modules_page_shows_latest_synced_blog_release(): void
+    {
+        config(['site.owner_site' => false]);
+
+        License::query()->create([
+            'license_key' => 'LIC-MODULE-001',
+            'domain' => 'localhost',
+            'expires_at' => now()->addDays(30),
+            'modules' => ['blog'],
+            'platform_valid' => true,
+            'last_validated_at' => now(),
+        ]);
+
+        ModuleVersion::setVersion('blog', '1.0.0');
+        ModuleChangeLog::query()->create([
+            'module_slug' => 'blog',
+            'version' => '1.1.0',
+            'release_type' => 'minor',
+            'changelog' => 'بهبود لیست و صفحه مطلب وبلاگ',
+            'released_at' => now()->subHour(),
+            'synced_at' => now(),
+        ]);
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $response = $this->actingAs($admin)->get(route('admin.modules.index'));
+
+        $response->assertOk();
+        $response->assertSee('نسخه نصب‌شده');
+        $response->assertSee('v1.1.0');
     }
 }

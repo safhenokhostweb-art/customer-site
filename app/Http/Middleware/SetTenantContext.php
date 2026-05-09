@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\TenantContext;
+use App\Support\Installation;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +22,7 @@ class SetTenantContext
     {
         $this->tenantContext->clear();
 
-        if (file_exists(storage_path('installed.lock')) && \Illuminate\Support\Facades\Schema::hasTable('licenses')) {
+        if (Installation::isLockPresent() && \Illuminate\Support\Facades\Schema::hasTable('licenses')) {
             $license = \App\Models\License::current();
             if ($license && $license->isValid($request->getHost())) {
                 $this->tenantContext->set($license);

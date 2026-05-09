@@ -17,7 +17,9 @@ class ProductCategoryController extends Controller
 
     public function create()
     {
-        return view('admin.product-categories.create');
+        $parents = ProductCategory::orderBy('order')->get();
+
+        return view('admin.product-categories.create', compact('parents'));
     }
 
     public function store(Request $request)
@@ -25,6 +27,7 @@ class ProductCategoryController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
+            'parent_id' => 'nullable|exists:product_categories,id',
             'order' => 'nullable|integer|min:0',
         ]);
         $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
@@ -35,7 +38,9 @@ class ProductCategoryController extends Controller
 
     public function edit(ProductCategory $productCategory)
     {
-        return view('admin.product-categories.edit', compact('productCategory'));
+        $parents = ProductCategory::orderBy('order')->where('id', '!=', $productCategory->id)->get();
+
+        return view('admin.product-categories.edit', compact('productCategory', 'parents'));
     }
 
     public function update(Request $request, ProductCategory $productCategory)
@@ -43,9 +48,13 @@ class ProductCategoryController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
+            'parent_id' => 'nullable|exists:product_categories,id',
             'order' => 'nullable|integer|min:0',
         ]);
         $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        if (! empty($data['parent_id']) && (int) $data['parent_id'] === (int) $productCategory->id) {
+            $data['parent_id'] = null;
+        }
         $productCategory->update($data);
         return redirect()->route('admin.product-categories.index')->with('success', 'دسته‌بندی به‌روزرسانی شد.');
     }

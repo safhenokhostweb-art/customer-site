@@ -3,7 +3,7 @@
 
 <h1>ایجاد حساب مدیر</h1>
 
-<form method="POST" action="{{ route('install.store-admin') }}">
+<form method="POST" action="{{ route('install.store-admin', [], false) }}">
     @csrf
     <label>نام</label>
     <input type="text" name="name" value="{{ old('name') }}" required>

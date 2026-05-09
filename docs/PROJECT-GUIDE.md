@@ -112,6 +112,7 @@
 ### ۳.۵ بروزرسانی ماژول‌ها
 
 - **مسیر:** `GET /api/updates/modules` — لیست ماژول‌های دارای بروزرسانی (tenant-aware)
+- **مسیر:** `GET /api/updates/module-history` — دریافت تاریخچهٔ نسخه و changelog ماژول‌های تخصیص‌یافته به سایت
 - **مسیر:** `POST /api/updates/report-versions` — گزارش نسخه‌های نصب‌شده به پلتفرم
 
 **جستجو:** `updates` ، `check` ، `report-versions`
@@ -149,7 +150,7 @@
 | `home` | `/` | صفحهٔ اصلی |
 | `page.show` | `/page/{slug}` | صفحه |
 | `contact.show` / `contact.submit` | `/contact` | تماس |
-| `blog.index` ، `blog.show` | `/blog` ، `/blog/{slug}` | وبلاگ |
+| `blog.index` ، `blog.category` ، `blog.series` ، `blog.show` ، `blog.like` | `/blog` ، `/blog/category/{slug}` ، `/blog/series/{slug}` ، `/blog/{slug}` ، POST `/blog/{slug}/like` | وبلاگ (فهرست، دسته، مجموعه، جزئیات، لایک) |
 | `shop.index` ، `shop.show` ، `shop.cart` ، `shop.cart.update` ، `shop.cart.remove` ، `shop.checkout` | `/shop` ، ... | فروشگاه (در صورت فعال بودن ماژول) |
 | `account.dashboard` | `/account` | داشبورد کاربر نهایی (حساب من) — خلاصه، سفارشات، اشتراک‌ها، اعلان‌ها، امنیت |
 | `account.orders.*` | `/account/orders` | سفارشات من (فقط با ماژول فروشگاه) |
@@ -175,9 +176,11 @@
 | `guide.search` | GET `/guide-search?q=` | جستجو در راهنما (JSON) |
 | `install.*` | `/install/*` | ویزارد نصب اولیه؛ پس از اتمام، فایل `storage/installed.lock` ساخته می‌شود. اگر این فایل حذف شود دوباره ویزارد باز می‌شود؛ در مرحلهٔ ادمین، اگر ایمیل مدیر از قبل در جدول `users` باشد، همان رکورد به‌روز می‌شود (نصب مجدد روی همان دیتابیس). |
 
+**دیتابیس در توسعه:** برای نگه داشتن داده بعد از تغییر کد، فقط `php artisan migrate` بزنید. دستورات `migrate:fresh` و `db:wipe` همه جداول را حذف می‌کنند. اگر بدون دلیل به `/install` برمی‌گردید، `storage/installed.lock` را حذف نکرده باشید و مسیر دیتابیس در `.env` پایدار باشد. ویزارد مرحلهٔ دیتابیس، `DB_CONNECTION=mysql` و خطوط `# DB_*` در `.env.example` را هم درست به‌روز می‌کند.
+
 **جستجو:** `routes` ، `customer-site` ، `admin` ، `sitemap`
 
-**RBAC (مسیرهای ادمین):** در customer-site مسیرهای admin به‌صورت granular نیز محافظت می‌شوند؛ نمونه‌ها: `admin.pages.* -> permission:pages`، `admin.products.* -> permission:products`، `admin.orders.* -> permission:orders`، `admin.settings.* -> permission:settings`، `admin.license.* -> permission:license`.
+**RBAC (مسیرهای ادمین):** در customer-site مسیرهای admin به‌صورت granular نیز محافظت می‌شوند؛ نمونه‌ها: `admin.pages.* -> permission:pages`، `admin.products.* -> permission:products`، `admin.orders.* -> permission:orders`، `admin.settings.* -> permission:settings`، `admin.license.* -> permission:license`، `admin.posts.*` و `admin.post-series.* -> permission:posts`، اقدامات انتشار/تایید/بازگردانی نسخه (`admin.posts.approve`، `reject`، `revisions.restore`) -> `permission:posts_moderate`.
 
 **بهینه‌سازی Layout + لاگ امنیتی:** در `AppServiceProvider` برای `currentPage` اگر دادهٔ `page` از controller موجود باشد، همان استفاده می‌شود تا در `page.show` کوئری تکراری حذف شود. همچنین در middlewareهای `CheckPermission` و `EnsureLicenseValid` برای رد دسترسی/لایسنس (`403` و redirectهای مرتبط) لاگ امنیتی ساخت‌یافته ثبت می‌شود.
 
@@ -281,7 +284,7 @@
 | `licenses` | لایسنس فعال (license_key، domain، expires_at، modules، support_expires_at، support_starts_at، support_level) |
 | `users` | کاربران سایت (شامل mobile برای ورود) |
 | `pages` | صفحات ثابت؛ `builder_content` (ساختار سازندهٔ v1)، `builder_content_v2` (ساختار سازندهٔ v2 با شناسهٔ یکتا و درگ‌اند‌دراپ)؛ رندر با اولویت v2 در صورت وجود |
-| `posts` ، `categories` | محتوای وبلاگ |
+| `posts` ، `categories` ، `tags` ، `post_tag` ، `post_series` ، `post_revisions` | محتوای وبلاگ (مطلب، دسته، برچسب، مجموعه، نسخه‌ها) |
 | `products` ، `orders` و جداول وابسته | فروشگاه (در صورت فعال بودن ماژول) |
 | `settings` | تنظیمات محلی سایت |
 
@@ -308,15 +311,41 @@
 - ماژول‌های قابل استفاده در **config/modules.php** تعریف شده‌اند (blog، shop، coupon، reviews، referral، subscription، whatsapp/messaging، sms، courses، invoice، business_card، social_links، advertisements، forms، advanced_search، currency_reform، menu و …).
 - **منبع حقیقت برای فعال/غیرفعال بودن ماژول‌ها:** در صورت وجود لایسنس معتبر، `SiteHelper::moduleEnabled($key)` ابتدا از فیلد **modules** مدل **License** (لیست slugهای فعال برای این سایت از پلتفرم) استفاده می‌کند و سپس در صورت عدم وجود، به **config/modules.php** و مقادیر **.env** (`MODULE_*_ENABLED`) fallback می‌کند.
 - لیست ماژول‌های **دریافتی از پلتفرم** در مدل **License** (فیلد `modules`) ذخیره و در داشبورد در بلوک **«ماژول‌ها و امکانات از پلتفرم»** و صفحهٔ `admin.modules.index` نمایش داده می‌شود.
+- در صفحهٔ `admin.modules.index` برای ماژول **blog** کارت وضعیت حرفه‌ای نمایش داده می‌شود: نسخهٔ نصب‌شده، نسخهٔ قابل‌دریافت، هشدار وجود آپدیت، دکمهٔ دریافت آپدیت و میانبر همگام‌سازی/نمایش changelog وبلاگ.
+- در همان صفحه برای ماژول **shop** هم کارت وضعیت حرفه‌ای اضافه شده است (نمایش نسخهٔ نصب‌شده/قابل‌دریافت، هشدار آپدیت، میانبر لاگ تغییرات و همگام‌سازی لاگ).
+- صفحهٔ `admin.modules.changelog` از پارامتر `module` پشتیبانی می‌کند (مثلاً `?module=blog`) تا لاگ تغییرات یک ماژول خاص فیلتر شود.
 - برای اکثر ماژول‌ها (وبلاگ، فروشگاه، کوپن، نظرات، معرفی دوستان، اشتراک، پیامک، دوره‌ها، فاکتور، کارت ویزیت، لینک‌های اجتماعی، تبلیغات، فرم‌ساز، اصلاح پول ملی و …) یک بخش کامل مدیریت در پنل ادمین سایت وجود دارد (`routes/web.php`، گروه `admin.*` و کلاس‌های زیر `App\Http\Controllers\Admin\*`).
+- ماژول `blog` (نسخهٔ 1.4.0):
+  - ویرایشگر WYSIWYG (TinyMCE از CDN jsDelivr) برای بدنهٔ مطلب؛ خروجی HTML با `PostHtml::safe()` در فرانت سانitize می‌شود.
+  - وضعیت تحریریه: `editorial_status` (پیش‌نویس، در انتظار بازبینی، تایید، رد، منتشر) همراه با `is_published` و `published_at`؛ انتشار و زمان‌بندی فقط با دسترسی `posts_moderate` (مدیر سایت/نقش tenant_admin به‌صورت پیش‌فرض)؛ کارمند با فقط `posts` می‌تواند پیش‌نویس ذخیره یا برای بازبینی ارسال کند.
+  - سئو هر مطلب: `meta_title`، `meta_description`، `canonical_url` اختیاری، `og_image` اختیاری (اولویت در `SeoService::imageUrl` نسبت به تصویر شاخص).
+  - برچسب‌ها (جدول `tags` و واسط `post_tag`) و مجموعهٔ مطالب (`post_series`، فیلدهای `series_id` و `part_number` روی `posts`)؛ CRUD مجموعه در `admin.post-series.*`؛ فیلتر برچسب در `blog.index` و صفحهٔ `blog.series`.
+  - گالری تصاویر (`gallery_images` JSON)، بازدید با یک‌بار شمارش در هر نشست، لایک ساده (یک‌بار در نشست، مسیر POST `blog.like`).
+  - تاریخچهٔ نسخه‌ها (`post_revisions` با snapshot JSON)، صفحهٔ `admin.posts.revisions` و بازگردانی نسخه با `posts_moderate`.
+  - جداول: `tags`، `post_series`، `post_tag`، `post_revisions`؛ مایگریشن `2026_05_08_180000_blog_professional_features.php` و به‌روزرسانی رکورد `module_versions` / `module_change_logs` برای slug `blog`.
+- ماژول `shop` (نسخهٔ 2.0.0) — به‌روزرسانی ۱۴۰۵/۰۲/۱۸:
+  - **کاتالوگ:** تنوع (واریانت) با SKU، قیمت/حراج و موجودی جدا؛ گالری `product_images`؛ بستهٔ محصول با اجزا و قیمت ثابت یا جمع با تخفیف؛ برچسب و ویژگی‌های فنی با فیلتر در لیست؛ دستهٔ سلسله‌مراتبی؛ مرتبط / upsell / cross_sell؛ پیش‌نویس/انتشار (`status`)؛ حداقل/حداکثر سفارش؛ پیش‌فروش (`allow_backorder`) و جدول `product_stock_notifications`.
+  - **صفحهٔ محصول:** تب‌ها (توضیح، مشخصات، ارسال/بازگشت، FAQ)، جدول سایز، شمارش معکوس `sale_ends_at`، اعتماد (گارانتی/تضمین)، گالری و ویدیو، JSON-LD و متای canonical/og.
+  - **تعامل:** نظرات `product_reviews` (بازبینی ادمین)، علاقه‌مندی و مقایسهٔ نشستی، شمارندهٔ بازدید (یک بار به ازای نشست)، `shop_cart_events` برای رویداد افزودن به سبد، لاگ اختیاری `product_audit_logs` برای قیمت/موجودی.
+  - **سبد و سفارش:** کلید ردیف `productId:variantId`، ذخیرهٔ `product_variant_id` روی `order_items`، کوپن با `ShopCartHelper::distinctProductIds`.
+  - **ادمین:** فرم گسترش‌یافتهٔ محصول، CRUD ویژگی‌های فنی (`admin.product-attributes.*`)، مدیریت نظرات فروشگاه (`admin.shop-product-reviews.*`).
+  - نسخهٔ قبلی مستند 1.1.0: فیلتر قیمت `effective_price`، اعتبارسنجی موجودی سبد، checkout تراکنشی و `lockForUpdate` همچنان برقرار است.
+- صفحهٔ `admin.modules.index` علاوه‌بر نسخهٔ نصب‌شده، آخرین changelog همگام‌شدهٔ هر ماژول را نیز نشان می‌دهد تا مقایسهٔ نسخهٔ نصب‌شده/قابل‌دریافت شفاف‌تر باشد.
 - ماژول `advanced_search`:
   - مسیرهای فرانت: گروه `module:advanced_search` در `routes/web.php` (`search.index`، `search.suggest`، `search.results`).
   - صفحهٔ تنظیمات در پنل ادمین: `admin.modules.show` با `slug=advanced_search`، که از آن‌جا می‌توان تعیین کرد جستجو روی محصولات و/یا مطالب وبلاگ فعال باشد و تعداد نتایج در هر صفحه (ذخیره در `settings` با کلیدهای `advanced_search_include_products`، `advanced_search_include_posts`، `advanced_search_results_per_page`).
   - رفتار فرانت در `AdvancedSearchController` بر اساس همین تنظیمات و فعال‌بودن ماژول (`SiteHelper::moduleEnabled('advanced_search')`) کنترل می‌شود.
-- ماژول `menu`:
-  - اگر در لایسنس/تنظیمات فعال باشد (`SiteHelper::moduleEnabled('menu')`)، layout پیش‌فرض (`resources/views/themes/default/layout.blade.php`) از `PlatformUx::menus()` برای خروجی منوهای header/footer استفاده می‌کند.
-  - صفحهٔ تنظیمات منو در پنل ادمین: `admin.modules.show` با `slug=menu`، که از آن‌جا می‌توان منبع منوها را بین **منوهای پلتفرم** و **منوهای سفارشی همین سایت** انتخاب کرد و آیتم‌های header/footer را برای سایت تعریف نمود (اطلاعات در جدول `settings` با کلیدهای `menu_mode` و `menu_custom_menus` ذخیره می‌شود).
-  - `PlatformUxService::getMenus()` ابتدا تنظیمات محلی منو را می‌خواند و در صورت قرار داشتن `menu_mode` روی `local`، همان منوهای سفارشی را برمی‌گرداند؛ در غیر این صورت از منوهای ارسال‌شده توسط پلتفرم استفاده می‌شود.
+- ماژول `menu` (به‌روزرسانی ۱۴۰۵/۰۲/۱۸):
+  - اگر در لایسنس/تنظیمات فعال باشد (`SiteHelper::moduleEnabled('menu')`)، layout پیش‌فرض (`resources/views/themes/default/layout.blade.php`) از منوی منتشرشده در جدول `menus` (موقعیت‌های `primary`، `footer`، `mobile`، `secondary`، `topbar`) و در نبود آن از `PlatformUx::menus()` استفاده می‌کند.
+  - **حالت local:** `PlatformUxService::getMenus()` در `menu_mode=local` منوی منتشرشدهٔ دیتابیس را با کلیدهای `header`/`footer`/`mobile`/`secondary`/`topbar` به خروجی API‌شکل یکسان می‌کند؛ اگر برای یک کلید در دیتابیس آیتمی نباشد، از `menu_custom_menus` در `settings` استفاده می‌شود. `decodeMenus` و `enrichMenuTreeItems` فیلدهای غنی (UTM، badge، مگامنو، …) را یکدست می‌کنند.
+  - **ادمین:** مسیر `admin.menus.*` — درخت تو در تو با SortableJS، ذخیرهٔ ساختار از طریق `menus.reorder-tree`، کپی شاخه (`copy-branch`)، پیش‌نویس/انتشار و `go_live_at`، پیش‌نمایش با `preview_token`، نسخه‌گردانی (`menu_revisions` + بازگردانی)، لاگ اختیاری (`menu_change_logs`).
+  - **آیتم:** انواع `custom_url`، `internal_page`، `blog`، `blog_category`، `blog_tag`، `shop`، `category`؛ فیلدهای `utm_query`/`utm_json` (کلیدهای `utm_*`)، `rel_nofollow`، `open_in_new_tab`، `badge_label`، `image_url`، `mega_column`، `featured_html`، `auto_list_children` (زیردستهٔ خودکار برای دستهٔ فروشگاه)، `visible_modules` (فیلتر بر اساس `SiteHelper::moduleEnabled`)، `title_en` و `labels` JSON.
+  - **فرانت:** `partials/site-menu.blade.php` و `MenuActiveTrail` برای مسیر فعال؛ مگامنو چندستونه از `mega_columns`؛ موبایل آکاردئونی (`partials/site-menu-mobile.blade.php`) با `aria-expanded`/`aria-hidden` و قفل اسکرول بدنه (`config/menu.php` → `mobile_body_scroll_lock`).
+  - **کش:** `MenuService::clearMenuCache` و `PlatformUxService::clearCache` پس از ذخیره.
+  - **API:** `GET /site-api/menus` (`site-api.menus`) خروجی JSON منوها وقتی ماژول فعال است.
+  - **پیکربندی:** `config/menu.php` (`MENU_MAX_DEPTH`، پیش‌فرض ۴).
+  - صفحهٔ تنظیمات سادهٔ منو در `admin.modules.show` با `slug=menu` همچنان برای حالت «فقط JSON در settings» وجود دارد؛ اولویت نمایش در حالت local با منوی دیتابیس است.
+  - نسخهٔ منتشرشده در پلتفرم برای ماژول منو: **۱.۲.۰** (مایگریشن `2026_05_08_210000_release_menu_module_1_2_0` در saas-platform).
 - ماژول `seo_advanced`:
   - در صورت فعال بودن (`SiteHelper::moduleEnabled('seo_advanced')`) یک صفحهٔ اختصاصی در پنل ادمین با route نام‌گذاری‌شده `admin.seo-advanced.index` و مسیر `/admin/seo-advanced` نمایش می‌دهد.
   - این صفحه وضعیت ماژول، تنظیمات سئوی دریافتی از پلتفرم (seo_default_title، seo_default_description، seo_robots، seo_twitter_card) و نمای کلی محتوای قابل ایندکس (تعداد صفحات، مطالب و محصولات) را نشان می‌دهد؛ منطق تولید متا در `App\Helpers\Seo` و `App\Services\SeoService` پیاده‌سازی شده است.
@@ -388,4 +417,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۲۰۲۶/۰۵/۰۷ — علاوه بر موارد قبلی، مرحلهٔ ۲ ارتقای UX ادمین شروع شد: سیستم طراحی مرکزی در `customer-admin-layout.css` بهبود یافت (focus ring استاندارد، badge/button state یکپارچه، motion-reduction، استیکی شدن فیلترهای سنگین، تنظیمات ظریف جدول/فرم، و کلاس‌های تایپوگرافی/فرم مانند `admin-section-lead`, `admin-form-stack`, `admin-form-inline-check`)؛ همچنین صفحهٔ `forms/submissions` از CDNهای datepicker/sortable جدا شد و Drag & Drop بومی همراه بازخورد بصری بهبود یافت، و فرم‌های چندبخشی `menus/create` و `messaging/edit` نیز با همین زبان طراحی یکدست شدند.*
+*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۸ — ماژول blog به نسخهٔ 1.4.0 ارتقا یافت: WYSIWYG، گردش کار تایید، سئو پیشرفته، برچسب/سری، گالری، نسخه‌ها، آمار بازدید/لایک و مسیرهای فرانت تکمیل شد.*

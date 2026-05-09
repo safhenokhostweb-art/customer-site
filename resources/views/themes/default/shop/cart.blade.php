@@ -16,8 +16,12 @@
 @if(count($cart) > 0)
     <div style="display: grid; gap: 1.5rem; margin-bottom: 2rem;">
         @php $total = 0; @endphp
-        @foreach($cart as $item)
-            @php $sub = $item['price'] * $item['quantity']; $total += $sub; @endphp
+        @foreach($cart as $lineKey => $item)
+            @php
+                $sub = $item['price'] * $item['quantity'];
+                $total += $sub;
+                $lineKey = is_string($lineKey) ? $lineKey : \App\Helpers\ShopCartHelper::lineKey((int)($item['product_id'] ?? $item['id']), $item['product_variant_id'] ?? null);
+            @endphp
             <div class="card" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;">
                 <div style="flex-shrink: 0; width: 80px; height: 80px; border-radius: 0.5rem; overflow: hidden; background: #f3f4f6;">
                     @if(!empty($item['image']))
@@ -33,12 +37,13 @@
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <form method="post" action="{{ route('shop.cart.update') }}" class="inline" style="display: flex; align-items: center; gap: 0.25rem;">
                         @csrf
-                        <input type="hidden" name="product_id" value="{{ $item['id'] }}">
-                        <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" max="99" style="width: 4rem; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 0.375rem; text-align: center;">
+                        <input type="hidden" name="line_key" value="{{ $lineKey }}">
+                        <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" max="999" style="width: 4rem; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 0.375rem; text-align: center;">
                         <button type="submit" style="padding: 0.375rem 0.75rem; font-size: 0.875rem; border-radius: 0.375rem; background: #f3f4f6; border: 1px solid #e5e7eb; cursor: pointer;">بروزرسانی</button>
                     </form>
-                    <form method="post" action="{{ route('shop.cart.remove', $item['id']) }}" class="inline" onsubmit="return confirm('حذف از سبد؟');">
+                    <form method="post" action="{{ route('shop.cart.remove') }}" class="inline" onsubmit="return confirm('حذف از سبد؟');">
                         @csrf
+                        <input type="hidden" name="line_key" value="{{ $lineKey }}">
                         <button type="submit" style="padding: 0.375rem; color: #dc2626; background: transparent; border: none; cursor: pointer;" title="حذف" aria-label="حذف از سبد">✕</button>
                     </form>
                 </div>

@@ -19,6 +19,15 @@
                     <input type="text" name="slug" value="{{ old('slug') }}">
                 </div>
                 <div class="form-group">
+                    <label class="form-label">دستهٔ والد (سلسله‌مراتب)</label>
+                    <select name="parent_id">
+                        <option value="">— ریشه —</option>
+                        @foreach($parents ?? [] as $par)
+                            <option value="{{ $par->id }}" @selected(old('parent_id') == $par->id)>{{ $par->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label">ترتیب</label>
                     <input type="number" name="order" value="{{ old('order', 0) }}" min="0">
                 </div>

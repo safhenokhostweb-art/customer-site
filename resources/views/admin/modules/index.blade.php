@@ -33,6 +33,162 @@
     </div>
 @endif
 
+@php
+    $blogModuleEnabled = in_array('blog', $modulesFromPlatform ?? [], true);
+    $blogHasUpdate = !empty($blogUpdate);
+    $shopModuleEnabled = in_array('shop', $modulesFromPlatform ?? [], true);
+    $shopHasUpdate = !empty($shopUpdate);
+    $menuModuleEnabled = in_array('menu', $modulesFromPlatform ?? [], true);
+    $menuHasUpdate = !empty($menuUpdate);
+@endphp
+
+@if($blogModuleEnabled)
+    <div class="card p-5 mb-6 border-sky-200 bg-sky-50">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h3 class="font-semibold text-sky-900">وضعیت حرفه‌ای ماژول وبلاگ</h3>
+                <p class="text-sm text-sky-800 mt-1">
+                    نسخه نصب‌شده: <code>{{ $blogInstalledVersion ?: '—' }}</code>
+                    <span class="mx-1">|</span>
+                    نسخه قابل دریافت: <code>{{ $blogAvailableVersion ?: '—' }}</code>
+                </p>
+                @if($blogHasUpdate)
+                    <p class="text-xs text-amber-700 mt-1">
+                        بروزرسانی برای وبلاگ آماده است. پیشنهاد می‌شود پس از دریافت از پلتفرم، همگام‌سازی لاگ نسخه را اجرا کنید.
+                    </p>
+                @else
+                    <p class="text-xs text-emerald-700 mt-1">وبلاگ در حال حاضر همگام با آخرین نسخهٔ ثبت‌شده است.</p>
+                @endif
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <form action="{{ route('admin.license.refresh-modules') }}" method="post">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary btn-sm">دریافت بروزرسانی ماژول‌ها</button>
+                </form>
+                <a href="{{ route('admin.modules.changelog', ['module' => 'blog']) }}" class="btn btn-secondary btn-sm">لاگ تغییرات وبلاگ</a>
+                <a href="{{ route('admin.modules.changelog', ['sync' => 1, 'module' => 'blog']) }}" class="btn btn-secondary btn-sm">همگام‌سازی لاگ وبلاگ</a>
+            </div>
+        </div>
+
+        @if(($blogLatestLogs ?? collect())->count() > 0)
+            <div class="mt-4 space-y-2">
+                @foreach($blogLatestLogs as $blogLog)
+                    <article class="rounded-lg border border-sky-100 bg-white p-3">
+                        <div class="flex items-center justify-between gap-2 text-xs text-slate-600">
+                            <div>
+                                <span class="font-mono">v{{ $blogLog->version }}</span>
+                                <span class="badge badge-secondary mr-1">{{ strtoupper($blogLog->release_type) }}</span>
+                            </div>
+                            <div>{{ $blogLog->released_at ? \App\Helpers\Jalali::formatFa($blogLog->released_at, 'Y/m/d H:i') : '—' }}</div>
+                        </div>
+                        @if($blogLog->changelog)
+                            <p class="mt-2 text-xs text-slate-700 whitespace-pre-line">{{ \Illuminate\Support\Str::limit($blogLog->changelog, 220) }}</p>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endif
+
+@if($shopModuleEnabled)
+    <div class="card p-5 mb-6 border-emerald-200 bg-emerald-50">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h3 class="font-semibold text-emerald-900">وضعیت حرفه‌ای ماژول فروشگاه</h3>
+                <p class="text-sm text-emerald-800 mt-1">
+                    نسخه نصب‌شده: <code>{{ $shopInstalledVersion ?: '—' }}</code>
+                    <span class="mx-1">|</span>
+                    نسخه قابل دریافت: <code>{{ $shopAvailableVersion ?: '—' }}</code>
+                </p>
+                @if($shopHasUpdate)
+                    <p class="text-xs text-amber-700 mt-1">
+                        بروزرسانی برای فروشگاه آماده است. پیشنهاد می‌شود پس از دریافت از پلتفرم، لاگ نسخهٔ shop همگام‌سازی شود.
+                    </p>
+                @else
+                    <p class="text-xs text-emerald-700 mt-1">فروشگاه در حال حاضر همگام با آخرین نسخهٔ ثبت‌شده است.</p>
+                @endif
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <form action="{{ route('admin.license.refresh-modules') }}" method="post">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary btn-sm">دریافت بروزرسانی ماژول‌ها</button>
+                </form>
+                <a href="{{ route('admin.modules.changelog', ['module' => 'shop']) }}" class="btn btn-secondary btn-sm">لاگ تغییرات فروشگاه</a>
+                <a href="{{ route('admin.modules.changelog', ['sync' => 1, 'module' => 'shop']) }}" class="btn btn-secondary btn-sm">همگام‌سازی لاگ فروشگاه</a>
+            </div>
+        </div>
+
+        @if(($shopLatestLogs ?? collect())->count() > 0)
+            <div class="mt-4 space-y-2">
+                @foreach($shopLatestLogs as $shopLog)
+                    <article class="rounded-lg border border-emerald-100 bg-white p-3">
+                        <div class="flex items-center justify-between gap-2 text-xs text-slate-600">
+                            <div>
+                                <span class="font-mono">v{{ $shopLog->version }}</span>
+                                <span class="badge badge-secondary mr-1">{{ strtoupper($shopLog->release_type) }}</span>
+                            </div>
+                            <div>{{ $shopLog->released_at ? \App\Helpers\Jalali::formatFa($shopLog->released_at, 'Y/m/d H:i') : '—' }}</div>
+                        </div>
+                        @if($shopLog->changelog)
+                            <p class="mt-2 text-xs text-slate-700 whitespace-pre-line">{{ \Illuminate\Support\Str::limit($shopLog->changelog, 220) }}</p>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endif
+
+@if($menuModuleEnabled)
+    <div class="card p-5 mb-6 border-violet-200 bg-violet-50">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h3 class="font-semibold text-violet-900">وضعیت حرفه‌ای ماژول منو</h3>
+                <p class="text-sm text-violet-800 mt-1">
+                    نسخه نصب‌شده: <code>{{ $menuInstalledVersion ?: '—' }}</code>
+                    <span class="mx-1">|</span>
+                    نسخه قابل دریافت: <code>{{ $menuAvailableVersion ?: '—' }}</code>
+                </p>
+                <p class="text-xs text-violet-700 mt-1">
+                    حالت فعلی منو: <strong>{{ $menuMode === 'local' ? 'محلی' : 'پلتفرم' }}</strong>
+                    <span class="mx-1">|</span>
+                    آیتم‌های محلی هدر: <strong>{{ $menuLocalHeaderCount }}</strong>
+                    <span class="mx-1">|</span>
+                    آیتم‌های محلی فوتر: <strong>{{ $menuLocalFooterCount }}</strong>
+                </p>
+                @if($menuHasUpdate)
+                    <p class="text-xs text-amber-700 mt-1">بروزرسانی جدید برای ماژول منو موجود است.</p>
+                @endif
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.modules.show', ['slug' => 'menu']) }}" class="btn btn-secondary btn-sm">تنظیمات ماژول منو</a>
+                <a href="{{ route('admin.menus.index') }}" class="btn btn-secondary btn-sm">مدیریت منوهای محلی</a>
+                <a href="{{ route('admin.modules.changelog', ['module' => 'menu']) }}" class="btn btn-secondary btn-sm">لاگ تغییرات منو</a>
+                <a href="{{ route('admin.modules.changelog', ['sync' => 1, 'module' => 'menu']) }}" class="btn btn-secondary btn-sm">همگام‌سازی لاگ منو</a>
+            </div>
+        </div>
+        @if(($menuLatestLogs ?? collect())->count() > 0)
+            <div class="mt-4 space-y-2">
+                @foreach($menuLatestLogs as $menuLog)
+                    <article class="rounded-lg border border-violet-100 bg-white p-3">
+                        <div class="flex items-center justify-between gap-2 text-xs text-slate-600">
+                            <div>
+                                <span class="font-mono">v{{ $menuLog->version }}</span>
+                                <span class="badge badge-secondary mr-1">{{ strtoupper($menuLog->release_type) }}</span>
+                            </div>
+                            <div>{{ $menuLog->released_at ? \App\Helpers\Jalali::formatFa($menuLog->released_at, 'Y/m/d H:i') : '—' }}</div>
+                        </div>
+                        @if($menuLog->changelog)
+                            <p class="mt-2 text-xs text-slate-700 whitespace-pre-line">{{ \Illuminate\Support\Str::limit($menuLog->changelog, 220) }}</p>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endif
+
 {{-- بروزرسانی ماژول‌ها از پلتفرم --}}
 @if($license && $license->license_key)
     <div class="mb-6 flex items-center gap-2">
@@ -54,6 +210,7 @@
                     @php
                         $info = $localModules[$slug] ?? ['name' => $slug, 'enabled' => false];
                         $updateRow = collect($moduleUpdates ?? [])->firstWhere('slug', $slug);
+                        $latestLog = $latestModuleLogs[$slug] ?? null;
                         $hasUpdate = !empty($updateRow);
                         $installedVersion = $installedVersions[$slug] ?? ($updateRow['installed_version'] ?? '1.0.0');
                         $availableVersion = $updateRow['available_version'] ?? $installedVersion;
@@ -140,6 +297,14 @@
                                 نسخه قابل دریافت: <code>{{ $availableVersion }}</code>
                             @endif
                         </div>
+                        @if($latestLog)
+                            <div class="mt-2 text-xs text-slate-600 leading-relaxed">
+                                آخرین انتشار: <code>v{{ $latestLog->version }}</code>
+                                @if($latestLog->changelog)
+                                    <div class="mt-1 text-slate-700">{{ \Illuminate\Support\Str::limit($latestLog->changelog, 140) }}</div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

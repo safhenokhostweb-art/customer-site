@@ -73,7 +73,7 @@ class JsonLd
         return $data;
     }
 
-    public static function product($product): array
+    public static function product($product, ?float $offerPrice = null, ?string $availability = null, ?float $ratingAvg = null, int $ratingCount = 0): array
     {
         $data = [
             '@context' => 'https://schema.org',
@@ -85,15 +85,42 @@ class JsonLd
         if ($desc !== '') {
             $data['description'] = $desc;
         }
-        $image = Seo::imageUrl($product);
-        if ($image !== null) {
-            $data['image'] = $image;
+        $images = [];
+        if ($product->relationLoaded('images') && $product->images->isNotEmpty()) {
+            foreach ($product->images as $img) {
+                $u = \App\Helpers\ImageHelper::url($img->path);
+                if ($u) {
+                    $images[] = $u;
+                }
+            }
         }
-        if (isset($product->price)) {
-            $data['offers'] = [
-                '@type' => 'Offer',
-                'price' => (float) ($product->sale_price ?? $product->price),
-                'priceCurrency' => 'IRR',
+        $fallbackImg = Seo::imageUrl($product);
+        if ($fallbackImg !== null) {
+            $images[] = $fallbackImg;
+        }
+        $images = array_values(array_unique(array_filter($images)));
+        if (count($images) === 1) {
+            $data['image'] = $images[0];
+        } elseif (count($images) > 1) {
+            $data['image'] = $images;
+        }
+        $price = $offerPrice ?? (float) $product->effective_price;
+        $avail = $availability ?? 'https://schema.org/InStock';
+        $data['offers'] = [
+            '@type' => 'Offer',
+            'price' => round($price, 2),
+            'priceCurrency' => 'IRR',
+            'availability' => $avail,
+            'url' => route('shop.show', $product->slug),
+        ];
+        if (! empty($product->sale_ends_at)) {
+            $data['offers']['priceValidUntil'] = $product->sale_ends_at->format('Y-m-d');
+        }
+        if ($ratingCount > 0 && $ratingAvg !== null) {
+            $data['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => round($ratingAvg, 2),
+                'reviewCount' => $ratingCount,
             ];
         }
         return $data;

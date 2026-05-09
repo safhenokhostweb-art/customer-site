@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: \App\Helpers\Seo::title();
         $seoDesc = trim($__env->yieldContent('meta_description')) ?: \App\Helpers\Seo::description();
@@ -240,6 +241,7 @@
         .tb-mobile-menu { display: none; border-top: 1px solid rgba(0,0,0,0.08); padding: 1rem; background: var(--tb-surface, #fff); }
         .tb-mobile-menu.is-open { display: block; }
         .tb-mobile-menu-inner { display: flex; flex-direction: column; gap: 0.5rem; }
+        body.tb-mobile-menu-open { overflow: hidden; }
         .tb-mobile-menu-inner a { padding: 0.5rem 0; color: var(--tb-text, #1f2937); text-decoration: none; font-weight: 500; }
         .tb-mobile-menu-inner a:hover { color: var(--tb-primary, var(--platform-primary, #4f46e5)); }
         .tb-header-nav-wrap { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; }
@@ -317,6 +319,20 @@
         $showFooter = $layoutService->shouldShowFooter($currentPage);
         $primaryMenu = $menuService->getMenuForLocation('primary');
         $footerMenu = $menuService->getMenuForLocation('footer');
+        $mobileMenuLoc = $menuService->getMenuForLocation('mobile');
+        $mobileNavItems = [];
+        if ($mobileMenuLoc) {
+            $mobileNavItems = $menuService->buildMenuTree($mobileMenuLoc);
+        } elseif ($primaryMenu) {
+            $mobileNavItems = $menuService->buildMenuTree($primaryMenu);
+        } elseif (\App\Helpers\SiteHelper::moduleEnabled('menu')) {
+            $uxMenus = \App\Helpers\PlatformUx::menus();
+            $mobileNavItems = ($uxMenus['mobile']['items'] ?? []) ?: ($uxMenus['header']['items'] ?? []);
+            $mobileNavItems = is_array($mobileNavItems) ? $mobileNavItems : [];
+        }
+        if (! empty($mobileNavItems)) {
+            $mobileNavItems = \App\Helpers\MenuActiveTrail::decorate($mobileNavItems, url()->current());
+        }
         $headerMenuHtml = $primaryMenu
             ? view('partials.site-menu', ['menu' => $primaryMenu, 'variant' => 'nav', 'items' => $menuService->buildMenuTree($primaryMenu)])->render()
             : view('partials.platform-menu', ['location' => 'header', 'variant' => 'nav'])->render();
@@ -342,23 +358,10 @@
                         ->renderBlocks($headerBlocks) !!}
                 </div>
             </div>
-            <div id="tb-mobile-menu" class="tb-mobile-menu" aria-hidden="true">
+            <div id="tb-mobile-menu" class="tb-mobile-menu tb-mobile-menu-panel" aria-hidden="true" role="dialog" aria-label="منوی موبایل">
                 <div class="tb-mobile-menu-inner">
-                    @if($primaryMenu && !empty($menuService->buildMenuTree($primaryMenu)))
-                        @foreach($menuService->buildMenuTree($primaryMenu) as $item)
-                            <a href="{{ $item['url'] ?? '#' }}" target="{{ $item['target'] ?? '_self' }}">{{ $item['title'] }}</a>
-                            @foreach($item['children'] ?? [] as $child)
-                                <a href="{{ $child['url'] ?? '#' }}" target="{{ $child['target'] ?? '_self' }}" class="mr-4">{{ $child['title'] }}</a>
-                            @endforeach
-                        @endforeach
-                    @elseif(\App\Helpers\SiteHelper::moduleEnabled('menu') && !empty(\App\Helpers\PlatformUx::menus()['header']['items']))
-                        @php $headerItems = \App\Helpers\PlatformUx::menus()['header']['items'] ?? []; @endphp
-                        @foreach($headerItems as $item)
-                            <a href="{{ $item['url'] ?? '#' }}" target="{{ $item['target'] ?? '_self' }}">{{ $item['title'] }}</a>
-                            @foreach($item['children'] ?? [] as $child)
-                                <a href="{{ $child['url'] ?? '#' }}" target="{{ $child['target'] ?? '_self' }}" class="mr-4">{{ $child['title'] }}</a>
-                            @endforeach
-                        @endforeach
+                    @if(!empty($mobileNavItems))
+                        @include('partials.site-menu-mobile', ['items' => $mobileNavItems])
                     @else
                         <a href="{{ route('home') }}">خانه</a>
                         @foreach($pages ?? \App\Models\Page::published()->menu()->get() as $p)
@@ -573,7 +576,15 @@
         });
         document.getElementById('tb-mobile-menu-btn')?.addEventListener('click', function() {
             var menu = document.getElementById('tb-mobile-menu');
-            if (menu) { menu.classList.toggle('is-open'); this.setAttribute('aria-expanded', menu.classList.contains('is-open')); }
+            if (menu) {
+                var open = !menu.classList.contains('is-open');
+                menu.classList.toggle('is-open', open);
+                menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+                this.setAttribute('aria-expanded', open ? 'true' : 'false');
+                @if(config('menu.mobile_body_scroll_lock', true))
+                document.body.classList.toggle('tb-mobile-menu-open', open);
+                @endif
+            }
         });
         document.querySelectorAll('form').forEach(function(f) {
             f.addEventListener('submit', function() {

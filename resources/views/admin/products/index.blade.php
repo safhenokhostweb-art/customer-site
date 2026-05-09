@@ -21,7 +21,7 @@
                             <td>{{ $p->title }}</td>
                             <td>{!! \App\Helpers\CurrencyHelper::formatPrice($p->price) !!} {{ \App\Helpers\CurrencyHelper::unitLabel() }}</td>
                             <td>{{ $p->stock }}</td>
-                            <td>{{ $p->is_active ? 'فعال' : 'غیرفعال' }}</td>
+                            <td>{{ $p->status === \App\Models\Product::STATUS_PUBLISHED ? 'منتشر شده' : 'پیش‌نویس' }}</td>
                             <td>
                                 <a href="{{ route('admin.products.edit', $p) }}" class="btn btn-primary btn-sm">ویرایش</a>
                                 <form method="post" action="{{ route('admin.products.destroy', $p) }}" style="display:inline;" onsubmit="return confirm('حذف شود؟');">

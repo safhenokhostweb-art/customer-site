@@ -44,7 +44,7 @@ class PhaseOneTwoThreeTest extends TestCase
             'slug' => 'test-book',
             'price' => 1000,
             'category_id' => $cat->id,
-            'is_active' => true,
+            'status' => Product::STATUS_PUBLISHED,
         ]);
         $response = $this->get(route('shop.index', ['category' => 'book']));
         $response->assertStatus(200);
@@ -53,7 +53,7 @@ class PhaseOneTwoThreeTest extends TestCase
 
     public function test_shop_search(): void
     {
-        Product::create(['title' => 'محصول ویژه', 'slug' => 'special', 'price' => 5000, 'is_active' => true]);
+        Product::create(['title' => 'محصول ویژه', 'slug' => 'special', 'price' => 5000, 'status' => Product::STATUS_PUBLISHED]);
         $response = $this->get(route('shop.index', ['q' => 'ویژه']));
         $response->assertStatus(200);
         $response->assertSee('محصول ویژه');
@@ -73,6 +73,35 @@ class PhaseOneTwoThreeTest extends TestCase
         $response = $this->get(route('blog.index', ['q' => 'جستجو']));
         $response->assertStatus(200);
         $response->assertSee('مطلب تست جستجو');
+    }
+
+    public function test_blog_show_displays_related_posts_and_reading_time(): void
+    {
+        $user = User::factory()->create();
+        $main = Post::create([
+            'title' => 'مطلب اصلی وبلاگ',
+            'slug' => 'main-post',
+            'body' => str_repeat('متن تست ', 300),
+            'user_id' => $user->id,
+            'category_id' => null,
+            'is_published' => true,
+            'published_at' => now()->subDay(),
+        ]);
+        Post::create([
+            'title' => 'مطلب مرتبط وبلاگ',
+            'slug' => 'related-post',
+            'body' => 'متن کوتاه',
+            'user_id' => $user->id,
+            'category_id' => null,
+            'is_published' => true,
+            'published_at' => now()->subHours(2),
+        ]);
+
+        $response = $this->get(route('blog.show', $main->slug));
+        $response->assertOk();
+        $response->assertSee('مطالب مرتبط');
+        $response->assertSee('مطلب مرتبط وبلاگ');
+        $response->assertSee('دقیقه مطالعه');
     }
 
     public function test_about_us_block_shows_when_enabled(): void

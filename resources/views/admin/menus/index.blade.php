@@ -4,11 +4,23 @@
 @section('content')
 <div class="admin-page">
     <div class="admin-page-head">
-        <p class="text-slate-600 text-sm">مدیریت منوهای هدر، فوتر، موبایل و نوار بالا.</p>
+        <p class="text-slate-600 text-sm">مدیریت منوهای هدر، فوتر، موبایل، ثانویه و نوار بالا.</p>
         <div class="admin-page-tools">
             <a href="{{ route('admin.menus.create') }}" class="btn btn-primary">منوی جدید</a>
         </div>
     </div>
+
+    <form method="get" class="card card-body flex flex-wrap gap-3 items-end mb-4">
+        <div class="form-group mb-0">
+            <label class="form-label">فیلتر موقعیت</label>
+            <select name="location" onchange="this.form.submit()">
+                <option value="">همه</option>
+                @foreach($locations as $k => $lbl)
+                    <option value="{{ $k }}" @selected(request('location') === $k)>{{ $lbl }}</option>
+                @endforeach
+            </select>
+        </div>
+    </form>
 
     <div class="card">
         <div class="table-responsive">
@@ -18,7 +30,10 @@
                     @forelse($menus as $menu)
                         <tr>
                             <td>{{ $menu->name }}</td>
-                            <td>{{ $locations[$menu->location] ?? $menu->location }}</td>
+                            <td>
+                                {{ $locations[$menu->location] ?? $menu->location }}
+                                <span class="text-xs text-slate-500">— {{ $menu->status === 'published' ? 'منتشر' : 'پیش‌نویس' }}</span>
+                            </td>
                             <td>
                                 <div class="admin-page-tools">
                                     <a href="{{ route('admin.menus.edit', $menu) }}" class="btn btn-primary btn-sm">ویرایش و مدیریت آیتم‌ها</a>

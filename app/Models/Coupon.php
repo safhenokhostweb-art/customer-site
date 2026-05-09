@@ -82,7 +82,10 @@ class Coupon extends Model
         if (empty($allowed)) {
             return true;
         }
-        foreach (array_keys($cart) as $productId) {
+        $productIds = \App\Helpers\ShopCartHelper::distinctProductIds(
+            \App\Helpers\ShopCartHelper::normalizeCart($cart)
+        );
+        foreach ($productIds as $productId) {
             if (in_array((int) $productId, $allowed, true)) {
                 return true;
             }
@@ -96,7 +99,9 @@ class Coupon extends Model
         if (empty($allowedCategories)) {
             return true;
         }
-        $productIds = array_keys($cart);
+        $productIds = \App\Helpers\ShopCartHelper::distinctProductIds(
+            \App\Helpers\ShopCartHelper::normalizeCart($cart)
+        );
         if (empty($productIds)) {
             return false;
         }

@@ -53,7 +53,7 @@ class SeoService
     public function imageUrl(?object $model = null): ?string
     {
         if ($model !== null) {
-            $image = $model->featured_image ?? $model->image ?? $model->meta_image ?? null;
+            $image = $model->og_image ?? $model->featured_image ?? $model->image ?? $model->meta_image ?? null;
             if (!empty($image)) {
                 return \App\Helpers\ImageHelper::url($image) ?? $image;
             }

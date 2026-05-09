@@ -11,9 +11,12 @@ use App\Http\Controllers\Front\ContactController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
+use App\Http\Controllers\Admin\PostSeriesController as AdminPostSeriesController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductAttributeController as AdminProductAttributeController;
 use App\Http\Controllers\Admin\ProductCategoryController as AdminProductCategoryController;
+use App\Http\Controllers\Admin\ShopProductReviewController as AdminShopProductReviewController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
@@ -49,6 +52,7 @@ use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\CurrencyReformController;
 use App\Http\Controllers\Admin\CaptchaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
+use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Account\DashboardController as AccountDashboardController;
@@ -92,6 +96,7 @@ Route::middleware('install.check')->group(function () {
     | (مثلاً safhenokhost.ir) است و PAYMENT_CALLBACK_URL در پلتفرم به این آدرس اشاره دارد.
     */
     Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
+    Route::get('/site-api/menus', [SiteMenuApiController::class, 'index'])->name('site-api.menus');
 
     // Auth
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -170,22 +175,31 @@ Route::middleware('install.check')->group(function () {
     Route::middleware('module:blog')->group(function () {
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
         Route::get('/blog/category/{slug}', [BlogController::class, 'category'])->name('blog.category');
+        Route::get('/blog/series/{slug}', [BlogController::class, 'series'])->name('blog.series');
+        Route::post('/blog/{slug}/like', [BlogController::class, 'like'])->name('blog.like');
         Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
     });
 
     Route::middleware('module:shop')->group(function () {
         Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-        Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
+        Route::get('/shop/compare', [ShopController::class, 'compare'])->name('shop.compare');
+        Route::post('/shop/compare/toggle/{product}', [ShopController::class, 'compareToggle'])->name('shop.compare.toggle');
+        Route::get('/shop/wishlist', [ShopController::class, 'wishlist'])->name('shop.wishlist');
+        Route::post('/shop/wishlist/toggle/{product}', [ShopController::class, 'wishlistToggle'])->name('shop.wishlist.toggle');
+        Route::post('/shop/stock-notify', [ShopController::class, 'stockNotify'])->name('shop.stock-notify');
+        Route::post('/shop/{slug}/reviews', [ShopController::class, 'storeReview'])->name('shop.reviews.store');
+        Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
         Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->name('shop.cart.add');
         Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->name('shop.cart.update');
-        Route::post('/shop/cart/remove/{productId}', [ShopController::class, 'removeFromCart'])->name('shop.cart.remove');
-        Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
+        Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->name('shop.cart.remove');
         Route::post('/shop/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
+        Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
     });
 
     // Admin panel (Persian)
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'license.valid', 'permission:dashboard'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::post('image/upload', [ImageUploadController::class, 'store'])->name('image.upload');
         Route::middleware('permission:pages')->group(function () {
             Route::resource('pages', AdminPageController::class);
         });
@@ -194,7 +208,14 @@ Route::middleware('install.check')->group(function () {
                 Route::resource('categories', AdminCategoryController::class)->except('show');
             });
             Route::middleware('permission:posts')->group(function () {
-                Route::resource('posts', AdminPostController::class);
+                Route::get('posts/{post}/revisions', [AdminPostController::class, 'revisions'])->name('posts.revisions');
+                Route::resource('posts', AdminPostController::class)->except(['show']);
+                Route::resource('post-series', AdminPostSeriesController::class)->except(['show']);
+            });
+            Route::middleware('permission:posts_moderate')->group(function () {
+                Route::post('posts/{post}/approve', [AdminPostController::class, 'approve'])->name('posts.approve');
+                Route::post('posts/{post}/reject', [AdminPostController::class, 'reject'])->name('posts.reject');
+                Route::post('posts/{post}/revisions/{revision}/restore', [AdminPostController::class, 'restoreRevision'])->name('posts.revisions.restore');
             });
         });
         Route::middleware(['module:shop'])->group(function () {
@@ -203,6 +224,10 @@ Route::middleware('install.check')->group(function () {
             });
             Route::middleware('permission:products')->group(function () {
                 Route::resource('products', AdminProductController::class);
+                Route::resource('product-attributes', AdminProductAttributeController::class)->except(['show']);
+                Route::get('shop-product-reviews', [AdminShopProductReviewController::class, 'index'])->name('shop-product-reviews.index');
+                Route::patch('shop-product-reviews/{product_review}', [AdminShopProductReviewController::class, 'update'])->name('shop-product-reviews.update');
+                Route::delete('shop-product-reviews/{product_review}', [AdminShopProductReviewController::class, 'destroy'])->name('shop-product-reviews.destroy');
             });
             Route::middleware('permission:orders')->group(function () {
                 Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
@@ -216,6 +241,12 @@ Route::middleware('install.check')->group(function () {
         Route::middleware('permission:settings')->group(function () {
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+            Route::get('menus/{menu}/preview', [AdminMenuController::class, 'preview'])->name('menus.preview');
+            Route::post('menus/{menu}/publish', [AdminMenuController::class, 'publish'])->name('menus.publish');
+            Route::post('menus/{menu}/preview-token', [AdminMenuController::class, 'regeneratePreviewLink'])->name('menus.preview-token');
+            Route::post('menus/{menu}/reorder-tree', [AdminMenuController::class, 'reorderTree'])->name('menus.reorder-tree');
+            Route::post('menus/{menu}/items/{item}/copy-branch', [AdminMenuController::class, 'copyBranch'])->name('menus.items.copy-branch');
+            Route::post('menus/{menu}/revisions/{revision}/restore', [AdminMenuController::class, 'restoreRevision'])->name('menus.revisions.restore');
             Route::resource('menus', AdminMenuController::class)->except('show');
             Route::post('menus/{menu}/items', [AdminMenuController::class, 'storeItem'])->name('menus.items.store');
             Route::put('menus/{menu}/items/{item}', [AdminMenuController::class, 'updateItem'])->name('menus.items.update');
@@ -413,7 +444,6 @@ Route::middleware('install.check')->group(function () {
         Route::middleware('permission:captcha')->group(function () {
             Route::get('captcha', [CaptchaController::class, 'index'])->name('captcha.index');
             Route::post('captcha', [CaptchaController::class, 'update'])->name('captcha.update');
-            Route::post('image/upload', [ImageUploadController::class, 'store'])->name('image.upload');
         });
 
         // اعلان‌های تولبار سایت (ماژول notifications) + مرکز اعلان‌ها برای کاربران

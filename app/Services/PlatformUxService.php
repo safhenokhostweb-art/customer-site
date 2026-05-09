@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\License;
 use App\Models\Setting;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -122,22 +123,141 @@ class PlatformUxService
         $config = $this->getSiteConfig();
         $menus = $config['menus'] ?? [];
 
-        // تنظیمات محلی منو (ماژول menu) از پنل ادمین سایت
+        // تنظیمات محلی منو (ماژول menu) از پنل ادمین سایت + منوهای منتشرشده در دیتابیس
         $mode = (string) (Setting::get('menu_mode', 'platform') ?: 'platform');
         $rawLocal = Setting::get('menu_custom_menus', null);
-        $localMenus = [];
-        if ($rawLocal) {
-            $decoded = json_decode($rawLocal, true);
-            if (is_array($decoded)) {
-                $localMenus = $decoded;
+        $localMenus = $this->decodeMenus($rawLocal);
+
+        if ($mode === 'local') {
+            $merged = $this->mergeLocalMenusWithDatabase($localMenus);
+            if ($this->menusHaveAnyItems($merged)) {
+                return $merged;
             }
         }
 
-        if ($mode === 'local' && ! empty($localMenus)) {
-            return $localMenus;
+        return $menus;
+    }
+
+    /**
+     * Decode menu payload saved in settings (json string or array).
+     *
+     * @return array<string, mixed>
+     */
+    public function decodeMenus(mixed $raw): array
+    {
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (! is_string($raw) || trim($raw) === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * ادغام منوی ذخیره‌شده در settings با منوهای منتشرشدهٔ جدول menus (اولویت با دیتابیس).
+     *
+     * @param  array<string, mixed>  $settingsMenus
+     * @return array<string, array{items: list<array<string, mixed>>}>
+     */
+    protected function mergeLocalMenusWithDatabase(array $settingsMenus): array
+    {
+        $db = App::make(MenuService::class)->exportPublishedMenusForPlatformShape();
+        $keys = ['header', 'footer', 'mobile', 'secondary', 'topbar'];
+        $out = [];
+        foreach ($keys as $key) {
+            $dbItems = $db[$key]['items'] ?? [];
+            $setItems = $settingsMenus[$key]['items'] ?? [];
+            if (is_array($dbItems) && count($dbItems) > 0) {
+                $out[$key] = ['items' => $this->enrichMenuTreeItems($dbItems)];
+            } elseif (is_array($setItems) && count($setItems) > 0) {
+                $out[$key] = ['items' => $this->enrichMenuTreeItems($setItems)];
+            } else {
+                $out[$key] = ['items' => []];
+            }
         }
 
-        return $menus;
+        return $out;
+    }
+
+    /**
+     * @param  array<string, array{items?: mixed}>  $merged
+     */
+    protected function menusHaveAnyItems(array $merged): bool
+    {
+        foreach ($merged as $block) {
+            $items = $block['items'] ?? [];
+            if (is_array($items) && count($items) > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    public function enrichMenuTreeItems(array $items): array
+    {
+        $out = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $children = $item['children'] ?? [];
+            $children = is_array($children) ? $this->enrichMenuTreeItems($children) : [];
+            $target = $item['target'] ?? (($item['open_in_new_tab'] ?? false) ? '_blank' : '_self');
+            $out[] = array_merge([
+                'title' => (string) ($item['title'] ?? ''),
+                'url' => (string) ($item['url'] ?? '#'),
+                'target' => in_array($target, ['_self', '_blank'], true) ? $target : '_self',
+                'rel' => (string) ($item['rel'] ?? ''),
+                'icon' => $item['icon'] ?? null,
+                'css_class' => $item['css_class'] ?? null,
+                'badge' => $item['badge'] ?? null,
+                'image_url' => $item['image_url'] ?? null,
+                'mega_column' => $item['mega_column'] ?? null,
+                'featured_html' => $item['featured_html'] ?? null,
+                'mega_columns' => is_array($item['mega_columns'] ?? null) ? $item['mega_columns'] : [],
+                'type' => $item['type'] ?? null,
+                'sort_order' => $item['sort_order'] ?? null,
+                'utm_query' => $item['utm_query'] ?? null,
+                'utm_json' => $item['utm_json'] ?? null,
+                'labels' => $item['labels'] ?? null,
+                'title_en' => $item['title_en'] ?? null,
+                'children' => $children,
+            ], array_diff_key($item, array_flip([
+                'title', 'url', 'target', 'rel', 'icon', 'css_class', 'badge', 'image_url',
+                'mega_column', 'featured_html', 'mega_columns', 'type', 'sort_order',
+                'utm_query', 'utm_json', 'labels', 'title_en', 'children',
+            ])));
+        }
+
+        return $out;
+    }
+
+    /**
+     * یکدست‌سازی کلیدهای منو (header/footer/…) برای خروجی API.
+     *
+     * @param  array<string, mixed>  $menus
+     * @return array<string, mixed>
+     */
+    public function enrichMenuPayload(array $menus): array
+    {
+        $out = [];
+        foreach ($menus as $key => $block) {
+            if (is_array($block) && isset($block['items']) && is_array($block['items'])) {
+                $out[$key] = ['items' => $this->enrichMenuTreeItems($block['items'])];
+            } else {
+                $out[$key] = $block;
+            }
+        }
+
+        return $out;
     }
 
     protected function getSiteConfig(): array

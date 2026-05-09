@@ -56,7 +56,16 @@
             method: 'POST',
             body: fd,
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-        }).then(function(r) { return r.json(); }).then(function(data) {
+        }).then(function(r) {
+            return r.json().then(function(data) {
+                return { ok: r.ok, data: data };
+            });
+        }).then(function(result) {
+            var data = result.data;
+            if (!result.ok) {
+                alert(data.message || 'خطا در آپلود');
+                return;
+            }
             if (data.path) {
                 input.value = data.path;
                 if (preview) {

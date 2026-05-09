@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Module as ConfigModule;
 use App\Helpers\SiteHelper;
 use App\Models\License;
+use App\Models\ModuleChangeLog;
 use App\Models\ModuleVersion;
 use App\Models\Setting;
 use App\Services\UpdateCheckService;
@@ -48,12 +49,72 @@ class ModuleController extends Controller
 
         $installedVersions = ModuleVersion::allVersions();
 
+        $latestModuleLogs = ModuleChangeLog::query()
+            ->orderByDesc('released_at')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('module_slug')
+            ->keyBy('module_slug');
+
+        $blogUpdate = collect($moduleUpdates)->firstWhere('slug', 'blog');
+        $blogInstalledVersion = $installedVersions['blog'] ?? ($blogUpdate['installed_version'] ?? ModuleVersion::DEFAULT_VERSION);
+        $blogAvailableVersion = $blogUpdate['available_version'] ?? $blogInstalledVersion;
+        $blogLatestLogs = ModuleChangeLog::query()
+            ->where('module_slug', 'blog')
+            ->orderByDesc('released_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
+        $shopUpdate = collect($moduleUpdates)->firstWhere('slug', 'shop');
+        $shopInstalledVersion = $installedVersions['shop'] ?? ($shopUpdate['installed_version'] ?? ModuleVersion::DEFAULT_VERSION);
+        $shopAvailableVersion = $shopUpdate['available_version'] ?? $shopInstalledVersion;
+        $shopLatestLogs = ModuleChangeLog::query()
+            ->where('module_slug', 'shop')
+            ->orderByDesc('released_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
+        $menuUpdate = collect($moduleUpdates)->firstWhere('slug', 'menu');
+        $menuInstalledVersion = $installedVersions['menu'] ?? ($menuUpdate['installed_version'] ?? ModuleVersion::DEFAULT_VERSION);
+        $menuAvailableVersion = $menuUpdate['available_version'] ?? $menuInstalledVersion;
+        $menuLatestLogs = ModuleChangeLog::query()
+            ->where('module_slug', 'menu')
+            ->orderByDesc('released_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
+
+        $menuMode = (string) (Setting::get('menu_mode', 'platform') ?: 'platform');
+        $menuRaw = Setting::get('menu_custom_menus', null);
+        $menuDecoded = is_array($menuRaw) ? $menuRaw : (is_string($menuRaw) ? json_decode($menuRaw, true) : []);
+        if (!is_array($menuDecoded)) {
+            $menuDecoded = [];
+        }
+        $menuLocalHeaderCount = count($menuDecoded['header']['items'] ?? []);
+        $menuLocalFooterCount = count($menuDecoded['footer']['items'] ?? []);
+
         return view('admin.modules.index', compact(
             'license',
             'modulesFromPlatform',
             'localModules',
             'moduleUpdates',
-            'installedVersions'
+            'installedVersions',
+            'latestModuleLogs',
+            'blogUpdate',
+            'blogInstalledVersion',
+            'blogAvailableVersion',
+            'blogLatestLogs',
+            'shopUpdate',
+            'shopInstalledVersion',
+            'shopAvailableVersion',
+            'shopLatestLogs',
+            'menuUpdate',
+            'menuInstalledVersion',
+            'menuAvailableVersion',
+            'menuLatestLogs',
+            'menuMode',
+            'menuLocalHeaderCount',
+            'menuLocalFooterCount'
         ));
     }
 

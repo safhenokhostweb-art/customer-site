@@ -3,7 +3,11 @@
 
 <h1>تنظیمات اولیه سایت</h1>
 
-<form method="POST" action="{{ route('install.store-settings') }}">
+@if (session('install_notice'))
+    <p class="error mb-2">{{ session('install_notice') }}</p>
+@endif
+
+<form method="POST" action="{{ route('install.store-settings', [], false) }}">
     @csrf
     <label>نام سایت</label>
     <input type="text" name="site_name" value="{{ old('site_name', 'سایت شرکتی من') }}" required>

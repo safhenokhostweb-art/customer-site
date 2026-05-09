@@ -28,7 +28,7 @@ class ModuleReviewsTest extends TestCase
     public function test_reviews_index(): void
     {
         $user = User::factory()->create(['is_admin' => true]);
-        $product = Product::create(['title' => 'تست', 'slug' => 'test', 'price' => 1000, 'is_active' => true]);
+        $product = Product::create(['title' => 'تست', 'slug' => 'test', 'price' => 1000, 'status' => Product::STATUS_PUBLISHED]);
         Review::create([
             'reviewable_type' => Product::class,
             'reviewable_id' => $product->id,

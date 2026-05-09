@@ -8,9 +8,18 @@
             <p class="text-sm text-slate-600">
                 در این صفحه تمام تغییرات منتشرشدهٔ ماژول‌ها از پلتفرم نمایش داده می‌شود.
             </p>
-            <a href="{{ route('admin.modules.changelog', ['sync' => 1]) }}" class="btn btn-secondary">همگام‌سازی لاگ‌ها</a>
+            <a href="{{ route('admin.modules.changelog', array_filter(['sync' => 1, 'module' => $moduleSlug ?? null])) }}" class="btn btn-secondary">همگام‌سازی لاگ‌ها</a>
         </div>
     </div>
+
+    @if(!empty($moduleSlug))
+        <div class="card mb-4">
+            <div class="card-body text-sm text-slate-700">
+                فیلتر فعال: <span class="badge badge-secondary">{{ $moduleSlug }}</span>
+                <a href="{{ route('admin.modules.changelog') }}" class="text-indigo-600 hover:underline mr-2">حذف فیلتر</a>
+            </div>
+        </div>
+    @endif
 
     <div class="card">
         <div class="card-header">لاگ تغییرات ماژول‌ها</div>
