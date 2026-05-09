@@ -10,7 +10,7 @@
         $seoImage = trim($__env->yieldContent('meta_image')) ?: \App\Helpers\Seo::imageUrl();
         $seoCanonical = \App\Helpers\Seo::canonical(trim($__env->yieldContent('canonical')));
         $ogType = trim($__env->yieldContent('og_type')) ?: 'website';
-        $seoRobots = \App\Helpers\Seo::robots();
+        $seoRobots = trim($__env->yieldContent('meta_robots')) ?: \App\Helpers\Seo::robots();
     @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ e($seoDesc) }}">

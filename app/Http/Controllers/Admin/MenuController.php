@@ -59,6 +59,9 @@ class MenuController extends Controller
         }
         if (Menu::menusTableHasGoLiveAtColumn()) {
             $rules['go_live_at'] = 'nullable|date';
+            if ($request->input('go_live_at') === '') {
+                $request->merge(['go_live_at' => null]);
+            }
         }
         $data = $request->validate($rules);
         $data['site_id'] = null;
@@ -67,7 +70,7 @@ class MenuController extends Controller
         }
         if (Menu::menusTableHasGoLiveAtColumn()) {
             if (! empty($data['go_live_at'])) {
-                $data['go_live_at'] = $request->date('go_live_at');
+                $data['go_live_at'] = \Carbon\Carbon::parse($data['go_live_at']);
             } else {
                 $data['go_live_at'] = null;
             }
@@ -130,8 +133,18 @@ class MenuController extends Controller
         }
         if (Menu::menusTableHasGoLiveAtColumn()) {
             $rules['go_live_at'] = 'nullable|date';
+            if ($request->input('go_live_at') === '') {
+                $request->merge(['go_live_at' => null]);
+            }
         }
         $data = $request->validate($rules);
+        if (Menu::menusTableHasGoLiveAtColumn()) {
+            if (! empty($data['go_live_at'] ?? null)) {
+                $data['go_live_at'] = \Carbon\Carbon::parse($data['go_live_at']);
+            } else {
+                $data['go_live_at'] = null;
+            }
+        }
         $menu->update(Menu::stripUnsupportedMenuTableAttributes($data));
         $this->menuService->clearMenuCache($menu->id);
         $this->logChange($request->user()?->id, $menu->id, 'menu_updated', $data);
@@ -146,6 +159,9 @@ class MenuController extends Controller
         ];
         if (Menu::menusTableHasGoLiveAtColumn()) {
             $rules['go_live_at'] = 'nullable|date';
+            if ($request->input('go_live_at') === '') {
+                $request->merge(['go_live_at' => null]);
+            }
         }
         $request->validate($rules);
         if (Menu::menusTableHasStatusColumn()) {

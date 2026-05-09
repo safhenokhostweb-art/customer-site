@@ -18,7 +18,14 @@ class AdvertisementController extends Controller
             $query->where('position', $request->position);
         }
         $advertisements = $query->orderBy('position')->orderBy('order')->paginate(20);
-        return view('admin.advertisements.index', compact('advertisements'));
+
+        $stats = [
+            'total' => \App\Models\Advertisement::count(),
+            'active' => \App\Models\Advertisement::query()->where('is_active', true)->count(),
+            'inactive' => \App\Models\Advertisement::query()->where('is_active', false)->count(),
+        ];
+
+        return view('admin.advertisements.index', compact('advertisements', 'stats'));
     }
 
     public function create()

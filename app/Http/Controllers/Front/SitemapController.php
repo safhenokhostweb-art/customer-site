@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Form;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Product;
@@ -79,6 +80,22 @@ class SitemapController extends Controller
                     'lastmod' => ($post->updated_at ?? $post->published_at)?->toW3cString(),
                     'changefreq' => 'monthly',
                     'priority' => '0.7',
+                ];
+            }
+        }
+
+        if (SiteHelper::moduleEnabled('forms')) {
+            $entries[] = [
+                'loc' => route('forms.index'),
+                'changefreq' => 'weekly',
+                'priority' => '0.65',
+            ];
+            foreach (Form::query()->where('is_active', true)->orderBy('title')->get() as $form) {
+                $entries[] = [
+                    'loc' => route('forms.show', $form->slug),
+                    'lastmod' => $form->updated_at?->toW3cString(),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.55',
                 ];
             }
         }

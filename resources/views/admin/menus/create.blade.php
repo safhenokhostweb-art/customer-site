@@ -2,6 +2,16 @@
 @section('title', 'ایجاد منو')
 @section('header', 'ایجاد منو')
 @section('content')
+@php
+    $goLiveIso = old('go_live_at', '');
+    $goLiveDisplay = '';
+    if ($goLiveIso !== '') {
+        try {
+            $goLiveDisplay = \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($goLiveIso), 'Y/m/d H:i');
+        } catch (\Throwable $e) {
+        }
+    }
+@endphp
 <div class="admin-page" style="max-width:48rem">
     <div class="admin-page-head">
         <h1 class="admin-page-title">ایجاد منو</h1>
@@ -35,10 +45,7 @@
                         <option value="draft" @selected(old('status') === 'draft')>پیش‌نویس</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="menu-go-live">زمان انتشار (اختیاری)</label>
-                    <input id="menu-go-live" type="datetime-local" name="go_live_at" value="{{ old('go_live_at') }}">
-                </div>
+                @include('admin.menus.partials.go-live-at-fields')
                 <div class="admin-form-actions">
                     <button type="submit" class="btn btn-primary">ذخیره</button>
                     <a href="{{ route('admin.menus.index') }}" class="btn btn-outline-secondary">انصراف</a>
@@ -47,4 +54,5 @@
         </div>
     </div>
 </div>
+@include('admin.menus.partials.go-live-at-scripts')
 @endsection

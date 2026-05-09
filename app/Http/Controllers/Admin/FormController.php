@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\SlugHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Front\SitemapController;
 use App\Models\Form;
 use App\Models\FormField;
 use App\Services\CaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 /**
  * ماژول فرم‌ساز: فرم‌ها توسط سایت مشتری ساخته و مدیریت می‌شوند.
@@ -17,50 +18,84 @@ class FormController extends Controller
 {
     public function index()
     {
-        if (!Schema::hasTable('forms')) {
+        if (! Schema::hasTable('forms')) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'جدول فرم‌ها وجود ندارد. لطفاً دستور php artisan migrate را اجرا کنید.');
         }
-        $forms = Form::latest()->get();
+        $forms = Form::query()
+            ->withCount('submissions')
+            ->withCount(['fields' => fn ($q) => $q->where('is_active', true)])
+            ->latest()
+            ->get();
+
         return view('admin.forms.index', compact('forms'));
     }
 
     public function create()
     {
-        if (!Schema::hasTable('forms')) {
+        if (! Schema::hasTable('forms')) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'جدول فرم‌ها وجود ندارد. لطفاً دستور php artisan migrate را اجرا کنید.');
         }
+
         return view('admin.forms.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate(['title' => 'required|string|max:255']);
+        $data = $request->validate($this->formSettingsRules());
 
-        Form::create([
-            'title' => $request->title,
-            'slug' => Str::slug($request->title) . '-' . time(),
+        $slug = $this->resolveSlugForSave(trim((string) ($data['slug'] ?? '')), $data['title'], null);
+        if ($slug instanceof \Illuminate\Http\RedirectResponse) {
+            return $slug;
+        }
+
+        $form = Form::create([
+            'title' => $data['title'],
+            'slug' => $slug,
             'is_active' => $request->boolean('is_active'),
+            'meta_title' => $data['meta_title'] ?: null,
+            'meta_description' => $data['meta_description'] ?: null,
+            'canonical_url' => $data['canonical_url'] ?: null,
+            'meta_robots' => $data['meta_robots'] ?: null,
+            'intro_text' => $data['intro_text'] ?: null,
         ]);
 
-        return redirect()->route('admin.forms.index')->with('success', 'فرم ساخته شد');
+        SitemapController::clearCache();
+
+        return redirect()->route('admin.forms.edit', $form)->with('success', 'فرم ساخته شد؛ اکنون فیلدها را اضافه کنید.');
     }
 
     public function edit(Form $form)
     {
         $form->load('fields');
+
         return view('admin.forms.edit', compact('form'));
     }
 
     public function update(Request $request, Form $form)
     {
+        $data = $request->validate($this->formSettingsRules());
+
+        $slug = $this->resolveSlugForSave(trim((string) ($data['slug'] ?? '')), $data['title'], $form->id);
+        if ($slug instanceof \Illuminate\Http\RedirectResponse) {
+            return $slug;
+        }
+
         $form->update([
-            'title' => $request->title,
+            'title' => $data['title'],
+            'slug' => $slug,
             'is_active' => $request->boolean('is_active'),
+            'meta_title' => $data['meta_title'] ?: null,
+            'meta_description' => $data['meta_description'] ?: null,
+            'canonical_url' => $data['canonical_url'] ?: null,
+            'meta_robots' => $data['meta_robots'] ?: null,
+            'intro_text' => $data['intro_text'] ?: null,
         ]);
 
-        return back()->with('success', 'فرم ویرایش شد');
+        SitemapController::clearCache();
+
+        return back()->with('success', 'تنظیمات فرم ذخیره شد.');
     }
 
     public function destroy(Form $form)
@@ -68,6 +103,7 @@ class FormController extends Controller
         $form->fields()->delete();
         $form->submissions()->delete();
         $form->delete();
+        SitemapController::clearCache();
 
         return redirect()->route('admin.forms.index')->with('success', 'فرم حذف شد');
     }
@@ -90,6 +126,7 @@ class FormController extends Controller
                 }
             }
         }
+
         return view('admin.forms.preview', compact('form', 'captcha'));
     }
 
@@ -98,13 +135,29 @@ class FormController extends Controller
         $data = $request->validate([
             'label' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'type' => 'required|string',
+            'type' => 'required|string|in:text,textarea,email,number,date,radio,checkbox,select',
             'is_required' => 'nullable|boolean',
+            'placeholder' => 'nullable|string|max:255',
+            'help_text' => 'nullable|string|max:500',
+            'options_raw' => 'nullable|string|max:8000',
         ]);
 
         $data['is_required'] = $request->has('is_required');
         $data['is_active'] = true;
         $data['position'] = $form->fields()->count() + 1;
+        $data['placeholder'] = $data['placeholder'] ?: null;
+        $data['help_text'] = $data['help_text'] ?: null;
+
+        $options = null;
+        if (in_array($data['type'], ['select', 'radio', 'checkbox'], true)) {
+            $lines = preg_split('/\r\n|\r|\n/', (string) ($data['options_raw'] ?? '')) ?: [];
+            $options = array_values(array_filter(array_map('trim', $lines), fn ($p) => $p !== ''));
+            if (count($options) < 1) {
+                return back()->withErrors(['options_raw' => 'برای این نوع فیلد حداقل یک گزینه وارد کنید (هر خط یک گزینه).'])->withInput();
+            }
+        }
+        $data['options'] = $options;
+        unset($data['options_raw']);
 
         $form->fields()->create($data);
 
@@ -114,12 +167,14 @@ class FormController extends Controller
     public function destroyField(FormField $field)
     {
         $field->delete();
+
         return back()->with('success', 'فیلد حذف شد');
     }
 
     public function toggleField(FormField $field)
     {
-        $field->update(['is_active' => !$field->is_active]);
+        $field->update(['is_active' => ! $field->is_active]);
+
         return back();
     }
 
@@ -128,6 +183,51 @@ class FormController extends Controller
         foreach ($request->positions as $position => $id) {
             FormField::where('id', $id)->update(['position' => $position]);
         }
+
         return response()->json(['status' => 'ok']);
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function formSettingsRules(): array
+    {
+        return [
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'canonical_url' => 'nullable|string|max:500',
+            'meta_robots' => 'nullable|string|max:80',
+            'intro_text' => 'nullable|string|max:5000',
+        ];
+    }
+
+    /**
+     * @return string|\Illuminate\Http\RedirectResponse
+     */
+    private function resolveSlugForSave(string $slugInput, string $title, ?int $ignoreFormId)
+    {
+        if ($slugInput !== '') {
+            if (! SlugHelper::isValid($slugInput)) {
+                return back()->withErrors(['slug' => 'نامک فقط می‌تواند شامل حروف، اعداد و خط تیره باشد.'])->withInput();
+            }
+
+            return SlugHelper::unique(
+                $slugInput,
+                fn (string $s) => Form::query()
+                    ->when($ignoreFormId, fn ($q) => $q->whereKeyNot($ignoreFormId))
+                    ->where('slug', $s)
+                    ->exists()
+            );
+        }
+
+        return SlugHelper::unique(
+            SlugHelper::make($title),
+            fn (string $s) => Form::query()
+                ->when($ignoreFormId, fn ($q) => $q->whereKeyNot($ignoreFormId))
+                ->where('slug', $s)
+                ->exists()
+        );
     }
 }

@@ -2,12 +2,23 @@
 
 namespace App\Models;
 
+use App\Helpers\SlugHelper;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Form extends Model
 {
-    protected $fillable = ['title', 'slug', 'is_active', 'enable_simple_captcha', 'enable_hcaptcha'];
+    protected $fillable = [
+        'title',
+        'slug',
+        'is_active',
+        'enable_simple_captcha',
+        'enable_hcaptcha',
+        'meta_title',
+        'meta_description',
+        'canonical_url',
+        'meta_robots',
+        'intro_text',
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -30,7 +41,10 @@ class Form extends Model
         parent::boot();
         static::creating(function ($form) {
             if (empty($form->slug)) {
-                $form->slug = Str::slug($form->title) . '-' . time();
+                $form->slug = SlugHelper::unique(
+                    SlugHelper::make((string) $form->title),
+                    fn (string $s) => static::query()->where('slug', $s)->exists()
+                );
             }
         });
     }

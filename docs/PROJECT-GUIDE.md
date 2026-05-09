@@ -330,6 +330,10 @@
   - **سبد و سفارش:** کلید ردیف `productId:variantId`، ذخیرهٔ `product_variant_id` روی `order_items`، کوپن با `ShopCartHelper::distinctProductIds`.
   - **ادمین:** فرم گسترش‌یافتهٔ محصول (TinyMCE محلی برای توضیح بلند، ارسال/بازگشت، گارانتی، تضمین، جدول سایز HTML؛ FAQ به‌صورت ردیف‌های فرم با ویرایشگر غنی برای پاسخ)، `sale_ends_at` با datepicker شمسی و ساعت؛ CRUD ویژگی‌های فنی (`admin.product-attributes.*`)، مدیریت نظرات فروشگاه (`admin.shop-product-reviews.*`)؛ فهرست و ویرایش محصول تاریخ ثبت/ویرایش و در صورت وجود پایان حراج را با `Jalali::formatFa` نشان می‌دهند.
   - نسخهٔ قبلی مستند 1.1.0: فیلتر قیمت `effective_price`، اعتبارسنجی موجودی سبد، checkout تراکنشی و `lockForUpdate` همچنان برقرار است.
+- ماژول `forms` (فرم‌ساز در customer-site):
+  - جدول `forms`: پس از مایگریشن `2026_05_09_140000_add_seo_to_forms_table.php` فیلدهای `meta_title`، `meta_description`، `canonical_url`، `meta_robots`، `intro_text`؛ نامک پایدار با `SlugHelper`؛ ادمین `admin.forms.*` با کارت آماری (تعداد فیلد فعال و ارسال)، لینک مستقیم عمومی و بخش سئو/متن راهنما.
+  - فرانت `forms.index` / `forms.show` / `forms.submit`: breadcrumb، متا و canonical از فیلدهای فرم، `@section('meta_robots')` در `themes/default/layout.blade.php` برای robots صفحه‌ای، JSON-LD (`WebPage` / `CollectionPage`)؛ انواع فیلد شامل `select` / `radio` / `checkbox` با گزینه‌های چندخطی؛ تاریخ شمسی در ارسال با `Jalali::toCarbon` به `Y-m-d` در JSON ارسال.
+  - **Sitemap:** اگر `SiteHelper::moduleEnabled('forms')` باشد، URL فهرست فرم‌ها و هر فرم فعال در `SitemapController::collectEntries`؛ `SitemapController::clearCache()` پس از ذخیره/حذف فرم در `FormController`.
 - صفحهٔ `admin.modules.index` علاوه‌بر نسخهٔ نصب‌شده، آخرین changelog همگام‌شدهٔ هر ماژول را نیز نشان می‌دهد تا مقایسهٔ نسخهٔ نصب‌شده/قابل‌دریافت شفاف‌تر باشد.
 - ماژول `advanced_search`:
   - مسیرهای فرانت: گروه `module:advanced_search` در `routes/web.php` (`search.index`، `search.suggest`، `search.results`).
@@ -338,7 +342,7 @@
 - ماژول `menu` (به‌روزرسانی ۱۴۰۵/۰۲/۱۸):
   - اگر در لایسنس/تنظیمات فعال باشد (`SiteHelper::moduleEnabled('menu')`)، layout پیش‌فرض (`resources/views/themes/default/layout.blade.php`) از منوی منتشرشده در جدول `menus` (موقعیت‌های `primary`، `footer`، `mobile`، `secondary`، `topbar`) و در نبود آن از `PlatformUx::menus()` استفاده می‌کند.
   - **حالت local:** `PlatformUxService::getMenus()` در `menu_mode=local` منوی منتشرشدهٔ دیتابیس را با کلیدهای `header`/`footer`/`mobile`/`secondary`/`topbar` به خروجی API‌شکل یکسان می‌کند؛ اگر برای یک کلید در دیتابیس آیتمی نباشد، از `menu_custom_menus` در `settings` استفاده می‌شود. `decodeMenus` و `enrichMenuTreeItems` فیلدهای غنی (UTM، badge، مگامنو، …) را یکدست می‌کنند.
-  - **ادمین:** مسیر `admin.menus.*` — درخت تو در تو با SortableJS، ذخیرهٔ ساختار از طریق `menus.reorder-tree`، کپی شاخه (`copy-branch`)، پیش‌نویس/انتشار و `go_live_at`، پیش‌نمایش با `preview_token`، نسخه‌گردانی (`menu_revisions` + بازگردانی)، لاگ اختیاری (`menu_change_logs`).
+  - **ادمین:** مسیر `admin.menus.*` — درخت تو در تو با SortableJS، ذخیرهٔ ساختار از طریق `menus.reorder-tree`، کپی شاخه (`copy-branch`)، پیش‌نویس/انتشار و `go_live_at` با datepicker شمسی و ساعت (partial `admin.menus.partials.go-live-at-*`)، پیش‌نمایش با `preview_token`، نسخه‌گردانی (`menu_revisions` + بازگردانی با تاریخ شمسی در فهرست)، لاگ اختیاری (`menu_change_logs`).
   - **آیتم:** انواع `custom_url`، `internal_page`، `blog`، `blog_category`، `blog_tag`، `shop`، `category`؛ فیلدهای `utm_query`/`utm_json` (کلیدهای `utm_*`)، `rel_nofollow`، `open_in_new_tab`، `badge_label`، `image_url`، `mega_column`، `featured_html`، `auto_list_children` (زیردستهٔ خودکار برای دستهٔ فروشگاه)، `visible_modules` (فیلتر بر اساس `SiteHelper::moduleEnabled`)، `title_en` و `labels` JSON.
   - **فرانت:** `partials/site-menu.blade.php` و `MenuActiveTrail` برای مسیر فعال؛ مگامنو چندستونه از `mega_columns`؛ موبایل آکاردئونی (`partials/site-menu-mobile.blade.php`) با `aria-expanded`/`aria-hidden` و قفل اسکرول بدنه (`config/menu.php` → `mobile_body_scroll_lock`).
   - **کش:** `MenuService::clearMenuCache` و `PlatformUxService::clearCache` پس از ذخیره.
@@ -417,4 +421,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۹ — ادمین وبلاگ و فروشگاه: TinyMCE یکپارچه از vendor، datepicker شمسی برای انتشار مطلب و پایان حراج محصول، برچسب‌های زمانی شمسی در فرم‌ها.*
+*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۹ — فرم‌ساز: سئو per-form، sitemap، UX ادمین و اصلاح فیلدها؛ منو: `go_live_at` شمسی؛ layout فرانت پشتیبانی `@section('meta_robots')`.*

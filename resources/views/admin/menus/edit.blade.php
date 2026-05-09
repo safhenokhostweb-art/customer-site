@@ -2,6 +2,20 @@
 @section('title', 'ویرایش منو: ' . $menu->name)
 @section('header', 'ویرایش منو')
 @section('content')
+@php
+    $goLiveIso = old('go_live_at');
+    if ($goLiveIso === null && $menu->go_live_at) {
+        $goLiveIso = $menu->go_live_at->format('Y-m-d H:i:s');
+    }
+    $goLiveIso = $goLiveIso ?? '';
+    $goLiveDisplay = '';
+    if ($goLiveIso !== '') {
+        try {
+            $goLiveDisplay = \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($goLiveIso), 'Y/m/d H:i');
+        } catch (\Throwable $e) {
+        }
+    }
+@endphp
 <div class="admin-page">
     <div class="admin-page-head">
         <div>
@@ -14,7 +28,7 @@
                     <span class="badge badge-draft">پیش‌نویس</span>
                 @endif
                 @if($menu->go_live_at)
-                    <span class="text-xs text-slate-500" style="margin-right:0.35rem">زمان انتشار: {{ $menu->go_live_at->format('Y-m-d H:i') }}</span>
+                    <span class="text-xs text-slate-500" style="margin-right:0.35rem">زمان انتشار (شمسی): {{ \App\Helpers\Jalali::formatFa($menu->go_live_at, 'Y/m/d H:i') }}</span>
                 @endif
             </p>
         </div>
@@ -77,11 +91,8 @@
                                 <option value="published" @selected(old('status', $menu->status) === 'published')>منتشر شده</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="menu-go-live">زمان انتشار (اختیاری — آینده برای زمان‌بندی)</label>
-                            <input id="menu-go-live" type="datetime-local" name="go_live_at" value="{{ old('go_live_at', optional($menu->go_live_at)->format('Y-m-d\TH:i')) }}">
-                            <span class="admin-field-hint">اگر تاریخ آینده باشد، منو به‌صورت خودکار در همان زمان منتشر می‌شود.</span>
-                        </div>
+                        @include('admin.menus.partials.go-live-at-fields')
+                        <p class="admin-field-hint mt-0">اگر تاریخ آینده باشد، منو در همان زمان در فرانت قابل نمایش می‌شود (طبق منطق visible).</p>
                         <button type="submit" class="btn btn-secondary">ذخیرهٔ وضعیت</button>
                     </form>
                     <form action="{{ route('admin.menus.publish', $menu) }}" method="post" class="admin-form-stack border-t border-slate-100 pt-4">
@@ -108,7 +119,7 @@
                     <div class="card-body text-sm space-y-2">
                         @foreach($revisions as $rev)
                             <div class="flex flex-wrap justify-between gap-2 border-b border-slate-100 pb-2">
-                                <span>{{ $rev->created_at->format('Y-m-d H:i') }} @if($rev->note) — {{ $rev->note }} @endif</span>
+                                <span>{{ \App\Helpers\Jalali::formatFa($rev->created_at, 'Y/m/d H:i') }} @if($rev->note) — {{ $rev->note }} @endif</span>
                                 <form action="{{ route('admin.menus.revisions.restore', [$menu, $rev]) }}" method="post" onsubmit="return confirm('بازگردانی این نسخه؟ آیتم‌های فعلی جایگزین می‌شوند.');">
                                     @csrf
                                     <button type="submit" class="btn btn-danger btn-sm">بازگردانی</button>
@@ -285,4 +296,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+@include('admin.menus.partials.go-live-at-scripts')
 @endsection
