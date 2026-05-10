@@ -33,6 +33,12 @@
         }
     },
     "scripts": {
+        "sync-cursor-rules": [
+            "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-cursor-rules.ps1"
+        ],
+        "sync-cursor-rules:reverse": [
+            "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-cursor-rules.ps1 -Reverse"
+        ],
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",

@@ -10,6 +10,7 @@
 /.nova
 /.phpunit.cache
 /.vscode
+cursor-rules-sync.local.json
 /.cursor
 /.zed
 /auth.json
