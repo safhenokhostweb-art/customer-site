@@ -32,7 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">توضیحات</label>
-                    <textarea name="description" rows="3">{{ old('description', $subscription->description) }}</textarea>
+                    <textarea id="subscription-description-editor" name="description" class="w-full min-h-[160px]">{{ old('description', $subscription->description) }}</textarea>
                 </div>
                 <div class="form-group">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -48,4 +48,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#subscription-description-editor', 'uploadContext' => 'featured', 'height' => 300])
 @endsection

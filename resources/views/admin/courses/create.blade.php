@@ -18,7 +18,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">توضیحات</label>
-                    <textarea name="description" rows="4" placeholder="شرح دوره...">{{ old('description') }}</textarea>
+                    <textarea id="course-description-editor" name="description" class="w-full min-h-[180px]" placeholder="شرح دوره...">{{ old('description') }}</textarea>
                 </div>
                 <x-image-picker name="image" :value="old('image')" context="course" label="تصویر دوره" />
                 <div class="form-group">
@@ -39,4 +39,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#course-description-editor', 'uploadContext' => 'course', 'height' => 340])
 @endsection

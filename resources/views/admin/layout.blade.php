@@ -7,6 +7,7 @@
     <title>@yield('title', 'پنل مدیریت') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
     {{-- قالب و منو: فقط فایل محلی؛ ابزارهای صفحات داخلی از build محلی Vite (بدون CDN) --}}
     <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
+    @include('partials.customer-admin-sidebar-theme')
     <link rel="stylesheet" href="{{ asset('css/admin-modules.css') }}?v={{ @filemtime(public_path('css/admin-modules.css')) ?: time() }}">
     @vite(['resources/css/app.css'])
     @include('partials.platform-styles')
@@ -104,6 +105,7 @@
             </header>
 
             <main class="admin-main">
+                @include('admin.partials.persian-date-admin-assets')
                 @if(session('success'))
                     <div class="admin-flash admin-flash--success" role="status">
                         <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
@@ -161,7 +163,7 @@
             });
         }
     })();
-    // Sidebar menu groups accordion (collapse/expand)
+    // Sidebar menu groups accordion (collapse/expand); گروه حاوی صفحهٔ جاری همیشه باز می‌ماند
     (function(){
         var toggles = document.querySelectorAll('[data-group-toggle]');
         toggles.forEach(function(btn){
@@ -174,7 +176,8 @@
             if (!items || !caret) return;
 
             var storageKey = 'customer-admin-group-open-' + idx;
-            var open = localStorage.getItem(storageKey) === 'true';
+            var hasActive = !!group.querySelector('.sidebar-link.active');
+            var open = hasActive || localStorage.getItem(storageKey) === 'true';
 
             function setOpen(isOpen){
                 if (isOpen) {
@@ -189,6 +192,9 @@
             }
 
             setOpen(open);
+            if (hasActive) {
+                localStorage.setItem(storageKey, 'true');
+            }
 
             btn.addEventListener('click', function(e){
                 e.preventDefault();

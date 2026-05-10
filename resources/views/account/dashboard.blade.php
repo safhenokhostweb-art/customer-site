@@ -3,46 +3,37 @@
 @section('header', 'خلاصه حساب')
 
 @section('content')
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<p class="text-slate-600 text-sm mb-4">نمای کلی حساب شما به‌صورت کاشی؛ برای جزئیات روی هر کاشی کلیک کنید.</p>
+<div class="account-dashboard-tiles">
     @if(\App\Helpers\SiteHelper::shopEnabled())
-        <div class="account-card">
-            <div class="account-card-body">
-                <div class="text-sm text-slate-500 mb-1">تعداد سفارشات</div>
-                <div class="text-2xl font-bold text-slate-800">{{ number_format($ordersCount) }}</div>
-                <a href="{{ route('account.orders.index') }}" class="text-indigo-600 text-sm mt-2 inline-block hover:underline">مشاهده همه</a>
-            </div>
-        </div>
-        <div class="account-card">
-            <div class="account-card-body">
-                <div class="text-sm text-slate-500 mb-1">مجموع خریدها</div>
-                <div class="text-2xl font-bold text-slate-800">{{ number_format($ordersTotal) }} تومان</div>
-            </div>
+        <a href="{{ route('account.orders.index') }}" class="account-dashboard-tile account-dashboard-tile--indigo">
+            <span class="account-dashboard-tile__label">تعداد سفارشات</span>
+            <span class="account-dashboard-tile__value">{{ number_format($ordersCount) }}</span>
+            <span class="account-dashboard-tile__link">مشاهده همه سفارشات ←</span>
+        </a>
+        <div class="account-dashboard-tile account-dashboard-tile--teal" style="cursor: default;">
+            <span class="account-dashboard-tile__label">مجموع خریدها</span>
+            <span class="account-dashboard-tile__value">{{ number_format($ordersTotal) }} <span style="font-size:0.75rem;font-weight:600">تومان</span></span>
         </div>
     @endif
     @if(\App\Helpers\SiteHelper::moduleEnabled('subscription'))
-        <div class="account-card">
-            <div class="account-card-body">
-                <div class="text-sm text-slate-500 mb-1">اشتراک‌های فعال</div>
-                <div class="text-2xl font-bold text-slate-800">{{ number_format($activeSubscriptionsCount) }}</div>
-                <a href="{{ route('account.subscriptions.index') }}" class="text-indigo-600 text-sm mt-2 inline-block hover:underline">مشاهده همه</a>
-            </div>
-        </div>
+        <a href="{{ route('account.subscriptions.index') }}" class="account-dashboard-tile account-dashboard-tile--orange">
+            <span class="account-dashboard-tile__label">اشتراک‌های فعال</span>
+            <span class="account-dashboard-tile__value">{{ number_format($activeSubscriptionsCount) }}</span>
+            <span class="account-dashboard-tile__link">مدیریت اشتراک ←</span>
+        </a>
     @endif
     @if(config('account.wallet_enabled', false))
-        <div class="account-card">
-            <div class="account-card-body">
-                <div class="text-sm text-slate-500 mb-1">موجودی کیف پول</div>
-                <div class="text-2xl font-bold text-slate-800">{{ number_format($walletBalance) }} تومان</div>
-            </div>
+        <div class="account-dashboard-tile account-dashboard-tile--pink" style="cursor: default;">
+            <span class="account-dashboard-tile__label">موجودی کیف پول</span>
+            <span class="account-dashboard-tile__value">{{ number_format($walletBalance) }} <span style="font-size:0.75rem;font-weight:600">تومان</span></span>
         </div>
     @endif
-    <div class="account-card">
-        <div class="account-card-body">
-            <div class="text-sm text-slate-500 mb-1">اعلان‌های خوانده‌نشده</div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($unreadNotificationsCount) }}</div>
-            <a href="{{ route('account.notifications.index') }}" class="text-indigo-600 text-sm mt-2 inline-block hover:underline">مشاهده همه</a>
-        </div>
-    </div>
+    <a href="{{ route('account.notifications.index') }}" class="account-dashboard-tile account-dashboard-tile--blue">
+        <span class="account-dashboard-tile__label">اعلان خوانده‌نشده</span>
+        <span class="account-dashboard-tile__value">{{ number_format($unreadNotificationsCount) }}</span>
+        <span class="account-dashboard-tile__link">صندوق اعلان‌ها ←</span>
+    </a>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

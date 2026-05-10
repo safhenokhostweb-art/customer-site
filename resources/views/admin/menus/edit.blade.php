@@ -202,7 +202,7 @@
                     <div class="form-group"><label class="form-label" for="new-item-badge">Badge</label><input id="new-item-badge" type="text" name="badge_label"></div>
                     <div class="form-group"><label class="form-label" for="new-item-image-url">تصویر مگا</label><input id="new-item-image-url" type="text" name="image_url"></div>
                     <div class="form-group"><label class="form-label" for="new-item-mega-column">ستون مگا</label><input id="new-item-mega-column" type="number" name="mega_column" min="0" max="99"></div>
-                    <div class="form-group"><label class="form-label" for="new-item-featured-html">HTML ویژه</label><textarea id="new-item-featured-html" name="featured_html" rows="2"></textarea></div>
+                    <div class="form-group"><label class="form-label" for="new-item-featured-html">HTML ویژه</label><textarea id="new-item-featured-html" class="menu-featured-html-editor w-full min-h-[120px]" name="featured_html" rows="2"></textarea></div>
                     <div class="form-group"><label class="form-label" for="new-item-css-class">کلاس CSS</label><input id="new-item-css-class" type="text" name="css_class"></div>
                     <div class="form-group"><label class="form-label" for="new-item-visible-modules">ماژول‌های لازم JSON</label><textarea id="new-item-visible-modules" name="visible_modules_json" rows="1" placeholder='["shop"]'></textarea></div>
                     <label class="admin-form-inline-check"><input type="checkbox" name="open_in_new_tab" value="1"> تب جدید</label>
@@ -297,4 +297,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @include('admin.menus.partials.go-live-at-scripts')
+@include('admin.partials.tinymce-field-init', ['selector' => '.menu-featured-html-editor', 'uploadContext' => 'featured', 'height' => 260])
 @endsection

@@ -163,7 +163,7 @@ class AdminMenu
     protected const MODULE_UI_MODE = [
         // ماژول‌های داخلی سایت
         'advanced_search' => 'standalone',
-        'menu' => 'admin.menus.index',
+        'menu' => 'standalone',
         'bank_gateway' => 'embedded',
 
         // ماژول‌های پلتفرمی
@@ -279,13 +279,121 @@ class AdminMenu
     {
         return [
             'اصلی' => ['dashboard'],
-            'محتوا' => ['pages', 'categories', 'post_series', 'posts', 'advanced_search', 'menu'],
+            // صفحات و منو نزدیک هم؛ سپس وبلاگ؛ جستجوی پیشرفته در انتهای بلوک محتوا
+            'محتوا و ساختار سایت' => ['pages', 'menu', 'categories', 'post_series', 'posts', 'advanced_search'],
             'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon'],
-            'تعامل و اعلان' => ['reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
-            'اشتراک و دوره' => ['subscription', 'courses'],
-            'مالی و تماس' => ['invoice', 'business_card', 'social_links', 'advertisements'],
-            'فرم و محتوا' => ['forms', 'forms_submissions'],
-            'سیستم' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform', 'license', 'modules', 'modules_changelog', 'module_store', 'support', 'bank_gateway'],
+            'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
+            'اشتراک و آموزش' => ['subscription', 'courses'],
+            'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
+            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
+            'لایسنس، ماژول‌ها و پشتیبانی' => ['license', 'modules', 'modules_changelog', 'module_store', 'support', 'bank_gateway'],
+        ];
+    }
+
+    /**
+     * ترتیب نمایش در کاتالوگ ماژول‌ها (صفحهٔ admin.modules.index): ابتدا دسته، سپس نامک.
+     *
+     * @param  array<int, string>  $slugs
+     * @return array<int, string>
+     */
+    public static function sortLicensedModuleSlugsForDisplay(array $slugs): array
+    {
+        $slugs = array_values(array_unique(array_filter($slugs, 'is_string')));
+        usort($slugs, function (string $a, string $b): int {
+            $metaA = self::moduleCatalogMeta($a);
+            $metaB = self::moduleCatalogMeta($b);
+            if ($metaA['sort'] !== $metaB['sort']) {
+                return $metaA['sort'] <=> $metaB['sort'];
+            }
+
+            return strnatcasecmp($a, $b);
+        });
+
+        return $slugs;
+    }
+
+    /** نگاشت slug لایسنس به کلید آیکن سایدبار (همان partial). */
+    public static function moduleTileIconKey(string $slug): string
+    {
+        $slug = $slug === 'messaging' ? 'whatsapp' : $slug;
+        $map = [
+            'blog' => 'posts',
+            'shop' => 'products',
+            'forms' => 'forms',
+            'advanced_search' => 'advanced_search',
+            'menu' => 'menu',
+            'advertisements' => 'advertisements',
+            'notifications' => 'notifications',
+            'coupon' => 'coupon',
+            'messaging' => 'whatsapp',
+        ];
+
+        return $map[$slug] ?? $slug;
+    }
+
+    /**
+     * دستهٔ نمایشی یک ماژول در گرید «ماژول‌های خریداری‌شده».
+     *
+     * @return array{sort: int, label: string, pill_class: string}
+     */
+    public static function moduleCatalogMeta(string $slug): array
+    {
+        $slug = $slug === 'messaging' ? 'whatsapp' : $slug;
+
+        $defs = [
+            'content' => [
+                'sort' => 10,
+                'label' => 'محتوا و وب‌سایت',
+                'pill_class' => 'admin-module-cat-pill admin-module-cat-pill--content',
+                'slugs' => [
+                    'blog', 'forms', 'advanced_search', 'menu', 'gallery', 'podcast', 'video',
+                    'portfolio', 'projects', 'qa', 'services', 'pages', 'media',
+                ],
+            ],
+            'commerce' => [
+                'sort' => 20,
+                'label' => 'فروش و تجارت',
+                'pill_class' => 'admin-module-cat-pill admin-module-cat-pill--commerce',
+                'slugs' => [
+                    'shop', 'coupon', 'reviews', 'referral', 'subscription', 'courses', 'invoice',
+                    'business_card', 'social_links', 'wallet', 'product_bundling', 'inventory',
+                    'shipping', 'multi_currency', 'marketplace_sync', 'discount_advanced',
+                ],
+            ],
+            'marketing' => [
+                'sort' => 30,
+                'label' => 'مارکتینگ و ارتباط',
+                'pill_class' => 'admin-module-cat-pill admin-module-cat-pill--marketing',
+                'slugs' => [
+                    'seo_advanced', 'analytics', 'marketing_automation', 'announcements',
+                    'notifications', 'whatsapp', 'sms', 'omnichannel', 'crm', 'advertisements',
+                ],
+            ],
+            'system' => [
+                'sort' => 40,
+                'label' => 'سیستم و عملیات',
+                'pill_class' => 'admin-module-cat-pill admin-module-cat-pill--system',
+                'slugs' => [
+                    'accounting', 'backup', 'cloud', 'brand', 'i18n', 'tasks', 'contract',
+                    'recruitment',
+                ],
+            ],
+        ];
+
+        foreach ($defs as $def) {
+            if (in_array($slug, $def['slugs'], true)) {
+                return [
+                    'sort' => $def['sort'],
+                    'label' => $def['label'],
+                    'pill_class' => $def['pill_class'],
+                ];
+            }
+        }
+
+        return [
+            'sort' => 90,
+            'label' => 'سایر امکانات',
+            'pill_class' => 'admin-module-cat-pill admin-module-cat-pill--other',
         ];
     }
 

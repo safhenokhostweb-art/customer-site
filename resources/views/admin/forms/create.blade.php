@@ -45,7 +45,7 @@
                     <legend class="admin-fieldset__legend">متن بالای فرم (اختیاری)</legend>
                     <div class="form-group">
                         <label class="form-label" for="form-intro">راهنما / توضیح کوتاه</label>
-                        <textarea id="form-intro" name="intro_text" rows="4" class="w-full border rounded-lg px-3 py-2" placeholder="مثلاً مدارک لازم، زمان پاسخ‌گویی...">{{ old('intro_text') }}</textarea>
+                        <textarea id="form-intro" name="intro_text" class="w-full border rounded-lg px-3 py-2 min-h-[200px]" placeholder="مثلاً مدارک لازم، زمان پاسخ‌گویی...">{{ old('intro_text') }}</textarea>
                     </div>
                 </fieldset>
 
@@ -77,5 +77,5 @@
         </div>
     </div>
 </div>
-
+@include('admin.partials.tinymce-field-init', ['selector' => '#form-intro', 'uploadContext' => 'featured', 'height' => 320])
 @endsection

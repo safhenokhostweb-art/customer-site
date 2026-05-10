@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageTemplate;
 use App\Services\ThemeBuilder\BlockRenderer;
+use App\Support\BuilderPageKits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -31,6 +32,7 @@ class PageBuilderController extends Controller
             'page' => $page,
             'elementsConfig' => $elements,
             'builderContent' => $content,
+            'pageKits' => BuilderPageKits::definitions(),
             'useV2' => true,
             'testMode' => false,
         ]);
@@ -53,6 +55,7 @@ class PageBuilderController extends Controller
             'page' => $page,
             'elementsConfig' => $elements,
             'builderContent' => $content,
+            'pageKits' => BuilderPageKits::definitions(),
             'useV2' => true,
             'testMode' => true,
         ]);
@@ -223,6 +226,7 @@ class PageBuilderController extends Controller
             'footers' => $footers,
             'saved' => $saved,
             'sectionPresets' => $sectionPresets,
+            'pageKits' => BuilderPageKits::definitions(),
         ]);
     }
 

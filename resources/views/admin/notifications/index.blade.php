@@ -5,7 +5,8 @@
 <div class="admin-page">
     <div class="admin-page-head">
         <div>
-            <p class="text-slate-600 text-sm">مدیریت اعلان‌های نوار اطلاع‌رسانی (تولبار) برای بازدیدکنندگان سایت و اعلان‌های داخلی کاربران.</p>
+            <h1 class="admin-page-title">اعلان‌ها و نوار پیام</h1>
+            <p class="text-slate-600 text-sm mt-1">مدیریت اعلان‌های نوار اطلاع‌رسانی (تولبار) برای بازدیدکنندگان سایت و اعلان‌های داخلی کاربران.</p>
             <p class="text-slate-500 text-xs mt-1">
                 اعلان‌های ادمین این سایت از پلتفرم اصلی (saas-platform) در دکمهٔ زنگولهٔ پایین راست پنل مدیریت نمایش داده می‌شوند.
                 برای همگام‌سازی اعلان‌های ادمین از پلتفرم، در
@@ -175,9 +176,9 @@
                             <td>{{ $n->show_shaking_logo ? '✓' : '—' }}</td>
                             <td class="text-sm">
                                 @if($n->starts_at || $n->expires_at)
-                                    {{ $n->starts_at ? \App\Helpers\Jalali::formatFa($n->starts_at, 'Y/m/d') : '—' }}
+                                    {{ $n->starts_at ? \App\Helpers\Jalali::formatFa($n->starts_at, 'Y/m/d H:i') : '—' }}
                                     تا
-                                    {{ $n->expires_at ? \App\Helpers\Jalali::formatFa($n->expires_at, 'Y/m/d') : '—' }}
+                                    {{ $n->expires_at ? \App\Helpers\Jalali::formatFa($n->expires_at, 'Y/m/d H:i') : '—' }}
                                 @else
                                     همیشه
                                 @endif

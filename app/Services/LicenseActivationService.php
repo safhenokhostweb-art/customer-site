@@ -22,6 +22,24 @@ class LicenseActivationService
         $domain = $domain ?? $license->domain ?? request()->getHost();
         $result = $this->validate($license->license_key, $domain);
 
+        /**
+         * فقط برای خطای قطعی پلتفرم (ابطال، انقضا، کلید نامعتبر، …) وضعیت محلی را خراب کن.
+         * خطاهای شبکه، ۵۰۰، timeout و پاسخ نامعتبر نباید لایسنس را «ابطال‌شده توسط پلتفرم» کنند.
+         */
+        if (empty($result['valid']) && ! $this->isDefinitePlatformRejection($result)) {
+            Log::warning('license.sync.skipped_transient', [
+                'error' => $result['error'] ?? null,
+                'http_status' => $result['http_status'] ?? null,
+                'license_id' => $license->id,
+            ]);
+
+            return [
+                'valid' => true,
+                'message' => null,
+                'sync_skipped' => true,
+            ];
+        }
+
         $data = [
             'last_validated_at' => now(),
         ];
@@ -41,6 +59,18 @@ class LicenseActivationService
             'valid' => !empty($result['valid']),
             'message' => $result['message'] ?? null,
         ];
+    }
+
+    /**
+     * پلتفرم صریحاً گفته این کلید/دامنه دیگر مجاز نیست (برخلاف خطای موقت ارتباط یا سرور).
+     *
+     * @param  array<string, mixed>  $result
+     */
+    protected function isDefinitePlatformRejection(array $result): bool
+    {
+        $err = (string) ($result['error'] ?? '');
+
+        return in_array($err, ['revoked', 'expired', 'invalid_key', 'domain_mismatch', 'site_inactive'], true);
     }
 
     public function validate(string $licenseKey, string $domain): array
@@ -81,9 +111,15 @@ class LicenseActivationService
                 } else {
                     $message = 'خطا در ارتباط با سرور لایسنس. بعداً تلاش کنید.';
                 }
+                $bodyError = is_array($body) && isset($body['error']) && is_string($body['error']) ? $body['error'] : null;
+                $error = ($bodyError !== null && $this->isDefinitePlatformRejection(['error' => $bodyError]))
+                    ? $bodyError
+                    : 'api_error';
+
                 return [
                     'valid' => false,
-                    'error' => 'api_error',
+                    'error' => $error,
+                    'http_status' => $status,
                     'message' => $message,
                 ];
             }
@@ -122,6 +158,7 @@ class LicenseActivationService
             return [
                 'valid' => false,
                 'error' => 'connection_error',
+                'http_status' => 0,
                 'message' => 'امکان ارتباط با سرور لایسنس وجود ندارد. اتصال اینترنت و آدرس پلتفرم (PLATFORM_URL در .env) را بررسی کنید.',
             ];
         }
@@ -132,12 +169,6 @@ class LicenseActivationService
      */
     private function normalizeDomain(string $domain): string
     {
-        $domain = trim($domain);
-        if (str_contains($domain, '://')) {
-            $parsed = parse_url($domain);
-            $domain = $parsed['host'] ?? $domain;
-        }
-        $domain = rtrim($domain, '/');
-        return strtolower($domain);
+        return License::normalizeDomain($domain);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\AdminMenu;
 use App\Helpers\Module as ConfigModule;
 use App\Helpers\SiteHelper;
 use App\Models\License;
@@ -21,6 +22,7 @@ class ModuleController extends Controller
     {
         $license = License::current();
         $modulesFromPlatform = $license && is_array($license->modules) ? $license->modules : [];
+        $modulesFromPlatform = AdminMenu::sortLicensedModuleSlugsForDisplay($modulesFromPlatform);
 
         $localModulesRaw = ConfigModule::all();
         $localModules = [];

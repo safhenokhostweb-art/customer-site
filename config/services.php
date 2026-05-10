@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'hcaptcha' => [
+        'skip_in_local' => filter_var(env('AUTH_CAPTCHA_SKIP_IN_LOCAL', false), FILTER_VALIDATE_BOOLEAN),
+    ],
+
 ];

@@ -134,7 +134,7 @@
 | `admin.sites.index` | `/admin/sites` | لیست سایت‌ها |
 | `admin.sites.show` | `/admin/sites/{site}` | نمایش سایت |
 | `admin.sites.modules.edit` | `/admin/sites/{site}/modules` | مدیریت ماژول‌های یک سایت |
-| `admin.platform-settings.index` | `/admin/platform-settings` | تنظیمات عمومی پلتفرم (نام، لوگو، رنگ، فونت) |
+| `admin.platform-settings.index` | `/admin/platform-settings` | تنظیمات عمومی پلتفرم (نام، لوگو، رنگ‌ها از جمله نوار کناری پنل، فونت) |
 | `admin.customers.index` | `/admin/customers` | مشتری‌ها |
 | `admin.forms.index` | `/admin/forms` | فرم‌ها |
 | `admin.pages.index` | `/admin/pages` | صفحات ثابت |
@@ -166,8 +166,8 @@
 | `admin.notifications.index` | `/admin/notifications` | مدیریت اعلان‌های تولبار سایت (بنر بالای سایت؛ فقط وقتی ماژول notifications در لایسنس سایت فعال بوده است) |
 | `admin.notifications.send-users.form` / `admin.notifications.send-users` | `/admin/notifications/send-users` | ارسال اعلان به کاربران ثبت‌نام‌کرده (inbox داشبورد «حساب من») |
 | `admin.notifications.archive` | `/admin/notifications/send-users/archive` | آرشیو اعلان‌های ارسال‌شده به کاربران |
-| `admin.settings.index` | `/admin/settings` | تنظیمات سایت (شامل قالب هدر/فوتر سازندهٔ بصری و هدر چسبان) |
-| `builder.edit` ، `builder.page.edit` ، `builder.page.show` ، `builder.page.update` ، `builder.preview` ، `builder.templates.index` ، `builder.templates.store` | `/builder/edit/{page}` ، `/builder/page/{page}/edit` ، GET/PUT `/builder/page/{page}` ، POST `/builder/preview` ، GET/POST `/builder/templates` | سازندهٔ بصری صفحه (ادمین): ویرایش با درگ‌اند‌دراپ، پیش‌نمایش زنده، ذخیرهٔ `builder_content_v2` یا `builder_content`، قالب‌های هدر/فوتر و بخش‌های آماده |
+| `admin.settings.index` | `/admin/settings` | تنظیمات سایت (شامل قالب هدر/فوتر سازندهٔ بصری، هدر چسبان، و رنگ‌های نوار کناری پنل ادمین/حساب کاربری) |
+| `builder.edit` ، `builder.page.edit` ، `builder.page.show` ، `builder.page.update` ، `builder.preview` ، `builder.templates.index` ، `builder.templates.store` | `/builder/edit/{page}` ، `/builder/page/{page}/edit` ، GET/PUT `/builder/page/{page}` ، POST `/builder/preview` ، GET/POST `/builder/templates` | سازندهٔ بصری صفحه (ادمین): رابط کاربری چندستونه (المان‌ها / **قالب کامل**)، پیش‌نمایش زنده در بالا، درخت ساختار در پایین، جستجو در کتابخانهٔ المان‌ها؛ **ویرایش زنده:** کلیک روی هر بلوک با `id` به شکل `tb-*` در iframe پیش‌نمایش، همان المان را در پنل راست انتخاب می‌کند (`postMessage` با `page-builder-preview` / `page-builder-parent`)؛ سه **Kit** حرفه‌ای (`corporate_pro`، `personal_pro`، `shop_pro`) در `App\Support\BuilderPageKits` + `config/builder-page-kits.php`؛ ذخیرهٔ `builder_content_v2`؛ رندر `promo_banner`، `countdown`، `gallery`، `custom_html` در `BlockRenderer` |
 | `admin.pages.*` ، `admin.posts.*` ، `admin.products.*` ، `admin.orders.*` | ... | صفحات، مطالب، محصولات، سفارشات |
 | `platform-products.index` | `/platform-products` | فقط سایت مالک؛ محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) از API |
 | `payment.callback` | `/payment/callback` | فقط سایت مالک؛ callback بانک → فوروارد به پلتفرم (اعتبارسنجی پارامترهای `invoice`، `Authority` و `Status` قبل از redirect) |
@@ -196,7 +196,7 @@
 
 | مسیر | توضیح |
 |------|--------|
-| `app/Helpers/PlatformSettings.php` | کلیدهای تنظیمات عمومی، تم، فونت، آپلود؛ متدهای `get` ، `allTheme` ، `allFont` ، `logoUrl` ، `platformName` |
+| `app/Helpers/PlatformSettings.php` | کلیدهای تنظیمات عمومی، تم (`THEME_KEYS` شامل رنگ‌های نوار کناری پنل ادمین پلتفرم)، فونت، آپلود؛ متدهای `get` ، `allTheme` ، `themeKeyLabel` ، `allFont` ، `logoUrl` ، `platformName` |
 | `app/Http/Controllers/Api/SiteConfigController.php` | API سایت‌کانفیگ؛ برگرداندن `ux` (theme, font, general) در پاسخ |
 | `app/Http/Controllers/Api/LicenseController.php` | API اعتبارسنجی لایسنس |
 | `app/Http/Controllers/Admin/PlatformSettingsController.php` | ذخیرهٔ تنظیمات عمومی پلتفرم |
@@ -205,6 +205,7 @@
 | `app/Models/Setting.php` | ذخیرهٔ key/value تنظیمات |
 | `app/Services/LicenseServerService.php` | اعتبارسنجی لایسنس و برگرداندن ماژول‌های سایت |
 | `resources/views/partials/platform-styles.blade.php` | خروجی CSS متغیرهای تم و فونت |
+| `resources/views/partials/platform-admin-sidebar-theme.blade.php` | رنگ نوار کناری پنل ادمین پلتفرم از `PlatformSettings::allTheme()` |
 | `resources/views/admin/platform-settings/index.blade.php` | فرم تنظیمات عمومی پلتفرم |
 | `routes/api.php` | مسیرهای API |
 | `routes/web.php` | مسیرهای وب |
@@ -216,6 +217,7 @@
 | مسیر | توضیح |
 |------|--------|
 | `app/Helpers/PlatformUx.php` | دسترسی به نام پلتفرم، لوگو، تم، فونت، seo از کش/API |
+| `app/Helpers/AdminSidebarTheme.php` | کلیدهای رنگ نوار کناری پنل ادمین مشتری و «حساب من» (`admin_sidebar_*`)؛ پیش‌فرض آبی ملایم |
 | `app/Helpers/Seo.php` | `title` ، `description` ، `imageUrl` ، `robots` ، `canonical` ، `twitterCard` |
 | `app/Helpers/SlugHelper.php` | `make` ، `sanitize` ، `unique` ، `transliterateFa` ، `isValid` |
 | `app/Helpers/JsonLd.php` | `organization` ، `webSite` ، `webPage` ، `article` ، `product` ، `breadcrumb` |
@@ -231,12 +233,13 @@
 | `app/Builder/` | **Element SDK:** Contracts، Elements (BaseElement + المان‌های مشخص)، ElementRegistry، Validation/ElementValidator، Rendering/ElementRenderer، Services/DynamicDataResolver، Testing/ElementTestSuite |
 | `config/builder-headers.php` ، `config/builder-footers.php` | قالب‌های ۱۰گانهٔ هدر و فوتر برای انتخاب در تنظیمات |
 | `config/builder-section-presets.php` | بخش‌های آماده (هیرو، خدمات، CTA، تماس، FAQ، نظرات، وبلاگ، محصولات) برای درج در سازندهٔ بصری |
+| `config/builder-page-kits.php` | قالب‌های صفحهٔ کامل شرکتی، شخصی و فروشگاهی (اعمال یکجا در تب «قالب کامل» سازنده) |
 | `app/Services/LicenseActivationService.php` | فراخوانی API لایسنس پلتفرم و ذخیرهٔ نتیجه در مدل License |
 | `app/Models/License.php` | `license_key` ، `domain` ، `expires_at` ، `modules` (آرایه) ، `support_expires_at` ، `support_starts_at` ، `support_level` ؛ متد `current()` |
 | `config/site.php` | `platform_url` ، `platform_config_cache_ttl` ، `name` ، `theme` ، `locale` |
 | `config/modules.php` | تعریف ماژول‌های blog و shop و env مربوطه |
 | `app/Http/Middleware/UseFileSessionWhenNotInstalled.php` | هنگام نصب‌نشده بودن سایت، درایور session را موقتاً `file` می‌کند تا ویزارد نصب حتی قبل از آماده شدن دیتابیس/جدول sessions قابل استفاده باشد. |
-| `resources/views/admin/layout.blade.php` | قالب پنل ادمین؛ استایل پوسته از `public/css/customer-admin-layout.css` (بدون CDN)؛ صفحات داخلی از `resources/css/app.css` ساخته‌شده با Vite روی همان هاست. |
+| `resources/views/admin/layout.blade.php` | قالب پنل ادمین؛ استایل پوسته از `public/css/customer-admin-layout.css` (بدون CDN)؛ رنگ نوار کناری از `partials/customer-admin-sidebar-theme` (تنظیمات `admin_sidebar_*`)؛ صفحات داخلی از `resources/css/app.css` ساخته‌شده با Vite روی همان هاست. |
 | `public/css/customer-admin-layout.css` | CSS محلی منو، هدر، فلش‌ها، کارت/جدول/فرم پایهٔ ادمین (بدون Tailwind CDN). |
 | `resources/views/admin/{products,orders,forms,pages,posts}/index.blade.php` | صفحات پرتردد ادمین با الگوی یکدست `admin-page` (هدر ابزار، کارت جدول، empty-state، pagination) استاندارد شده‌اند. |
 | `resources/views/admin/{products,pages,posts}/{create,edit}.blade.php` | فرم‌های ایجاد/ویرایش پرتردد با الگوی یکسان کارت + `form-group` + اکشن‌های استاندارد بازآرایی شده‌اند. |
@@ -250,7 +253,8 @@
 | `public/css/customer-admin-layout.css` (مرحله ۲) | ارتقای سیستم طراحی مشترک ادمین: توکن‌های رنگ/feedback، حلقهٔ فوکوس یکنواخت (`focus-visible`)، بهبود دکمه‌ها (border + state)، یکدست‌سازی badgeها و رعایت `prefers-reduced-motion` برای UX بهتر و حرفه‌ای‌تر. |
 | `public/assets/fonts/vazirmatn/*` | فایل‌های فونت آفلاین (`woff2`) برای استفاده در کل سایت و ادمین. |
 | `resources/views/partials/platform-styles.blade.php` | استفاده از `PlatformUx::allTheme()` و `allFont()` برای استایل |
-| `resources/views/layouts/auth.blade.php` | لایهٔ ورود با لوگو و نام پلتفرم |
+| `resources/views/layouts/auth-login.blade.php` | لایهٔ یکپارچهٔ ورود (دو ستون، برند، SVG) — همان الگوی بصری `saas-platform`؛ توکن‌های تم از `platform-styles` |
+| `resources/views/partials/auth-captcha.blade.php` | بلوک کپچای فرم ورود (با `CaptchaService::getAuthCaptchaConfig`) |
 | `resources/views/admin/dashboard.blade.php` | داشبورد + بلوک «ماژول‌ها و امکانات از پلتفرم» |
 | `routes/web.php` | مسیرهای نصب، فرانت، ادمین، لایسنس |
 
@@ -330,6 +334,7 @@
   - **سبد و سفارش:** کلید ردیف `productId:variantId`، ذخیرهٔ `product_variant_id` روی `order_items`، کوپن با `ShopCartHelper::distinctProductIds`.
   - **ادمین:** فرم گسترش‌یافتهٔ محصول (TinyMCE محلی برای توضیح بلند، ارسال/بازگشت، گارانتی، تضمین، جدول سایز HTML؛ FAQ به‌صورت ردیف‌های فرم با ویرایشگر غنی برای پاسخ)، `sale_ends_at` با datepicker شمسی و ساعت؛ CRUD ویژگی‌های فنی (`admin.product-attributes.*`)، مدیریت نظرات فروشگاه (`admin.shop-product-reviews.*`)؛ فهرست و ویرایش محصول تاریخ ثبت/ویرایش و در صورت وجود پایان حراج را با `Jalali::formatFa` نشان می‌دهند.
   - نسخهٔ قبلی مستند 1.1.0: فیلتر قیمت `effective_price`، اعتبارسنجی موجودی سبد، checkout تراکنشی و `lockForUpdate` همچنان برقرار است.
+- **کپچا (customer-site):** مسیر `admin.captcha.*`؛ انواع `persian_number`، `normal` و `hcaptcha` در جدول `settings`. با **فعال بودن ماژول** (`captcha_enabled=1`) و **گزینهٔ ورود** (`auth_captcha_enabled=1`)، کپچا روی صفحهٔ `login` نمایش و در `LoginController` اعتبارسنجی می‌شود (`getAuthCaptchaConfig`، همان منطق پلتفرم). برای توسعهٔ محلی: `AUTH_CAPTCHA_SKIP_IN_LOCAL=true` در `.env` و `config/services.php` → `hcaptcha.skip_in_local`.
 - ماژول `forms` (فرم‌ساز در customer-site):
   - جدول `forms`: پس از مایگریشن `2026_05_09_140000_add_seo_to_forms_table.php` فیلدهای `meta_title`، `meta_description`، `canonical_url`، `meta_robots`، `intro_text`؛ نامک پایدار با `SlugHelper`؛ ادمین `admin.forms.*` با کارت آماری (تعداد فیلد فعال و ارسال)، لینک مستقیم عمومی و بخش سئو/متن راهنما.
   - فرانت `forms.index` / `forms.show` / `forms.submit`: breadcrumb، متا و canonical از فیلدهای فرم، `@section('meta_robots')` در `themes/default/layout.blade.php` برای robots صفحه‌ای، JSON-LD (`WebPage` / `CollectionPage`)؛ انواع فیلد شامل `select` / `radio` / `checkbox` با گزینه‌های چندخطی؛ تاریخ شمسی در ارسال با `Jalali::toCarbon` به `Y-m-d` در JSON ارسال.
@@ -421,4 +426,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۹ — فرم‌ساز: سئو per-form، sitemap، UX ادمین و اصلاح فیلدها؛ منو: `go_live_at` شمسی؛ layout فرانت پشتیبانی `@section('meta_robots')`.*
+*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۹ — کپچای فارسی رنگی/آشفتهٔ بصری؛ فهرست تبلیغات با KPI و تاریخ شمسی؛ فرم‌ساز و منو و layout مطابق نسخهٔ قبلی.*

@@ -1,12 +1,5 @@
-@push('head')
-<link rel="stylesheet" href="{{ asset('vendor/persian-datepicker/persian-datepicker.min.css') }}?v={{ @filemtime(public_path('vendor/persian-datepicker/persian-datepicker.min.css')) ?: time() }}">
-@endpush
-
 @push('scripts')
 @include('admin.partials.tinymce-professional-base')
-<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
-<script src="{{ asset('vendor/persian-date/persian-date.min.js') }}"></script>
-<script src="{{ asset('vendor/persian-datepicker/persian-datepicker.min.js') }}"></script>
 <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}?v={{ @filemtime(public_path('vendor/tinymce/tinymce.min.js')) ?: time() }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -38,11 +38,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
                         <label class="form-label">تاریخ شروع (شمسی)</label>
-                        <input type="text" name="starts_at" value="{{ old('starts_at', $coupon->starts_at ? \App\Helpers\Jalali::formatFa($coupon->starts_at, 'Y/m/d') : '') }}" placeholder="۱۴۰۴/۱۲/۰۱" class="persian-date">
+                        <x-persian-date-input name="starts_at" :value="old('starts_at', $coupon->starts_at ? \App\Helpers\Jalali::formatFa($coupon->starts_at, 'Y/m/d') : '')" placeholder="۱۴۰۴/۱۲/۰۱" class="form-control" />
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاریخ انقضا (شمسی)</label>
-                        <input type="text" name="expires_at" value="{{ old('expires_at', $coupon->expires_at ? \App\Helpers\Jalali::formatFa($coupon->expires_at, 'Y/m/d') : '') }}" placeholder="۱۴۰۴/۱۲/۰۵" class="persian-date">
+                        <x-persian-date-input name="expires_at" :value="old('expires_at', $coupon->expires_at ? \App\Helpers\Jalali::formatFa($coupon->expires_at, 'Y/m/d') : '')" placeholder="۱۴۰۴/۱۲/۰۵" class="form-control" />
                     </div>
                     <div class="form-group">
                         <label class="form-label">محدودیت استفاده</label>

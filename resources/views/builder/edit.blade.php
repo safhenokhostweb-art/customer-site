@@ -45,10 +45,25 @@
         .form-label { display: block; font-size: 0.8rem; font-weight: 500; color: #475569; margin-bottom: 0.25rem; }
         .form-group { margin-bottom: 0.75rem; }
         .canvas-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
+        [x-cloak] { display: none !important; }
         .canvas-section.selected-wrap { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+        .builder-chrome { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%); color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .builder-chrome h1 { color: #f8fafc; }
+        .builder-chrome .btn-secondary { background: rgba(255,255,255,0.12); color: #f1f5f9; border: 1px solid rgba(255,255,255,0.2); }
+        .builder-chrome .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .builder-kit-card { border-radius: 0.75rem; border: 1px solid #e2e8f0; padding: 0.85rem; background: linear-gradient(180deg, #fff 0%, #f8fafc 100%); transition: box-shadow .15s, border-color .15s; }
+        .builder-kit-card:hover { border-color: #a5b4fc; box-shadow: 0 8px 24px rgba(79,70,229,0.12); }
+        .builder-kit-card__title { font-weight: 700; font-size: 0.9rem; color: #0f172a; margin: 0 0 0.35rem; }
+        .builder-kit-card__desc { font-size: 0.72rem; color: #64748b; line-height: 1.65; margin: 0 0 0.65rem; }
+        .builder-tab-btn { flex: 1; padding: 0.45rem 0.5rem; font-size: 0.78rem; font-weight: 600; border: none; background: transparent; color: #64748b; cursor: pointer; border-radius: 0.375rem; }
+        .builder-tab-btn.is-active { background: #eef2ff; color: #4338ca; }
+        .builder-left-head { display: flex; gap: 0.25rem; padding: 0.35rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="bg-slate-100">
+@php
+    $pageKitsForJs = $pageKits ?? config('builder-page-kits.kits', []);
+@endphp
 <script>
     window.builderConfig = {!! json_encode([
         'pageId' => $page->id,
@@ -56,6 +71,7 @@
         'pageSlug' => $page->slug,
         'initialContent' => $builderContent,
         'elementsConfig' => $elementsConfig,
+        'pageKits' => $pageKitsForJs,
         'saveUrl' => $page->id ? route('builder.page.update', $page) : null,
         'previewUrl' => route('builder.preview'),
         'exitUrl' => $page->id ? route('page.show', $page->slug) : route('admin.pages.index'),
@@ -67,20 +83,23 @@
 <div id="page-builder" class="flex flex-col h-screen"
      x-data="pageBuilder(window.builderConfig)"
      x-init="init()">
-    <header class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200 shadow-sm shrink-0">
+    <header class="builder-chrome flex items-center justify-between px-4 py-2.5 shrink-0">
         <div class="flex items-center gap-3">
             <a :href="exitUrl" class="btn btn-secondary btn-sm">← خروج</a>
-            <h1 class="text-lg font-bold text-slate-800" x-text="pageTitle"></h1>
+            <div>
+                <div class="text-[0.65rem] uppercase tracking-wider opacity-70">سازندهٔ بصری صفحه</div>
+                <h1 class="text-base font-bold leading-tight" x-text="pageTitle"></h1>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="flex rounded-lg border border-slate-200 overflow-hidden">
-                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'desktop' ? 'bg-indigo-100 text-indigo-700' : 'bg-white text-slate-600'" @click="device = 'desktop'">دسکتاپ</button>
-                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'tablet' ? 'bg-indigo-100 text-indigo-700' : 'bg-white text-slate-600'" @click="device = 'tablet'">تبلت</button>
-                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'mobile' ? 'bg-indigo-100 text-indigo-700' : 'bg-white text-slate-600'" @click="device = 'mobile'">موبایل</button>
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+            <div class="flex rounded-lg border border-white/20 overflow-hidden bg-slate-900/40">
+                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'desktop' ? 'bg-white/20 text-white' : 'text-slate-300'" @click="device = 'desktop'">دسکتاپ</button>
+                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'tablet' ? 'bg-white/20 text-white' : 'text-slate-300'" @click="device = 'tablet'">تبلت</button>
+                <button type="button" class="px-3 py-1.5 text-sm" :class="device === 'mobile' ? 'bg-white/20 text-white' : 'text-slate-300'" @click="device = 'mobile'">موبایل</button>
             </div>
             <template x-if="saveUrl">
                 <button type="button" class="btn btn-success" @click="save()" :disabled="saving">
-                    <span x-show="!saving">ذخیره</span>
+                    <span x-show="!saving">ذخیره صفحه</span>
                     <span x-show="saving">در حال ذخیره...</span>
                 </button>
             </template>
@@ -91,10 +110,16 @@
     </header>
 
     <div class="flex flex-1 min-h-0">
-        <!-- Left: Component panel (drag sources) -->
-        <aside class="w-64 bg-white border-l border-slate-200 builder-panel shrink-0 flex flex-col">
-            <div class="p-2 border-b border-slate-200 font-semibold text-slate-700">کتابخانه المان‌ها</div>
-            <div class="p-2 flex-1 overflow-y-auto space-y-3">
+        <!-- Left: library + full-page kits -->
+        <aside class="w-72 bg-white border-l border-slate-200 builder-panel shrink-0 flex flex-col">
+            <div class="builder-left-head">
+                <button type="button" class="builder-tab-btn" :class="leftTab === 'widgets' ? 'is-active' : ''" @click="leftTab = 'widgets'">المان‌ها</button>
+                <button type="button" class="builder-tab-btn" :class="leftTab === 'kits' ? 'is-active' : ''" @click="leftTab = 'kits'">قالب کامل</button>
+            </div>
+            <div class="p-2 border-b border-slate-200" x-show="leftTab === 'widgets'">
+                <input type="search" class="text-sm" placeholder="جستجو در المان‌ها..." x-model="libraryFilter">
+            </div>
+            <div class="p-2 flex-1 overflow-y-auto space-y-3" x-show="leftTab === 'widgets'">
                 <div>
                     <div class="text-xs font-semibold text-slate-500 mb-1">چیدمان</div>
                     <div
@@ -111,10 +136,11 @@
                     <div class="element-card" draggable="true" data-type="column" data-props="{}" @dragstart="onDragStart($event, 'column', getDefaultProps('column'))">▤ ستون</div>
                 </div>
                 <template x-for="(cat, catKey) in elementsConfig.byCategory" :key="catKey">
-                    <div>
+                    <div x-show="!libraryFilter || categoryMatches(catKey, cat)">
                         <div class="text-xs font-semibold text-slate-500 mb-1" x-text="elementsConfig.categories[catKey] || catKey"></div>
                         <template x-for="el in cat" :key="el.type">
                             <div
+                                x-show="!libraryFilter || elementMatches(el)"
                                 class="element-card"
                                 draggable="true"
                                 :data-type="el.type"
@@ -128,16 +154,33 @@
                     </div>
                 </template>
             </div>
+            <div class="p-3 flex-1 overflow-y-auto space-y-3" x-show="leftTab === 'kits'" x-cloak>
+                <p class="text-xs text-slate-600 leading-relaxed m-0">سه قالب حرفه‌ای آماده — مشابه «Kits» در المنتور. با اعمال، <strong>تمام صفحه</strong> جایگزین می‌شود؛ ابتدا ذخیره یا از صفحهٔ خالی استفاده کنید.</p>
+                <template x-for="kit in kitsList" :key="kit.id">
+                    <div class="builder-kit-card" :style="'border-top: 3px solid ' + (kit.accent || '#6366f1')">
+                        <p class="builder-kit-card__title" x-text="kit.label"></p>
+                        <p class="builder-kit-card__desc" x-text="kit.description"></p>
+                        <button type="button" class="btn btn-primary btn-sm w-full justify-center" @click="applyFullPageKit(kit)">اعمال این قالب</button>
+                    </div>
+                </template>
+            </div>
         </aside>
 
-        <!-- Center: Canvas + Live preview iframe -->
-        <main class="flex-1 min-w-0 flex flex-col builder-panel p-4 gap-3"
+        <!-- Center: Live preview + structure tree -->
+        <main class="flex-1 min-w-0 flex flex-col builder-panel p-3 gap-2 bg-slate-200/60"
              @dragover.prevent="dragOverSection = true; $event.dataTransfer.dropEffect = 'copy'"
              @dragleave="dragOverSection = false"
              @drop.prevent="onDropSection($event)">
-            <div class="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden" :class="{ 'drag-over': dragOverSection }">
-                <div class="text-sm font-semibold text-slate-600">ساختار صفحه — المان را اینجا رها کنید یا از دکمه‌ها استفاده کنید</div>
-                <div class="flex-1 overflow-y-auto pr-1 min-h-[200px]">
+            <div class="flex items-center justify-between gap-2 px-1 shrink-0">
+                <span class="text-xs font-semibold text-slate-700">پیش‌نمایش زنده</span>
+                <span class="text-[0.65rem] text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-medium">کلیک روی بلوک در پیش‌نمایش = انتخاب</span>
+            </div>
+            <div class="flex-1 min-h-[46vh] shrink-0 rounded-xl overflow-hidden border border-slate-300 shadow-md bg-white" :style="previewWidth">
+                <iframe id="builder-preview-iframe" class="preview-frame bg-white w-full h-full min-h-[280px]" title="پیش‌نمایش زنده — کلیک برای انتخاب المان"></iframe>
+            </div>
+            <div class="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-3" :class="{ 'drag-over': dragOverSection }">
+                <div class="text-sm font-semibold text-slate-700">ساختار صفحه (بخش → ردیف → ستون → ویجت)</div>
+                <div class="flex-1 overflow-y-auto pr-1 min-h-[160px]">
                     <div class="drop-zone mb-2 p-2 text-center text-slate-400 text-sm"
                          @dragover.prevent="dragOverSection = true; $event.dataTransfer.dropEffect = 'copy'"
                          @dragleave="dragOverSection = false"
@@ -208,9 +251,6 @@
                         + بخش جدید را اینجا رها کنید
                     </div>
                 </div>
-            </div>
-            <div class="h-64 shrink-0 rounded-lg overflow-hidden bg-slate-200 flex items-start justify-center" :style="previewWidth">
-                <iframe id="builder-preview-iframe" class="preview-frame bg-white shadow-lg w-full h-full" title="پیش‌نمایش"></iframe>
             </div>
         </main>
 
@@ -389,7 +429,7 @@
                             </div>
                         </div>
                     </template>
-                    <button type="button" class="btn btn-secondary btn-sm mt-2" @click="selectedId = null; selectedNode = null">بستن تنظیمات</button>
+                    <button type="button" class="btn btn-secondary btn-sm mt-2" @click="clearSelection()">بستن تنظیمات</button>
                 </div>
             </template>
         </aside>
@@ -432,10 +472,55 @@ function pageBuilder(config) {
         dragOverSection: false,
         dragPayload: null,
         dropTarget: null,
+        leftTab: 'widgets',
+        libraryFilter: '',
+        pageKits: config.pageKits || {},
+
+        get kitsList() {
+            const p = this.pageKits || {};
+            return Object.keys(p).map((k) => p[k]);
+        },
+
+        categoryMatches(catKey, cat) {
+            const f = (this.libraryFilter || '').trim().toLowerCase();
+            if (!f) return true;
+            const label = String(this.elementsConfig.categories[catKey] || catKey).toLowerCase();
+            if (label.includes(f)) return true;
+            return cat.some((el) => this.elementMatches(el));
+        },
+
+        elementMatches(el) {
+            const f = (this.libraryFilter || '').trim().toLowerCase();
+            if (!f) return true;
+            return String(el.name || '').toLowerCase().includes(f) || String(el.type || '').toLowerCase().includes(f);
+        },
+
+        applyFullPageKit(kit) {
+            if (!kit || !kit.sections) return;
+            const has = (this.content.sections || []).length > 0;
+            if (has && !confirm('تمام بخش‌های فعلی صفحه با این قالب جایگزین شود؟')) return;
+            const clone = JSON.parse(JSON.stringify(kit.sections));
+            this.renewIdsTree(clone);
+            this.content.sections = clone;
+            this.selectedId = null;
+            this.selectedNode = null;
+            this.refreshPreview();
+            this.setupSortable();
+        },
+
+        renewIdsTree(blocks) {
+            if (!blocks || !Array.isArray(blocks)) return;
+            blocks.forEach((b) => {
+                b.id = this.uid();
+                this.ensureStyle(b);
+                this.renewIdsTree(b.blocks);
+            });
+        },
 
         init() {
             if (!this.content.sections) this.content.sections = [];
             this.ensureUniqueIds(this.content.sections);
+            window.addEventListener('message', this.onPreviewPostMessage.bind(this));
             this.refreshPreview();
             this.setupSortable();
         },
@@ -585,7 +670,54 @@ function pageBuilder(config) {
         select(id) {
             this.selectedId = id;
             this.selectedNode = this.findNode(this.content.sections, id);
-            this.ensureStyle(this.selectedNode);
+            if (this.selectedNode) {
+                this.ensureStyle(this.selectedNode);
+            }
+            this.syncIframeSelection(id);
+        },
+
+        syncIframeSelection(elementId) {
+            var iframe = document.getElementById('builder-preview-iframe');
+            try {
+                if (iframe && iframe.contentWindow) {
+                    var targetOrigin = window.location.origin || '*';
+                    iframe.contentWindow.postMessage({
+                        source: 'page-builder-parent',
+                        type: 'applySelection',
+                        elementId: elementId || ''
+                    }, targetOrigin);
+                }
+            } catch (e) {}
+        },
+
+        onPreviewPostMessage(ev) {
+            try {
+                if (ev.origin && ev.origin !== window.location.origin) {
+                    return;
+                }
+                var d = ev.data;
+                if (!d || d.source !== 'page-builder-preview' || d.type !== 'select') {
+                    return;
+                }
+                if (typeof d.elementId !== 'string') {
+                    return;
+                }
+                if (!this.findNode(this.content.sections, d.elementId)) {
+                    return;
+                }
+                this.selectedId = d.elementId;
+                this.selectedNode = this.findNode(this.content.sections, d.elementId);
+                if (this.selectedNode) {
+                    this.ensureStyle(this.selectedNode);
+                }
+                this.syncIframeSelection(d.elementId);
+            } catch (err) {}
+        },
+
+        clearSelection() {
+            this.selectedId = null;
+            this.selectedNode = null;
+            this.syncIframeSelection('');
         },
 
         findNode(blocks, id) {
@@ -758,8 +890,25 @@ function pageBuilder(config) {
                     if (iframe && data.html !== undefined) {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         doc.open();
-                        doc.write('<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="utf-8"><style>@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Regular.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Bold.woff2) format("woff2");font-weight:700;font-display:swap}body{font-family:Vazirmatn,Tahoma,sans-serif;margin:0;padding:1rem;direction:rtl;background:#f9fafb}.tb-section{padding:1.5rem 0}.tb-container{max-width:80rem;margin:0 auto;padding:0 1rem}.tb-row{display:flex;flex-wrap:wrap;gap:1rem}.tb-column{min-width:0}.tb-col-full{flex:1 1 100%}.tb-col-1-2{flex:1 1 calc(50% - 0.5rem)}.tb-col-1-3{flex:1 1 calc(33.333% - 0.67rem)}.tb-col-2-3{flex:1 1 calc(66.666% - 0.67rem)}.tb-hero{padding:2rem;text-align:center;border-radius:0.5rem;background:#4f46e5;color:#fff}.tb-hero-title{font-size:1.75rem;margin:0 0 0.5rem}.tb-heading{margin:0 0 0.5rem;font-weight:700}.tb-text{line-height:1.7}.tb-image{display:block;max-width:100%;margin:0 auto 1.5rem}.tb-image .tb-img{display:block;max-width:100%;height:auto;margin:0 auto;max-height:480px;object-fit:contain}.tb-btn{display:inline-block;padding:0.5rem 1rem;border-radius:0.5rem;text-decoration:none;font-weight:600}.tb-btn-primary{background:#4338ca;color:#fff}.tb-radius-sm{border-radius:0.5rem}.tb-radius-md{border-radius:0.75rem}.tb-radius-lg{border-radius:1rem}.tb-shadow-sm{box-shadow:0 1px 3px rgba(15,23,42,0.16)}.tb-shadow-md{box-shadow:0 4px 12px rgba(15,23,42,0.18)}.tb-shadow-lg{box-shadow:0 12px 30px rgba(15,23,42,0.22)}.tb-hover-lift{transition:transform .2s,box-shadow .2s}.tb-hover-lift:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(15,23,42,0.22)}@media(max-width:767px){.tb-col-1-2,.tb-col-1-3,.tb-col-2-3{flex:1 1 100%}}</style></head><body>' + data.html + '</body></html>');
+                        doc.write('<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="utf-8"><style>@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Regular.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:Vazirmatn;src:url(/assets/fonts/vazirmatn/Vazirmatn-Bold.woff2) format("woff2");font-weight:700;font-display:swap}body{font-family:Vazirmatn,Tahoma,sans-serif;margin:0;padding:1rem;direction:rtl;background:#f9fafb}.tb-section{box-sizing:border-box}.tb-padding-none{padding-top:0;padding-bottom:0}.tb-padding-sm{padding-top:1.25rem;padding-bottom:1.25rem}.tb-padding-md{padding-top:2.5rem;padding-bottom:2.5rem}.tb-padding-lg{padding-top:3.5rem;padding-bottom:3.5rem}.tb-padding-xl{padding-top:4.5rem;padding-bottom:4.5rem}.tb-bg-background{background:#f9fafb}.tb-bg-surface{background:#fff}.tb-bg-primary{background:#4f46e5;color:#fff}.tb-container{max-width:80rem;margin:0 auto;padding:0 1rem}.tb-row{display:flex;flex-wrap:wrap;gap:1rem}.tb-column{min-width:0}.tb-col-full{flex:1 1 100%}.tb-col-1-2{flex:1 1 calc(50% - 0.5rem)}.tb-col-1-3{flex:1 1 calc(33.333% - 0.67rem)}.tb-col-2-3{flex:1 1 calc(66.666% - 0.67rem)}.tb-col-1-4{flex:1 1 calc(25% - 0.75rem)}.tb-col-3-4{flex:1 1 calc(75% - 0.75rem)}.tb-hero{padding:2rem;text-align:center;border-radius:0.5rem;background:#4f46e5;color:#fff}.tb-hero.tb-align-left{text-align:right}.tb-hero.tb-align-right{text-align:left}.tb-promo-banner{margin:0 0 1rem;border-radius:0.5rem;overflow:hidden}.tb-promo-banner__link{display:block;padding:0.65rem 1rem;text-align:center;text-decoration:none;font-weight:600}.tb-promo-info{background:#dbeafe}.tb-promo-info .tb-promo-banner__link{color:#1e3a8a}.tb-promo-success{background:#d1fae5}.tb-promo-success .tb-promo-banner__link{color:#065f46}.tb-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem}.tb-gallery-img{width:100%;height:140px;object-fit:cover;border-radius:0.5rem}.tb-gallery-empty{padding:1rem;text-align:center;color:#64748b}.tb-countdown{padding:1rem;border-radius:0.75rem;background:#1c1917;color:#fef3c7;text-align:center}.tb-countdown__hint{display:block;margin-top:0.5rem;font-size:0.75rem;opacity:0.85}.tb-hero-title{font-size:1.75rem;margin:0 0 0.5rem}.tb-heading{margin:0 0 0.5rem;font-weight:700}.tb-text{line-height:1.7}.tb-image{display:block;max-width:100%;margin:0 auto 1.5rem}.tb-image .tb-img{display:block;max-width:100%;height:auto;margin:0 auto;max-height:480px;object-fit:contain}.tb-btn{display:inline-block;padding:0.5rem 1rem;border-radius:0.5rem;text-decoration:none;font-weight:600}.tb-btn-primary{background:#4338ca;color:#fff}.tb-radius-sm{border-radius:0.5rem}.tb-radius-md{border-radius:0.75rem}.tb-radius-lg{border-radius:1rem}.tb-shadow-sm{box-shadow:0 1px 3px rgba(15,23,42,0.16)}.tb-shadow-md{box-shadow:0 4px 12px rgba(15,23,42,0.18)}.tb-shadow-lg{box-shadow:0 12px 30px rgba(15,23,42,0.22)}.tb-hover-lift{transition:transform .2s,box-shadow .2s}.tb-hover-lift:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(15,23,42,0.22)}@media(max-width:767px){.tb-col-1-2,.tb-col-1-3,.tb-col-2-3{flex:1 1 100%}}</style></head><body>' + data.html + '</body></html>');
                         doc.close();
+                        try {
+                            var prevSt = doc.querySelector('style[data-builder-live="1"]');
+                            if (prevSt) prevSt.remove();
+                            var prevSc = doc.querySelector('script[data-builder-live="1"]');
+                            if (prevSc) prevSc.remove();
+                            var liveSt = doc.createElement('style');
+                            liveSt.setAttribute('data-builder-live', '1');
+                            liveSt.textContent = '[id^="tb-"]{cursor:pointer;position:relative;transition:outline .12s ease,box-shadow .12s ease}[id^="tb-"]:hover{outline:2px solid rgba(99,102,241,.55);outline-offset:2px}.tb-builder-selected{outline:3px solid #4f46e5!important;outline-offset:2px;box-shadow:0 0 0 4px rgba(79,70,229,.14)!important;position:relative;z-index:2}';
+                            doc.head.appendChild(liveSt);
+                            var liveSc = doc.createElement('script');
+                            liveSc.setAttribute('data-builder-live', '1');
+                            liveSc.textContent = '(function(){var PW=window.parent;if(!PW)return;function clearSel(){document.querySelectorAll(".tb-builder-selected").forEach(function(n){n.classList.remove("tb-builder-selected");});}function applySel(eid){clearSel();if(!eid)return;var el=document.getElementById("tb-"+eid);if(!el)return;el.classList.add("tb-builder-selected");try{el.scrollIntoView({behavior:"smooth",block:"center"});}catch(_1){try{el.scrollIntoView();}catch(_2){}}}document.addEventListener("click",function(e){var t=e.target.closest(\'[id^="tb-"]\');if(!t||!t.id||t.id.indexOf("tb-")!==0)return;e.preventDefault();e.stopPropagation();var raw=t.id.slice(3);clearSel();t.classList.add("tb-builder-selected");PW.postMessage({source:"page-builder-preview",type:"select",elementId:raw},"*");},true);window.addEventListener("message",function(ev){if(ev.source!==PW)return;var d=ev.data;if(!d||d.source!=="page-builder-parent"||d.type!=="applySelection")return;applySel(d.elementId||"");});})();';
+                            doc.body.appendChild(liveSc);
+                        } catch (eLive) {}
+                        requestAnimationFrame(() => {
+                            this.syncIframeSelection(this.selectedId);
+                        });
                     }
                 }).catch(() => {});
             }, 300);

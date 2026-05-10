@@ -19,7 +19,7 @@
         @foreach($chars as $i => $ch)
             @php
                 $isDigit = preg_match('/^[۰-۹0-9]$/u', $ch);
-                $isOp = in_array($ch, ['+', '-', '×', '÷', '=', '?', ' '], true);
+                $isOp = in_array($ch, ['+', '-', '×', '÷', '=', '?', '؟', ' '], true);
                 $r = $rotations[$i % count($rotations)];
                 $y = ($i % 3 - 1) * 3;
                 $c = $isDigit ? $digitColors[$i % count($digitColors)] : $opColor;

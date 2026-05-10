@@ -32,7 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">متن تبلیغ</label>
-                    <textarea name="content" rows="4" placeholder="متن برای نوشتار رونده، تایپی، مارکی و...">{{ old('content') }}</textarea>
+                    <textarea id="advertisement-content-editor" name="content" class="w-full min-h-[160px]" placeholder="متن برای نوشتار رونده، تایپی، مارکی و...">{{ old('content') }}</textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">تصویر (برای بنر)</label>
@@ -49,11 +49,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
                         <label class="form-label">تاریخ شروع (شمسی)</label>
-                        <input type="text" name="starts_at" value="{{ old('starts_at') }}" placeholder="۱۴۰۴/۱۲/۰۵">
+                        <x-persian-date-input name="starts_at" :value="old('starts_at')" placeholder="۱۴۰۴/۱۲/۰۵" class="form-control" />
                     </div>
                     <div class="form-group">
                         <label class="form-label">تاریخ انقضا (شمسی)</label>
-                        <input type="text" name="expires_at" value="{{ old('expires_at') }}" placeholder="۱۴۰۴/۱۲/۳۰">
+                        <x-persian-date-input name="expires_at" :value="old('expires_at')" placeholder="۱۴۰۴/۱۲/۳۰" class="form-control" />
                     </div>
                 </div>
                 <div class="form-group">
@@ -70,4 +70,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#advertisement-content-editor', 'uploadContext' => 'advertisement', 'height' => 280])
 @endsection

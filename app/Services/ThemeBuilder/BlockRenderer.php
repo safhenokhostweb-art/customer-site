@@ -486,6 +486,57 @@ class BlockRenderer
         return "<section id=\"tb-{$id}\" class=\"tb-cta tb-bg-{$bg}\"><h2 class=\"tb-cta-title\">{$title}</h2><p class=\"tb-cta-subtitle\">{$subtitle}</p>{$btn}</section>";
     }
 
+    protected function renderPromoBanner(array $props, string $inner, string $id): string
+    {
+        $text = $this->escape($props['text'] ?? '');
+        $link = $this->escapeAttr($props['link'] ?? '#');
+        $variant = $this->escapeAttr($props['style'] ?? 'info');
+        if ($text === '') {
+            return '';
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-promo-banner tb-promo-{$variant}\"><a href=\"{$link}\" class=\"tb-promo-banner__link\">{$text}</a></div>";
+    }
+
+    protected function renderCountdown(array $props, string $inner, string $id): string
+    {
+        $label = $this->escape($props['label'] ?? '');
+        $end = $this->escapeAttr($props['end_date'] ?? '');
+        $labelHtml = $label ? "<span class=\"tb-countdown__label\">{$label}</span>" : '';
+        $endHtml = $end ? "<span class=\"tb-countdown__end\" data-end=\"{$end}\"></span>" : '';
+
+        return "<div id=\"tb-{$id}\" class=\"tb-countdown\" data-end-date=\"{$end}\">{$labelHtml}{$endHtml}<span class=\"tb-countdown__hint\">تاریخ پایان را در تنظیمات المان وارد کنید تا شمارش معکوس فعال شود.</span></div>";
+    }
+
+    protected function renderGallery(array $props, string $inner, string $id): string
+    {
+        $title = $this->escape($props['title'] ?? '');
+        $items = $props['items'] ?? [];
+        $h = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        $cells = [];
+        foreach ($items as $item) {
+            $url = $this->escapeAttr(is_array($item) ? ($item['url'] ?? '') : $item);
+            $alt = $this->escape(is_array($item) ? ($item['alt'] ?? '') : '');
+            if ($url === '') {
+                continue;
+            }
+            $cells[] = "<div class=\"tb-gallery-cell\"><img src=\"{$url}\" alt=\"{$alt}\" loading=\"lazy\" class=\"tb-gallery-img\"></div>";
+        }
+        if ($cells === []) {
+            return "<div id=\"tb-{$id}\" class=\"tb-gallery tb-gallery-empty\"><p class=\"tb-text\">تصاویر گالری را در تنظیمات المان اضافه کنید.</p></div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-gallery\">{$h}<div class=\"tb-gallery-grid\">" . implode('', $cells) . '</div></div>';
+    }
+
+    protected function renderCustomHtml(array $props, string $inner, string $id): string
+    {
+        $raw = (string) ($props['content'] ?? '');
+        $clean = strip_tags($raw, '<p><br><a><strong><em><ul><ol><li><h2><h3><h4><div><span><blockquote>');
+
+        return "<div id=\"tb-{$id}\" class=\"tb-custom-html\">{$clean}</div>";
+    }
+
     protected function renderTabs(array $tabs): string
     {
         $out = [];

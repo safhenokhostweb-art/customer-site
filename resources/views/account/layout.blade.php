@@ -9,10 +9,11 @@
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
     <style>@include('partials.vazirmatn-font-faces-inline')</style>
+    {{-- استایل مشترک (کاشی داشبورد، فونت پایه) همیشه؛ Vite در صورت وجود اضافه می‌شود --}}
+    <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
+    @include('partials.customer-admin-sidebar-theme')
     @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @endif
     @include('partials.platform-styles')
     <style>
@@ -48,12 +49,12 @@
 </head>
 <body class="min-h-screen bg-slate-50">
 <div class="flex min-h-screen">
-        <aside id="account-sidebar" class="hidden md:flex md:flex-shrink-0 w-64 bg-white border-l border-slate-200 flex-col">
-            <div class="flex items-center px-4 py-5 border-b border-slate-200">
-                <svg class="w-7 h-7 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span class="mr-3 text-lg font-bold text-slate-800">{{ \App\Helpers\SiteHelper::siteName() }}</span>
+        <aside id="account-sidebar" class="account-sidebar-shell hidden md:flex md:flex-shrink-0 w-64 flex-col min-h-0 md:max-h-screen md:sticky md:top-0 self-start">
+            <div class="account-sidebar-brand flex items-center px-4 py-5 border-b border-slate-700/40">
+                <svg class="w-7 h-7 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span class="mr-3 text-lg font-bold text-slate-100">{{ \App\Helpers\SiteHelper::siteName() }}</span>
             </div>
-            <nav class="flex-1 px-3 py-4 overflow-y-auto">
+            <nav class="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain" style="scrollbar-width: thin;">
                 @foreach(\App\Helpers\AccountMenu::getGroups() as $groupLabel => $keys)
                     @php $visibleKeys = array_filter($keys, fn($k) => \App\Helpers\AccountMenu::isVisible($k)); @endphp
                     @if(count($visibleKeys) > 0)

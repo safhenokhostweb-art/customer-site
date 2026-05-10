@@ -54,7 +54,7 @@
 
                     <div class="form-group">
                         <label class="form-label" for="form-intro">متن بالای فرم</label>
-                        <textarea id="form-intro" name="intro_text" rows="3" class="w-full border rounded-lg px-3 py-2">{{ old('intro_text', $form->intro_text) }}</textarea>
+                        <textarea id="form-intro" name="intro_text" class="w-full border rounded-lg px-3 py-2 min-h-[200px]">{{ old('intro_text', $form->intro_text) }}</textarea>
                     </div>
 
                     <p class="text-sm font-semibold text-slate-700 mb-2">سئو</p>
@@ -167,6 +167,7 @@
     </div>
 </div>
 
+@include('admin.partials.tinymce-field-init', ['selector' => '#form-intro', 'uploadContext' => 'featured', 'height' => 320])
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -49,6 +49,14 @@
     --admin-radius: 14px;
     --admin-sidebar-w: 16rem;
     --admin-sidebar-collapsed-w: 5rem;
+    --admin-sidebar-bg1: #5a7fa8;
+    --admin-sidebar-bg2: #456f94;
+    --admin-sidebar-text: #f1f6fb;
+    --admin-sidebar-muted: #d8ebfb;
+    --admin-sidebar-accent: #7dd3fc;
+    --admin-sidebar-border: #8aa9c4;
+    --admin-sidebar-hover: color-mix(in srgb, var(--admin-sidebar-accent) 20%, transparent);
+    --admin-sidebar-active: color-mix(in srgb, var(--admin-sidebar-accent) 32%, transparent);
 }
 
 *,
@@ -85,8 +93,10 @@ body.admin-body {
     flex-shrink: 0;
     width: var(--admin-sidebar-w);
     min-width: var(--admin-sidebar-w);
-    background: var(--admin-surface);
-    border-left: 1px solid var(--admin-border);
+    min-height: 0;
+    background: linear-gradient(165deg, var(--admin-sidebar-bg1) 0%, var(--admin-sidebar-bg2) 100%);
+    border-left: 1px solid color-mix(in srgb, var(--admin-sidebar-border) 55%, transparent);
+    box-shadow: -4px 0 24px color-mix(in srgb, var(--admin-sidebar-bg2) 50%, transparent);
     transition: width 0.25s ease, min-width 0.25s ease;
 }
 
@@ -106,6 +116,7 @@ body.admin-body {
     flex-direction: column;
     width: var(--admin-sidebar-w);
     min-width: 0;
+    min-height: 0;
     flex: 1;
     transition: width 0.25s ease, min-width 0.25s ease;
 }
@@ -124,6 +135,22 @@ body.admin-body {
     overflow-x: hidden;
     height: 100%;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+.admin-sidebar-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.admin-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.admin-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 8px;
+}
+.admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.55);
 }
 
 /* برند */
@@ -133,14 +160,19 @@ body.admin-body {
     flex-shrink: 0;
     padding: 1rem 1rem;
     min-height: 4rem;
-    border-bottom: 1px solid var(--admin-border);
+    border-bottom: 1px solid color-mix(in srgb, var(--admin-sidebar-border) 45%, transparent);
     gap: 0.75rem;
+    background: color-mix(in srgb, var(--admin-sidebar-bg2) 78%, #0f172a 22%);
+}
+
+.admin-sidebar-brand-icon {
+    color: var(--admin-sidebar-accent);
 }
 
 .admin-sidebar-brand-text {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--admin-sidebar-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -155,11 +187,11 @@ body.admin-body {
     display: none;
 }
 
-/* ناوبری */
+/* ناوبری — اسکرول فقط روی .admin-sidebar-scroll تا انتهای منو و فوتر دیده شود */
 .admin-sidebar-nav {
-    flex: 1;
+    flex: 0 0 auto;
     padding: 0.75rem 0.75rem 1rem;
-    overflow-y: auto;
+    overflow: visible;
 }
 
 .admin-sidebar-group {
@@ -177,9 +209,9 @@ body.admin-body {
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    color: var(--admin-muted);
+    color: var(--admin-sidebar-muted);
     text-transform: uppercase;
-    border-bottom: 1px solid var(--admin-border);
+    border-bottom: 1px solid var(--admin-sidebar-border);
 }
 
 .sidebar-group-toggle {
@@ -198,25 +230,26 @@ body.admin-body {
 }
 
 .sidebar-group-toggle:hover {
-    background: rgba(37, 99, 235, 0.06);
+    background: var(--admin-sidebar-hover);
+    border-radius: 0.5rem;
 }
 
 .sidebar-group-toggle[aria-expanded="true"] .sidebar-group-label {
-    color: var(--admin-primary);
-    border-bottom-color: rgba(37, 99, 235, 0.35);
+    color: var(--admin-sidebar-accent);
+    border-bottom-color: rgba(56, 189, 248, 0.35);
 }
 
 .sidebar-group-caret {
     width: 1rem;
     height: 1rem;
     flex-shrink: 0;
-    color: var(--admin-muted);
+    color: var(--admin-sidebar-muted);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-group-caret.is-open {
     transform: rotate(180deg);
-    color: var(--admin-primary);
+    color: var(--admin-sidebar-accent);
 }
 
 .sidebar-group-items.is-collapsed {
@@ -226,34 +259,8 @@ body.admin-body {
 .admin-sidebar-item-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    /* اسکرول داخلی برای زیرمنوهای طولانی (مثل ماژول‌های پلتفرم) */
-    max-height: 50vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(37, 99, 235, 0.35) transparent;
+    gap: 4px;
     padding-right: 2px;
-}
-
-.admin-sidebar-item-list::-webkit-scrollbar {
-    width: 6px;
-}
-.admin-sidebar-item-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-.admin-sidebar-item-list::-webkit-scrollbar-thumb {
-    background: rgba(37, 99, 235, 0.25);
-    border-radius: 6px;
-}
-.admin-sidebar-item-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(37, 99, 235, 0.45);
-}
-
-/* در حالت جمع‌شدهٔ سایدبار، اسکرول داخلی غیرفعال */
-#admin-sidebar[data-collapsed="true"] .admin-sidebar-item-list {
-    max-height: none;
-    overflow: visible;
 }
 
 /* لینک‌های منو: بدون زیرخط، RTL درست */
@@ -265,36 +272,37 @@ a.sidebar-link,
     padding: 0.7rem 0.9rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #334155;
+    color: var(--admin-sidebar-text);
     text-decoration: none;
     border: none;
     border-radius: 0.5rem;
     background: transparent;
     cursor: pointer;
     text-align: right;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     width: 100%;
 }
 
 a.sidebar-link:hover,
 .sidebar-link:hover {
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
+    background: var(--admin-sidebar-hover);
+    color: #fff;
 }
 
 .sidebar-link.active {
-    background: var(--admin-primary-soft);
-    color: var(--admin-primary);
+    background: var(--admin-sidebar-active);
+    color: #fff;
     font-weight: 600;
+    box-shadow: inset -3px 0 0 var(--admin-sidebar-accent);
 }
 
 .sidebar-link.sidebar-link--danger {
-    color: #dc2626;
+    color: #fca5a5;
 }
 
 .sidebar-link.sidebar-link--danger:hover {
-    background: #fef2f2;
-    color: #b91c1c;
+    background: rgba(220, 38, 38, 0.22);
+    color: #fecaca;
 }
 
 #admin-sidebar .sidebar-link svg {
@@ -302,16 +310,16 @@ a.sidebar-link:hover,
     height: 1.25rem;
     min-width: 1.25rem;
     flex-shrink: 0;
-    color: #64748b;
+    color: var(--admin-sidebar-muted);
 }
 
 .sidebar-link:hover svg,
 .sidebar-link.active svg {
-    color: var(--admin-primary);
+    color: var(--admin-sidebar-accent);
 }
 
 .sidebar-link.sidebar-link--danger svg {
-    color: #dc2626;
+    color: #f87171;
 }
 
 #admin-sidebar .admin-sidebar-brand-icon {
@@ -319,13 +327,13 @@ a.sidebar-link:hover,
     height: 1.5rem;
     min-width: 1.5rem;
     flex-shrink: 0;
-    color: var(--admin-primary);
+    color: var(--admin-sidebar-accent);
 }
 
 .admin-sidebar-footer {
     padding-top: 1rem;
-    margin-top: 1rem;
-    border-top: 1px solid var(--admin-border);
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--admin-sidebar-border);
 }
 
 .admin-sidebar-logout-form {
@@ -348,8 +356,9 @@ a.sidebar-link:hover,
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background: var(--admin-surface);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border-bottom: 1px solid var(--admin-border);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
 }
 
 @media (min-width: 768px) {
@@ -1017,3 +1026,156 @@ button:focus-visible {
     width: 1.5rem !important;
     height: 1.5rem !important;
 }
+
+/* ——— داشبورد: کاشی‌های آماری و میانبر ——— */
+.admin-dashboard-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+@media (min-width: 768px) {
+    .admin-dashboard-tiles {
+        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    }
+}
+
+.admin-dashboard-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    min-height: 6.5rem;
+    padding: 1.1rem 1.15rem;
+    border-radius: var(--admin-radius);
+    text-decoration: none;
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-dashboard-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.admin-dashboard-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.18);
+    color: #fff;
+}
+
+.admin-dashboard-tile__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.92;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-dashboard-tile__value {
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 0.35rem;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-dashboard-tile__hint {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-dashboard-tile--indigo {
+    background: linear-gradient(145deg, #4f46e5 0%, #3730a3 100%);
+}
+.admin-dashboard-tile--sky {
+    background: linear-gradient(145deg, #0284c7 0%, #0c4a6e 100%);
+}
+.admin-dashboard-tile--emerald {
+    background: linear-gradient(145deg, #059669 0%, #064e3b 100%);
+}
+.admin-dashboard-tile--amber {
+    background: linear-gradient(145deg, #d97706 0%, #78350f 100%);
+}
+.admin-dashboard-tile--rose {
+    background: linear-gradient(145deg, #e11d48 0%, #881337 100%);
+}
+.admin-dashboard-tile--slate {
+    background: linear-gradient(145deg, #475569 0%, #1e293b 100%);
+}
+.admin-dashboard-tile--violet {
+    background: linear-gradient(145deg, #7c3aed 0%, #4c1d95 100%);
+}
+
+.admin-dashboard-tile__icon {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    opacity: 0.35;
+    z-index: 0;
+}
+
+/* حساب کاربری (کاشی‌های هم‌خانواده) */
+.account-dashboard-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.account-dashboard-tile {
+    display: flex;
+    flex-direction: column;
+    min-height: 5.75rem;
+    padding: 1rem 1.1rem;
+    border-radius: 0.85rem;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.16s ease;
+}
+
+.account-dashboard-tile:hover {
+    transform: translateY(-2px);
+    color: #fff;
+}
+
+.account-dashboard-tile__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.account-dashboard-tile__value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+}
+
+.account-dashboard-tile__link {
+    font-size: 0.72rem;
+    margin-top: 0.45rem;
+    opacity: 0.9;
+    text-decoration: underline;
+}
+
+.account-dashboard-tile--indigo { background: linear-gradient(145deg, #6366f1 0%, #4338ca 100%); }
+.account-dashboard-tile--teal { background: linear-gradient(145deg, #0d9488 0%, #115e59 100%); }
+.account-dashboard-tile--orange { background: linear-gradient(145deg, #ea580c 0%, #9a3412 100%); }
+.account-dashboard-tile--pink { background: linear-gradient(145deg, #db2777 0%, #831843 100%); }
+.account-dashboard-tile--blue { background: linear-gradient(145deg, #2563eb 0%, #1e3a8a 100%); }

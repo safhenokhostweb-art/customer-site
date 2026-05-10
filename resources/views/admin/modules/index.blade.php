@@ -216,32 +216,10 @@
                         $installedVersion = $installedVersions[$slug] ?? ($updateRow['installed_version'] ?? '1.0.0');
                         $availableVersion = $updateRow['available_version'] ?? $installedVersion;
 
-                        // نگاشت slug ماژول به کلید منو برای آیکن
-                        $iconMap = [
-                            'blog' => 'posts',
-                            'shop' => 'products',
-                            'forms' => 'forms',
-                            'advanced_search' => 'advanced_search',
-                            'menu' => 'menu',
-                        ];
-                        $iconKey = $iconMap[$slug] ?? $slug;
-
-                        // دسته‌بندی ماژول برای راهنمای بصری
-                        $category = 'سایر';
-                        $categoryColor = 'bg-slate-100 text-slate-700';
-                        if (in_array($slug, ['blog', 'forms', 'advanced_search', 'menu', 'gallery', 'podcast', 'video', 'portfolio', 'projects', 'qa', 'services'], true)) {
-                            $category = 'محتوا و سایت';
-                            $categoryColor = 'bg-sky-100 text-sky-800';
-                        } elseif (in_array($slug, ['shop', 'coupon', 'reviews', 'referral', 'subscription', 'courses', 'invoice', 'business_card', 'social_links', 'wallet', 'product_bundling', 'inventory', 'shipping', 'multi_currency', 'marketplace_sync'], true)) {
-                            $category = 'فروش و تجارت';
-                            $categoryColor = 'bg-emerald-100 text-emerald-800';
-                        } elseif (in_array($slug, ['seo_advanced', 'analytics', 'marketing_automation', 'announcements', 'notifications', 'whatsapp', 'sms', 'omnichannel', 'crm'], true)) {
-                            $category = 'مارکتینگ و ارتباط';
-                            $categoryColor = 'bg-amber-100 text-amber-800';
-                        } elseif (in_array($slug, ['accounting', 'backup', 'cloud', 'brand', 'i18n', 'tasks'], true)) {
-                            $category = 'سیستم و زیرساخت';
-                            $categoryColor = 'bg-indigo-100 text-indigo-800';
-                        }
+                        $cat = \App\Helpers\AdminMenu::moduleCatalogMeta($slug);
+                        $category = $cat['label'];
+                        $categoryPillClass = $cat['pill_class'];
+                        $iconKey = \App\Helpers\AdminMenu::moduleTileIconKey($slug);
 
                         // توضیح کوتاه برای روش استفاده
                         $usageText = match ($slug) {
@@ -269,7 +247,7 @@
                                 </div>
                             </div>
                             <div class="admin-module-tile__badges">
-                                <span class="admin-module-category-pill {{ $categoryColor }}">{{ $category }}</span>
+                                <span class="admin-module-category-pill {{ $categoryPillClass }}">{{ $category }}</span>
                                 <span class="badge {{ $info['enabled'] ? 'badge-success' : 'badge-warning' }}">
                                     {{ $info['enabled'] ? 'فعال در این سایت' : 'غیرفعال در این سایت' }}
                                 </span>

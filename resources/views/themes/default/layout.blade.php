@@ -213,6 +213,25 @@
         .tb-grid .tb-text.prose { background: #f9fafb; border: 1px solid #e5e7eb; padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; font-weight: 500; margin: 0; }
         .tb-nav.tb-nav-header a { margin-left: 1rem; text-decoration: none; color: inherit; }
         .tb-social-icons a { margin-left: 0.75rem; text-decoration: none; }
+        .tb-hero.tb-align-left { text-align: right; }
+        .tb-hero.tb-align-right { text-align: left; }
+        .tb-hero.tb-align-center { text-align: center; }
+        .tb-hero.tb-align-left .tb-hero-subtitle,
+        .tb-hero.tb-align-right .tb-hero-subtitle { margin-right: 0; margin-left: 0; max-width: none; }
+        .tb-promo-banner { margin: 0 0 1rem; border-radius: 0.75rem; overflow: hidden; }
+        .tb-promo-banner__link { display: block; padding: 0.75rem 1.25rem; text-align: center; text-decoration: none; font-weight: 600; }
+        .tb-promo-info { background: #dbeafe; }
+        .tb-promo-info .tb-promo-banner__link { color: #1e40af; }
+        .tb-promo-success { background: #d1fae5; }
+        .tb-promo-success .tb-promo-banner__link { color: #065f46; }
+        .tb-gallery { margin: 1.5rem 0; }
+        .tb-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+        .tb-gallery-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.75rem; border: 1px solid #e5e7eb; }
+        .tb-gallery-empty { padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border-radius: 0.75rem; border: 1px dashed #d1d5db; }
+        .tb-countdown { padding: 1.25rem; border-radius: 1rem; background: linear-gradient(135deg, #1c1917, #292524); color: #fef3c7; text-align: center; margin: 1rem 0; }
+        .tb-countdown__label { display: block; font-weight: 700; margin-bottom: 0.35rem; }
+        .tb-countdown__hint { display: block; margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.88; }
+        .tb-custom-html { line-height: 1.75; color: var(--tb-text-muted, #4b5563); }
         /* پس‌زمینه سکشن‌های Theme Builder */
         .tb-bg-background { background-color: var(--tb-background, #f9fafb) !important; }
         .tb-bg-surface { background-color: var(--tb-surface, #ffffff) !important; }

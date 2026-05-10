@@ -20,7 +20,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">توضیحات</label>
-                    <textarea name="description">{{ old('description') }}</textarea>
+                    <textarea id="post-series-description-editor" name="description" class="w-full min-h-[160px]">{{ old('description') }}</textarea>
                 </div>
                 <div class="admin-page-tools">
                     <button type="submit" class="btn btn-primary">ذخیره</button>
@@ -30,4 +30,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#post-series-description-editor', 'uploadContext' => 'featured', 'height' => 320])
 @endsection

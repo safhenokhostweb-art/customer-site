@@ -87,7 +87,8 @@
 
                 @if($product->sale_ends_at)
                     <p id="sale-countdown-wrap" style="font-size:0.9rem; color:#b45309; margin-bottom:0.75rem;">
-                        پایان حراج: <span id="sale-countdown" data-end="{{ $product->sale_ends_at->toIso8601String() }}">—</span>
+                        پایان حراج (شمسی): <span dir="ltr">{{ \App\Helpers\Jalali::formatFa($product->sale_ends_at, 'Y/m/d H:i') }}</span>
+                        — باقیمانده: <span id="sale-countdown" data-end="{{ $product->sale_ends_at->toIso8601String() }}">—</span>
                     </p>
                 @endif
 

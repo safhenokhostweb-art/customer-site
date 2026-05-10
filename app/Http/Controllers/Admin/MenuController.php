@@ -15,7 +15,6 @@ use App\Services\MenuHierarchyService;
 use App\Services\MenuService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MenuController extends Controller
@@ -459,7 +458,7 @@ class MenuController extends Controller
         $type = (string) $request->input('type');
         if ($type === MenuItem::TYPE_CUSTOM_URL) {
             $request->validate([
-                'url' => ['required', 'string', 'max:1024', Rule::startsWith(['http://', 'https://', '/', '#'])],
+                'url' => ['required', 'string', 'max:1024', 'starts_with:http://,https://,/,#'],
             ]);
 
             return;

@@ -181,12 +181,6 @@ class LicenseController extends Controller
 
     private function normalizeDomain(string $domain): string
     {
-        $domain = trim($domain);
-        if (str_contains($domain, '://')) {
-            $parsed = parse_url($domain);
-            $domain = $parsed['host'] ?? $domain;
-        }
-        $domain = rtrim($domain, '/');
-        return strtolower($domain);
+        return \App\Models\License::normalizeDomain($domain);
     }
 }

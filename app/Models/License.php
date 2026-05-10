@@ -39,6 +39,24 @@ class License extends Model
     }
 
     /**
+     * همان منطق LicenseActivationService: مقایسهٔ دامنه باید بعد از نرمال‌سازی باشد (پروتکل، حروف بزرگ، اسلش انتها).
+     */
+    public static function normalizeDomain(?string $domain): string
+    {
+        if ($domain === null || $domain === '') {
+            return '';
+        }
+        $domain = trim($domain);
+        if (str_contains($domain, '://')) {
+            $parsed = parse_url($domain);
+            $domain = $parsed['host'] ?? $domain;
+        }
+        $domain = rtrim($domain, '/');
+
+        return strtolower($domain);
+    }
+
+    /**
      * Whether the current license is valid (domain match, not expired, and not revoked on platform).
      * platform_valid is updated when we re-validate with the platform (e.g. in middleware).
      */
@@ -48,7 +66,7 @@ class License extends Model
             return false;
         }
         $host = $requestHost ?? request()->getHost();
-        if (! empty($this->domain) && $this->domain !== $host) {
+        if (! empty($this->domain) && self::normalizeDomain($this->domain) !== self::normalizeDomain($host)) {
             return false;
         }
         if ($this->expires_at !== null && $this->expires_at->isPast()) {
@@ -72,7 +90,7 @@ class License extends Model
             return 'ابطال‌شده توسط پلتفرم';
         }
         $host = request()->getHost();
-        if (! empty($this->domain) && $this->domain !== $host) {
+        if (! empty($this->domain) && self::normalizeDomain($this->domain) !== self::normalizeDomain($host)) {
             return 'دامنه نامطابقت';
         }
         if ($this->expires_at !== null && $this->expires_at->isPast()) {

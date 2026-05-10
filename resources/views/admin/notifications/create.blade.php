@@ -14,7 +14,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">متن</label>
-                    <textarea name="body" rows="4" placeholder="متن کامل اعلان...">{{ old('body') }}</textarea>
+                    <textarea id="site-notification-body-editor" name="body" class="w-full min-h-[200px]" placeholder="متن کامل اعلان...">{{ old('body') }}</textarea>
                 </div>
                 <input type="hidden" name="audience" value="public">
                 <p class="text-slate-500 text-sm mb-3">اعلان‌های ایجادشده در این پنل فقط برای کاربران نهایی (مشتریان) در سایت فروش نمایش داده می‌شوند. برای ارسال اعلان به ادمین سایت، از پنل پلتفرم اصلی (saas-platform) استفاده کنید.</p>
@@ -89,4 +89,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#site-notification-body-editor', 'uploadContext' => 'featured', 'height' => 300])
 @endsection

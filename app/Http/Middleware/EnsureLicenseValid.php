@@ -49,7 +49,7 @@ class EnsureLicenseValid
         $intervalMinutes = (int) config('license.revalidate_interval_minutes', 5);
         $shouldRevalidate = $intervalMinutes > 0
             && (\Illuminate\Support\Facades\Schema::hasColumn('licenses', 'last_validated_at'))
-            && ($license->last_validated_at === null || $license->last_validated_at->addMinutes($intervalMinutes)->isPast());
+            && ($license->last_validated_at === null || $license->last_validated_at->copy()->addMinutes($intervalMinutes)->isPast());
 
         if ($shouldRevalidate) {
             $activation = app(LicenseActivationService::class);

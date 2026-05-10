@@ -78,7 +78,7 @@
                 <div class="form-group"><label>برچسب (Badge)</label><input type="text" name="badge_label" value="{{ old('badge_label', $item->badge_label) }}"></div>
                 <div class="form-group"><label>تصویر سرستون مگا</label><input type="text" name="image_url" value="{{ old('image_url', $item->image_url) }}" placeholder="https://..."></div>
                 <div class="form-group"><label>ستون مگامنو (۰=پیش‌فرض)</label><input type="number" name="mega_column" value="{{ old('mega_column', $item->mega_column) }}" min="0" max="99"></div>
-                <div class="form-group"><label>بلوک HTML ویژه</label><textarea name="featured_html" rows="2">{{ old('featured_html', $item->featured_html) }}</textarea></div>
+                <div class="form-group"><label>بلوک HTML ویژه</label><textarea id="menu-featured-html-{{ $item->id }}" class="menu-featured-html-editor w-full min-h-[120px]" name="featured_html" rows="2">{{ old('featured_html', $item->featured_html) }}</textarea></div>
                 <div class="form-group"><label>کلاس CSS اضافی</label><input type="text" name="css_class" value="{{ old('css_class', $item->css_class) }}"></div>
                 <div class="form-group"><label>ماژول‌های لازم (JSON آرایه slug)</label><textarea name="visible_modules_json" rows="1" placeholder='["shop","blog"]'>{{ old('visible_modules_json', $item->visible_modules ? json_encode($item->visible_modules, JSON_UNESCAPED_UNICODE) : '') }}</textarea></div>
                 <label class="admin-form-inline-check"><input type="checkbox" name="open_in_new_tab" value="1" {{ $item->open_in_new_tab ? 'checked' : '' }}> تب جدید</label>

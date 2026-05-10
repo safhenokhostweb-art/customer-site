@@ -63,27 +63,53 @@
     </div>
 @endif
 
-<p class="text-slate-600 text-sm mb-6">خلاصهٔ محتوا و وضعیت سایت.</p>
+<p class="text-slate-600 text-sm mb-4">خلاصهٔ محتوا و وضعیت سایت — از کاشی‌ها برای ورود سریع استفاده کنید.</p>
 
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <div class="card p-6">
-        <div class="text-slate-500 text-sm">صفحات</div>
-        <div class="text-2xl font-bold text-slate-800 mt-1">{{ $stats['pages'] }}</div>
-    </div>
-    <div class="card p-6">
-        <div class="text-slate-500 text-sm">مطالب وبلاگ</div>
-        <div class="text-2xl font-bold text-slate-800 mt-1">{{ $stats['posts'] }}</div>
-    </div>
+<div class="admin-dashboard-tiles">
+    <a href="{{ route('admin.pages.index') }}" class="admin-dashboard-tile admin-dashboard-tile--slate">
+        <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span class="admin-dashboard-tile__label">صفحات</span>
+        <span class="admin-dashboard-tile__value">{{ number_format($stats['pages']) }}</span>
+        <span class="admin-dashboard-tile__hint">مدیریت صفحات ثابت</span>
+    </a>
+    <a href="{{ route('admin.posts.index') }}" class="admin-dashboard-tile admin-dashboard-tile--indigo">
+        <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+        <span class="admin-dashboard-tile__label">مطالب وبلاگ</span>
+        <span class="admin-dashboard-tile__value">{{ number_format($stats['posts']) }}</span>
+        <span class="admin-dashboard-tile__hint">نوشته‌ها و دسته‌ها</span>
+    </a>
     @if(\App\Helpers\SiteHelper::shopEnabled())
-        <div class="card p-6">
-            <div class="text-slate-500 text-sm">محصولات</div>
-            <div class="text-2xl font-bold text-slate-800 mt-1">{{ $stats['products'] }}</div>
-        </div>
-        <div class="card p-6">
-            <div class="text-slate-500 text-sm">سفارشات</div>
-            <div class="text-2xl font-bold text-slate-800 mt-1">{{ $stats['orders'] }}</div>
-        </div>
+        <a href="{{ route('admin.products.index') }}" class="admin-dashboard-tile admin-dashboard-tile--emerald">
+            <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <span class="admin-dashboard-tile__label">محصولات</span>
+            <span class="admin-dashboard-tile__value">{{ number_format($stats['products']) }}</span>
+            <span class="admin-dashboard-tile__hint">فروشگاه</span>
+        </a>
+        <a href="{{ route('admin.orders.index') }}" class="admin-dashboard-tile admin-dashboard-tile--amber">
+            <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <span class="admin-dashboard-tile__label">سفارشات</span>
+            <span class="admin-dashboard-tile__value">{{ number_format($stats['orders']) }}</span>
+            <span class="admin-dashboard-tile__hint">پیگیری سفارش</span>
+        </a>
     @endif
+    <a href="{{ route('admin.settings.index') }}" class="admin-dashboard-tile admin-dashboard-tile--sky">
+        <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="admin-dashboard-tile__label">تنظیمات سایت</span>
+        <span class="admin-dashboard-tile__value" style="font-size:1rem;font-weight:700">پیکربندی</span>
+        <span class="admin-dashboard-tile__hint">نام سایت، تم، دربارهٔ ما</span>
+    </a>
+    <a href="{{ route('admin.license.index') }}" class="admin-dashboard-tile admin-dashboard-tile--violet">
+        <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+        <span class="admin-dashboard-tile__label">لایسنس</span>
+        <span class="admin-dashboard-tile__value" style="font-size:1rem;font-weight:700">کلید و ماژول</span>
+        <span class="admin-dashboard-tile__hint">اعتبارسنجی و بروزرسانی</span>
+    </a>
+    <a href="{{ route('admin.modules.index') }}" class="admin-dashboard-tile admin-dashboard-tile--rose">
+        <svg class="admin-dashboard-tile__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span class="admin-dashboard-tile__label">ماژول‌ها</span>
+        <span class="admin-dashboard-tile__value" style="font-size:1rem;font-weight:700">دریافت و وضعیت</span>
+        <span class="admin-dashboard-tile__hint">همگام با پلتفرم</span>
+    </a>
 </div>
 
 @if(\App\Helpers\SiteHelper::shopEnabled() && $recentOrders->isNotEmpty())

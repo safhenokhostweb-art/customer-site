@@ -20,7 +20,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">محتوا</label>
-                    <textarea name="body">{{ old('body') }}</textarea>
+                    <textarea id="page-body-editor" name="body" class="w-full min-h-[220px]">{{ old('body') }}</textarea>
                 </div>
                 <div class="form-group"><label><input type="checkbox" name="is_published" value="1" {{ old('is_published', true) ? 'checked' : '' }}> منتشر شود</label></div>
                 <div class="form-group"><label><input type="checkbox" name="show_in_menu" value="1" {{ old('show_in_menu', true) ? 'checked' : '' }}> در منو نمایش داده شود</label></div>
@@ -32,4 +32,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#page-body-editor', 'uploadContext' => 'featured', 'height' => 420])
 @endsection

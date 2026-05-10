@@ -31,6 +31,30 @@ class CaptchaService
         ];
     }
 
+    /** کپچا روی فرم ورود فقط وقتی ماژول فعال است و گزینهٔ «ورود و ثبت‌نام» در پنل روشن باشد */
+    public static function isAuthCaptchaEnabled(): bool
+    {
+        if (!self::isModuleEnabled()) {
+            return false;
+        }
+
+        return (string) Setting::get('auth_captcha_enabled', '0') === '1';
+    }
+
+    /**
+     * @return array{enabled: bool, type: ?string, hcaptcha_site_key: string, hcaptcha_secret_key: string}
+     */
+    public static function getAuthCaptchaConfig(): array
+    {
+        if (!self::isAuthCaptchaEnabled()) {
+            return ['enabled' => false, 'type' => null, 'hcaptcha_site_key' => '', 'hcaptcha_secret_key' => ''];
+        }
+        $cfg = self::getForSite(null);
+        $cfg['enabled'] = true;
+
+        return $cfg;
+    }
+
     public static function generatePersianNumber(int $length = 4): string
     {
         $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -101,7 +125,7 @@ class CaptchaService
         if (trim($token) === '') {
             return false;
         }
-        if (config('app.env') === 'local' && config('services.hcaptcha.skip_in_local', false)) {
+        if (config('app.env') === 'local' && filter_var(config('services.hcaptcha.skip_in_local', false), FILTER_VALIDATE_BOOLEAN)) {
             return true;
         }
         $response = \Illuminate\Support\Facades\Http::timeout(10)->asForm()->post('https://hcaptcha.com/siteverify', [

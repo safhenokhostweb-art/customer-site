@@ -32,7 +32,7 @@ class UpdateCheckService
         try {
             $response = Http::timeout(12)->get($url, [
                 'license_key' => $license->license_key,
-                'domain' => $license->domain ?: request()->getHost(),
+                'domain' => $this->licenseRequestDomain($license),
                 'limit' => $limit,
             ]);
 
@@ -95,7 +95,7 @@ class UpdateCheckService
         try {
             $response = Http::timeout(10)->post($url, [
                 'license_key' => $license->license_key,
-                'domain' => $license->domain ?: request()->getHost(),
+                'domain' => $this->licenseRequestDomain($license),
                 'versions' => $versions,
             ]);
 
@@ -134,7 +134,7 @@ class UpdateCheckService
         try {
             $response = Http::timeout(10)->get($url, [
                 'license_key' => $license->license_key,
-                'domain' => $license->domain ?: request()->getHost(),
+                'domain' => $this->licenseRequestDomain($license),
             ]);
 
             if (!$response->successful()) {
@@ -183,7 +183,7 @@ class UpdateCheckService
         $params = [
             'product' => 'site_template',
             'license_key' => $license->license_key,
-            'domain' => $license->domain ?: request()->getHost(),
+            'domain' => $this->licenseRequestDomain($license),
         ];
         if ($currentVersion !== null) {
             $params['current_version'] = $currentVersion;
@@ -215,5 +215,10 @@ class UpdateCheckService
             Log::error('Update check exception', ['message' => $e->getMessage()]);
             return ['success' => false, 'message' => 'امکان ارتباط با سرور بروزرسانی وجود ندارد.'];
         }
+    }
+
+    private function licenseRequestDomain(License $license): string
+    {
+        return License::normalizeDomain($license->domain ?: request()->getHost());
     }
 }

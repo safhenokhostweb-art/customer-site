@@ -21,7 +21,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">توضیح</label>
-                    <textarea name="description">{{ old('description', $category->description) }}</textarea>
+                    <textarea id="category-description-editor" name="description" class="w-full min-h-[160px]">{{ old('description', $category->description) }}</textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">ترتیب</label>
@@ -35,4 +35,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#category-description-editor', 'uploadContext' => 'featured', 'height' => 300])
 @endsection

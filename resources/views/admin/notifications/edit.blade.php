@@ -15,7 +15,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">متن</label>
-                    <textarea name="body" rows="4">{{ old('body', $site_notification->body) }}</textarea>
+                    <textarea id="site-notification-body-editor" name="body" class="w-full min-h-[200px]">{{ old('body', $site_notification->body) }}</textarea>
                 </div>
                 <input type="hidden" name="audience" value="public">
                 <div class="form-group">
@@ -89,4 +89,5 @@
         </div>
     </div>
 </div>
+@include('admin.partials.tinymce-field-init', ['selector' => '#site-notification-body-editor', 'uploadContext' => 'featured', 'height' => 300])
 @endsection
