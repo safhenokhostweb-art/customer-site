@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('css/admin-modules.css') }}?v={{ @filemtime(public_path('css/admin-modules.css')) ?: time() }}">
     @vite(['resources/css/app.css'])
     @include('partials.platform-styles')
+    @include('admin.partials.persian-date-admin-styles')
     @stack('head')
 </head>
 <body class="admin-body">

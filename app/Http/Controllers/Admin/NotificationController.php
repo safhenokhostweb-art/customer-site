@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SiteHelper;
 use App\Models\NotificationBatch;
 use App\Models\User;
 use App\Models\UserNotification;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class NotificationController extends Controller
@@ -38,6 +41,7 @@ class NotificationController extends Controller
             'user_ids.*' => 'integer|exists:users,id',
             'registered_from' => 'nullable|string|max:20',
             'registered_to' => 'nullable|string|max:20',
+            'send_sms' => 'nullable|boolean',
         ]);
 
         $users = $this->resolveRecipients($data);
@@ -45,12 +49,19 @@ class NotificationController extends Controller
             return back()->withInput()->with('error', 'هیچ کاربری برای ارسال انتخاب نشده است.');
         }
 
+        if ($request->hasFile('image') && ! $request->file('image')->isValid()) {
+            return back()->withInput()->with('error', 'فایل تصویر معتبر نیست یا حجم آن بیش از حد مجاز است.');
+        }
+
         $imageUrl = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $dir = 'notifications/' . date('Y/m');
-            $path = $file->storeAs($dir, Str::random(20) . '.' . $file->getClientOriginalExtension(), 'uploads');
-            $imageUrl = asset('uploads/' . $path);
+            // store() با hashName نام امن می‌سازد؛ storeAs(..., clientExtension خالی) می‌تواند به fopen با مسیر خالی منجر شود.
+            $path = $file->store($dir, 'uploads');
+            if (is_string($path) && $path !== '') {
+                $imageUrl = asset('uploads/' . ltrim(str_replace('\\', '/', $path), '/'));
+            }
         }
 
         $dataPayload = array_filter([
@@ -82,21 +93,48 @@ class NotificationController extends Controller
             ]);
         }
 
+        $smsHint = '';
+        if ($request->boolean('send_sms') && SiteHelper::moduleEnabled('sms')) {
+            $smsBody = trim($data['title'] . (isset($data['body']) && $data['body'] !== '' ? "\n" . Str::limit(strip_tags($data['body']), 280) : ''));
+            $sms = app(SmsService::class);
+            $smsOk = 0;
+            foreach ($users as $user) {
+                $mobile = trim((string) ($user->mobile ?? ''));
+                if ($mobile === '') {
+                    continue;
+                }
+                $normalized = preg_replace('/\D+/', '', $mobile);
+                if (strlen($normalized) < 10) {
+                    continue;
+                }
+                try {
+                    if ($sms->send($normalized, Str::limit($smsBody, 480))) {
+                        $smsOk++;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('notification.sms_failed', ['user_id' => $user->id, 'message' => $e->getMessage()]);
+                }
+            }
+            $smsHint = $smsOk > 0 ? " پیامک برای {$smsOk} شماره ارسال شد (در صورت تنظیم درگاه پیامک)." : ' پیامک ارسال نشد (شماره موبایل یا تنظیمات SMS را بررسی کنید).';
+        } elseif ($request->boolean('send_sms') && ! SiteHelper::moduleEnabled('sms')) {
+            $smsHint = ' ماژول پیامک برای این سایت فعال نیست؛ فقط اعلان داخل پنل ثبت شد.';
+        }
+
         return redirect()
             ->route('admin.notifications.send-users.form')
-            ->with('success', "اعلان برای {$users->count()} کاربر ارسال شد.");
+            ->with('success', "اعلان برای {$users->count()} کاربر ارسال شد." . $smsHint);
     }
 
     protected function resolveRecipients(array $data)
     {
         if ($data['recipient_type'] === 'all') {
-            return User::select('id')->get();
+            return User::query()->select(['id', 'mobile'])->get();
         }
         if ($data['recipient_type'] === 'selected' && !empty($data['user_ids'])) {
-            return User::whereIn('id', $data['user_ids'])->select('id')->get();
+            return User::whereIn('id', $data['user_ids'])->select(['id', 'mobile'])->get();
         }
         if ($data['recipient_type'] === 'date_range') {
-            $query = User::select('id');
+            $query = User::query()->select(['id', 'mobile']);
             if (!empty($data['registered_from'])) {
                 $from = \App\Helpers\Jalali::toCarbon($data['registered_from']);
                 if ($from) {

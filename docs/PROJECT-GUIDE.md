@@ -166,6 +166,9 @@
 | `admin.notifications.index` | `/admin/notifications` | مدیریت اعلان‌های تولبار سایت (بنر بالای سایت؛ فقط وقتی ماژول notifications در لایسنس سایت فعال بوده است) |
 | `admin.notifications.send-users.form` / `admin.notifications.send-users` | `/admin/notifications/send-users` | ارسال اعلان به کاربران ثبت‌نام‌کرده (inbox داشبورد «حساب من») |
 | `admin.notifications.archive` | `/admin/notifications/send-users/archive` | آرشیو اعلان‌های ارسال‌شده به کاربران |
+
+**جریان اعلان‌ها (خلاصه):** از **پلتفرم** (`saas-platform`) برای هر سایت می‌توان اعلان با مخاطب «ادمین» (ویجت شناور پنل ادمین مشتری) یا «کاربران نهایی» (ویجت فرانت + بخش «اعلان سایت» در نوار حساب کاربری) ساخت؛ لیست از `GET /api/site-config` و فیلدهای `id`، `priority`، `created_at` می‌آید. در **customer-site** ادمین سایت می‌تواند اعلان محلی تولبار بسازد، به کاربران **inbox** (`account/notifications`) بفرستد و در صورت فعال بودن ماژول **sms** گزینهٔ ارسال **پیامک** خلاصه را بزند. helper مرتب‌سازی: `App\Helpers\NotificationUi`.
+
 | `admin.settings.index` | `/admin/settings` | تنظیمات سایت (شامل قالب هدر/فوتر سازندهٔ بصری، هدر چسبان، و رنگ‌های نوار کناری پنل ادمین/حساب کاربری) |
 | `builder.edit` ، `builder.page.edit` ، `builder.page.show` ، `builder.page.update` ، `builder.preview` ، `builder.templates.index` ، `builder.templates.store` | `/builder/edit/{page}` ، `/builder/page/{page}/edit` ، GET/PUT `/builder/page/{page}` ، POST `/builder/preview` ، GET/POST `/builder/templates` | سازندهٔ بصری صفحه (ادمین): رابط کاربری چندستونه (المان‌ها / **قالب کامل**)، پیش‌نمایش زنده در بالا، درخت ساختار در پایین، جستجو در کتابخانهٔ المان‌ها؛ **ویرایش زنده:** کلیک روی هر بلوک با `id` به شکل `tb-*` در iframe پیش‌نمایش، همان المان را در پنل راست انتخاب می‌کند (`postMessage` با `page-builder-preview` / `page-builder-parent`)؛ سه **Kit** حرفه‌ای (`corporate_pro`، `personal_pro`، `shop_pro`) در `App\Support\BuilderPageKits` + `config/builder-page-kits.php`؛ ذخیرهٔ `builder_content_v2`؛ رندر `promo_banner`، `countdown`، `gallery`، `custom_html` در `BlockRenderer` |
 | `admin.pages.*` ، `admin.posts.*` ، `admin.products.*` ، `admin.orders.*` | ... | صفحات، مطالب، محصولات، سفارشات |
@@ -379,6 +382,8 @@
 
 - **صدور لایسنس:** در پلتفرم از بخش سایت یا لایسنس برای یک سایت و دامنه لایسنس صادر می‌شود. کلید فقط یک‌بار نمایش داده می‌شود.
 - **فعال‌سازی در سایت مشتری:** در **ادمین → لایسنس** کلید و دامنه وارد می‌شود. **LicenseActivationService** با **POST /api/license/validate** اعتبارسنجی می‌کند و در صورت موفقیت رکورد **licenses** به‌روز می‌شود (شامل modules و support_expires_at).
+- **همگام‌سازی دوره‌ای:** middleware **EnsureLicenseValid** هر چند دقیقه یک‌بار لایسنس را با پلتفرم چک می‌کند. **خطاهای موقت** (شبکه، timeout، پاسخ نامعتبر، HTTP غیرموفق بدون کد قطعی ابطال) نباید `platform_valid` را کاذباً `false` کنند؛ فقط پاسخ معتبر API با خطاهای قطعی مثل `revoked`، `expired`، `invalid_key`، `domain_mismatch`، `site_inactive` وضعیت «ابطال در پلتفرم» را در دیتابیس محلی منعکس می‌کنند.
+- **دامنه:** مقایسهٔ دامنهٔ ذخیره‌شده با host درخواست با **نرمال‌سازی یکسان** (`License::normalizeDomain`) انجام می‌شود تا اختلاف حروف بزرگ/کوچک یا اسلش انتها باعث قطع دسترسی نشود.
 - **سایت‌کانفیگ:** برای دریافت نام سایت، ماژول‌ها، انقضای پشتیبانی و **ux** از **GET /api/site-config** با همان license_key و domain استفاده می‌شود. پاسخ برای کش UX و نمایش در داشبورد استفاده می‌شود.
 
 **جستجو:** `لایسنس` ، `license_key` ، `site-config` ، `LicenseActivationService`

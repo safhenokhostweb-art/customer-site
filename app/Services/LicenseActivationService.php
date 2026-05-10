@@ -66,7 +66,7 @@ class LicenseActivationService
      *
      * @param  array<string, mixed>  $result
      */
-    protected function isDefinitePlatformRejection(array $result): bool
+    public function isDefinitePlatformRejection(array $result): bool
     {
         $err = (string) ($result['error'] ?? '');
 

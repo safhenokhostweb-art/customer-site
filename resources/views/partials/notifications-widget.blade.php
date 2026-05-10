@@ -9,8 +9,7 @@
     $audiencePublic = fn($n) => ($n['audience'] ?? $n->audience ?? 'public') === 'public';
     $localNotifs = $localNotifs->filter(fn($n) => ($n->audience ?? 'public') === 'public');
     $platformNotifs = $platformNotifs->filter($audiencePublic);
-    $priorityOrder = ['urgent' => 1, 'high' => 2, 'normal' => 3, 'low' => 4];
-    $allNotifs = $localNotifs->map(fn($n) => [
+    $rawItems = $localNotifs->map(fn($n) => [
         'id' => 'local_' . $n->id,
         'title' => $n->title,
         'body' => $n->body,
@@ -21,8 +20,9 @@
         'position' => $n->position ?? 'top',
         'image_position' => $n->image_position ?? 'right',
         'priority' => 'normal',
+        'created_at' => $n->created_at?->toIso8601String(),
     ])->concat($platformNotifs->map(fn($n) => [
-        'id' => 'platform_' . md5(($n['title'] ?? '') . ($n['body'] ?? '') . ($n['link'] ?? '')),
+        'id' => isset($n['id']) ? 'platform_' . $n['id'] : 'platform_' . md5(($n['title'] ?? '') . ($n['body'] ?? '') . ($n['link'] ?? '')),
         'audience' => $n['audience'] ?? 'public',
         'title' => $n['title'] ?? '',
         'body' => $n['body'] ?? null,
@@ -33,68 +33,57 @@
         'position' => $n['position'] ?? 'top',
         'image_position' => $n['image_position'] ?? 'right',
         'priority' => $n['priority'] ?? 'normal',
-    ]))->sortBy(fn($n) => $priorityOrder[$n['priority'] ?? 'normal'] ?? 3)->values();
-    $typeColors = ['info' => '#3b82f6', 'success' => '#22c55e', 'warning' => '#f59e0b', 'danger' => '#ef4444'];
+        'created_at' => $n['created_at'] ?? null,
+    ]))->values()->all();
+    $allNotifs = collect(\App\Helpers\NotificationUi::sortToolbarItems($rawItems));
+    $typeColors = ['info' => '#2563eb', 'success' => '#16a34a', 'warning' => '#d97706', 'danger' => '#dc2626', 'promo' => '#7c3aed', 'ad' => '#4f46e5'];
     $showWidget = \App\Helpers\SiteHelper::moduleEnabled('notifications');
 @endphp
 @if($showWidget)
-<div id="notifications-widget" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:99999;">
-    <button type="button" id="notifications-bell-btn" onclick="window.toggleNotificationsPanel(event)" aria-label="اعلان‌ها" style="
-        position:relative;width:3rem;height:3rem;border-radius:50%;
-        background:{{ $typeColors['info'] ?? '#3b82f6' }};
-        color:#fff;border:none;cursor:pointer;pointer-events:auto;
-        display:flex;align-items:center;justify-content:center;
-        box-shadow:0 4px 12px rgba(59,130,246,0.4);
-        transition:transform 0.2s;
-    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notif-bell-icon">
+<div id="notifications-widget" class="pub-notif-widget">
+    <button type="button" id="notifications-bell-btn" class="pub-notif-widget__bell" onclick="window.toggleNotificationsPanel(event)" aria-label="اعلان‌ها">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pub-notif-widget__bell-icon">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
-        <span id="notifications-badge" style="
-            position:absolute;top:-4px;right:-4px;
-            min-width:1.25rem;height:1.25rem;border-radius:9999px;
-            background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;
-            display:flex;align-items:center;justify-content:center;padding:0 4px;
-        "></span>
+        <span id="notifications-badge" class="pub-notif-widget__badge"></span>
     </button>
-    <div id="notifications-panel" style="
-        display:none;position:absolute;bottom:calc(100% + 0.5rem);right:0;
-        width:min(340px, calc(100vw - 2rem));max-height:70vh;overflow-y:auto;
-        background:#fff;border-radius:0.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.15);
-        border:1px solid #e5e7eb;z-index:100000;
-    ">
-        <div style="padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:0.95rem;">اعلان‌ها</div>
+    <div id="notifications-panel" class="pub-notif-widget__panel">
+        <div class="pub-notif-widget__head">اعلان‌ها</div>
         <div id="notifications-list">
             @if($allNotifs->isEmpty())
-            <div style="padding:1.5rem 1rem;color:#6b7280;font-size:0.9rem;text-align:center;">اعلان جدیدی وجود ندارد.</div>
+            <div class="pub-notif-widget__empty">اعلان جدیدی وجود ندارد.</div>
             @else
             @foreach($allNotifs as $n)
-            <div class="notif-item" data-id="{{ $n['id'] }}" style="
-                padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;
-                display:flex;align-items:flex-start;gap:0.75rem;
-            ">
+            @php
+                $accent = $typeColors[$n['type']] ?? $typeColors['info'];
+                $isFresh = \App\Helpers\NotificationUi::isFresh($n['created_at'] ?? null);
+            @endphp
+            <div class="notif-item pub-notif-item {{ $isFresh ? 'pub-notif-item--fresh' : '' }}" data-id="{{ $n['id'] }}" style="--notif-accent: {{ $accent }};">
                 @if($n['image_url'] && in_array($n['image_position'] ?? 'right', ['left']))
-                <img src="{{ $n['image_url'] }}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:0.375rem;flex-shrink:0;">
+                <img src="{{ $n['image_url'] }}" alt="" class="pub-notif-item__thumb">
                 @endif
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.9rem;color:#111827;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                        @if(($n['priority'] ?? 'normal') === 'urgent')
-                            <span style="font-size:0.7rem;background:#fef2f2;color:#b91c1c;padding:0.15rem 0.4rem;border-radius:0.25rem;">فوری</span>
-                        @elseif(($n['priority'] ?? 'normal') === 'high')
-                            <span style="font-size:0.7rem;background:#fffbeb;color:#b45309;padding:0.15rem 0.4rem;border-radius:0.25rem;">مهم</span>
+                <div class="pub-notif-item__body">
+                    <div class="pub-notif-item__title-row">
+                        @if($isFresh)
+                            <span class="pub-notif-item__new">جدید</span>
                         @endif
-                        {{ $n['title'] ?: 'اعلان' }}
+                        @if(($n['priority'] ?? 'normal') === 'urgent')
+                            <span class="pub-notif-item__pill pub-notif-item__pill--urgent">فوری</span>
+                        @elseif(($n['priority'] ?? 'normal') === 'high')
+                            <span class="pub-notif-item__pill pub-notif-item__pill--high">مهم</span>
+                        @endif
+                        <span class="pub-notif-item__title">{{ $n['title'] ?: 'اعلان' }}</span>
                     </div>
                     @if($n['body'])
-                    <div style="font-size:0.8rem;color:#6b7280;margin-top:0.2rem;">{{ Str::limit($n['body'], 80) }}</div>
+                    <div class="pub-notif-item__text">{{ Str::limit(strip_tags($n['body']), 100) }}</div>
                     @endif
                     @if($n['link'])
-                    <a href="{{ $n['link'] }}" target="_blank" rel="noopener" style="color:{{ $typeColors[$n['type']] ?? '#3b82f6' }};font-size:0.8rem;margin-top:0.25rem;display:inline-block;">{{ $n['link_text'] ?: 'مشاهده' }}</a>
+                    <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="pub-notif-item__link">{{ $n['link_text'] ?: 'مشاهده' }}</a>
                     @endif
                 </div>
                 @if($n['image_url'] && in_array($n['image_position'] ?? 'right', ['right']))
-                <img src="{{ $n['image_url'] }}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:0.375rem;flex-shrink:0;">
+                <img src="{{ $n['image_url'] }}" alt="" class="pub-notif-item__thumb">
                 @endif
             </div>
             @endforeach
@@ -103,13 +92,110 @@
     </div>
 </div>
 <style>
-@keyframes notif-bell-shake {
-    0%,100%{ transform: rotate(0deg); }
-    10%,30%,50%,70%,90%{ transform: rotate(-8deg); }
-    20%,40%,60%,80%{ transform: rotate(8deg); }
+.pub-notif-widget {
+    position: fixed;
+    bottom: 1.5rem;
+    inset-inline-end: 1.5rem;
+    z-index: 99999;
+    font-family: Tahoma, "Segoe UI", system-ui, sans-serif;
 }
-.notif-bell-icon { animation: notif-bell-shake 2s ease-in-out infinite; }
-#notifications-widget { font-family: inherit; }
+.pub-notif-widget__bell {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #4f46e5, #4338ca);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 22px rgba(67, 56, 202, 0.35);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.pub-notif-widget__bell:hover { transform: scale(1.06); box-shadow: 0 10px 28px rgba(67, 56, 202, 0.42); }
+.pub-notif-widget__badge {
+    position: absolute;
+    top: -4px;
+    inset-inline-end: -4px;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+.pub-notif-widget__panel {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    inset-inline-end: 0;
+    width: min(360px, calc(100vw - 2rem));
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+    border: 1px solid #e2e8f0;
+    z-index: 100000;
+}
+.pub-notif-widget__head {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #0f172a;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+.pub-notif-widget__empty { padding: 1.5rem 1rem; color: #64748b; font-size: 0.875rem; text-align: center; }
+@keyframes pub-notif-shake {
+    0%,100%{ transform: rotate(0deg); }
+    15%{ transform: rotate(-7deg); }
+    30%{ transform: rotate(7deg); }
+    45%{ transform: rotate(-4deg); }
+    60%{ transform: rotate(4deg); }
+    75%{ transform: rotate(0deg); }
+}
+.pub-notif-widget__bell-icon { animation: pub-notif-shake 2.4s ease-in-out infinite; }
+.pub-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    margin: 0.4rem 0.5rem;
+    border-radius: 0.6rem;
+    border: 1px solid #f1f5f9;
+    background: #fafafa;
+    border-inline-start: 3px solid var(--notif-accent, #4f46e5);
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.pub-notif-item:hover { background: #f8fafc; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
+.pub-notif-item--fresh {
+    background: linear-gradient(180deg, #f5f3ff 0%, #faf5ff 100%);
+    border-color: #e9d5ff;
+    box-shadow: 0 2px 12px rgba(124, 58, 237, 0.08);
+}
+.pub-notif-item__thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 0.45rem; flex-shrink: 0; }
+.pub-notif-item__body { flex: 1; min-width: 0; }
+.pub-notif-item__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.pub-notif-item__title { font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.35; }
+.pub-notif-item__text { font-size: 0.78rem; color: #64748b; margin-top: 0.25rem; line-height: 1.45; }
+.pub-notif-item__link { display: inline-block; margin-top: 0.35rem; font-size: 0.75rem; font-weight: 600; color: var(--notif-accent, #4f46e5); text-decoration: none; }
+.pub-notif-item__link:hover { text-decoration: underline; }
+.pub-notif-item__pill { font-size: 0.62rem; font-weight: 800; padding: 0.12rem 0.4rem; border-radius: 0.25rem; }
+.pub-notif-item__pill--urgent { background: #fef2f2; color: #b91c1c; }
+.pub-notif-item__pill--high { background: #fffbeb; color: #b45309; }
+.pub-notif-item__new { font-size: 0.62rem; font-weight: 800; color: #6d28d9; background: #ede9fe; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

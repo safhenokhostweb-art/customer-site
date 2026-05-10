@@ -141,6 +141,10 @@ class LicenseController extends Controller
         $result = $activationService->validate($license->license_key, $domain);
 
         if (empty($result['valid'])) {
+            if (! $activationService->isDefinitePlatformRejection($result)) {
+                return back()->with('error', $result['message'] ?? 'فعلاً ارتباط با سرور پلتفرم برقرار نشد. چند دقیقه بعد دوباره تلاش کنید.');
+            }
+
             return back()->with('error', $result['message'] ?? 'لایسنس معتبر نیست یا دامنه مطابقت ندارد.');
         }
 
@@ -149,6 +153,8 @@ class LicenseController extends Controller
             'support_expires_at' => $result['support_expires_at'] ?? null,
             'support_starts_at' => $result['support_starts_at'] ?? null,
             'support_level' => $result['support_level'] ?? 'basic',
+            'platform_valid' => true,
+            'last_validated_at' => now(),
         ]);
         PlatformUx::clearCache();
         app(UpdateCheckService::class)->reportModuleVersions();

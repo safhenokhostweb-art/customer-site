@@ -1,8 +1,4 @@
-{{-- jQuery + datepicker شمسی برای .persian-date-input در تمام پنل ادمین؛ قبل از @yield('content') لود شود تا اسکریپت‌های صفحه بعد از آن اجرا شوند. --}}
-@pushOnce('head', 'admin-persian-datepicker-css')
-<link rel="stylesheet" href="{{ asset('vendor/persian-datepicker/persian-datepicker.min.css') }}?v={{ @filemtime(public_path('vendor/persian-datepicker/persian-datepicker.min.css')) ?: time() }}">
-@endPushOnce
-
+{{-- استایل‌ها: admin.partials.persian-date-admin-styles در <head> لایوت. اینجا فقط اسکریپت‌ها به @stack('scripts') push می‌شوند. --}}
 @pushOnce('scripts', 'admin-vendor-jquery')
 <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
 @endPushOnce
@@ -14,14 +10,34 @@
 @endPushOnce
 @pushOnce('scripts', 'admin-persian-date-input-init')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof jQuery === 'undefined' || !jQuery.fn.persianDatepicker) return;
-    jQuery('.persian-date-input').each(function () {
-        var el = jQuery(this);
-        if (el.data('pdpInitialized')) return;
-        el.data('pdpInitialized', true);
-        el.persianDatepicker({ format: 'YYYY/MM/DD', persianDigit: true, initialValueType: 'persian', autoClose: true });
+(function () {
+    function pdpOptions() {
+        return { format: 'YYYY/MM/DD', persianDigit: true, initialValueType: 'persian', autoClose: true };
+    }
+    /** فقط ورودی‌های قابل‌رؤیت؛ برای فیلدهای داخل display:none مقداردهی نکن (تقویم تمام‌صفحه/خراب). */
+    /** ورودی‌های .persian-date-defer را به persian-date-input تبدیل کن (قبل از init). */
+    window.promoteDeferredPersianInputs = function (root) {
+        if (typeof jQuery === 'undefined') return;
+        var $r = root ? jQuery(root) : jQuery(document.body);
+        $r.find('.persian-date-defer').removeClass('persian-date-defer').addClass('persian-date-input');
+    };
+    window.initPersianDateInputs = function (root) {
+        if (typeof jQuery === 'undefined' || !jQuery.fn.persianDatepicker) return;
+        var $scope = root ? jQuery(root) : null;
+        var $inputs = $scope && $scope.length
+            ? $scope.find('.persian-date-input').add($scope.filter('.persian-date-input'))
+            : jQuery('.persian-date-input');
+        $inputs.each(function () {
+            var el = jQuery(this);
+            if (el.data('pdpInitialized')) return;
+            if (!el.is(':visible')) return;
+            el.data('pdpInitialized', true);
+            el.persianDatepicker(pdpOptions());
+        });
+    };
+    document.addEventListener('DOMContentLoaded', function () {
+        window.initPersianDateInputs(document.body);
     });
-});
+})();
 </script>
 @endPushOnce

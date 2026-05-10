@@ -1,20 +1,24 @@
 @php
     $platformNotifs = collect();
-    if (class_exists(\App\Services\PlatformUxService::class)) {
+    if (\App\Helpers\SiteHelper::moduleEnabled('notifications') && class_exists(\App\Services\PlatformUxService::class)) {
         $platformNotifs = collect(app(\App\Services\PlatformUxService::class)->getPlatformNotifications())
             ->filter(fn($n) => ($n['audience'] ?? 'public') === 'admin');
     }
-    $allNotifs = $platformNotifs->map(fn($n) => [
-        'id' => 'platform_' . md5(($n['title'] ?? '') . ($n['body'] ?? '')),
+    $rawAdmin = $platformNotifs->map(fn($n) => [
+        'id' => isset($n['id']) ? 'platform_' . $n['id'] : 'platform_' . md5(($n['title'] ?? '') . ($n['body'] ?? '')),
         'title' => $n['title'] ?? '',
         'body' => $n['body'] ?? null,
         'type' => $n['type'] ?? 'info',
         'link' => $n['link'] ?? null,
         'link_text' => $n['link_text'] ?? null,
         'image_url' => $n['image_url'] ?? null,
-    ]);
+        'priority' => $n['priority'] ?? 'normal',
+        'created_at' => $n['created_at'] ?? null,
+    ])->values()->all();
+    $allNotifs = collect(\App\Helpers\NotificationUi::sortToolbarItems($rawAdmin));
+    $adminTypeColors = ['info' => '#2563eb', 'success' => '#16a34a', 'warning' => '#d97706', 'danger' => '#dc2626'];
 @endphp
-@if(true)
+@if(\App\Helpers\SiteHelper::moduleEnabled('notifications'))
 <style>
 @keyframes admin-bell-shake {
     0%,100%{transform:rotate(0)}
@@ -122,33 +126,94 @@
         @endif
     </button>
     <div class="admin-notif-drag-hint">برای جابه‌جایی بکشید</div>
-    <div id="admin-notifications-panel" style="display:none;position:absolute;width:min(320px,90vw);max-height:60vh;overflow-y:auto;background:#fff;border-radius:0.5rem;box-shadow:0 10px 40px rgba(0,0,0,0.15);border:1px solid #e5e7eb;z-index:99999;">
-        <div style="padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:0.9rem;">اعلان‌های ادمین</div>
+    <div id="admin-notifications-panel" class="admin-notif-panel">
+        <div class="admin-notif-panel__head">اعلان‌های پلتفرم</div>
         @if($allNotifs->isEmpty())
-        <div style="padding:1.5rem 1rem;color:#6b7280;font-size:0.9rem;text-align:center;">
+        <div class="admin-notif-panel__empty">
             اعلانی وجود ندارد.<br>
-            <a href="{{ route('admin.license.refresh-config.get') }}" class="text-indigo-600 hover:underline mt-2 inline-block font-medium">کلیک کنید: بازخوانی تنظیمات و اعلان‌ها</a><br>
-            <span style="font-size:0.8rem;margin-top:0.5rem;display:block;">اگر باز هم نمایش داده نشد، لایسنس این سایت در پلتفرم باید به همان سایتی («سایت پیشخوان فروش محصولات») متصل باشد که اعلان برایش ساخته شده است.</span>
+            <a href="{{ route('admin.license.refresh-config.get') }}" class="text-indigo-600 hover:underline mt-2 inline-block font-medium">بازخوانی تنظیمات و اعلان‌ها</a><br>
+            <span class="admin-notif-panel__hint">لایسنس این سایت در پلتفرم باید به همان سایتی متصل باشد که اعلان برایش ثبت شده است.</span>
         </div>
         @else
         @foreach($allNotifs as $n)
-        <div style="padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;">
+        @php
+            $acc = $adminTypeColors[$n['type'] ?? 'info'] ?? $adminTypeColors['info'];
+            $fresh = \App\Helpers\NotificationUi::isFresh($n['created_at'] ?? null);
+        @endphp
+        <div class="admin-notif-card {{ $fresh ? 'admin-notif-card--fresh' : '' }}" style="--admin-notif-accent: {{ $acc }};">
             @if(!empty($n['image_url']))
-            <div style="margin-bottom:0.5rem;"><img src="{{ $n['image_url'] }}" alt="" style="max-width:100%;max-height:80px;object-fit:contain;border-radius:4px;"></div>
+            <div class="admin-notif-card__imgwrap"><img src="{{ $n['image_url'] }}" alt="" class="admin-notif-card__img"></div>
             @endif
-            <div style="font-weight:600;font-size:0.9rem;">{{ $n['title'] ?: 'اعلان' }}</div>
-            @if($n['body'])<div style="font-size:0.8rem;color:#6b7280;margin-top:0.2rem;">{{ Str::limit($n['body'], 80) }}</div>@endif
-            @if($n['link'])<a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="text-indigo-600 text-sm mt-1 inline-block">{{ $n['link_text'] ?: 'مشاهده' }}</a>@endif
+            <div class="admin-notif-card__row">
+                @if($fresh)<span class="admin-notif-card__new">جدید</span>@endif
+                @if(($n['priority'] ?? 'normal') === 'urgent')
+                    <span class="admin-notif-card__pill admin-notif-card__pill--urgent">فوری</span>
+                @elseif(($n['priority'] ?? 'normal') === 'high')
+                    <span class="admin-notif-card__pill admin-notif-card__pill--high">مهم</span>
+                @endif
+            </div>
+            <div class="admin-notif-card__title">{{ $n['title'] ?: 'اعلان' }}</div>
+            @if($n['body'])<div class="admin-notif-card__body">{{ Str::limit(strip_tags($n['body']), 100) }}</div>@endif
+            @if($n['link'])<a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="admin-notif-card__link">{{ $n['link_text'] ?: 'مشاهده' }}</a>@endif
         </div>
         @endforeach
         @endif
     </div>
 </div>
 <style>
+.admin-notif-panel {
+    display: none;
+    position: absolute;
+    width: min(340px, 90vw);
+    max-height: 60vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+    border: 1px solid #e2e8f0;
+    z-index: 99999;
+    font-family: Tahoma, "Segoe UI", system-ui, sans-serif;
+}
+.admin-notif-panel__head {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #0f172a;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+.admin-notif-panel__empty { padding: 1.25rem 0.85rem; color: #64748b; font-size: 0.875rem; text-align: center; line-height: 1.5; }
+.admin-notif-panel__hint { font-size: 0.75rem; margin-top: 0.5rem; display: block; color: #94a3b8; }
+.admin-notif-card {
+    margin: 0.45rem 0.5rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.55rem;
+    border: 1px solid #f1f5f9;
+    border-inline-start: 3px solid var(--admin-notif-accent, #4f46e5);
+    background: #fafafa;
+}
+.admin-notif-card--fresh {
+    background: linear-gradient(180deg, #f5f3ff 0%, #faf5ff 100%);
+    border-color: #e9d5ff;
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.07);
+}
+.admin-notif-card__imgwrap { margin-bottom: 0.45rem; }
+.admin-notif-card__img { max-width: 100%; max-height: 72px; object-fit: contain; border-radius: 0.35rem; }
+.admin-notif-card__row { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin-bottom: 0.25rem; }
+.admin-notif-card__new { font-size: 0.62rem; font-weight: 800; color: #6d28d9; background: #ede9fe; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
+.admin-notif-card__pill { font-size: 0.6rem; font-weight: 800; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
+.admin-notif-card__pill--urgent { background: #fef2f2; color: #b91c1c; }
+.admin-notif-card__pill--high { background: #fffbeb; color: #b45309; }
+.admin-notif-card__title { font-size: 0.84rem; font-weight: 700; color: #1e293b; line-height: 1.35; }
+.admin-notif-card__body { font-size: 0.78rem; color: #64748b; margin-top: 0.25rem; line-height: 1.45; }
+.admin-notif-card__link { display: inline-block; margin-top: 0.35rem; font-size: 0.75rem; font-weight: 600; color: var(--admin-notif-accent, #4f46e5); }
 #admin-notifications-panel[data-vertical="above"] { bottom: calc(100% + 0.5rem); top: auto; }
 #admin-notifications-panel[data-vertical="below"] { top: calc(100% + 0.5rem); bottom: auto; }
-#admin-notifications-panel[data-horizontal="right"] { right: 0; left: auto; }
-#admin-notifications-panel[data-horizontal="left"] { left: 0; right: auto; }
+#admin-notifications-panel[data-horizontal="right"] { inset-inline-end: 0; inset-inline-start: auto; }
+#admin-notifications-panel[data-horizontal="left"] { inset-inline-start: 0; inset-inline-end: auto; }
 </style>
 <script>
 (function(){

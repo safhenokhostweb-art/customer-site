@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -106,7 +106,10 @@
                         </details>
                         <h1 class="text-xl md:text-2xl font-bold text-slate-900">@yield('header', 'حساب من')</h1>
                     </div>
-                    <span class="text-sm text-slate-500">{{ auth()->user()->name }} — {{ auth()->user()->mobile ?? auth()->user()->email }}</span>
+                    <div class="flex items-center gap-3">
+                        @include('account.partials.notifications-toolbar')
+                        <span class="text-sm text-slate-500 hidden sm:inline">{{ auth()->user()->name }} — {{ auth()->user()->mobile ?? auth()->user()->email }}</span>
+                    </div>
                 </div>
             </header>
             <main class="flex-1 overflow-y-auto p-4 md:p-6">
