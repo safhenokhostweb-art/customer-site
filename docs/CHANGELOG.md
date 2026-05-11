@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Phase 5 / Wave 4 — ۱۴۰۵/۰۲/۲۱
+
+- **P2-5:** نمایش وضعیت «قبلاً خریداری‌شده — غیرفعال» در فروشگاه ماژول پنل ادمین (`resources/views/admin/module-store/index.blade.php`). با خواندن فیلدهای جدید `status` و `owned` از پاسخ پلتفرم (و fallback به‌محاسبه از `installed`/`owned` در صورت نبود)، اگر مشتری ماژولی را قبلاً خریده ولی فعلاً غیرفعال است، به‌جای دکمهٔ «خرید»، badge امبر «قبلاً خریداری‌شده — غیرفعال» + دکمهٔ «فعال‌سازی» به route `admin.modules.index` نمایش داده می‌شود. backward-compat با نسخهٔ قبلی API پلتفرم (که فقط `installed` می‌داد) کاملاً حفظ شد. `commit 4221b07`
+- **P2-6:** banner خطای موقت لایسنس در پنل ادمین. `LicenseActivationService::syncWithPlatform` همیشه خطاهای transient (5xx، timeout، network) را تشخیص می‌داد و لایسنس را invalid نمی‌کرد، اما کاربر هیچ نمایش بصری از این وضعیت در پنل نمی‌دید. اکنون: هنگام skip شدن sync به دلیل خطای موقت، Cache::put با کلید `license.transient_error.{license_id}` و TTL 30 دقیقه (شامل error/http_status/message/detected_at) ست می‌شود؛ در validation موفق بعدی به‌طور خودکار Cache::forget می‌شود. partial جدید `resources/views/admin/partials/license-transient-banner.blade.php` در `admin/layout.blade.php` include شد و در صورت وجود cache یک باکس امبر admin-flash--warning با لینک «تلاش مجدد» (به `admin.license.refresh-config.get`) نمایش می‌دهد. متن صریحاً تأکید می‌کند لایسنس فعلی همچنان معتبر است و دسترسی به ماژول‌ها قطع نمی‌شود (per global-rules §۴). متد جدید `LicenseActivationService::transientErrorCacheKey(int $id): string` برای استفادهٔ مشترک. هر cache exception با try/catch دفع شد ⇒ validation هرگز به‌خاطر cache break نمی‌شود. `commit e63da3c`
+
 ### Phase 5 — Wave-tip tags — ۱۴۰۵/۰۲/۲۱
 
 - افزوده شدن سه **lightweight tag** برای نام‌گذاری دائمی tip شاخه‌های phase5-waveN قبل از حذف احتمالی feature branchها (محلی، بدون push به GitHub):
