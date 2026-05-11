@@ -41,8 +41,14 @@
                         @else
                             <span class="text-gray-500">رایگان</span>
                         @endif
-                        @if(!empty($module['installed']))
+                        @php
+                            $moduleStatus = $module['status'] ?? (!empty($module['installed']) ? 'installed' : (!empty($module['owned']) ? 'owned_disabled' : 'available'));
+                        @endphp
+                        @if($moduleStatus === 'installed')
                             <span class="badge badge-success">نصب شده</span>
+                        @elseif($moduleStatus === 'owned_disabled')
+                            <span class="badge bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded">قبلاً خریداری‌شده — غیرفعال</span>
+                            <a href="{{ route('admin.modules.index') }}" class="btn btn-secondary btn-sm" title="فعال‌سازی از صفحهٔ ماژول‌های سایت">فعال‌سازی</a>
                         @else
                             <a href="{{ $platformStoreUrl }}?module={{ urlencode($module['slug'] ?? '') }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">خرید</a>
                         @endif
