@@ -33,6 +33,22 @@ class LicenseActivationService
                 'license_id' => $license->id,
             ]);
 
+            // P2-6: ثبت خطای موقت در cache تا banner در پنل ادمین قابل نمایش باشد.
+            try {
+                \Illuminate\Support\Facades\Cache::put(
+                    self::transientErrorCacheKey($license->id),
+                    [
+                        'error' => $result['error'] ?? 'transient',
+                        'http_status' => $result['http_status'] ?? null,
+                        'message' => $result['message'] ?? null,
+                        'detected_at' => now()->toIso8601String(),
+                    ],
+                    now()->addMinutes(30)
+                );
+            } catch (\Throwable $e) {
+                // cache نباید validation را break کند
+            }
+
             return [
                 'valid' => true,
                 'message' => null,
@@ -50,6 +66,13 @@ class LicenseActivationService
             $data['support_expires_at'] = $result['support_expires_at'] ?? null;
             $data['support_starts_at'] = $result['support_starts_at'] ?? null;
             $data['support_level'] = $result['support_level'] ?? 'basic';
+
+            // P2-6: validation موفق ⇒ banner خطای موقت پاک شود.
+            try {
+                \Illuminate\Support\Facades\Cache::forget(self::transientErrorCacheKey($license->id));
+            } catch (\Throwable $e) {
+                // no-op
+            }
         } else {
             $data['platform_valid'] = false;
             $data['modules'] = [];
@@ -59,6 +82,15 @@ class LicenseActivationService
             'valid' => !empty($result['valid']),
             'message' => $result['message'] ?? null,
         ];
+    }
+
+    /**
+     * P2-6: کلید cache برای ثبت آخرین خطای موقت در ارتباط با پلتفرم.
+     * هر لایسنس به صورت مستقل ردیابی می‌شود.
+     */
+    public static function transientErrorCacheKey(int $licenseId): string
+    {
+        return 'license.transient_error.' . $licenseId;
     }
 
     /**
