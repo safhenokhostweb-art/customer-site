@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Phase 5 / Wave 2 — ۱۴۰۵/۰۲/۲۱
+
+- **P0-4:** فیلد `license_key` در مدل `App\Models\License` با Cast سفارشی `App\Casts\EncryptedOrPlaintext` به‌صورت encrypted در دیتابیس ذخیره می‌شود. Cast جدید با Laravel `Crypt` رمزنگاری/رمزگشایی می‌کند و در صورت روبه‌رو شدن با مقدار legacy plaintext (`DecryptException`) همان را برمی‌گرداند و در اولین save بعدی به‌طور خودکار encrypted ذخیره می‌کند (lazy migration). **هیچ مایگریشن دیتابیس یا backfill لازم نیست.** هیچ query مستقیمی روی فیلد license_key در کد نیست (تأیید شده با grep) → سازگاری کامل با LicenseActivationService، EnsureLicenseValid و maskedKey(). `commit ab1d0f2`
+
 ### Phase 5 / Wave 1 — ۱۴۰۵/۰۲/۲۱
 
 - **P4-4:** حذف فایل‌های garbage 0-byte از root مخزن (artifactهای shell-pipe ناقص که اشتباهاً tracked شده بودند): `getNameWithReadWriteType()`, `home`, `isUniqueConstraintError($e)`, `main`, `origin)`, `prepareBindings($bindings)`. هیچ‌کدام در کد یا تست ارجاع نداشتند. `commit 3ee4efb`
