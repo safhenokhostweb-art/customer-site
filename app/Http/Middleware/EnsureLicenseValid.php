@@ -13,9 +13,37 @@ use Symfony\Component\HttpFoundation\Response;
  * اطمینان از معتبر بودن لایسنس.
  * هر چند دقیقه یک‌بار با پلتفرم re-validate می‌شود تا در صورت ابطال لایسنس از پلتفرم، سایت مشتری ماژول‌ها را مخفی کند.
  * برای سایت مالک (owner_site) این چک نادیده گرفته می‌شود.
+ *
+ * Phase 5 / P0-3:
+ * لیست route name های مجاز به‌صورت صریح (allow-list) شمارش شده تا prefix-match فضای حمله ایجاد نکند.
+ * هر route جدیدی که باید قبل از فعال‌سازی لایسنس قابل دسترسی باشد، باید عمداً به این لیست اضافه شود.
  */
 class EnsureLicenseValid
 {
+    /**
+     * Route name های مجاز پیش از validation لایسنس.
+     * صرفاً صفحات لایسنس، نصب و ورود/خروج که برای ثبت کلید و راه‌اندازی اولیه ضروری‌اند.
+     */
+    private const PUBLIC_ROUTES = [
+        'login',
+        'logout',
+        'admin.license.index',
+        'admin.license.update',
+        'admin.license.check-update',
+        'admin.license.refresh-config',
+        'admin.license.refresh-config.get',
+        'admin.license.test-config',
+        'admin.license.refresh-modules',
+        'install.welcome',
+        'install.database',
+        'install.store-database',
+        'install.admin',
+        'install.store-admin',
+        'install.settings',
+        'install.store-settings',
+        'install.done',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         if (\App\Helpers\SiteHelper::isOwnerSite()) {
@@ -23,11 +51,7 @@ class EnsureLicenseValid
         }
 
         $routeName = $request->route()?->getName();
-        if ($routeName && (
-            str_starts_with($routeName, 'admin.license')
-            || str_starts_with($routeName, 'install.')
-            || in_array($routeName, ['login', 'logout'], true)
-        )) {
+        if ($routeName !== null && in_array($routeName, self::PUBLIC_ROUTES, true)) {
             return $next($request);
         }
 

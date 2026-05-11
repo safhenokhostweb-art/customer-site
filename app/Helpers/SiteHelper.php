@@ -7,6 +7,20 @@ use App\Models\Setting;
 
 class SiteHelper
 {
+    /**
+     * Phase 5 / P0-7:
+     * نگاشت دوطرفهٔ alias بین کلیدهای قدیمی و جدید ماژول‌ها.
+     * هر کلید به آرایه‌ای از نام‌های هم‌معنا متصل است؛ اگر هر یک از آن‌ها در لیست
+     * ماژول‌های لایسنس وجود داشته باشد، ماژول فعال شمرده می‌شود.
+     *
+     * این نگاشت فقط access را گسترش می‌دهد و هیچ‌گاه entitlement موجود را
+     * نمی‌گیرد (سازگار با Global Rules §4 — Immutable Customer Entitlement Protection).
+     */
+    private const MODULE_ALIASES = [
+        'whatsapp'  => ['messaging'],
+        'messaging' => ['whatsapp'],
+    ];
+
     public static function theme(): string
     {
         return Setting::get('theme', config('site.theme', 'default'));
@@ -57,12 +71,16 @@ class SiteHelper
         $license = License::current();
         if ($license && $license->isValid()) {
             $modules = $license->modules ?? [];
-            if (is_array($modules) && in_array($key, $modules, true)) {
-                return true;
-            }
-            // پلتفرم ماژول را به messaging تغییر داده؛ کد سایت ممکن است هنوز whatsapp چک کند
-            if ($key === 'whatsapp' && in_array('messaging', $modules, true)) {
-                return true;
+            if (is_array($modules)) {
+                if (in_array($key, $modules, true)) {
+                    return true;
+                }
+                // alias دوطرفه: اگر هر هم‌معنایی از کلید درخواست‌شده در لایسنس باشد، فعال است.
+                foreach (self::MODULE_ALIASES[$key] ?? [] as $alias) {
+                    if (in_array($alias, $modules, true)) {
+                        return true;
+                    }
+                }
             }
         }
         return Module::enabled($key);
