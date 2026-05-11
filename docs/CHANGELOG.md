@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Phase 5 / Wave 3 — ۱۴۰۵/۰۲/۲۱
+
+- **P1-2:** افزودن زیرساخت لاگ فعالیت پنل ادمین سایت مشتری. مایگریشن جدید `2026_05_11_180000_create_admin_activity_log_table.php` با جدول `admin_activity_log` (admin_user_id, action, description, subject_type/id, properties json, ip, user_agent, timestamps + ایندکس‌های action/created_at/subject/composite). مدل `App\Models\AdminActivityLog` با cast properties=>array و رابطهٔ `adminUser()`، سرویس `App\Services\AdminActivityLogger::log()` با `Schema::hasTable` guard، کنترلر `App\Http\Controllers\Admin\AdminActivityLogController` با فیلتر admin_user_id/action/from(شمسی)/to(شمسی) و pagination 25، view `resources/views/admin/activity-log/{index,guide}.blade.php` با تاریخ شمسی (Jalali::formatFa) و کامپوننت `x-persian-date-input`. مسیر `GET /admin/activity-log` تحت middleware `[auth, admin, license.valid, permission:dashboard]`. در `AdminMenu` کلید `activity_log` به MENU_KEYS/MENU_ROUTES/MENU_ROUTE_PATTERNS، گروه «لایسنس، ماژول‌ها و پشتیبانی» و لیست always-visible افزوده شد. اولین نقاط استفاده: `LicenseController::update` → `license.activated`؛ `refreshConfig`/`refreshConfigGet` → `license.refreshed_config`؛ `refreshModules` → `license.refreshed_modules` با diff `added`/`removed` ماژول‌ها (entitlement preserved)؛ `Admin\ModuleController::update` (advanced_search و menu) → `module.settings_updated`. اضافه‌فقط و عقب‌سازگار — هیچ مسیر/مدل/جدول موجود تغییر نکرد. `commits 59a6411`, `1a70961`
+
 ### Phase 5 / Wave 2 — ۱۴۰۵/۰۲/۲۱
 
 - **P0-4:** فیلد `license_key` در مدل `App\Models\License` با Cast سفارشی `App\Casts\EncryptedOrPlaintext` به‌صورت encrypted در دیتابیس ذخیره می‌شود. Cast جدید با Laravel `Crypt` رمزنگاری/رمزگشایی می‌کند و در صورت روبه‌رو شدن با مقدار legacy plaintext (`DecryptException`) همان را برمی‌گرداند و در اولین save بعدی به‌طور خودکار encrypted ذخیره می‌کند (lazy migration). **هیچ مایگریشن دیتابیس یا backfill لازم نیست.** هیچ query مستقیمی روی فیلد license_key در کد نیست (تأیید شده با grep) → سازگاری کامل با LicenseActivationService، EnsureLicenseValid و maskedKey(). `commit ab1d0f2`
