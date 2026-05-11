@@ -195,7 +195,66 @@ The scripts honour the platform's global safety rules (`.cursor/rules/global-rul
 
 If `APP_KEY` is lost or rotated incorrectly, every encrypted `license_key` becomes unreadable and **tenants will lose access**. The lazy-decrypt cast (`App\Casts\EncryptedOrPlaintext`) does **not** save you from a key change; it only smooths the one-way migration from legacy plaintext to encrypted under the same key.
 
-## 10. Troubleshooting
+## 10. Wave-tip tags (permanent names for development milestones)
+
+In addition to automatic `deploy-backup-*` tags created by the deploy scripts, the repository carries **lightweight tags** that name the tip of each Phase 5 wave. These let you refer to important historical points without remembering raw SHAs.
+
+| Tag | Commit | What it captures |
+|---|---|---|
+| `phase5-wave1-tip` | `85b263a` | End of Wave 1: security hardening, P0-3 (license-route allow-list), P0-7 (`whatsapp ↔ messaging` alias) |
+| `phase5-wave2-tip` | `062bacb` | End of Wave 2: P0-4 (encrypted `license_key` with `EncryptedOrPlaintext` cast, lazy migration) |
+| `phase5-wave3-tip` | `46e4fcc` | End of Wave 3: P1-2 (AdminActivityLog: migration + model + service + controller + UI + menu) |
+
+These are **local-only** by design (not pushed to GitHub, to keep the remote tag list clean). They are stable, never advance, and survive deletion of the original `phase5-waveN` feature branches.
+
+> ⚠️ **Tenant-specific caveat:** `git checkout phase5-waveN-tip` only changes the **code and migration files** on disk. The **database** stays at its current state. Never check out a wave-tip on a production server without coordinating a matching database backup/restore. Use it on a local copy for inspection only.
+
+### Common operations
+
+```bash
+# List every wave-tip tag
+git tag --list 'phase5-wave*-tip'
+
+# Inspect repository state at the end of Wave 2 (read-only)
+git checkout phase5-wave2-tip
+# ... explore files (e.g. confirm EncryptedOrPlaintext cast is present) ...
+git checkout main
+
+# Compare two waves
+git diff phase5-wave1-tip phase5-wave2-tip --stat
+
+# List commits introduced by Wave 3
+git log phase5-wave2-tip..phase5-wave3-tip --oneline
+
+# Read a file as it was at a milestone
+git show phase5-wave1-tip:app/Models/License.php
+
+# Branch off a milestone for an emergency hotfix
+git checkout -b hotfix-wave2 phase5-wave2-tip
+```
+
+### Future waves
+
+After completing and merging each new wave, create the matching tag before deleting the feature branch:
+
+```bash
+# Replace N with the wave number, HASH with the tip commit (e.g. git rev-parse phase5-wave4)
+git tag phase5-waveN-tip <HASH>
+```
+
+If you forgot to tag before merging, the wave tip is still recoverable from the merge commit's second parent: `git rev-parse <merge-commit>^2`.
+
+### Publishing to GitHub (optional)
+
+If you ever want the wave-tip tags on GitHub, push them explicitly (never `--tags` blindly — that would also push transient `deploy-backup-*` tags):
+
+```bash
+git push origin phase5-wave1-tip phase5-wave2-tip phase5-wave3-tip
+```
+
+For full operator details and Persian guidance, see `DEPLOY-fa.md` §10.
+
+## 11. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -209,4 +268,4 @@ If `APP_KEY` is lost or rotated incorrectly, every encrypted `license_key` becom
 
 ---
 
-**Phase 5 / Wave 3 reference state:** `main` at `ba4ee26` (customer-site), `pre-phase5-baseline` tag preserved.
+**Phase 5 / Wave 3 reference state:** `main` at `ba4ee26` (customer-site). Tags: `pre-phase5-baseline`, `phase5-wave1-tip` → `85b263a`, `phase5-wave2-tip` → `062bacb`, `phase5-wave3-tip` → `46e4fcc`.

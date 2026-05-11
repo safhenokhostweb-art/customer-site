@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Phase 5 — Wave-tip tags — ۱۴۰۵/۰۲/۲۱
+
+- افزوده شدن سه **lightweight tag** برای نام‌گذاری دائمی tip شاخه‌های phase5-waveN قبل از حذف احتمالی feature branchها (محلی، بدون push به GitHub):
+  - `phase5-wave1-tip` → `85b263a`
+  - `phase5-wave2-tip` → `062bacb`
+  - `phase5-wave3-tip` → `46e4fcc`
+- مستندسازی کامل تگ‌ها، تفاوت با `deploy-backup-*` و `branch`، هشدار خاص customer-site (checkout فقط کد را برمی‌گرداند نه دیتابیس) و الگوی استفادهٔ روزمره در `DEPLOY-fa.md` §۱۰ (فارسی) و `DEPLOY.md` §10 (انگلیسی). شامل سناریوهای checkout/diff/log/show، روال wave آینده، بازیابی از merge commit، و push اختیاری به GitHub.
+
 ### Phase 5 / Wave 3 — ۱۴۰۵/۰۲/۲۱
 
 - **P1-2:** افزودن زیرساخت لاگ فعالیت پنل ادمین سایت مشتری. مایگریشن جدید `2026_05_11_180000_create_admin_activity_log_table.php` با جدول `admin_activity_log` (admin_user_id, action, description, subject_type/id, properties json, ip, user_agent, timestamps + ایندکس‌های action/created_at/subject/composite). مدل `App\Models\AdminActivityLog` با cast properties=>array و رابطهٔ `adminUser()`، سرویس `App\Services\AdminActivityLogger::log()` با `Schema::hasTable` guard، کنترلر `App\Http\Controllers\Admin\AdminActivityLogController` با فیلتر admin_user_id/action/from(شمسی)/to(شمسی) و pagination 25، view `resources/views/admin/activity-log/{index,guide}.blade.php` با تاریخ شمسی (Jalali::formatFa) و کامپوننت `x-persian-date-input`. مسیر `GET /admin/activity-log` تحت middleware `[auth, admin, license.valid, permission:dashboard]`. در `AdminMenu` کلید `activity_log` به MENU_KEYS/MENU_ROUTES/MENU_ROUTE_PATTERNS، گروه «لایسنس، ماژول‌ها و پشتیبانی» و لیست always-visible افزوده شد. اولین نقاط استفاده: `LicenseController::update` → `license.activated`؛ `refreshConfig`/`refreshConfigGet` → `license.refreshed_config`؛ `refreshModules` → `license.refreshed_modules` با diff `added`/`removed` ماژول‌ها (entitlement preserved)؛ `Admin\ModuleController::update` (advanced_search و menu) → `module.settings_updated`. اضافه‌فقط و عقب‌سازگار — هیچ مسیر/مدل/جدول موجود تغییر نکرد. `commits 59a6411`, `1a70961`

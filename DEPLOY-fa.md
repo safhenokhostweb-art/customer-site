@@ -529,7 +529,7 @@ php artisan migrate:rollback --step=1
 
 ---
 
-## ۱۱. خلاصه دستورات
+## ۱۲. خلاصه دستورات
 
 | می‌خواهید… | دستور |
 |---|---|
@@ -537,8 +537,12 @@ php artisan migrate:rollback --step=1
 | Deploy عادی روی Linux | `./deploy.sh` |
 | Deploy عادی روی Windows (cmd) | `deploy.bat` |
 | Deploy عادی روی Windows (PowerShell) | `.\deploy.bat` |
-| دیدن لیست تگ‌های پشتیبان | `git tag --list 'deploy-backup-*'` |
-| Rollback سریع کد | `git reset --hard deploy-backup-YYYYMMDD-HHMMSS` + composer + optimize |
+| دیدن لیست تگ‌های پشتیبان deploy | `git tag --list 'deploy-backup-*'` |
+| دیدن لیست تگ‌های wave-tip | `git tag --list 'phase5-wave*-tip'` |
+| Rollback سریع کد به deploy قبلی | `git reset --hard deploy-backup-YYYYMMDD-HHMMSS` + composer + optimize |
+| دیدن وضعیت پایان یک wave | `git checkout phase5-waveN-tip` (سپس `git checkout main` برای بازگشت) |
+| مقایسهٔ دو wave | `git diff phase5-wave1-tip phase5-wave2-tip --stat` |
+| لیست commit های یک wave | `git log phase5-wave2-tip..phase5-wave3-tip --oneline` |
 | Backup جدول لاگ ادمین قبل از rollback | `mysqldump -u user -p customer_site admin_activity_log > backup.sql` |
 | Restart queueها | `php artisan queue:restart` |
 | تست اتصال به پلتفرم | پنل ادمین → لایسنس → «تست تنظیمات سایت» |
@@ -546,4 +550,4 @@ php artisan migrate:rollback --step=1
 
 ---
 
-**وضعیت مرجع Phase 5 / Wave 3:** `main` در `a817d08` (سایت مشتری)، تگ `pre-phase5-baseline` حفظ شده.
+**وضعیت مرجع Phase 5 / Wave 3:** `main` در `a817d08` (سایت مشتری)، تگ‌ها: `pre-phase5-baseline`، `phase5-wave1-tip` → `85b263a`، `phase5-wave2-tip` → `062bacb`، `phase5-wave3-tip` → `46e4fcc`.
