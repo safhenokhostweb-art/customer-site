@@ -278,6 +278,9 @@ Route::middleware('install.check')->group(function () {
             Route::get('support', [AdminSupportController::class, 'index'])->name('support.index');
             Route::post('support', [AdminSupportController::class, 'store'])->name('support.store');
         });
+
+        // Phase 5 / Wave 3 / P1-2: لاگ فعالیت ادمین (فقط نمایش؛ نوشتن از سرویس‌ها انجام می‌شود).
+        Route::get('activity-log', [\App\Http\Controllers\Admin\AdminActivityLogController::class, 'index'])->name('activity-log.index');
         Route::middleware(['module:reviews', 'permission:reviews'])->group(function () {
             Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
             Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');

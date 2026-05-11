@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\PlatformUx;
 use App\Http\Controllers\Controller;
 use App\Models\License;
+use App\Services\AdminActivityLogger;
 use App\Services\LicenseActivationService;
 use App\Services\UpdateCheckService;
 use Illuminate\Http\Request;
@@ -60,10 +61,20 @@ class LicenseController extends Controller
         if ($license) {
             $license->update($data);
         } else {
-            License::create($data);
+            $license = License::create($data);
         }
 
         PlatformUx::clearCache();
+
+        AdminActivityLogger::log(
+            'license.activated',
+            'فعال‌سازی لایسنس برای دامنهٔ ' . $domain,
+            $license,
+            [
+                'domain' => $domain,
+                'modules_count' => is_array($result['modules'] ?? null) ? count($result['modules']) : null,
+            ]
+        );
 
         return back()->with('success', 'لایسنس با موفقیت فعال شد.');
     }
@@ -75,6 +86,7 @@ class LicenseController extends Controller
     {
         PlatformUx::clearCache();
         session()->put('platform_config_just_refreshed', true);
+        AdminActivityLogger::log('license.refreshed_config', 'بازخوانی تنظیمات و اعلان‌ها از پلتفرم');
         return back()->with('success', 'تنظیمات و اعلان‌ها از سرور پلتفرم دوباره بارگذاری می‌شوند.');
     }
 
@@ -85,6 +97,7 @@ class LicenseController extends Controller
     {
         PlatformUx::clearCache();
         session()->put('platform_config_just_refreshed', true);
+        AdminActivityLogger::log('license.refreshed_config', 'بازخوانی تنظیمات و اعلان‌ها از پلتفرم (GET)');
         return redirect()->route('admin.license.index')->with('success', 'تنظیمات و اعلان‌ها بازخوانی شدند.');
     }
 
@@ -148,6 +161,9 @@ class LicenseController extends Controller
             return back()->with('error', $result['message'] ?? 'لایسنس معتبر نیست یا دامنه مطابقت ندارد.');
         }
 
+        $modulesBefore = is_array($license->modules ?? null) ? $license->modules : [];
+        $modulesAfter = is_array($result['modules'] ?? null) ? $result['modules'] : [];
+
         $license->update([
             'modules' => $result['modules'] ?? null,
             'support_expires_at' => $result['support_expires_at'] ?? null,
@@ -159,6 +175,18 @@ class LicenseController extends Controller
         PlatformUx::clearCache();
         app(UpdateCheckService::class)->reportModuleVersions();
         app(UpdateCheckService::class)->syncModuleChangeLogs();
+
+        AdminActivityLogger::log(
+            'license.refreshed_modules',
+            'بروزرسانی فهرست ماژول‌ها از پلتفرم',
+            $license,
+            [
+                'modules_before_count' => count($modulesBefore),
+                'modules_after_count' => count($modulesAfter),
+                'added' => array_values(array_diff($modulesAfter, $modulesBefore)),
+                'removed' => array_values(array_diff($modulesBefore, $modulesAfter)),
+            ]
+        );
 
         return back()->with('success', 'ماژول‌ها از پلتفرم بروزرسانی شدند: ' . implode('، ', $result['modules'] ?? []));
     }

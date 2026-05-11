@@ -10,6 +10,7 @@ use App\Models\License;
 use App\Models\ModuleChangeLog;
 use App\Models\ModuleVersion;
 use App\Models\Setting;
+use App\Services\AdminActivityLogger;
 use App\Services\UpdateCheckService;
 use Illuminate\Http\Request;
 
@@ -199,6 +200,20 @@ class ModuleController extends Controller
             Setting::set('advanced_search_include_posts', $request->boolean('include_posts'));
             Setting::set('advanced_search_results_per_page', $data['results_per_page']);
 
+            AdminActivityLogger::log(
+                'module.settings_updated',
+                'ویرایش تنظیمات ماژول جستجوی پیشرفته',
+                null,
+                [
+                    'module_slug' => 'advanced_search',
+                    'changes' => [
+                        'include_products' => $request->boolean('include_products'),
+                        'include_posts' => $request->boolean('include_posts'),
+                        'results_per_page' => $data['results_per_page'],
+                    ],
+                ]
+            );
+
             return redirect()
                 ->route('admin.modules.show', $slug)
                 ->with('success', 'تنظیمات جستجوی پیشرفته ذخیره شد.');
@@ -265,6 +280,20 @@ class ModuleController extends Controller
             Setting::set('menu_custom_menus', $menus, 'menus');
 
             app(\App\Services\PlatformUxService::class)->clearCache();
+
+            AdminActivityLogger::log(
+                'module.settings_updated',
+                'ویرایش تنظیمات ماژول منو و ناوبری',
+                null,
+                [
+                    'module_slug' => 'menu',
+                    'changes' => [
+                        'menu_mode' => $data['menu_mode'],
+                        'header_items_count' => count($headerItems),
+                        'footer_items_count' => count($footerItems),
+                    ],
+                ]
+            );
 
             return redirect()
                 ->route('admin.modules.show', $slug)
