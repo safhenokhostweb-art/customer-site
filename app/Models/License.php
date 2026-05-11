@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\EncryptedOrPlaintext;
 use Illuminate\Database\Eloquent\Model;
 
 class License extends Model
@@ -18,9 +19,17 @@ class License extends Model
         'last_validated_at',
     ];
 
+    /**
+     * Phase 5 / P0-4:
+     * `license_key` با Cast `EncryptedOrPlaintext` ذخیره می‌شود:
+     * - رکوردهای جدید/به‌روزرسانی شده با Laravel\Crypt به‌صورت encrypted در DB ذخیره می‌شوند.
+     * - رکوردهای legacy (plaintext) بدون شکست خوانده می‌شوند و در اولین save بعدی
+     *   به‌طور خودکار encrypted می‌شوند (lazy migration بدون مایگریشن دیتابیس).
+     */
     protected function casts(): array
     {
         return [
+            'license_key' => EncryptedOrPlaintext::class,
             'expires_at' => 'datetime',
             'support_expires_at' => 'datetime',
             'support_starts_at' => 'datetime',
