@@ -465,4 +465,4 @@
 
 ---
 
-*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۱۹ — کپچای فارسی رنگی/آشفتهٔ بصری؛ فهرست تبلیغات با KPI و تاریخ شمسی؛ فرم‌ساز و منو و layout مطابق نسخهٔ قبلی.*
+*آخرین به‌روزرسانی راهنما: ۱۴۰۵/۰۲/۲۲ — Wave 5.3 / P1-5: rate-limiter و کپچای مشروط برای نقاط نوشتنی فروشگاه. ۴ limiter named (`shop-cart` ۶۰/دقیقه، `shop-checkout` ۵/دقیقه، `shop-review` ۳/۱۰دقیقه per slug، `shop-stock-notify` ۵/ساعت per product) در `AppServiceProvider::configureShopWriteRateLimiters()` با کلید `u:{id}` برای کاربر authenticated و `g:{ip}:{session}` برای مهمان. تنظیم جدید `shop_captcha_enabled` در صفحهٔ ادمین `admin.captcha.index`: وقتی روشن است، فرم‌های checkout/review/stock-notify فقط برای کاربر مهمان نیازمند کپچا می‌شوند (authenticated bypass). پیش‌فرض خاموش ⇒ بدون تغییر برای سایت‌های موجود. کپچای فارسی رنگی/آشفتهٔ بصری؛ فهرست تبلیغات با KPI و تاریخ شمسی؛ فرم‌ساز و منو و layout مطابق نسخهٔ قبلی.*
