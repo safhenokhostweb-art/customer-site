@@ -183,16 +183,17 @@ Route::middleware('install.check')->group(function () {
     Route::middleware('module:shop')->group(function () {
         Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
         Route::get('/shop/compare', [ShopController::class, 'compare'])->name('shop.compare');
-        Route::post('/shop/compare/toggle/{product}', [ShopController::class, 'compareToggle'])->name('shop.compare.toggle');
+        Route::post('/shop/compare/toggle/{product}', [ShopController::class, 'compareToggle'])->middleware('throttle:shop-cart')->name('shop.compare.toggle');
         Route::get('/shop/wishlist', [ShopController::class, 'wishlist'])->name('shop.wishlist');
-        Route::post('/shop/wishlist/toggle/{product}', [ShopController::class, 'wishlistToggle'])->name('shop.wishlist.toggle');
-        Route::post('/shop/stock-notify', [ShopController::class, 'stockNotify'])->name('shop.stock-notify');
-        Route::post('/shop/{slug}/reviews', [ShopController::class, 'storeReview'])->name('shop.reviews.store');
+        Route::post('/shop/wishlist/toggle/{product}', [ShopController::class, 'wishlistToggle'])->middleware('throttle:shop-cart')->name('shop.wishlist.toggle');
+        // Phase 5 / Wave 5.3 / P1-5: rate-limited shop write endpoints (limiters in AppServiceProvider).
+        Route::post('/shop/stock-notify', [ShopController::class, 'stockNotify'])->middleware('throttle:shop-stock-notify')->name('shop.stock-notify');
+        Route::post('/shop/{slug}/reviews', [ShopController::class, 'storeReview'])->middleware('throttle:shop-review')->name('shop.reviews.store');
         Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
-        Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->name('shop.cart.add');
-        Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->name('shop.cart.update');
-        Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->name('shop.cart.remove');
-        Route::post('/shop/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
+        Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->middleware('throttle:shop-cart')->name('shop.cart.add');
+        Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->middleware('throttle:shop-cart')->name('shop.cart.update');
+        Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->middleware('throttle:shop-cart')->name('shop.cart.remove');
+        Route::post('/shop/checkout', [ShopController::class, 'checkout'])->middleware('throttle:shop-checkout')->name('shop.checkout');
         Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
     });
 
