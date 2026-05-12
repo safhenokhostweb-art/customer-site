@@ -34,7 +34,16 @@ return new class extends Migration
             Schema::create('product_product_attribute_value', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('product_attribute_value_id')->constrained()->cascadeOnDelete();
+                // FK index name is explicitly shortened to fit MySQL's 64-char identifier
+                // limit. The auto-generated default
+                // 'product_product_attribute_value_product_attribute_value_id_foreign'
+                // is 67 chars and breaks migrate:fresh on MySQL during test runs.
+                // The FK semantics (cascade on delete, referenced table/column) are unchanged.
+                $table->unsignedBigInteger('product_attribute_value_id');
+                $table->foreign('product_attribute_value_id', 'ppav_attr_value_fk')
+                    ->references('id')
+                    ->on('product_attribute_values')
+                    ->cascadeOnDelete();
                 $table->unique(['product_id', 'product_attribute_value_id'], 'product_attr_val_unique');
             });
         }
