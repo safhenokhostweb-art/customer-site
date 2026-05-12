@@ -99,6 +99,7 @@
                 <label for="note" class="form-label">یادداشت (اختیاری)</label>
                 <textarea id="note" name="note" class="form-textarea" rows="2">{{ old('note') }}</textarea>
             </div>
+            @include('partials.shop-captcha')
             <button type="submit" style="padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 0.5rem; color: white; border: none; cursor: pointer; background: var(--platform-button-primary-bg, #4f46e5);">ثبت سفارش</button>
         </form>
     </div>

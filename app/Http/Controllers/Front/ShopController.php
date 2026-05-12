@@ -14,6 +14,7 @@ use App\Models\ProductReview;
 use App\Models\ProductStockNotification;
 use App\Models\ProductVariant;
 use App\Models\ShopCartEvent;
+use App\Services\CaptchaService;
 use App\Services\ShopWishlistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -413,6 +414,13 @@ class ShopController extends Controller
         if (empty($cart)) {
             return redirect()->route('shop.cart')->with('error', 'سبد خرید خالی است.');
         }
+        // Phase 5 / Wave 5.3 / P1-5: کپچا قبل از validate تا اگر معتبر نیست، order نسازد.
+        // برای کاربر authenticated همیشه true برمی‌گردد (bypass).
+        if (! CaptchaService::validateShopCaptcha($request)) {
+            return back()
+                ->withInput()
+                ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);
+        }
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email',
@@ -613,6 +621,12 @@ class ShopController extends Controller
         if (! SiteHelper::shopEnabled()) {
             abort(404);
         }
+        // Phase 5 / Wave 5.3 / P1-5: کپچا برای جلوگیری از spam درخواست‌های موجودی.
+        if (! CaptchaService::validateShopCaptcha($request)) {
+            return back()
+                ->withInput()
+                ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);
+        }
         $data = $request->validate([
             'product_id' => 'required|exists:products,id',
             'product_variant_id' => 'nullable|exists:product_variants,id',
@@ -642,6 +656,12 @@ class ShopController extends Controller
             abort(404);
         }
         $product = Product::active()->where('slug', $slug)->firstOrFail();
+        // Phase 5 / Wave 5.3 / P1-5: کپچا برای جلوگیری از spam ریویوی محصول.
+        if (! CaptchaService::validateShopCaptcha($request)) {
+            return back()
+                ->withInput()
+                ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);
+        }
         $data = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'title' => 'nullable|string|max:255',

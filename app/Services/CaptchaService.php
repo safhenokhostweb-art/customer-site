@@ -42,6 +42,19 @@ class CaptchaService
     }
 
     /**
+     * Phase 5 / Wave 5.3 / P1-5: کپچا روی نقاط نوشتنی فروشگاه (checkout/review/stock-notify)
+     * فقط وقتی ماژول کپچا فعال است **و** ادمین در صفحهٔ تنظیمات کپچا گزینهٔ
+     * «کپچا روی فرم‌های فروشگاه» را روشن کرده باشد.
+     */
+    public static function isShopCaptchaEnabled(): bool
+    {
+        if (!self::isModuleEnabled()) {
+            return false;
+        }
+        return (string) Setting::get('shop_captcha_enabled', '0') === '1';
+    }
+
+    /**
      * @return array{enabled: bool, type: ?string, hcaptcha_site_key: string, hcaptcha_secret_key: string}
      */
     public static function getAuthCaptchaConfig(): array
@@ -53,6 +66,58 @@ class CaptchaService
         $cfg['enabled'] = true;
 
         return $cfg;
+    }
+
+    /**
+     * Phase 5 / Wave 5.3 / P1-5: تولید پایلود کپچا برای فرم‌های فروشگاه.
+     * **فقط برای کاربر مهمان** فعال است؛ کاربر authenticated همیشه bypass می‌شود
+     * (rate-limit بر اساس user_id کافی است).
+     *
+     * @return array{enabled: bool, type: ?string, persian_code?: string, normal_text?: string, hcaptcha_site_key?: string, hcaptcha_secret_key?: string}
+     */
+    public static function getShopCaptchaConfig(): array
+    {
+        if (!self::isShopCaptchaEnabled() || auth()->check()) {
+            return ['enabled' => false, 'type' => null];
+        }
+        $cfg = self::getForSite(null);
+        $cfg['enabled'] = true;
+        if (($cfg['type'] ?? '') === self::TYPE_PERSIAN_NUMBER) {
+            $cfg['persian_code'] = self::generatePersianNumber(4);
+        } elseif (($cfg['type'] ?? '') === self::TYPE_NORMAL) {
+            $gen = self::generateNormal();
+            $cfg['normal_text'] = $gen['text'];
+        }
+        return $cfg;
+    }
+
+    /**
+     * Phase 5 / Wave 5.3 / P1-5: اعتبارسنجی پاسخ کپچا برای فرم‌های فروشگاه.
+     * اگر ماژول shop-captcha خاموش است یا کاربر authenticated است ⇒ همیشه `true`.
+     * در غیر این صورت بسته به نوع کپچا، فیلد ورودی استاندارد بررسی می‌شود:
+     *   - persian_number, normal ⇒ `captcha_answer`
+     *   - hcaptcha                 ⇒ `h-captcha-response`
+     */
+    public static function validateShopCaptcha(\Illuminate\Http\Request $request): bool
+    {
+        if (!self::isShopCaptchaEnabled() || auth()->check()) {
+            return true;
+        }
+        $cfg = self::getForSite(null);
+        $type = $cfg['type'] ?? '';
+        if ($type === self::TYPE_PERSIAN_NUMBER) {
+            return self::validatePersianNumber((string) $request->input('captcha_answer', ''));
+        }
+        if ($type === self::TYPE_NORMAL) {
+            return self::validateNormal((string) $request->input('captcha_answer', ''));
+        }
+        if ($type === self::TYPE_HCAPTCHA) {
+            return self::verifyHcaptcha(
+                (string) $request->input('h-captcha-response', ''),
+                (string) ($cfg['hcaptcha_secret_key'] ?? '')
+            );
+        }
+        return false;
     }
 
     public static function generatePersianNumber(int $length = 4): string
