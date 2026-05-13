@@ -18,8 +18,28 @@
         <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>تکمیل شده</option>
         <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>لغو شده</option>
     </select>
-    <button type="submit" class="btn btn-primary">بروزرسانی</button>
+    <label style="display:block;margin-top:0.4rem">دلیل تغییر (اختیاری)</label>
+    <input type="text" name="reason" maxlength="255" placeholder="مثلاً: پرداخت توسط مشتری انجام شد" style="width:100%;max-width:520px">
+    <div style="margin-top:0.4rem"><button type="submit" class="btn btn-primary">بروزرسانی</button></div>
 </form>
+
+@if($order->statusHistory && $order->statusHistory->count())
+    <h2 style="margin-top:1.4rem;font-size:1.05rem">تاریخچهٔ وضعیت (شمسی)</h2>
+    <table>
+        <thead><tr><th>زمان</th><th>از وضعیت</th><th>به وضعیت</th><th>توسط</th><th>دلیل</th></tr></thead>
+        <tbody>
+        @foreach($order->statusHistory as $h)
+            <tr>
+                <td>{{ \App\Helpers\Jalali::formatFa($h->created_at, 'Y/m/d H:i') }}</td>
+                <td>{{ $h->from_status ?? '—' }}</td>
+                <td>{{ $h->to_status }}</td>
+                <td>{{ $h->changedBy?->name ?? '—' }}</td>
+                <td>{{ $h->reason ?? '—' }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
 
 <table>
     <thead><tr><th>محصول</th><th>قیمت</th><th>تعداد</th><th>جمع</th></tr></thead>
