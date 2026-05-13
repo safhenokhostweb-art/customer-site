@@ -3,36 +3,34 @@
 namespace Tests\Feature;
 
 use App\Helpers\ShopCartHelper;
-use App\Models\License;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsValidLicenseWithShop;
 use Tests\TestCase;
 
 class ShopModuleFeatureTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /**
+     * Wave 6.2 — License/installation seeding delegated to
+     * `SeedsValidLicenseWithShop`. The legacy `domain => 'localhost'` seed
+     * silently broke whenever local `APP_URL` pointed elsewhere (e.g.
+     * `http://customer-site.test`); the trait derives the host from
+     * `config('app.url')` so it stays correct across dev and CI.
+     *
+     * The previous tearDown `@unlink(installed.lock)` is removed because
+     * the file is tracked in the repo; deleting it after every test run
+     * corrupted developers' working trees. The trait now only creates the
+     * file if missing.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-        file_put_contents(storage_path('installed.lock'), '1');
-
-        License::query()->create([
-            'license_key' => 'LIC-SHOP-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['shop'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(storage_path('installed.lock'));
-        parent::tearDown();
+        $this->markSiteAsInstalled();
+        $this->seedValidLicense(['shop']);
     }
 
     public function test_shop_index_uses_effective_price_for_filter_and_sort(): void
