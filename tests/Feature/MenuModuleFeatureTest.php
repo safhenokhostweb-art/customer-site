@@ -2,29 +2,30 @@
 
 namespace Tests\Feature;
 
-use App\Models\License;
 use App\Models\ModuleChangeLog;
 use App\Models\ModuleVersion;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\PlatformUxService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsValidLicenseWithShop;
 use Tests\TestCase;
 
 class MenuModuleFeatureTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /**
+     * Wave 7.0a — Only the installed-lock side-effect is unconditional in
+     * setUp; license seeding is deferred to per-test methods because the
+     * first test (`platform_ux_service_uses_local_menus_in_local_mode`)
+     * exercises `PlatformUxService` directly without ever issuing an HTTP
+     * request, so it does not need a license row.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-        file_put_contents(storage_path('installed.lock'), '1');
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(storage_path('installed.lock'));
-        parent::tearDown();
+        $this->markSiteAsInstalled();
     }
 
     public function test_platform_ux_service_uses_local_menus_in_local_mode(): void
@@ -54,14 +55,7 @@ class MenuModuleFeatureTest extends TestCase
     {
         config(['site.owner_site' => false]);
 
-        License::query()->create([
-            'license_key' => 'LIC-MENU-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['menu'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
+        $this->seedValidLicense(['menu']);
 
         ModuleVersion::setVersion('menu', '1.0.0');
         ModuleChangeLog::query()->create([
