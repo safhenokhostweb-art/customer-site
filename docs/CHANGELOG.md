@@ -4,6 +4,28 @@
 
 ## [Unreleased]
 
+### Phase 6 / Wave 6.2 — Shop Test-Suite Stabilization — ۱۴۰۵/۰۲/۲۳
+
+پاکسازی هدفمند ۶ failure باقی‌ماندهٔ baseline در `tests/Feature/ShopModuleFeatureTest.php` بدون تغییر منطق production. شاخه: `phase6-wave6.2`. نتیجهٔ کل suite **پس از این wave**: ۱۵۲ pass / ۱۰ fail (همگی non-Shop) / ۱ risky (output-buffer hygiene در helperهای JSON-LD/editor — خارج از scope و عدم تأثیر روی assertion).
+
+- **P0-S3 — bootstrap محرز برای تست‌های Shop (`trait جدید`):** افزودن `tests/Concerns/SeedsValidLicenseWithShop.php` با سه متد:
+  - `seedValidLicense(array $modules = ['shop']): License` ⇒ `License::firstOrCreate(['domain' => host])` با `platform_valid=true`، `last_validated_at=now()`، `expires_at=+1 year` و ماژول‌های دلخواه. منطق host از `parse_url(config('app.url'))` می‌خواند ⇒ بدون مفروضات سخت‌کد روی `localhost`. در محیط‌های لارگون با `APP_URL=http://customer-site.test` به‌درستی domain تست را مطابق درخواست HTTP می‌سازد ⇒ `EnsureLicenseValid` می‌پذیرد.
+  - `markSiteAsInstalled(): void` ⇒ تضمین وجود `storage/installed.lock` بدون wipe‌کردن آن (idempotent).
+  - `testRequestHost(): string` ⇒ helper داخلی برای استخراج host از `APP_URL` با fallback به `localhost`.
+- **بازآرایی `ShopModuleFeatureTest::setUp()`:** حذف خطوط hard-coded قدیمی (`License::create(['domain'=>'localhost', ...])` و `@unlink(installed.lock)`) و فراخوانی `markSiteAsInstalled()` + `seedValidLicense(['shop'])`. این پایه برای استفادهٔ مجدد در `BlogProfessionalUpliftTest`، `MenuModuleFeatureTest`، `PhaseOneTwoThreeTest`، `StageFourValidationTest` در Wave آینده آماده است (همان trait با آرگومان `['blog','shop']`).
+- **اصلاح latent schema bug — مایگریشن `2026_05_13_110000_add_timestamps_to_shop_pivots`:** پس از وصل trait، دو تست (`shop_index_uses_effective_price_for_filter_and_sort`، `product_review_not_visible_until_approved`) با `PDOException: Unknown column 'product_product_tag.created_at'` شکست خوردند. ریشه: `Product::tags()` و `Product::attributeValues()` در مدل با `withTimestamps()` تعریف شده‌اند ولی مایگریشن اصلی `2026_05_08_130200_shop_attributes_tags_related_bundles.php` ستون‌های `created_at/updated_at` را روی pivotهای `product_product_tag` و `product_product_attribute_value` نگذاشته بود ⇒ هرگاه Eloquent در attach/sync/eager-load به این pivot نیاز می‌داشت در پروداکشن نیز کرش می‌کرد. مایگریشن جدید کاملاً additive، idempotent (با `Schema::hasColumn` guard)، و reversible است. هیچ ستون موجود تغییر نمی‌کند؛ تنها در صورت نبود timestamp‌ها افزوده می‌شود. این یک fix محرز در پروداکشن است که در پوشش §۱۲ از Master Development Directive و قانون ۴ از `global-rules` صرفاً «افزودن قابلیت گمشده» محسوب می‌شود و هیچ entitlement مشتری را لمس نمی‌کند.
+- **به‌روزرسانی `docs/KNOWN-TEST-FAILURES.md`:** baseline از ۱۶ به ۱۰ کاهش یافت؛ ردیف‌های ۸–۱۳ (همگی `ShopModuleFeatureTest`) به جدول «حذف‌شده در Wave 6.2» منتقل شدند؛ بخش «نقشهٔ راه» با اشاره به trait جدید به‌روز شد.
+- **Risky test note (خارج از scope، تأیید کاربر):** تست `product_review_not_visible_until_approved` با assertion سبز ولی هشدار `Test code or tested code did not close its own output buffers` گزارش می‌شود. منشأ احتمالی در یکی از partialهای JSON-LD یا `_editor_scripts.blade.php` یا helper مشابه است. این یک hygiene warning است نه functional failure، هیچ ربطی به منطق shop ندارد، نه entitlement را می‌شکند نه backward compat را. fix آن برای wave بعدی شفاف‌سازی helperها رزرو شده.
+
+**فایل‌های جدید:** `tests/Concerns/SeedsValidLicenseWithShop.php`, `database/migrations/2026_05_13_110000_add_timestamps_to_shop_pivots.php`.
+
+**فایل‌های تغییر یافته:** `tests/Feature/ShopModuleFeatureTest.php` (بازنویسی `setUp` بدون تغییر هیچ assertion یا متد test).
+
+**Backward-compat invariants حفظ شده:**
+- صفر تغییر در `EnsureLicenseValid`، `EnsureModuleEnabled`، `SiteHelper`، یا هر middleware/service لایسنس.
+- صفر تغییر در رفتار سرویس‌ها/کنترلرها/UI ادمین یا کاربر.
+- مایگریشن pivot هیچ ستون موجود را drop/rename نمی‌کند و فقط در نبود ستون اضافه می‌کند ⇒ سایت‌های پروداکشن که قبلاً به‌نحوی این ستون‌ها را داشته‌اند (مهاجرت دستی یا rebuild)، unaffectedاند.
+
 ### Phase 6 / Wave 6.1 — Shop Data-Integrity Hardening — ۱۴۰۵/۰۲/۲۳
 
 Hardening pass on the Shop module's transactional surface. All changes are additive, reversible, and entitlement-safe (no automatic revocation, no destructive migration). Branch: `phase6-wave6.1`. Regression: 22 new tests (49 assertions) — all green; cross-wave regression with Wave 2/3/4/5.2/5.3 → 67 tests (171 assertions) all green; baseline failure count unchanged at 16.
