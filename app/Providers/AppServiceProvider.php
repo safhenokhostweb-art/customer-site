@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureShopWriteRateLimiters();
+        $this->configureFormsWriteRateLimiters();
 
         Product::observe(ProductObserver::class);
 
@@ -75,6 +76,36 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('shop-stock-notify', function (Request $request) {
             $product = $request->input('product_id', 'na');
             return Limit::perHour(5)->by($this->shopRateKey($request) . '|p:' . $product);
+        });
+    }
+
+    /**
+     * Phase 2 / Wave 7.0b: rate limiter for public form submissions.
+     *
+     * The legacy `POST /forms/{slug}` (`forms.submit`) had no throttle at
+     * all, so a single client could spam unlimited submissions per second.
+     * The limit is 10/minute scoped to identity + slug:
+     *  - Identity prefers `user_id` (authenticated submissions) and falls
+     *    back to the client IP. Logged-in users get their own bucket even
+     *    on shared NAT/VPN exits; anonymous traffic shares an IP bucket
+     *    per slug, which is intentionally permissive enough for shared
+     *    office/university networks but still blocks single-host flood.
+     *  - Per-slug scoping means a malicious payload against one form
+     *    does not consume the quota for unrelated forms on the same site.
+     *
+     * Hitting the limit returns a 429 with `Retry-After`; CaptchaService
+     * already covers human-vs-bot challenges when the captcha module is
+     * enabled, so this throttle is the second (not only) line of defence.
+     */
+    protected function configureFormsWriteRateLimiters(): void
+    {
+        RateLimiter::for('forms-submit', function (Request $request) {
+            $slug = (string) ($request->route('slug') ?: 'na');
+            $identity = optional($request->user())->id
+                ? 'u:' . $request->user()->id
+                : 'ip:' . ((string) ($request->ip() ?? '0.0.0.0'));
+
+            return Limit::perMinute(10)->by($identity . '|f:' . $slug);
         });
     }
 

@@ -166,7 +166,11 @@ Route::middleware('install.check')->group(function () {
     Route::middleware('module:forms')->group(function () {
         Route::get('/forms', [FrontFormController::class, 'index'])->name('forms.index');
         Route::get('/forms/{slug}', [FrontFormController::class, 'show'])->name('forms.show');
-        Route::post('/forms/{slug}', [FrontFormController::class, 'submit'])->name('forms.submit');
+        // Wave 7.0b: throttle the public submit endpoint (10/minute scoped
+        // to identity + slug — see AppServiceProvider::configureFormsWriteRateLimiters).
+        Route::post('/forms/{slug}', [FrontFormController::class, 'submit'])
+            ->middleware('throttle:forms-submit')
+            ->name('forms.submit');
     });
 
     // محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) — فقط برای سایت مالک
