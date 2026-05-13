@@ -32,8 +32,15 @@
     <header class="mb-8">
         <h1 class="font-bold text-2xl mb-2" style="color: var(--platform-heading-color, #111827);">{{ $form->title }}</h1>
         @if($form->intro_text)
-            <div class="text-slate-600 leading-relaxed text-sm md:text-base border-r-4 border-indigo-200 pr-4 py-1">
-                {!! nl2br(e($form->intro_text)) !!}
+            {{-- Wave 7.0b: intro_text is produced by TinyMCE; render with a
+                 conservative allowlist via strip_tags() so admins keep their
+                 formatting (paragraphs, lists, basic tables, anchors, images)
+                 while still rejecting scripts, iframes, event handlers, etc.
+                 Anchor href/img src attributes are preserved by strip_tags
+                 because attributes on whitelisted tags are kept; TinyMCE's
+                 own configuration is the first line of defence. --}}
+            <div class="form-intro-text text-slate-600 leading-relaxed text-sm md:text-base border-r-4 border-indigo-200 pr-4 py-1">
+                {!! strip_tags($form->intro_text, '<p><br><strong><em><u><a><ul><ol><li><h2><h3><h4><blockquote><span><img><table><thead><tbody><tr><td><th>') !!}
             </div>
         @endif
     </header>
@@ -159,13 +166,23 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 
 @push('json-ld')
-<script type="application/ld+json">@json([
+{{-- Wave 7.0b (P0 production fix): Blade's `@json` directive compiles the
+     expression via a naive `explode(',', $expr)` which mis-handles commas
+     nested inside function calls (e.g. the inner `strip_tags(..., 300)`).
+     That produces a syntactically broken compiled view (unmatched `[`)
+     and every public visit to `/forms/{slug}` returned HTTP 500.
+
+     The fix below uses a raw `json_encode(...)` block (semantically
+     identical to what `@json` should have produced) so the compiler
+     leaves the expression alone. No behavior change for crawlers — same
+     JSON-LD payload, same UTF-8 output. --}}
+<script type="application/ld+json"><?php echo json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'WebPage',
     'name' => $pageTitle,
     'description' => \Illuminate\Support\Str::limit(strip_tags($pageDesc), 300),
     'url' => url()->current(),
     'inLanguage' => 'fa-IR',
-], JSON_UNESCAPED_UNICODE)</script>
+], JSON_UNESCAPED_UNICODE) ?></script>
 @endpush
 @endsection

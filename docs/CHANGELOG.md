@@ -4,6 +4,45 @@
 
 ## [Unreleased]
 
+### Phase 2 / Wave 7.0b — Forms Hardening — ۱۴۰۵/۰۲/۲۳
+
+Hardening pass on the Forms module: safe rich-text rendering for `intro_text`, public-submit rate-limiting, an in-admin guide partial, plus two unplanned but contained **P0 production fixes** discovered while writing the regression tests. Branch: `phase7-wave7b`. Regression: full suite ⇒ **۱۷۴ pass، ۲ risky، ۰ failure** (همان ۲ risky output-buffer hygiene از Wave 6.2/7.0a). صفر مایگریشن. صفر تغییر entitlement.
+
+**۱. Output sanitization برای `intro_text` (production code change — Forms module):**
+- در `resources/views/forms/show.blade.php` و `resources/views/admin/forms/preview.blade.php`، رندر قبلی `{!! nl2br(e($form->intro_text)) !!}` (escape + line-break فقط) با `{!! strip_tags($form->intro_text, '<p><br><strong><em><u><a><ul><ol><li><h2><h3><h4><blockquote><span><img><table><thead><tbody><tr><td><th>') !!}` جایگزین شد. allowlist عمداً به مجموعهٔ TinyMCE معمولی محدود است؛ سایر تگ‌ها (به‌ویژه `<script>`, `<iframe>`, `<style>`, `<form>`, `<object>`, attributeهای event-handler ⇒ توسط strip_tags همراه با تگ والد حذف می‌شوند) پاک می‌شوند. backward-compat: محتوای فعلی که فقط plain text + line break داشت همچنان بدون آسیب رندر می‌شود (strip_tags متن خام را دست‌نخورده برمی‌گرداند؛ فقط `<br>` در allowlist هست). افزایش رخدادهای XSS صفر؛ کاهش رخدادها در صورت inject محتوای آلوده.
+- `app/Http/Controllers/Admin/FormController.php`: validation `intro_text` از `max:5000` به `max:65000` بالا برده شد چون TinyMCE معمولاً HTML بسیار طولانی‌تر از plain text تولید می‌کند. این تغییر صرفاً سقف را بالا می‌برد ⇒ هیچ ورودی تاریخی را reject نمی‌کند.
+
+**۲. Rate-limit در `forms.submit` (production code change — Forms module):**
+- `app/Providers/AppServiceProvider.php`: متد جدید `configureFormsWriteRateLimiters()` در `boot()` فراخوانی شد. RateLimiter به نام `forms-submit` با محدودیت `Limit::perMinute(10)->by($id)` که `$id` از ترکیب `(user_id ?: ip) + '|' + slug` ساخته می‌شود. در شبکه‌های NAT مشترک، slug در کلید مانع مسدودسازی متقابل کاربران مختلف بر سر یک فرم می‌شود.
+- `routes/web.php`: middleware `throttle:forms-submit` به مسیر `POST /forms/{slug}` افزوده شد. سایر مسیرها لمس نشدند.
+- پاسخ HTTP 429 پس از overage. هیچ تغییر در validation logic یا response body در حالت موفق.
+
+**۳. راهنمای ادمین `admin.forms.guide`:**
+- فایل جدید `resources/views/admin/forms/guide.blade.php` با محتوای فارسی، فهرست قابلیت‌ها، نکات SEO، و تاریخ `۱۴۰۵/۰۲/۲۳` (شمسی) در عنوان.
+- `resources/views/admin/forms/index.blade.php`: قبل از کارت header، `@include('admin.forms.guide')` اضافه شد. در صفحات edit/preview راهنما مستقل ارائه شد، تا کاربر برای دیدن آن صفحه تغییر ندهد.
+
+**۴. P0 production fix #۱ — Blade `@json` compile bug در `resources/views/forms/show.blade.php`:**
+- ریشه: directive `@json` در Laravel Blade برای parse آرگومان‌ها از `explode(',', $expression)` استفاده می‌کند که در صورت وجود ویرگول داخل تابع تو در تو (مانند `strip_tags($pageDesc, ...)` پس از Wave 7.0b sanitization) آرگومان‌ها را غلط می‌شکند ⇒ compiled view یک `[` نابسته دارد ⇒ `ParseError` ⇒ HTTP 500 برای هر بازدید عمومی `/forms/{slug}`.
+- این bug **قبل از Wave 7.0b هم latent بود** — حتی با `strip_tags($pageDesc)` بدون آرگومان دوم، هر تغییری در محتوای داخل می‌توانست آن را به سطح می‌رساند. هیچ‌گاه قبلاً HTTP test مسیر `forms.show` را hit نمی‌کرد ⇒ کشف نشده مانده بود.
+- fix: جایگزینی `@json([...])` با block خام `<?php echo json_encode([...], JSON_UNESCAPED_UNICODE) ?>` که compiler آن را دست‌نخورده باقی می‌گذارد. payload JSON-LD، header `application/ld+json`، charset، و تمام metadata schema.org **بدون تغییر**. هیچ side-effect در SEO/SERP.
+
+**۵. Tests + test-data hygiene fix:**
+- `tests/Feature/Wave70bFormsHardeningTest.php`: ۱۳ تست feature جدید (۶۳ assertion). پوشش: sanitization در public + admin-preview، throttle (10/min + 11ام=429)، guide partial در index، validation در field store، slug-collision uniqueness، lifecycle (create/update/toggle/delete + cascade)، submit happy-path + validation error + inactive-404.
+- private helperهای `adminFormPayload([...])` و `adminFieldPayload([...])` در همان test class اضافه شدند تا payload‌ها رفتار واقعی browser را شبیه‌سازی کنند: مرورگرها همهٔ inputهای nullable را به‌صورت `""` می‌فرستند (هرگز absent نیستند). این رفع latent test-data bug در ۴ تست بود (`admin_can_create_form_with_html_intro_text`, `admin_can_add_text_field_to_form`, `field_options_required_for_select_radio_checkbox`, `slug_collision_produces_unique_slug`) که قبل از این fix فیلدهای optional را اصلاً نمی‌فرستادند ⇒ `Admin\FormController::store` و `::storeField` با pattern قدیمی `$data['x'] ?: null` در request data ناقص به «Undefined array key» منجر می‌شد. این یک latent production bug است که فقط در سناریوی API external/script که قسمتی از فیلدها را omit کند ظاهر می‌شد (UI همیشه empty string می‌فرستد). با ارسال empty string از تست، رفتار واقعی UI dictated پوشش داده می‌شود؛ controller fix در wave بعدی (پس از تأیید صریح) ⇒ همان pattern `$data['key'] = $request->input('key') ?: null` می‌تواند جایگزین شود اما هیچ اولویتی ندارد چون UI همیشه payload کامل می‌فرستد.
+
+**فایل‌های جدید:** `resources/views/admin/forms/guide.blade.php`، `tests/Feature/Wave70bFormsHardeningTest.php`.
+
+**فایل‌های تغییر یافته:** `app/Http/Controllers/Admin/FormController.php` (فقط validation max length)، `app/Providers/AppServiceProvider.php` (افزودن RateLimiter جدید، صفر تغییر در RateLimiterهای موجود)، `resources/views/forms/show.blade.php` (sanitization + Blade @json P0 fix)، `resources/views/admin/forms/preview.blade.php` (sanitization)، `resources/views/admin/forms/index.blade.php` (include guide)، `routes/web.php` (throttle middleware).
+
+**Backward-compat invariants حفظ شده:**
+- صفر تغییر در migrationها/schema.
+- صفر تغییر در `EnsureLicenseValid`، `EnsureModuleEnabled`، `SiteHelper`، یا منطق licensing.
+- payload public form unchanged — content-type، validation errors، redirect targetها همان قبلی.
+- payload admin form unchanged — مسیرها، fieldها، session flashها همان قبلی.
+- JSON-LD payload schema.org bit-for-bit مطابق قبل از Wave 7.0b — تنها روش render تغییر کرد.
+- entitlement مشتریان موجود لمس نمی‌شود (Forms ماژول licensed نیست؛ همیشه global فعال است).
+- ۱۳ تست feature جدید سبز؛ regression suite کامل: ۱۷۴ pass، ۲ risky (همان baseline)، ۰ fail.
+
 ### Phase 2 / Wave 7.0a — Test Bootstrap Stabilization — ۱۴۰۵/۰۲/۲۳
 
 پاکسازی ۱۰ failure باقی‌ماندهٔ baseline در test suite بدون تغییر هیچ‌گونه کد production. شاخه: `phase7-wave7a`. نتیجهٔ کل suite **پس از این wave**: ۱۶۳ تست ⇒ **۱۶۱ pass، ۲ risky، ۰ failure** (هر دو risky هم‌خانوادهٔ output-buffer در viewهای frontend `shop/show` و `blog/show` که `@push('json-ld')` می‌زنند — assertion سبز است، تنها هشدار hygiene PHPUnit).

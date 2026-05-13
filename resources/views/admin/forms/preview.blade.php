@@ -12,7 +12,14 @@
         <div class="card-body">
             <h4 class="font-bold mb-2 text-xl">{{ $form->title }}</h4>
             @if($form->intro_text)
-                <p class="text-slate-600 text-sm mb-4 border-r-4 border-amber-200 pr-3">{!! nl2br(e($form->intro_text)) !!}</p>
+                {{-- Wave 7.0b: TinyMCE-generated HTML rendered through a strict
+                     allowlist (mirrors resources/views/forms/show.blade.php).
+                     The wrapper stays a <div> so paragraph-level tags render
+                     correctly; if the admin uses only plain text, TinyMCE
+                     still wraps it in <p> so nl2br is no longer needed. --}}
+                <div class="form-intro-text text-slate-600 text-sm mb-4 border-r-4 border-amber-200 pr-3">
+                    {!! strip_tags($form->intro_text, '<p><br><strong><em><u><a><ul><ol><li><h2><h3><h4><blockquote><span><img><table><thead><tbody><tr><td><th>') !!}
+                </div>
             @endif
 
             <form action="#" method="POST" onsubmit="event.preventDefault(); alert('این پیش‌نمایش است.');">
