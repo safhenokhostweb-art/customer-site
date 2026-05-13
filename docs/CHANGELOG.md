@@ -4,6 +4,38 @@
 
 ## [Unreleased]
 
+### Phase 5 / Wave 5.3 — ۱۴۰۵/۰۲/۲۲
+
+- **P1-5 (Captcha & Rate Limiting برای نقاط نوشتنی فروشگاه — customer-site):** سه فاز پیاپی روی همین مخزن، صفر تغییر در saas-platform، صفر مایگریشن، صفر breaking change. مجموع ۲۱ feature test جدید (`Wave53ShopGuardsTest`, ۴۳ assertion) ⇒ همگی سبز. regression مشترک با Wave 2/3/4 → ۴۴ تست سبز (۱۱۵ assertion).
+
+  **Phase 5.3A — Rate Limiters (`commit 1c8b709`):** افزودن ۴ limiter named در `App\Providers\AppServiceProvider::configureShopWriteRateLimiters()` (تعریف via `RateLimiter::for`):
+  - `shop-cart` ⇒ ۶۰ درخواست/دقیقه (روی `shop.cart.add/update/remove` + `shop.wishlist.toggle` + `shop.compare.toggle`)
+  - `shop-checkout` ⇒ ۵ درخواست/دقیقه (روی `shop.checkout`)
+  - `shop-review` ⇒ ۳ درخواست/۱۰ دقیقه (روی `shop.reviews.store`، scoped به product slug)
+  - `shop-stock-notify` ⇒ ۵ درخواست/ساعت (روی `shop.stock-notify`، scoped به product_id)
+  - کلید پایه: کاربر authenticated ⇒ `u:{id}` (یکسان بین تب‌ها/مرورگرها)، در غیر این صورت ⇒ `g:{ip}:{session_id_truncated}`. تجاوز ⇒ پاسخ ۴۲۹ استاندارد Laravel با header `Retry-After`. حد‌ها بسیار بالاتر از رفتار طبیعی کاربر صادق ⇒ هیچ خریدار/نظردهنده/مشتاق موجودی به این حد نمی‌خورد.
+  - مسیرها (`routes/web.php`) با middleware `throttle:shop-cart|shop-checkout|shop-review|shop-stock-notify` پوشش داده شدند. هیچ route جدیدی اضافه نشد.
+
+  **Phase 5.3B — کپچای مشروط برای کاربر مهمان (`commit 40bd246`):** `App\Services\CaptchaService` با سه helper جدید گسترش یافت بدون تکرار منطق captcha (همه از طریق `generatePersianNumber`/`generateNormal`/`verifyHcaptcha`/`validatePersianNumber`/`validateNormal` موجود کار می‌کنند):
+  - `isShopCaptchaEnabled()` ⇒ true فقط اگر ماژول کپچا روشن باشد و setting جدید `shop_captcha_enabled='1'`.
+  - `getShopCaptchaConfig()` ⇒ payload رندر برای مهمان؛ کاربر authenticated همیشه `enabled=false`.
+  - `validateShopCaptcha(Request)` ⇒ کاربر authenticated همیشه `true` (bypass)؛ مهمان بسته به نوع کپچا فیلد `captcha_answer` یا `h-captcha-response` را با همان متدهای موجود اعتبارسنجی می‌کند.
+  - `App\Http\Controllers\Front\ShopController` در سه نقطه (`checkout`، `storeReview`، `stockNotify`) قبل از validate درخواست، کپچا را چک می‌کند. در شکست ⇒ `back()->withInput()->withErrors([...])` و هیچ DB write انجام نمی‌شود.
+  - partial جدید `resources/views/partials/shop-captcha.blade.php` خودش از `CaptchaService::getShopCaptchaConfig()` می‌خواند ⇒ نیازی به پاس‌دادن متغیر از controller نیست. در سه فرم include شد: `cart.blade.php` (checkout)، `show.blade.php` (stock-notify)، `show.blade.php` (review).
+
+  **Phase 5.3C — Admin toggle + tests + docs (`commit pending`):**
+  - `App\Http\Controllers\Admin\CaptchaController::index` متغیرهای جدید `shopCaptchaEnabled` و `shopModuleEnabled` (از `SiteHelper::shopEnabled()`) را به view می‌فرستد.
+  - `update()` validation و persistence برای `shop_captcha_enabled` (boolean optional). اگر ماژول shop غیرفعال باشد، toggle disabled رندر می‌شود (با پیام راهنما) ولی اگر ادمین آن را روشن کرده بود، setting حفظ می‌ماند (entitlement protection §۴ — تنظیمات کاربر را به‌خاطر تغییر وضعیت ماژول حذف نمی‌کنیم).
+  - `resources/views/admin/captcha/index.blade.php` با چک‌باکس جدید (با توضیح فارسی: «شامل: ثبت سفارش، ثبت نظر محصول، درخواست اطلاع‌رسانی موجودی. فقط برای کاربر مهمان اعمال می‌شود.») و عنوان «(آخرین بروزرسانی: ۱۴۰۵/۰۲/۲۲)» در header کارت.
+  - `tests/Feature/Wave53ShopGuardsTest.php`: ۲۱ تست/۴۳ assertion:
+    - ۴ تست برای حضور limiter‌های nameبر روی هر ۴ route با middleware صحیح؛
+    - ۴ تست برای maxAttempts درست هر limiter و keyهای متمایز per (slug | product_id) و per (user_id vs guest);
+    - ۷ تست برای captcha service (bypass auth, reject guest without answer, accept correct persian, disabled when off, etc.);
+    - ۳ تست برای admin toggle (persist/clear/view variables);
+    - ۳ تست برای backward compatibility (default = '0'، auth_captcha مسیر unchanged، شکست هیچ helper موجود).
+
+  **Backward compatibility:** پیش‌فرض `shop_captcha_enabled='0'` ⇒ هیچ سایت موجودی تحت تأثیر قرار نمی‌گیرد مگر ادمین opt-in کند. هیچ migration، هیچ تغییر API پلتفرم، هیچ تغییر در entitlement کاربر. کاربر authenticated هرگز کپچا نمی‌بیند (بار UX روی خریدار صادق صفر).
+
 ### Phase 5 / Wave 5.4 — ۱۴۰۵/۰۲/۲۲
 
 - **P3-1/P3-2 (regression test suite — customer-site):** افزودن ۲۳ feature test جدید برای رفتارهای حساس waveهای ۲ تا ۴ این مخزن. هیچ تغییر رفتاری در کد production انجام نشد (فقط یک fix نام FK برای امکان‌پذیر ساختن `migrate:fresh` در MySQL). **مجموع suite: ۱۱۹ تست (۹۶ baseline + ۲۳ Wave 5.4) با ۲۷۸ assertion. تمام ۲۳ تست Wave 5.4 سبز.** ۱۶ failure باقی‌مانده در تست‌های baseline pre-existing (shop/blog/menu/stage4) است و به Wave 5.4 یا فاز ۵ ربطی ندارد.

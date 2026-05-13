@@ -138,6 +138,7 @@
                         <input type="hidden" name="product_variant_id" id="notify-variant-id" value="">
                         <p class="text-sm mb-2">موجود شد خبرم کنید</p>
                         <input type="email" name="email" placeholder="ایمیل (اختیاری)" class="form-input mb-2" style="max-width:16rem;">
+                        @include('partials.shop-captcha')
                         <button type="submit" class="btn btn-secondary btn-sm">ثبت درخواست</button>
                     </form>
                 @endif
@@ -229,6 +230,7 @@
             @endguest
             <div class="form-group"><label class="form-label">عنوان</label><input type="text" name="title" class="form-input"></div>
             <div class="form-group"><label class="form-label">متن</label><textarea name="body" class="form-textarea" rows="3"></textarea></div>
+            @include('partials.shop-captcha')
             <button type="submit" class="btn btn-primary">ارسال برای بازبینی</button>
         </form>
     </section>

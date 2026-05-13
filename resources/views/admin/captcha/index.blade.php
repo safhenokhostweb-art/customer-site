@@ -5,8 +5,8 @@
 <div class="admin-page max-w-3xl space-y-6">
     <div class="admin-page-head">
         <div>
-            <h1 class="admin-page-title">کپچا و ضد ربات</h1>
-            <p class="admin-section-lead text-sm" style="margin-top:0.35rem">کپچای عدد فارسی با نمایش رنگی، چرخش و نویز سبک برای فرم‌ساز و سایر فرم‌های محافظت‌شده.</p>
+            <h1 class="admin-page-title">کپچا و ضد ربات <span class="text-xs text-slate-500 font-normal">(آخرین بروزرسانی: ۱۴۰۵/۰۲/۲۲)</span></h1>
+            <p class="admin-section-lead text-sm" style="margin-top:0.35rem">کپچای عدد فارسی با نمایش رنگی، چرخش و نویز سبک برای فرم‌ساز، فرم‌های نوشتنی فروشگاه و سایر فرم‌های محافظت‌شده. در کنار کپچا، نقاط نوشتنی فروشگاه با rate limiter (محدودیت نرخ) هم محافظت می‌شوند.</p>
         </div>
     </div>
 
@@ -50,6 +50,21 @@
                     <input type="checkbox" name="auth_captcha_enabled" value="1" class="rounded border-gray-300" {{ $authCaptchaEnabled ?? false ? 'checked' : '' }}>
                     <span>فعال‌سازی کپچا برای ورود و ثبت‌نام (در صورت پشتیبانی تم)</span>
                 </label>
+            </div>
+            {{-- Phase 5 / Wave 5.3 / P1-5: toggle جدید برای فرم‌های نوشتنی فروشگاه. --}}
+            <div class="form-group">
+                <label class="admin-form-inline-check cursor-pointer @if(!($shopModuleEnabled ?? false)) opacity-50 cursor-not-allowed @endif">
+                    <input type="checkbox" name="shop_captcha_enabled" value="1" class="rounded border-gray-300"
+                        @checked($shopCaptchaEnabled ?? false)
+                        @disabled(!($shopModuleEnabled ?? false))>
+                    <span>
+                        فعال‌سازی کپچا برای فرم‌های نوشتنی فروشگاه
+                        <span class="text-xs text-slate-500 block mt-0.5">شامل: ثبت سفارش (checkout)، ثبت نظر محصول، درخواست اطلاع‌رسانی موجودی. فقط برای کاربر مهمان اعمال می‌شود؛ کاربر وارد شده bypass می‌شود.</span>
+                    </span>
+                </label>
+                @if(!($shopModuleEnabled ?? false))
+                    <p class="text-xs text-amber-700 mt-1">ماژول فروشگاه برای این سایت فعال نیست؛ این گزینه تا فعال شدن ماژول بی‌اثر است.</p>
+                @endif
             </div>
             <div class="form-group">
                 <label class="form-label" for="captcha-type">نوع کپچا</label>
