@@ -2,29 +2,30 @@
 
 namespace Tests\Feature;
 
-use App\Models\License;
 use App\Models\ModuleChangeLog;
 use App\Models\ModuleVersion;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsValidLicenseWithShop;
 use Tests\TestCase;
 
 class StageFourValidationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /**
+     * Wave 7.0a — License seeding is deliberately deferred to per-test
+     * methods because the first test
+     * (`admin_route_redirects_to_license_when_license_missing`) asserts the
+     * redirect behavior **when no license exists**; seeding one in setUp
+     * would invalidate that assertion. Other tests that need a license
+     * call `$this->seedValidLicense([...])` directly.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-
-        file_put_contents(storage_path('installed.lock'), '1');
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(storage_path('installed.lock'));
-        parent::tearDown();
+        $this->markSiteAsInstalled();
     }
 
     public function test_admin_route_redirects_to_license_when_license_missing(): void
@@ -41,14 +42,7 @@ class StageFourValidationTest extends TestCase
     {
         config(['site.owner_site' => false]);
 
-        License::query()->create([
-            'license_key' => 'LIC-VALID-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['blog', 'shop'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
+        $this->seedValidLicense(['blog', 'shop']);
 
         $admin = User::factory()->create(['is_admin' => true]);
         $response = $this->actingAs($admin)->get(route('admin.dashboard'));
@@ -87,14 +81,7 @@ class StageFourValidationTest extends TestCase
     {
         config(['site.owner_site' => false]);
 
-        License::query()->create([
-            'license_key' => 'LIC-PUBLIC-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['blog', 'shop'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
+        $this->seedValidLicense(['blog', 'shop']);
 
         Page::query()->create([
             'title' => 'Test Page',
@@ -115,14 +102,7 @@ class StageFourValidationTest extends TestCase
     {
         config(['site.owner_site' => false]);
 
-        License::query()->create([
-            'license_key' => 'LIC-MODULE-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['blog'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
+        $this->seedValidLicense(['blog']);
 
         ModuleVersion::setVersion('blog', '1.0.0');
         ModuleChangeLog::query()->create([

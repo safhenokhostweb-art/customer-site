@@ -2,38 +2,32 @@
 
 namespace Tests\Feature;
 
-use App\Models\License;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsValidLicenseWithShop;
 use Tests\TestCase;
 
 class PhaseOneTwoThreeTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /**
+     * Wave 7.0a — Same host-aware license bootstrap as `ShopModuleFeatureTest`,
+     * extended with the `blog` module so blog/shop public routes can render.
+     * `config('site.owner_site')` is preserved for backward-compatibility with
+     * any test in this file that relies on owner-site middleware bypass; with
+     * a valid license in place it is effectively redundant but harmless.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-        file_put_contents(storage_path('installed.lock'), '1');
+        $this->markSiteAsInstalled();
         config(['site.owner_site' => true]);
-        License::query()->create([
-            'license_key' => 'LIC-PHASE-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['blog', 'shop'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(storage_path('installed.lock'));
-        parent::tearDown();
+        $this->seedValidLicense(['blog', 'shop']);
     }
 
     public function test_shop_index_with_category_filter(): void
@@ -68,6 +62,7 @@ class PhaseOneTwoThreeTest extends TestCase
             'body' => 'متن',
             'user_id' => $user->id,
             'is_published' => true,
+            'editorial_status' => Post::EDITORIAL_PUBLISHED,
             'published_at' => now(),
         ]);
         $response = $this->get(route('blog.index', ['q' => 'جستجو']));
@@ -85,6 +80,7 @@ class PhaseOneTwoThreeTest extends TestCase
             'user_id' => $user->id,
             'category_id' => null,
             'is_published' => true,
+            'editorial_status' => Post::EDITORIAL_PUBLISHED,
             'published_at' => now()->subDay(),
         ]);
         Post::create([
@@ -94,6 +90,7 @@ class PhaseOneTwoThreeTest extends TestCase
             'user_id' => $user->id,
             'category_id' => null,
             'is_published' => true,
+            'editorial_status' => Post::EDITORIAL_PUBLISHED,
             'published_at' => now()->subHours(2),
         ]);
 

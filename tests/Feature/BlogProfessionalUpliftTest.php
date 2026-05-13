@@ -2,37 +2,34 @@
 
 namespace Tests\Feature;
 
-use App\Models\License;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\SeedsValidLicenseWithShop;
 use Tests\TestCase;
 
 class BlogProfessionalUpliftTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /**
+     * Wave 7.0a — License/installation seeding delegated to
+     * `SeedsValidLicenseWithShop`. The legacy `domain => 'localhost'` seed
+     * silently broke whenever local `APP_URL` pointed elsewhere (e.g.
+     * `http://customer-site.test`); the trait derives the host from
+     * `config('app.url')` so it stays correct across dev and CI.
+     *
+     * `withoutMiddleware()` was removed because the host-aware license now
+     * makes `EnsureLicenseValid` + `EnsureModuleEnabled('blog')` pass for
+     * real, exercising the production middleware path rather than skipping
+     * it. The legacy `tearDown` `@unlink(installed.lock)` is also removed
+     * because the file is tracked in the repo.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-
-        file_put_contents(storage_path('installed.lock'), '1');
-        License::query()->create([
-            'license_key' => 'LIC-BLOG-001',
-            'domain' => 'localhost',
-            'expires_at' => now()->addDays(30),
-            'modules' => ['blog'],
-            'platform_valid' => true,
-            'last_validated_at' => now(),
-        ]);
-
-        $this->withoutMiddleware();
-    }
-
-    protected function tearDown(): void
-    {
-        @unlink(storage_path('installed.lock'));
-        parent::tearDown();
+        $this->markSiteAsInstalled();
+        $this->seedValidLicense(['blog']);
     }
 
     public function test_admin_can_schedule_blog_post_with_seo_fallbacks(): void

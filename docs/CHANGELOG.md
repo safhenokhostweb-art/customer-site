@@ -4,6 +4,26 @@
 
 ## [Unreleased]
 
+### Phase 2 / Wave 7.0a — Test Bootstrap Stabilization — ۱۴۰۵/۰۲/۲۳
+
+پاکسازی ۱۰ failure باقی‌ماندهٔ baseline در test suite بدون تغییر هیچ‌گونه کد production. شاخه: `phase7-wave7a`. نتیجهٔ کل suite **پس از این wave**: ۱۶۳ تست ⇒ **۱۶۱ pass، ۲ risky، ۰ failure** (هر دو risky هم‌خانوادهٔ output-buffer در viewهای frontend `shop/show` و `blog/show` که `@push('json-ld')` می‌زنند — assertion سبز است، تنها هشدار hygiene PHPUnit).
+
+**فلسفهٔ wave:** «Test Bootstrap Stabilization» یعنی مفروضات قدیمی setUp تست‌ها (که قبل از Wave 2 / P0-3 یعنی allow-list سخت در `EnsureLicenseValid` نوشته شده بودند) را با trait مشترک `Tests\Concerns\SeedsValidLicenseWithShop` (که در Wave 6.2 ساخته شد) همگام می‌کند. صفر تغییر در `app/**`، `routes/**`، `config/**`، `resources/views/**` (به‌جز `docs/**`)، صفر تغییر در `database/migrations/**`.
+
+- **`tests/Feature/BlogProfessionalUpliftTest.php`:** `use SeedsValidLicenseWithShop`، `setUp` فقط `markSiteAsInstalled()` + `seedValidLicense(['blog'])`، حذف `withoutMiddleware()` (license معتبر مسیر full middleware را پاس می‌کند ⇒ تست‌ها رفتار production را بازنمایی می‌کنند نه دور می‌زنند)، حذف `tearDown()` که `installed.lock` tracked را unlink می‌کرد. ۲ failure (`future_scheduled_posts_are_hidden`، `public_blog_hides_posts_not_editorially_published`) به pass تبدیل شدند.
+- **`tests/Feature/MenuModuleFeatureTest.php`:** `use SeedsValidLicenseWithShop`، `setUp` فقط `markSiteAsInstalled()` (تست `platform_ux_service_uses_local_menus_in_local_mode` سرویس را مستقیم صدا می‌زند و license نمی‌خواهد ⇒ seed عمداً deferred)، در تست `admin_modules_page_shows_menu_professional_status_card` بلوک inline `License::create([..., 'domain'=>'localhost', ...])` با `$this->seedValidLicense(['menu'])` جایگزین شد، حذف `tearDown()`. ۱ failure به pass تبدیل شد.
+- **`tests/Feature/PhaseOneTwoThreeTest.php`:** `use SeedsValidLicenseWithShop`، `setUp` فراخوانی `markSiteAsInstalled()` + `config(['site.owner_site'=>true])` (حفظ شد برای backward-compatibility) + `seedValidLicense(['blog','shop'])`، حذف bulk inline `License::create`، حذف `tearDown()`. علاوه بر آن، در ۳ `Post::create` (یکی در `test_blog_search`، دوتا در `test_blog_show_displays_related_posts_and_reading_time`) فیلد `editorial_status => Post::EDITORIAL_PUBLISHED` افزوده شد چون `Post::scopePublished()` در پروداکشن این فیلد را اجباری می‌داند (test-data hygiene؛ نه production behavior change). ۴ failure به pass، ۱ failure (`blog_show_displays_related_posts_and_reading_time`) به risky-pass (assertion سبز، فقط hygiene warning) تبدیل شد.
+- **`tests/Feature/StageFourValidationTest.php`:** `use SeedsValidLicenseWithShop`، `setUp` فقط `markSiteAsInstalled()` (تست `admin_route_redirects_to_license_when_license_missing` عمداً نباید license داشته باشد)، در ۳ متد failing جایگزینی inline `License::create([...])` با `$this->seedValidLicense([...])` با ماژول‌های متناسب (`['blog','shop']` برای دو متد و `['blog']` برای متد changelog blog)، حذف `tearDown()`. ۳ failure به pass تبدیل شدند.
+- **به‌روزرسانی `docs/KNOWN-TEST-FAILURES.md`:** اعداد baseline به ۰ failure / ۲ risky تنظیم شد؛ تاریخچهٔ ۱۰ failure قبلی در جدول §۲ نگه داشته شد ولی همگی به ستون «وضعیت فعلی» با `pass`/`risky-pass` به‌روز شد؛ توضیح صریح هر ۲ risky و علت scope-out از Wave 7.0a در §۲.۲ اضافه شد؛ نقشهٔ راه §۵ به‌روز شد.
+
+**Backward-compat invariants حفظ شده:**
+- صفر تغییر در `EnsureLicenseValid`، `EnsureModuleEnabled`، `SiteHelper`، `BlogController`، `Post` model، `License` model، یا هر middleware/service/controller production.
+- صفر تغییر در رفتار route‌ها، responseها، یا API.
+- صفر migration در این wave.
+- entitlement مشتریان موجود لمس نمی‌شود.
+- ۹ تست failing → passing، ۱ تست failing → risky-pass (functional assertion سبز).
+- ۲ تست قبلاً سبز (`shop/show` JSON-LD) بدون regression.
+
 ### Phase 6 / Wave 6.2 — Shop Test-Suite Stabilization — ۱۴۰۵/۰۲/۲۳
 
 پاکسازی هدفمند ۶ failure باقی‌ماندهٔ baseline در `tests/Feature/ShopModuleFeatureTest.php` بدون تغییر منطق production. شاخه: `phase6-wave6.2`. نتیجهٔ کل suite **پس از این wave**: ۱۵۲ pass / ۱۰ fail (همگی non-Shop) / ۱ risky (output-buffer hygiene در helperهای JSON-LD/editor — خارج از scope و عدم تأثیر روی assertion).
