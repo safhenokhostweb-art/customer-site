@@ -199,7 +199,11 @@ class FormController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'canonical_url' => 'nullable|string|max:500',
             'meta_robots' => 'nullable|string|max:80',
-            'intro_text' => 'nullable|string|max:5000',
+            // Wave 7.0b: intro_text is edited via TinyMCE; HTML markup pushes
+            // the realistic payload well past the legacy 5,000-char ceiling.
+            // 65,000 aligns with the underlying MySQL TEXT column (~64 KB)
+            // declared in migration 2026_05_09_140000_add_seo_to_forms_table.
+            'intro_text' => 'nullable|string|max:65000',
         ];
     }
 
