@@ -2,6 +2,11 @@
 @section('title', 'داشبورد')
 @section('header', 'داشبورد')
 @section('content')
+
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => null],
+]])
+
 <div class="admin-dashboard-page">
 
 @php

@@ -4,6 +4,33 @@
 
 @section('content')
 
+{{-- Wave 7.0c — Coming Soon banner. این صفحه برای ماژول‌های پلتفرمی است که
+     هنوز UI کامل اختصاصی در سایت ندارند و فقط راهنما/وضعیت نمایش می‌دهند. --}}
+<div class="admin-coming-soon-banner" role="status">
+    <div class="admin-coming-soon-banner__icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    </div>
+    <div class="admin-coming-soon-banner__body">
+        <p class="admin-coming-soon-banner__title">
+            <span class="admin-coming-soon-badge">به‌زودی</span>
+            UI اختصاصی ماژول «{{ $guide['title'] ?? $slug }}» در دست توسعه است.
+        </p>
+        <p class="admin-coming-soon-banner__sub">
+            در نسخه‌های آینده این صفحه با فرم‌ها، فهرست‌ها و گزارش‌های مخصوص این ماژول جایگزین می‌شود.
+            تا آن زمان، راهنما و وضعیت فعال‌سازی این ماژول را در پایین می‌بینید.
+        </p>
+    </div>
+</div>
+<style>
+    .admin-coming-soon-banner { display: flex; gap: 0.85rem; align-items: flex-start; padding: 0.95rem 1.05rem; margin: 0 0 1.25rem; border-radius: 0.75rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; color: #78350f; }
+    .admin-coming-soon-banner__icon { color: #b45309; flex-shrink: 0; padding-top: 0.1rem; }
+    .admin-coming-soon-banner__title { margin: 0; font-weight: 600; font-size: 0.95rem; line-height: 1.5; }
+    .admin-coming-soon-banner__sub { margin: 0.35rem 0 0; font-size: 0.82rem; line-height: 1.7; color: #92400e; }
+    .admin-coming-soon-badge { display: inline-block; padding: 0.15rem 0.55rem; margin-left: 0.35rem; border-radius: 9999px; background: #b45309; color: #fef3c7; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; }
+</style>
+
 <div class="card mb-6">
     <div class="card-header">راهنمای ماژول {{ $guide['title'] ?? $slug }}</div>
     <div class="card-body space-y-3 text-sm leading-relaxed">

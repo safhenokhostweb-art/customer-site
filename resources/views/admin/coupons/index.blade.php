@@ -2,6 +2,9 @@
 @section('title', 'کوپن‌ها')
 @section('header', 'کوپن‌ها')
 @section('content')
+
+@include('admin.coupons.guide')
+
 <div class="admin-page">
     <div class="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-sm">
         <strong>راهنما:</strong> کدهای تخفیف در صفحهٔ سبد خرید و هنگام تکمیل سفارش قابل استفاده‌اند. حداقل مبلغ سفارش (اختیاری) تعیین می‌کند کوپن فقط برای سفارش‌های بالاتر از آن مبلغ اعمال شود.

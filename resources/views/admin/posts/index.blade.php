@@ -2,6 +2,14 @@
 @section('title', 'مطالب وبلاگ')
 @section('header', 'مطالب وبلاگ')
 @section('content')
+
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'مطالب وبلاگ', 'url' => null],
+]])
+
+@include('admin.posts.guide')
+
 <div class="admin-page">
     <div class="admin-page-head">
         <h1 class="admin-page-title">مطالب وبلاگ</h1>
