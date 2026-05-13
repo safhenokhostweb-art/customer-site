@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Phase 5 — Technical-debt note — ۱۴۰۵/۰۲/۲۲
+
+- ایجاد فایل **`docs/KNOWN-TEST-FAILURES.md`** برای ایزوله نگه‌داشتن ۱۶ failure pre-existing در PHPUnit suite این مخزن. این failureها هیچ‌کدام به Wave 5.x ربط ندارند و با `git checkout a213fcc` (commit دقیقاً پیش از Wave 5.3) قابل بازتولید‌اند (یعنی baseline). علت ریشه‌ای همگی در bootstrap تست‌های قدیمی است (عدم seed لایسنس معتبر یا `modules => ['shop', 'blog']` در `setUp()`). الگوی صحیح در `tests/Feature/Wave53ShopGuardsTest::seedValidLicense()` نشان داده شده. **هیچ تغییری در کد production لازم نیست؛ تست‌های Wave 5.x در فایل‌های جداگانه‌اند و license/module را خود seed می‌کنند.** قانون: اگر run بعدی بیشتر از ۱۶ failure داشت ⇒ regression جدید بررسی شود؛ اگر کمتر بود ⇒ این فایل به‌روز شود.
+
 ### Phase 5 / Wave 5.3 — ۱۴۰۵/۰۲/۲۲
 
 - **P1-5 (Captcha & Rate Limiting برای نقاط نوشتنی فروشگاه — customer-site):** سه فاز پیاپی روی همین مخزن، صفر تغییر در saas-platform، صفر مایگریشن، صفر breaking change. مجموع ۲۱ feature test جدید (`Wave53ShopGuardsTest`, ۴۳ assertion) ⇒ همگی سبز. regression مشترک با Wave 2/3/4 → ۴۴ تست سبز (۱۱۵ assertion).
@@ -35,6 +39,8 @@
     - ۳ تست برای backward compatibility (default = '0'، auth_captcha مسیر unchanged، شکست هیچ helper موجود).
 
   **Backward compatibility:** پیش‌فرض `shop_captcha_enabled='0'` ⇒ هیچ سایت موجودی تحت تأثیر قرار نمی‌گیرد مگر ادمین opt-in کند. هیچ migration، هیچ تغییر API پلتفرم، هیچ تغییر در entitlement کاربر. کاربر authenticated هرگز کپچا نمی‌بیند (بار UX روی خریدار صادق صفر).
+
+  **Pre-merge hardening (`commit 18766a2`):** اصلاح edge case در `AppServiceProvider::shopRateKey()` که در آن اگر `$request->hasSession()=true` ولی `getId()=''` (مثلاً سفارشی‌سازی session impl)، key با `:` خالی پایان می‌گرفت و چند کاربر anonymous مختلف در یک bucket می‌افتادند. حالا تنها وقتی `getId() !== ''` است session را در key استفاده می‌کنیم؛ در غیر این صورت ثابت `no-sess` (مثل request بدون session). تست‌های پیش‌رفته‌ای روی هر سه شاخه (no session، blank-id session، normal ۴۰-char truncated). همچنین تأیید شد `php artisan route:cache` بدون collision بین limiter name‌ها موفق است (هر ۸ instance `throttle:shop-*` پس از cache بازیابی می‌شوند). `merge commit be8cd74`
 
 ### Phase 5 / Wave 5.4 — ۱۴۰۵/۰۲/۲۲
 
