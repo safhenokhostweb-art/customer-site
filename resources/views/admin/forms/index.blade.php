@@ -3,6 +3,8 @@
 @section('header', 'فرم‌ساز')
 @section('content')
 
+@include('admin.forms.guide')
+
 <div class="admin-page admin-forms-page">
     <div class="admin-page-head">
         <div>
