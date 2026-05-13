@@ -3,6 +3,11 @@
 @section('header', 'فرم‌ساز')
 @section('content')
 
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'فرم‌ساز', 'url' => null],
+]])
+
 @include('admin.forms.guide')
 
 <div class="admin-page admin-forms-page">

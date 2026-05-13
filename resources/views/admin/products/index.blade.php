@@ -2,6 +2,14 @@
 @section('title', 'محصولات')
 @section('header', 'محصولات')
 @section('content')
+
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'محصولات', 'url' => null],
+]])
+
+@include('admin.products.guide')
+
 <div class="admin-page">
     <div class="admin-page-head">
         <div>

@@ -1,6 +1,15 @@
 @extends('admin.layout')
 @section('title', 'سفارشات')
+@section('header', 'سفارشات')
 @section('content')
+
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'سفارشات', 'url' => null],
+]])
+
+@include('admin.orders.guide')
+
 <div class="admin-page">
     <div class="admin-page-head">
         <h1 class="admin-page-title">سفارشات</h1>
