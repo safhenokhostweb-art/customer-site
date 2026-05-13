@@ -4,6 +4,31 @@
 
 ## [Unreleased]
 
+### Phase 6 / Wave 6.1 — Shop Data-Integrity Hardening — ۱۴۰۵/۰۲/۲۳
+
+Hardening pass on the Shop module's transactional surface. All changes are additive, reversible, and entitlement-safe (no automatic revocation, no destructive migration). Branch: `phase6-wave6.1`. Regression: 22 new tests (49 assertions) — all green; cross-wave regression with Wave 2/3/4/5.2/5.3 → 67 tests (171 assertions) all green; baseline failure count unchanged at 16.
+
+- **P0-S1 — `coupons.discount_percent` nullability (`commit 1d70785`):** مهاجرت `2026_05_13_100000_make_coupons_discount_percent_nullable` ستون را nullable می‌کند تا `Admin\CouponController` بتواند برای نوع `fixed` مقدار `NULL` ذخیره کند بدون خطای SQL در strict mode. سطرهای historical با `discount_type=fixed AND discount_percent=0` بازنرمالایز می‌شوند به NULL برای نمایش تمیز.
+- **P0-S4 — `Order::generateNumber` ایمن در همزمانی (`commit 13669aa`):** قفل advisory در MySQL (GET_LOCK/RELEASE_LOCK) per-day، طول دنباله از ۴ به ۶ رقم (max 999,999/day)، الگوریتم retry برای collisionها در driverهای فاقد lock helper (SQLite/Postgres در تست‌ها). شماره‌های 4-رقمی قدیمی هنوز unique و سازگارند.
+- **P1-S1 — Race در checkout (`commit 2ff4d1f`):** قبل از هرگونه validation، همهٔ سطرهای متأثر (parent productها، bundle childها، variantهای درخواستی) به ترتیب صعودی primary key با `whereIn(...)->lockForUpdate()` قفل می‌شوند. این oversell در دو سناریوی پیش‌بینی‌شده را می‌بندد: (الف) bundle child مشترک بین دو bundle، (ب) variant مشترک بین تنوع‌های مختلف یک محصول. ترتیب پایدار قفل ⇒ deadlock-free.
+- **P1-S5 — IDOR در `Account\OrderController` (`commit ea5f697`):** شاخهٔ legacy «تطبیق با customer_email» حذف شد. حالا فقط `user_id` معتبر است؛ کاربری که ایمیل پروفایلش را عوض کند نمی‌تواند سفارش guest را ببیند. مسیر guest order lookup مستقل از این کنترلر (با شمارهٔ سفارش + ایمیل تأییدی) دست‌نخورده است.
+- **P1-S2 / P1-S3 / P1-S4 — `OrderStatusService` + history table (`commit d444adf`, `commit 44cc569`, `commit 9823fa3`):**
+  - مهاجرت `2026_05_13_100100_create_order_status_history_table` ⇒ جدول `order_status_history` (from/to status، changed_by_user_id، reason، JSON side_effects، created_at). ایندکس روی `(order_id, created_at)` و `to_status`.
+  - مهاجرت `2026_05_13_100200_add_restocked_at_to_orders` ⇒ ستون nullable `orders.restocked_at` به‌عنوان idempotency guard برای side-effect لغو.
+  - مدل `App\Models\OrderStatusHistory` (با `$table='order_status_history'` صریح برای جلوگیری از پلورال‌سازی Eloquent).
+  - سرویس `App\Services\OrderStatusService` تنها مسیر تغییر وضعیت سفارش است: FSM را اعمال می‌کند (cancelled ⇒ terminal، transitions مجاز در const `TRANSITIONS`)، یک ردیف history می‌نویسد، یک ردیف `admin_activity_log` با `action='order.status_changed'` از طریق `AdminActivityLogger::log()` ثبت می‌کند، و در گذار به `cancelled` به‌صورت اتمیک stock محصول/variant را برمی‌گرداند و `coupon.used_count` را کاهش می‌دهد. `restocked_at` تضمین می‌کند هر سفارش حداکثر **یک‌بار** restock شود حتی اگر ادمین به‌صورت دستی paid → cancelled → paid → cancelled کند.
+  - `Admin\OrderController::updateStatus` کاملاً به سرویس delegate می‌شود؛ illegal transition ⇒ `flash error` و audit بدون پیشرفت. فرم با فیلد اختیاری `reason` گسترش یافت.
+  - بلاک کوتاه Jalali (`Y/m/d H:i`) برای نمایش تاریخچهٔ وضعیت در `admin/orders/show.blade.php`. UI کامل timeline برای Wave 6.3 رزرو است.
+
+**فایل‌های جدید:** `app/Models/OrderStatusHistory.php`, `app/Services/OrderStatusService.php`, `database/migrations/2026_05_13_100000_make_coupons_discount_percent_nullable.php`, `database/migrations/2026_05_13_100100_create_order_status_history_table.php`, `database/migrations/2026_05_13_100200_add_restocked_at_to_orders.php`, `tests/Feature/Wave61ShopDataIntegrityTest.php`.
+
+**فایل‌های تغییر یافته:** `app/Models/Order.php` (status constants + advisory-lock generateNumber + statusHistory relation + restocked_at cast), `app/Http/Controllers/Admin/OrderController.php`, `app/Http/Controllers/Account/OrderController.php`, `app/Http/Controllers/Front/ShopController.php`, `resources/views/admin/orders/show.blade.php`.
+
+**Backward-compat invariants حفظ شده:**
+- شماره‌های قدیمی 4-رقمی هنوز unique و قابل lookup هستند.
+- ادمین می‌تواند هر وضعیت قبلی را به cancelled تغییر دهد (terminal فقط در یک سمت).
+- ledger entitlement مشتری (Wave 5.1) و دروازه‌های captcha/rate-limit (Wave 5.3) دست‌نخورده.
+
 ### Phase 5 — Technical-debt note — ۱۴۰۵/۰۲/۲۲
 
 - ایجاد فایل **`docs/KNOWN-TEST-FAILURES.md`** برای ایزوله نگه‌داشتن ۱۶ failure pre-existing در PHPUnit suite این مخزن. این failureها هیچ‌کدام به Wave 5.x ربط ندارند و با `git checkout a213fcc` (commit دقیقاً پیش از Wave 5.3) قابل بازتولید‌اند (یعنی baseline). علت ریشه‌ای همگی در bootstrap تست‌های قدیمی است (عدم seed لایسنس معتبر یا `modules => ['shop', 'blog']` در `setUp()`). الگوی صحیح در `tests/Feature/Wave53ShopGuardsTest::seedValidLicense()` نشان داده شده. **هیچ تغییری در کد production لازم نیست؛ تست‌های Wave 5.x در فایل‌های جداگانه‌اند و license/module را خود seed می‌کنند.** قانون: اگر run بعدی بیشتر از ۱۶ failure داشت ⇒ regression جدید بررسی شود؛ اگر کمتر بود ⇒ این فایل به‌روز شود.
