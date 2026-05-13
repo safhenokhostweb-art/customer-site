@@ -434,12 +434,48 @@ class ShopController extends Controller
                 $subtotal = 0;
                 $items = [];
 
+                // Wave 6.1 / P1-S1 — stable lock ordering. Collect every row
+                // that affects stock (parent products, requested variants,
+                // bundle child products) and lock them ascending by primary
+                // key BEFORE any validation. This eliminates the race where
+                // bundle/variant stock could be approved against stale data
+                // and then oversold by a parallel checkout.
+                $productIds = [];
+                $variantIds = [];
+                foreach ($cart as $lineKey => $item) {
+                    [$pid, $vid] = ShopCartHelper::parseLineKey($lineKey);
+                    if ($pid > 0) {
+                        $productIds[$pid] = true;
+                    }
+                    if ($vid > 0) {
+                        $variantIds[$vid] = true;
+                    }
+                }
+                $parentIds = array_keys($productIds);
+                $childIds = [];
+                if ($parentIds) {
+                    $childIds = \App\Models\ProductBundle::query()
+                        ->whereIn('parent_product_id', $parentIds)
+                        ->pluck('child_product_id')
+                        ->all();
+                }
+                $allProductIds = array_values(array_unique(array_merge($parentIds, $childIds)));
+                sort($allProductIds);
+                $allVariantIds = array_keys($variantIds);
+                sort($allVariantIds);
+
+                if ($allProductIds) {
+                    Product::query()->whereIn('id', $allProductIds)->lockForUpdate()->get();
+                }
+                if ($allVariantIds) {
+                    ProductVariant::query()->whereIn('id', $allVariantIds)->lockForUpdate()->get();
+                }
+
                 foreach ($cart as $lineKey => $item) {
                     [$pid, $vid] = ShopCartHelper::parseLineKey($lineKey);
                     $product = Product::query()
                         ->where('status', Product::STATUS_PUBLISHED)
                         ->whereKey($pid)
-                        ->lockForUpdate()
                         ->with(['variants', 'bundleLines.child'])
                         ->first();
 
