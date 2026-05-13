@@ -2,6 +2,13 @@
 @section('title', 'ماژول‌ها')
 @section('header', 'ماژول‌ها و امکانات')
 @section('content')
+
+{{-- Wave 7.0c — small "Coming Soon" pill style for placeholder modules.
+     Lives at page level so it does not pollute global CSS bundles. --}}
+<style>
+    .admin-coming-soon-pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 9999px; background: #fde68a; color: #78350f; font-size: 0.68rem; font-weight: 700; border: 1px solid #fbbf24; }
+</style>
+
 <div class="admin-modules-page">
 
 @if(!$license || empty($license->license_key))
@@ -221,6 +228,21 @@
                         $categoryPillClass = $cat['pill_class'];
                         $iconKey = \App\Helpers\AdminMenu::moduleTileIconKey($slug);
 
+                        // Wave 7.0c — slugs whose tenant UI is still a placeholder
+                        // (served by App\Http\Controllers\Admin\PlatformModuleController
+                        // via the MODULE_GUIDES constant). Source of truth lives in
+                        // that controller; this array is a passive mirror used only
+                        // for the visual "Coming Soon" pill below.
+                        $placeholderSlugs = [
+                            'analytics', 'announcements', 'backup', 'brand', 'cloud',
+                            'contract', 'crm', 'discount_advanced', 'gallery', 'i18n',
+                            'inventory', 'marketing_automation', 'marketplace_sync',
+                            'multi_currency', 'omnichannel', 'podcast', 'portfolio',
+                            'product_bundling', 'projects', 'qa', 'recruitment',
+                            'services', 'shipping', 'tasks', 'video', 'wallet',
+                        ];
+                        $isPlaceholder = in_array($slug, $placeholderSlugs, true);
+
                         // توضیح کوتاه برای روش استفاده
                         $usageText = match ($slug) {
                             'blog' => 'برای مدیریت مقالات از منوی «محتوا → مطالب وبلاگ» و «دسته‌بندی‌ها» استفاده کنید؛ در فرم مطلب ویرایشگر پیشرفته (TinyMCE) و زمان انتشار با تقویم و ساعت شمسی است و در فهرست ادمین تاریخ‌ها با ارقام فارسی دیده می‌شوند.',
@@ -251,6 +273,9 @@
                                 <span class="badge {{ $info['enabled'] ? 'badge-success' : 'badge-warning' }}">
                                     {{ $info['enabled'] ? 'فعال در این سایت' : 'غیرفعال در این سایت' }}
                                 </span>
+                                @if($isPlaceholder)
+                                    <span class="admin-coming-soon-pill" title="UI اختصاصی این ماژول هنوز در دست توسعه است.">به‌زودی</span>
+                                @endif
                                 @if($hasUpdate)
                                     <span class="admin-field-hint" style="color:#b45309;font-size:0.68rem">بروزرسانی جدید برای این ماژول موجود است.</span>
                                 @endif
