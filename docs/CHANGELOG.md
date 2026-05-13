@@ -4,6 +4,59 @@
 
 ## [Unreleased]
 
+### Phase 2 / Wave 7.0c — UX Uniformity Sweep — ۱۴۰۵/۰۲/۲۳
+
+پاس یکنواخت‌سازی UX روی پنل ادمین tenant: راهنماهای فارسی برای ۴ ماژول اصلی فروشگاه و وبلاگ (orders, products, posts, coupons)، breadcrumb قابل استفاده مجدد روی ۵ صفحهٔ مهم (dashboard, forms, orders, products, posts)، و نشان «به‌زودی» برای ماژول‌های placeholder که UI اختصاصی هنوز ندارند. شاخه: `phase7-wave7c`. صفر مایگریشن. صفر تغییر controller/middleware/service/route. تنها viewهای admin و یک partial جدید لمس شده‌اند. regression suite کامل پس از این wave: **۱۸۳ pass، ۲ risky (baseline)، ۰ failure** (۹ تست جدید Wave 7.0c).
+
+**۱. Breadcrumb partial قابل استفاده مجدد:**
+- فایل جدید `resources/views/admin/partials/breadcrumb.blade.php` — opt-in. آرگومان `$crumbs` آرایه‌ای از `['label' => string, 'url' => string|null]` می‌گیرد. آخرین آیتم همیشه به‌صورت `aria-current="page"` بدون لینک رندر می‌شود. هیچ markupی اگر `$crumbs` خالی باشد تولید نمی‌شود (تست `test_breadcrumb_partial_renders_nothing_when_crumbs_empty`). CSS داخلی و خودکفا (لایه inline `<style>` در همان partial؛ جلوگیری از آلودگی bundle سراسری). جداکنندهٔ «‹» برای جهت RTL طبیعی است.
+- صفحاتی که opt-in کرده‌اند: `admin/dashboard.blade.php`، `admin/forms/index.blade.php`، `admin/orders/index.blade.php`، `admin/products/index.blade.php`، `admin/posts/index.blade.php`. صفحات coupons/edit/create و سایر pageها لمس نشده‌اند (طبق محدودهٔ تأییدشدهٔ کاربر).
+
+**۲. راهنماهای جدید ماژول‌ها (۴ فایل):**
+- `resources/views/admin/orders/guide.blade.php` — توضیح ستون‌های جدول، جریان وضعیت‌ها (state machine)، اشاره به `OrderStatusService` و `order_status_history`، نکات لغو idempotent (Wave 6.1)، و حذف legacy email-matching (P1-S5 از Wave 6.1).
+- `resources/views/admin/products/guide.blade.php` — انواع محصول (ساده، متغیر، bundle، دانلودی، مجازی)، جریان واریانت و موجودی، نکات stock locking از Wave 6.1، اشاره به pivot timestamps از Wave 6.2 (P0-S3)، تنظیمات سئو و JSON-LD.
+- `resources/views/admin/posts/guide.blade.php` — جریان انتشار حرفه‌ای (پیش‌نویس → بازبینی → تأیید → منتشرشده)، اشاره به `editorial_status` که از Wave 7.0a در فهرست عمومی دخیل است، قابلیت‌های پیشرفته (revisions، زمان مطالعه، related posts، JSON-LD Article، RSS، sitemap).
+- `resources/views/admin/coupons/guide.blade.php` — انواع تخفیف (percent / fixed)، nullability ستون `discount_percent` پس از Wave 6.1، شرایط اعمال (min_amount، usage_limit/usage_count، بازهٔ شمسی)، و رفتار idempotent لغو سفارش روی شمارندهٔ usage.
+
+همهٔ راهنماها از همان الگوی `<details>`/`<summary>` فایل `admin/forms/guide.blade.php` (Wave 7.0b) و `admin/activity-log/guide.blade.php` پیروی می‌کنند تا UX یکنواخت بماند؛ تاریخ شمسی `۱۴۰۵/۰۲/۲۳` در عنوان هر بلوک طبق قانون `saas-module-guide-update`.
+
+**۳. include راهنماها در صفحات index:**
+- `admin/orders/index.blade.php` ⇒ `@include('admin.orders.guide')` در صدر؛ همچنین `@section('header','سفارشات')` افزوده شد (پیش‌تر تنها `@section('title', ...)` داشت ⇒ unification با سایر pageهای ادمین).
+- `admin/products/index.blade.php` ⇒ `@include('admin.products.guide')` در صدر.
+- `admin/posts/index.blade.php` ⇒ `@include('admin.posts.guide')` در صدر.
+- `admin/coupons/index.blade.php` ⇒ `@include('admin.coupons.guide')` در صدر؛ کادر inline «راهنما» موجود (که تاکید روی نحوهٔ اعمال کوپن داشت) **حفظ شد** چون اطلاعاتی متفاوت از راهنمای ماژول می‌دهد و حذف آن می‌توانست UX را برای ادمین‌های فعلی تخریب کند.
+
+**۴. «به‌زودی» badge برای ماژول‌های placeholder:**
+- `resources/views/admin/platform-modules/show.blade.php` — banner برجستهٔ amber در صدر صفحه (با کلاس‌های `admin-coming-soon-banner` و `admin-coming-soon-badge`)، پیام دوبخشی: «UI اختصاصی این ماژول در دست توسعه است» + توضیح اطمینان‌بخش که نسخه‌های آینده این صفحه را با فرم‌ها/فهرست‌ها/گزارش‌ها جایگزین می‌کنند. CSS داخلی و scoped؛ هیچ تغییر در باقی structure صفحه (راهنما، وضعیت ماژول، اطلاعات لایسنس) ⇒ کاملاً additive.
+- `resources/views/admin/modules/index.blade.php` — pill کوچک `admin-coming-soon-pill` در tile grid برای ماژول‌هایی که در آرایهٔ `$placeholderSlugs` (شامل ۲۶ slug placeholder از `PlatformModuleController::MODULE_GUIDES`) قرار دارند. آرایه به‌صورت passive mirror در همان `@php` block است و کامنت صریح به source of truth (controller) دارد ⇒ هر افزودن slug جدید به controller نیاز به به‌روزرسانی این آرایه دارد (low-frequency، documented). صفر تغییر در structure tile موجود (پیل جدید فقط در صورت placeholder بودن slug ظاهر می‌شود).
+
+**۵. تست‌های جدید (Wave70cUxUniformityTest — ۹ تست، ۴۱ assertion):**
+- `test_admin_dashboard_renders_breadcrumb_with_dashboard_label`
+- `test_admin_forms_index_renders_breadcrumb_with_two_segments`
+- `test_admin_orders_index_renders_breadcrumb_and_guide`
+- `test_admin_products_index_renders_breadcrumb_and_guide`
+- `test_admin_posts_index_renders_breadcrumb_and_guide`
+- `test_admin_coupons_index_renders_guide_without_breadcrumb` (قرارداد صریح که coupons از breadcrumb خارج است)
+- `test_placeholder_platform_module_page_shows_coming_soon_banner` (با مسیر `admin.analytics.index` به‌عنوان نمایندهٔ placeholder)
+- `test_breadcrumb_partial_renders_nothing_when_crumbs_empty` (sanity)
+- `test_breadcrumb_partial_marks_last_item_as_current` (هندل aria-current)
+
+License seeding با `Tests\Concerns\SeedsValidLicenseWithShop` (host-aware) + ماژول‌های `blog, shop, forms, analytics`.
+
+**فایل‌های جدید:** `resources/views/admin/partials/breadcrumb.blade.php`، `resources/views/admin/orders/guide.blade.php`، `resources/views/admin/products/guide.blade.php`، `resources/views/admin/posts/guide.blade.php`، `resources/views/admin/coupons/guide.blade.php`، `tests/Feature/Wave70cUxUniformityTest.php`.
+
+**فایل‌های تغییر یافته:** `resources/views/admin/dashboard.blade.php` (افزودن breadcrumb)، `resources/views/admin/forms/index.blade.php` (افزودن breadcrumb)، `resources/views/admin/orders/index.blade.php` (افزودن breadcrumb + guide + `@section('header')`)، `resources/views/admin/products/index.blade.php` (افزودن breadcrumb + guide)، `resources/views/admin/posts/index.blade.php` (افزودن breadcrumb + guide)، `resources/views/admin/coupons/index.blade.php` (افزودن guide)، `resources/views/admin/platform-modules/show.blade.php` (افزودن Coming Soon banner)، `resources/views/admin/modules/index.blade.php` (افزودن Coming Soon pill).
+
+**Backward-compat invariants حفظ شده:**
+- صفر تغییر در migration/schema.
+- صفر تغییر در `EnsureLicenseValid`، `EnsureModuleEnabled`، `SiteHelper`، یا منطق licensing/entitlement.
+- صفر تغییر در controllers (PlatformModuleController دست‌نخورده ⇒ rules دسترسی همان قبلی).
+- صفر تغییر در routes یا route names.
+- صفر تغییر در API (REST/JSON).
+- منوی sidebar، فوتر، header، و سایر pageهای admin که opt-in نکرده‌اند، بدون تغییر.
+- entitlement مشتریان موجود لمس نمی‌شود (هیچ ماژول جدیدی اضافه/حذف نشد).
+- ۹ تست feature جدید سبز؛ regression suite کامل: ۱۸۳ pass، ۲ risky (همان baseline)، ۰ fail.
+
 ### Phase 2 / Wave 7.0b — Forms Hardening — ۱۴۰۵/۰۲/۲۳
 
 Hardening pass on the Forms module: safe rich-text rendering for `intro_text`, public-submit rate-limiting, an in-admin guide partial, plus two unplanned but contained **P0 production fixes** discovered while writing the regression tests. Branch: `phase7-wave7b`. Regression: full suite ⇒ **۱۷۴ pass، ۲ risky، ۰ failure** (همان ۲ risky output-buffer hygiene از Wave 6.2/7.0a). صفر مایگریشن. صفر تغییر entitlement.
