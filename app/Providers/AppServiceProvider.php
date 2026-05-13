@@ -82,6 +82,10 @@ class AppServiceProvider extends ServiceProvider
      * کلید پایه برای rate limiter shop:
      * - اگر کاربر authenticated است ⇒ `u:{id}` (یکسان بین مرورگرها/تب‌ها).
      * - در غیر این صورت ⇒ `g:{ip}:{session_id}` (anonymous با fallback روی session).
+     *
+     * گارد: اگر session هنوز شروع نشده باشد (یا `getId()` رشتهٔ خالی برگرداند)،
+     * بخش session با ثابت `no-sess` پر می‌شود تا key هیچ‌وقت با `:` خالی پایان
+     * نگیرد و چند کاربر anonymous مختلف در یک bucket نیفتند.
      */
     protected function shopRateKey(Request $request): string
     {
@@ -89,7 +93,17 @@ class AppServiceProvider extends ServiceProvider
         if ($userId) {
             return 'u:' . $userId;
         }
-        $sessionId = $request->hasSession() ? substr((string) $request->session()->getId(), 0, 32) : 'no-sess';
-        return 'g:' . ($request->ip() ?: '0.0.0.0') . ':' . $sessionId;
+        $sessionId = 'no-sess';
+        if ($request->hasSession()) {
+            $sid = (string) $request->session()->getId();
+            if ($sid !== '') {
+                $sessionId = substr($sid, 0, 32);
+            }
+        }
+        $ip = (string) ($request->ip() ?? '');
+        if ($ip === '') {
+            $ip = '0.0.0.0';
+        }
+        return 'g:' . $ip . ':' . $sessionId;
     }
 }

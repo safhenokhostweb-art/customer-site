@@ -176,6 +176,84 @@ class Wave53ShopGuardsTest extends TestCase
         $this->assertSame('u:' . $user->id, $authKey, 'auth key must be u:{id}');
     }
 
+    /**
+     * Pre-merge hardening: a request whose session has been started but
+     * hasn't received an ID yet (or one without a Laravel session at all)
+     * must never produce a key that ends with an empty session segment.
+     * If it did, every anonymous request on the same IP would collapse
+     * into a single bucket, which is _almost_ correct but loses the
+     * "per browser session" granularity we promised.
+     *
+     * Contract: the resolved key must always end with a non-empty token,
+     * and a request with no session must use the literal "no-sess".
+     */
+    public function test_guest_limiter_key_never_ends_with_empty_session_segment(): void
+    {
+        $reg = app(\Illuminate\Cache\RateLimiter::class);
+
+        // Case 1: no session bound at all.
+        $noSession = \Illuminate\Http\Request::create('/shop/cart/add', 'POST');
+        $limit1 = $reg->limiter('shop-cart')($noSession);
+        $key1 = is_array($limit1) ? $limit1[0]->key : $limit1->key;
+        $this->assertStringEndsWith(':no-sess', $key1);
+        $this->assertDoesNotMatchRegularExpression('/:$/', $key1);
+
+        // Case 2: session bound but with an empty id. Laravel's real Store
+        // auto-generates an id whenever a blank one is set, so we use a
+        // tiny anonymous Session impl that genuinely returns ''.
+        $emptyIdSession = \Illuminate\Http\Request::create('/shop/cart/add', 'POST');
+        $blankSession = new class implements \Illuminate\Contracts\Session\Session {
+            public function getName() { return 'blank'; }
+            public function setName($name) {}
+            public function getId() { return ''; }
+            public function setId($id) {}
+            public function start() { return true; }
+            public function save() {}
+            public function all() { return []; }
+            public function exists($key) { return false; }
+            public function missing($key) { return true; }
+            public function has($key) { return false; }
+            public function get($key, $default = null) { return $default; }
+            public function pull($key, $default = null) { return $default; }
+            public function put($key, $value = null) {}
+            public function token() { return ''; }
+            public function regenerateToken() {}
+            public function remove($key) { return null; }
+            public function forget($keys) {}
+            public function flush() {}
+            public function invalidate() { return true; }
+            public function regenerate($destroy = false) { return true; }
+            public function migrate($destroy = false) { return true; }
+            public function isStarted() { return true; }
+            public function previousUrl() { return null; }
+            public function setPreviousUrl($url) {}
+            public function flash($key, $value = true) {}
+            public function getHandler() { return new \Illuminate\Session\ArraySessionHandler(120); }
+            public function handlerNeedsRequest() { return false; }
+            public function setRequestOnHandler($request) {}
+        };
+        $emptyIdSession->setLaravelSession($blankSession);
+        $this->assertSame('', $blankSession->getId(), 'sanity: store id is empty');
+
+        $limit2 = $reg->limiter('shop-cart')($emptyIdSession);
+        $key2 = is_array($limit2) ? $limit2[0]->key : $limit2->key;
+        $this->assertStringEndsWith(':no-sess', $key2);
+        $this->assertDoesNotMatchRegularExpression('/:$/', $key2);
+
+        // Case 3: proper session with id — must use that id (truncated <=32).
+        $normalSession = \Illuminate\Http\Request::create('/shop/cart/add', 'POST');
+        $store2 = new \Illuminate\Session\Store(
+            'shop_test',
+            new \Illuminate\Session\ArraySessionHandler(120)
+        );
+        $store2->setId(str_repeat('a', 40));
+        $normalSession->setLaravelSession($store2);
+        $limit3 = $reg->limiter('shop-cart')($normalSession);
+        $key3 = is_array($limit3) ? $limit3[0]->key : $limit3->key;
+        $this->assertStringContainsString(':' . str_repeat('a', 32), $key3);
+        $this->assertDoesNotMatchRegularExpression('/:$/', $key3);
+    }
+
     // =====================================================================
     // Phase 5.3B — captcha gate (controller-level)
     // =====================================================================
