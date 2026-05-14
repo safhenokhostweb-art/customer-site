@@ -326,7 +326,7 @@
 | `products` ، `orders` و جداول وابسته | فروشگاه (در صورت فعال بودن ماژول) |
 | `settings` | تنظیمات محلی سایت |
 | `user_activity_log` | فعالیت end-user (ورود، تغییر رمز، ویرایش پروفایل و آدرس) |
-| `admin_activity_log` | لاگ فعالیت پنل ادمین tenant — Phase 5 / Wave 3 / P1-2 (admin_user_id، action، description، subject_type/id، properties json، ip، ua). actions ثبت‌شده: license.activated، license.refreshed_config، license.refreshed_modules، module.settings_updated. مسیر نمایش: `/admin/activity-log` |
+| `admin_activity_log` | لاگ فعالیت پنل ادمین tenant — Phase 5 / Wave 3 / P1-2 (`admin_user_id`، در صورت migrate ستون `causer_id`، action، description، subject_type/id، properties json، ip، ua). actions نمونه: license.*، module.settings_*، setting.updated، order.status_changed، blog.post_published / blog.post_scheduled (Wave 8.0b). مسیر نمایش: `/admin/activity-log`. **نگهداری:** `php artisan admin-activity-log:prune` + `config/audit.php` / `AUDIT_RETENTION_DAYS` / `AUDIT_PRUNE_DRY_RUN`؛ زمان‌بندی در `bootstrap/app.php` (روزانه ۰۳:۰۵). |
 | `module_change_logs` | تاریخچهٔ نسخه و changelog ماژول‌ها (sync از پلتفرم با `GET /api/updates/module-history`) |
 
 **جستجو:** `licenses` ، `migration` ، `customer-site` ، `admin_activity_log` ، `module_change_logs`

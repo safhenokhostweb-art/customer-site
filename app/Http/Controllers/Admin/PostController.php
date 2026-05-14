@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Helpers\SlugHelper;
 use App\Http\Controllers\Controller;
+use App\Services\AdminActivityLogger;
 use App\Models\Post;
 use App\Models\PostRevision;
 use App\Models\Category;
@@ -83,6 +84,7 @@ class PostController extends Controller
 
         $post = Post::create($data);
         $this->syncPostTags($post, $request->input('tags_input'));
+        $this->auditBlogPublishOrSchedule($post, (string) ($data['save_action'] ?? 'draft'));
 
         return redirect()->route('admin.posts.index')->with('success', $this->storeSuccessMessage($data['save_action'] ?? 'draft'));
     }
@@ -114,6 +116,7 @@ class PostController extends Controller
 
         $post->update($data);
         $this->syncPostTags($post, $request->input('tags_input'));
+        $this->auditBlogPublishOrSchedule($post->fresh(), (string) ($data['save_action'] ?? 'draft'));
 
         return redirect()->route('admin.posts.index')->with('success', $this->updateSuccessMessage($data['save_action'] ?? 'draft'));
     }
@@ -389,4 +392,29 @@ class PostController extends Controller
             default => 'مطلب به‌روزرسانی شد.',
         };
     }
+
+    /**
+     * Wave 8.0b — ثبت سبک انتشار / زمان‌بندی در admin_activity_log (بدون side-effect).
+     */
+    private function auditBlogPublishOrSchedule(Post $post, string $saveAction): void
+    {
+        if (! in_array($saveAction, ['publish', 'schedule'], true)) {
+            return;
+        }
+
+        $action = $saveAction === 'schedule' ? 'blog.post_scheduled' : 'blog.post_published';
+        $description = $saveAction === 'schedule'
+            ? 'زمان‌بندی انتشار مطلب'
+            : 'انتشار مطلب';
+
+        AdminActivityLogger::log($action, $description, $post, [
+            'post_id' => $post->id,
+            'slug' => $post->slug,
+            'title' => $post->title,
+            'published_at' => $post->published_at?->toIso8601String(),
+            'editorial_status' => $post->editorial_status,
+            'is_published' => (bool) $post->is_published,
+        ]);
+    }
 }
+

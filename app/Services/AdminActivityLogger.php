@@ -35,15 +35,24 @@ class AdminActivityLogger
         $description = $description ?? AdminActivityLog::actionLabel($action);
         $request = request();
 
-        return AdminActivityLog::create([
-            'admin_user_id' => Auth::id(),
+        $causerId = Auth::id();
+        $propertiesPayload = $properties === [] ? null : array_merge($properties, ['causer_id' => $causerId]);
+
+        $row = [
+            'admin_user_id' => $causerId,
             'action' => $action,
             'description' => $description,
             'subject_type' => $subject ? get_class($subject) : null,
             'subject_id' => $subject?->getKey(),
-            'properties' => $properties ?: null,
+            'properties' => $propertiesPayload,
             'ip_address' => $request?->ip(),
             'user_agent' => $request?->userAgent(),
-        ]);
+        ];
+
+        if (Schema::hasColumn('admin_activity_log', 'causer_id')) {
+            $row['causer_id'] = $causerId;
+        }
+
+        return AdminActivityLog::create($row);
     }
 }

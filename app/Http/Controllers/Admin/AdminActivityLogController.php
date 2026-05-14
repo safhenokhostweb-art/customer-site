@@ -72,6 +72,9 @@ class AdminActivityLogController extends Controller
             'license.refreshed_config' => 'بروزرسانی تنظیمات از پلتفرم',
             'license.refreshed_modules' => 'بروزرسانی فهرست ماژول‌ها',
             'setting.updated' => 'ویرایش تنظیمات',
+            'order.status_changed' => 'تغییر وضعیت سفارش',
+            'blog.post_published' => 'انتشار مطلب وبلاگ',
+            'blog.post_scheduled' => 'زمان‌بندی انتشار مطلب وبلاگ',
         ];
     }
 }

@@ -21,6 +21,7 @@ class AdminActivityLog extends Model
 
     protected $fillable = [
         'admin_user_id',
+        'causer_id',
         'action',
         'description',
         'subject_type',
@@ -39,6 +40,11 @@ class AdminActivityLog extends Model
         return $this->belongsTo(User::class, 'admin_user_id');
     }
 
+    public function causer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'causer_id');
+    }
+
     /** برچسب فارسی عملیات برای نمایش در UI. */
     public static function actionLabel(string $action): string
     {
@@ -50,6 +56,9 @@ class AdminActivityLog extends Model
             'license.refreshed_config' => 'بروزرسانی تنظیمات از پلتفرم',
             'license.refreshed_modules' => 'بروزرسانی فهرست ماژول‌ها',
             'setting.updated' => 'ویرایش تنظیمات',
+            'order.status_changed' => 'تغییر وضعیت سفارش',
+            'blog.post_published' => 'انتشار مطلب وبلاگ',
+            'blog.post_scheduled' => 'زمان‌بندی انتشار مطلب وبلاگ',
         ];
 
         return $labels[$action] ?? $action;

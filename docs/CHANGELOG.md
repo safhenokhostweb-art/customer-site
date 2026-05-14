@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Wave 8.0b — Audit coverage closeout (customer-site) — ۱۴۰۵/۰۲/۲۴
+
+- ثبت `blog.post_published` و `blog.post_scheduled` در `admin_activity_log` از `Admin\PostController` هنگام انتشار/زمان‌بندی.
+- `AdminActivityLogger`: پر کردن `causer_id` (در صورت وجود ستون) و ادغام `causer_id` در properties؛ برچسب‌های فارسی برای `order.status_changed`، blog.* در `AdminActivityLog` و فیلتر UI.
+- `config/audit.php`، دستور `admin-activity-log:prune`، زمان‌بندی روزانه در `bootstrap/app.php` (هم‌نام envهای `AUDIT_RETENTION_DAYS` / `AUDIT_PRUNE_DRY_RUN` با پلتفرم).
+- به‌روزرسانی راهنمای `resources/views/admin/activity-log/guide.blade.php` و ردیف `admin_activity_log` در `docs/PROJECT-GUIDE.md`.
+- تست `Wave3AdminActivityLogTest`: ستون `causer_id` و برچسب‌های جدید.
+
 ### Phase 2 / Wave 7.0c — UX Uniformity Sweep — ۱۴۰۵/۰۲/۲۳
 
 پاس یکنواخت‌سازی UX روی پنل ادمین tenant: راهنماهای فارسی برای ۴ ماژول اصلی فروشگاه و وبلاگ (orders, products, posts, coupons)، breadcrumb قابل استفاده مجدد روی ۵ صفحهٔ مهم (dashboard, forms, orders, products, posts)، و نشان «به‌زودی» برای ماژول‌های placeholder که UI اختصاصی هنوز ندارند. شاخه: `phase7-wave7c`. صفر مایگریشن. صفر تغییر controller/middleware/service/route. تنها viewهای admin و یک partial جدید لمس شده‌اند. regression suite کامل پس از این wave: **۱۸۳ pass، ۲ risky (baseline)، ۰ failure** (۹ تست جدید Wave 7.0c).

@@ -33,7 +33,7 @@ class Wave3AdminActivityLogTest extends TestCase
     {
         $this->assertTrue(Schema::hasTable('admin_activity_log'));
         $this->assertTrue(Schema::hasColumns('admin_activity_log', [
-            'id', 'admin_user_id', 'action', 'description',
+            'id', 'admin_user_id', 'causer_id', 'action', 'description',
             'subject_type', 'subject_id', 'properties',
             'ip_address', 'user_agent', 'created_at', 'updated_at',
         ]));
@@ -112,6 +112,9 @@ class Wave3AdminActivityLogTest extends TestCase
         $this->assertSame('بروزرسانی تنظیمات از پلتفرم', AdminActivityLog::actionLabel('license.refreshed_config'));
         $this->assertSame('بروزرسانی فهرست ماژول‌ها', AdminActivityLog::actionLabel('license.refreshed_modules'));
         $this->assertSame('ویرایش تنظیمات', AdminActivityLog::actionLabel('setting.updated'));
+        $this->assertSame('تغییر وضعیت سفارش', AdminActivityLog::actionLabel('order.status_changed'));
+        $this->assertSame('انتشار مطلب وبلاگ', AdminActivityLog::actionLabel('blog.post_published'));
+        $this->assertSame('زمان‌بندی انتشار مطلب وبلاگ', AdminActivityLog::actionLabel('blog.post_scheduled'));
     }
 
     public function test_action_label_falls_back_to_action_key_for_unknown_actions(): void
