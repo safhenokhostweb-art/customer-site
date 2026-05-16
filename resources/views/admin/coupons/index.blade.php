@@ -1,75 +1,24 @@
-@extends('admin.layout')
-@section('title', 'کوپن‌ها')
-@section('header', 'کوپن‌ها')
+@extends(\App\Helpers\SiteHelper::view('layout'))
+@section('title', 'فاکتور ' . $invoice->invoice_number)
 @section('content')
-
-@include('admin.coupons.guide')
-
-<div class="admin-page">
-    <div class="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-sm">
-        <strong>راهنما:</strong> کدهای تخفیف در صفحهٔ سبد خرید و هنگام تکمیل سفارش قابل استفاده‌اند. حداقل مبلغ سفارش (اختیاری) تعیین می‌کند کوپن فقط برای سفارش‌های بالاتر از آن مبلغ اعمال شود.
-    </div>
-    <div class="admin-page-head">
-        <p class="text-slate-600 text-sm">مدیریت کدهای تخفیف برای مشتریان.</p>
-        <div class="admin-page-tools">
-            <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                کوپن جدید
-            </a>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="table-responsive">
-            <table>
-            <thead>
-                <tr>
-                    <th>کد</th>
-                    <th>تخفیف</th>
-                    <th>حداقل سفارش</th>
-                    <th>انقضا</th>
-                    <th>استفاده</th>
-                    <th>وضعیت</th>
-                    <th style="width:180px">عملیات</th>
-                </tr>
-            </thead>
+<main>
+    <div class="main-inner">
+        <h1>فاکتور {{ $invoice->invoice_number }}</h1>
+        <p>مشتری: {{ $invoice->customer_name }}</p>
+        <table class="card" style="margin-top:1rem;">
+            <thead><tr><th>عنوان</th><th>قیمت</th><th>تعداد</th><th>جمع</th></tr></thead>
             <tbody>
-                @forelse($coupons as $c)
-                    <tr>
-                        <td><code class="px-2 py-1 bg-slate-100 rounded text-sm font-mono">{{ $c->code }}</code></td>
-                        <td><span class="font-semibold text-indigo-600">{{ $c->discount_percent }}٪</span></td>
-                        <td>{{ $c->min_order_amount ? number_format($c->min_order_amount) . ' تومان' : '—' }}</td>
-                        <td>{{ $c->expires_at ? \App\Helpers\Jalali::formatFa($c->expires_at, 'Y/m/d') : '—' }}</td>
-                        <td>{{ $c->used_count }}{{ $c->usage_limit ? ' / ' . $c->usage_limit : '' }}</td>
-                        <td>
-                            @if($c->is_active)
-                                <span class="badge badge-success">فعال</span>
-                            @else
-                                <span class="badge badge-danger">غیرفعال</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('admin.coupons.edit', $c) }}" class="btn btn-primary btn-sm">ویرایش</a>
-                                <form method="post" action="{{ route('admin.coupons.destroy', $c) }}" class="inline" onsubmit="return confirm('آیا از حذف این کوپن اطمینان دارید؟');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="admin-empty">هنوز کوپنی ثبت نشده است. <a href="{{ route('admin.coupons.create') }}" class="text-indigo-600 hover:underline">اولین کوپن را ایجاد کنید</a></td>
-                    </tr>
-                @endforelse
+                @foreach($invoice->items as $item)
+                    <tr><td>{{ $item->title }}</td><td>{{ \App\Helpers\NumberHelper::formatFa($item->price) }}</td><td>{{ $item->quantity }}</td><td>{{ \App\Helpers\NumberHelper::formatFa($item->total) }}</td></tr>
+                @endforeach
             </tbody>
         </table>
-        </div>
+        <p style="margin-top:1rem;"><strong>جمع کل: {{ \App\Helpers\NumberHelper::formatFa($invoice->total) }} تومان</strong></p>
+        @if($invoice->status === 'pending')
+            <a href="{{ route('invoice.pay', $invoice->invoice_number) }}" class="btn btn-primary" style="display:inline-block;margin-top:1rem;padding:0.75rem 1.5rem;background:#4f46e5;color:#fff;border-radius:0.5rem;text-decoration:none;">پرداخت</a>
+        @elseif($invoice->status === 'paid')
+            <p style="color:#166534;">این فاکتور پرداخت شده است.</p>
+        @endif
     </div>
-    @if($coupons->hasPages())
-        <div class="admin-pagination">{{ $coupons->links() }}</div>
-    @endif
-</div>
+</main>
 @endsection
