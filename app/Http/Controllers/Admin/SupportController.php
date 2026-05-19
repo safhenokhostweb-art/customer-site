@@ -8,14 +8,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 /**
- * ارسال تیکت پشتیبانی به پلتفرم.
+ * ارسال تیکت پشتیبانی به پلتفرم و نمایش تاریخچه تیکت‌ها.
  */
 class SupportController extends Controller
 {
     public function index()
     {
         $license = License::current();
-        return view('admin.support.index', compact('license'));
+        $tickets = collect();
+        $error = null;
+
+        if ($license && !empty($license->license_key) && !empty($license->domain)) {
+            try {
+                $platformUrl = rtrim(config('site.platform_url', ''), '/');
+                if (!empty($platformUrl)) {
+                    $response = Http::timeout(10)->get($platformUrl . '/api/support-tickets', [
+                        'license_key' => $license->license_key,
+                        'domain' => $license->domain,
+                    ]);
+                    $data = $response->json();
+                    if (($data['success'] ?? false)) {
+                        $tickets = collect($data['tickets'] ?? []);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $error = 'خطا در دریافت تاریخچه تیکت‌ها';
+            }
+        }
+
+        return view('admin.support.index', compact('license', 'tickets', 'error'));
     }
 
     public function store(Request $request)
@@ -49,7 +70,7 @@ class SupportController extends Controller
 
             $data = $response->json();
             if ($response->successful() && ($data['success'] ?? false)) {
-                return back()->with('success', 'تیکت شما ثبت شد. به‌زودی پاسخ داده می‌شود.');
+                return redirect()->route('admin.support.index')->with('success', 'تیکت شما با موفقیت ثبت شد. به‌زودی پاسخ داده می‌شود.');
             }
 
             return back()->with('error', $data['message'] ?? 'خطا در ثبت تیکت.');

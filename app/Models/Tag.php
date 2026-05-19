@@ -3,14 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Tag extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    use HasFactory, SoftDeletes;
 
-    public function posts(): BelongsToMany
+    protected $fillable = [
+        'name',
+        'slug',
+        'color',
+        'description',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    /**
+     * Get all users tagged with this tag.
+     */
+    public function users(): MorphToMany
     {
-        return $this->belongsToMany(Post::class, 'post_tag');
+        return $this->morphedByMany(User::class, 'taggable');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }
