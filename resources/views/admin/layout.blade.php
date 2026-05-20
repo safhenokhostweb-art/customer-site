@@ -9,9 +9,13 @@
     <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @include('partials.customer-admin-sidebar-theme')
     <link rel="stylesheet" href="{{ asset('css/admin-modules.css') }}?v={{ @filemtime(public_path('css/admin-modules.css')) ?: time() }}">
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.platform-styles')
     @include('admin.partials.persian-date-admin-styles')
+    <style>
+        @keyframes badge-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+        .badge-blink{animation:badge-blink 1.5s infinite}
+    </style>
     @stack('head')
 </head>
 <body class="admin-body">
@@ -48,9 +52,12 @@
                                     <div class="admin-sidebar-item-list sidebar-group-items is-collapsed" data-group-items="{{ $loop->index }}">
                                         @foreach($visibleKeys as $key)
                                             @php $routeName = \App\Helpers\AdminMenu::getRoute($key); $routeParams = \App\Helpers\AdminMenu::getRouteParams($key); @endphp
-                                            <a href="{{ route($routeName, $routeParams) }}" class="sidebar-link {{ \App\Helpers\AdminMenu::isActive($key) ? 'active' : '' }}">
+                                            <a href="{{ route($routeName, $routeParams) }}" class="sidebar-link {{ \App\Helpers\AdminMenu::isActive($key) ? 'active' : '' }}" style="position:relative">
                                                 @include('admin.partials.sidebar-icon', ['key' => $key])
                                                 <span class="sidebar-text">{{ \App\Helpers\AdminMenu::getTitle($key) }}</span>
+                                                @if($key === 'support')
+                                                    <span id="support-unread-badge" style="display:none;position:absolute;left:0.5rem;top:50%;transform:translateY(-50%);min-width:1.25rem;height:1.25rem;padding:0 0.375rem;border-radius:9999px;font-size:0.625rem;font-weight:700;align-items:center;justify-content:center;background:#ef4444;color:#fff;box-shadow:0 2px 6px rgba(239,68,68,0.4)">0</span>
+                                                @endif
                                             </a>
                                         @endforeach
                                     </div>
@@ -205,6 +212,39 @@
                 setOpen(open);
             });
         });
+    })();
+    // Polling for unread support ticket count (notification badge)
+    (function(){
+        var badge = document.getElementById('support-unread-badge');
+        if (!badge) return;
+        var platformUrl = '{{ rtrim(config("site.platform_url", ""), "/") }}';
+        var licenseKey = '{{ optional(\App\Models\License::current())->license_key ?? "" }}';
+        var domain = '{{ optional(\App\Models\License::current())->domain ?? "" }}';
+        if (!platformUrl || !licenseKey || !domain) return;
+        function checkUnread() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', platformUrl + '/api/support-tickets/unread-count?license_key=' + encodeURIComponent(licenseKey) + '&domain=' + encodeURIComponent(domain), true);
+            xhr.timeout = 8000;
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.success && data.unread_count > 0) {
+                            badge.textContent = data.unread_count;
+                            badge.style.display = 'inline-flex';
+                            badge.classList.add('badge-blink');
+                        } else {
+                            badge.style.display = 'none';
+                            badge.classList.remove('badge-blink');
+                        }
+                    } catch(e) {}
+                }
+            };
+            xhr.onerror = function(){};
+            xhr.send();
+        }
+        checkUnread();
+        setInterval(checkUnread, 30000);
     })();
     </script>
     @stack('scripts')

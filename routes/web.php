@@ -281,7 +281,11 @@ Route::middleware('install.check')->group(function () {
         });
         Route::middleware('permission:support')->group(function () {
             Route::get('support', [AdminSupportController::class, 'index'])->name('support.index');
+            Route::get('support/create', [AdminSupportController::class, 'create'])->name('support.create');
             Route::post('support', [AdminSupportController::class, 'store'])->name('support.store');
+            Route::get('support/{ticketId}', [AdminSupportController::class, 'show'])->name('support.show');
+            Route::get('support/history', [AdminSupportController::class, 'history'])->name('support.history');
+            Route::post('support/{ticketId}/reply', [AdminSupportController::class, 'reply'])->name('support.reply');
         });
 
         // Phase 5 / Wave 3 / P1-2: لاگ فعالیت ادمین (فقط نمایش؛ نوشتن از سرویس‌ها انجام می‌شود).

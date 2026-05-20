@@ -45,6 +45,7 @@ class AdminMenu
         'modules_changelog' => 'تاریخچه ماژول‌ها',
         'module_store' => 'فروشگاه ماژول',
         'support' => 'پشتیبانی',
+        'support_history' => 'تاریخچه تیکت‌ها',
         'activity_log' => 'لاگ فعالیت ادمین',
         'advanced_search' => 'جستجوی پیشرفته',
         'menu' => 'منو و ناوبری',
@@ -124,6 +125,7 @@ class AdminMenu
         'modules_changelog' => 'admin.modules.changelog',
         'module_store' => 'admin.module-store.index',
         'support' => 'admin.support.index',
+        'support_history' => 'admin.support.history',
         'activity_log' => 'admin.activity-log.index',
         'advanced_search' => 'admin.modules.show',
         'menu' => 'admin.menus.index',
@@ -289,7 +291,7 @@ class AdminMenu
             'اشتراک و آموزش' => ['subscription', 'courses'],
             'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
-            'لایسنس، ماژول‌ها و پشتیبانی' => ['license', 'modules', 'modules_changelog', 'module_store', 'support', 'bank_gateway', 'activity_log'],
+            'لایسنس، ماژول‌ها و پشتیبانی' => ['license', 'modules', 'modules_changelog', 'module_store', 'support', 'support_history', 'bank_gateway', 'activity_log'],
         ];
     }
 
@@ -460,7 +462,7 @@ class AdminMenu
         if (in_array($key, self::getDynamicPlatformMenuKeys(), true)) {
             return true;
         }
-        if ($key === 'dashboard' || $key === 'pages' || $key === 'captcha' || $key === 'theme_design' || $key === 'builder_health' || $key === 'settings' || $key === 'license' || $key === 'modules' || $key === 'modules_changelog' || $key === 'support' || $key === 'activity_log') {
+        if ($key === 'dashboard' || $key === 'pages' || $key === 'captcha' || $key === 'theme_design' || $key === 'builder_health' || $key === 'settings' || $key === 'license' || $key === 'modules' || $key === 'modules_changelog' || $key === 'support' || $key === 'support_history' || $key === 'activity_log') {
             return true;
         }
         if ($key === 'module_store') {
