@@ -1,5 +1,12 @@
 @php
     use App\Helpers\Jalali;
+    // Use hardcoded defaults since Setting model doesn't exist in customer-site
+    $chatColors = [
+        'customer_bg' => '#e3f2fd',
+        'customer_text' => '#1a1a2e',
+        'staff_bg' => '#dcf8c6',
+        'staff_text' => '#1a1a2e',
+    ];
 @endphp
 
 @extends('admin.layout')
@@ -57,7 +64,7 @@
     {{-- Chat Panel (2/3 width) --}}
     <div class="lg:col-span-2">
         {{-- Chat Header / Ticket Info Bar --}}
-        <div class="glass-card-strong rounded-b-none overflow-hidden">
+        <div class="bg-white rounded-t-2xl shadow-sm border border-gray-200 border-b-0 overflow-hidden">
             <div class="p-4 border-b border-gray-100">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
@@ -95,11 +102,18 @@
             </div>
         </div>
 
-        {{-- Chat Messages Area --}}
-        <div class="glass-card-strong rounded-t-none border-t-0 overflow-hidden"
+        {{-- Chat Messages Area with Alpine.js --}}
+        <div class="bg-white shadow-sm border border-gray-200 border-t-0"
+             x-data="supportChat()"
+             data-customer-bg="{{ $chatColors['customer_bg'] }}"
+             data-customer-text="{{ $chatColors['customer_text'] }}"
+             data-staff-bg="{{ $chatColors['staff_bg'] }}"
+             data-staff-text="{{ $chatColors['staff_text'] }}"
              style="min-height: 400px; display: flex; flex-direction: column;">
-            <div class="flex-1 overflow-y-auto p-4 space-y-1"
-                 style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); max-height: 450px;">
+            <div x-ref="chatMessages"
+                 @scroll="handleScroll"
+                 class="flex-1 overflow-y-auto p-4 space-y-1"
+                 style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); max-height: 450px; scroll-behavior: smooth;">
 
                 {{-- Initial Message (Customer) --}}
                 <div class="flex items-end gap-2 max-w-[85%] sm:max-w-[75%] mb-4" style="align-self: flex-start;">
@@ -108,7 +122,7 @@
                     </div>
                     <div>
                         <div class="rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm"
-                             style="background-color: #e3f2fd; color: #1a1a2e;">
+                             style="background-color: {{ $chatColors['customer_bg'] }}; color: {{ $chatColors['customer_text'] }};">
                             <p class="text-xs font-semibold mb-1 opacity-80">{{ $ticket['customer_name'] ?? 'شما' }}</p>
                             <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ $ticket['message'] ?? '' }}</p>
                             @if(!empty($ticket['attachments']))
@@ -165,7 +179,7 @@
                         @endif
                         <div>
                             <div class="rounded-2xl px-4 py-2.5 shadow-sm {{ $isStaff ? 'rounded-bl-sm' : 'rounded-br-sm' }}"
-                                 style="background-color: {{ $isStaff ? '#dcf8c6' : '#e3f2fd' }}; color: {{ $isStaff ? '#1a1a2e' : '#1a1a2e' }};">
+                                 style="background-color: {{ $isStaff ? $chatColors['staff_bg'] : $chatColors['customer_bg'] }}; color: {{ $isStaff ? $chatColors['staff_text'] : $chatColors['customer_text'] }};">
                                 <p class="text-xs font-semibold mb-1 opacity-80">
                                     {{ $authorName }}
                                     @if($isStaff)
@@ -193,24 +207,48 @@
                         </div>
                     </div>
                 @endforeach
+
+                {{-- Scroll to bottom button --}}
+                <div x-show="showScrollBtn"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="sticky bottom-2 flex justify-center">
+                    <button @click="scrollDown"
+                            class="bg-white text-gray-600 rounded-full px-4 py-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-all text-xs font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        پیام‌های جدید
+                    </button>
+                </div>
             </div>
 
-            {{-- Reply Input --}}
+            {{-- Reply Input with Alpine.js loading state --}}
             @if(($ticket['status'] ?? '') !== 'closed')
             <div class="border-t border-gray-200 bg-white/80 p-3">
-                <form method="POST" action="{{ route('admin.support.reply', $ticket['id']) }}" class="flex items-end gap-2">
+                <form method="POST" action="{{ route('admin.support.reply', $ticket['id']) }}"
+                      @submit="isSending = true; setTimeout(() => { isSending = false; }, 3000);"
+                      class="flex items-end gap-2">
                     @csrf
                     <div class="flex-1 relative">
                         <textarea name="message"
+                                  x-model="message"
                                   class="w-full rounded-2xl border border-gray-300 resize-none py-3 px-4 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                                   rows="2" required maxlength="5000"
                                   placeholder="پاسخ خود را بنویسید..."
-                                  style="background:rgba(255,255,255,0.8)"></textarea>
+                                  style="background:rgba(255,255,255,0.8)"
+                                  @keydown.enter.prevent="if(!$event.shiftKey) $el.closest('form').submit()"></textarea>
                         <small class="text-[10px] text-gray-400 mt-1 block mr-2">اینتر = ارسال | Shift+Enter = خط جدید</small>
                     </div>
                     <button type="submit"
-                            class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg transition-all">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            :disabled="isSending || !message.trim()"
+                            class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all"
+                            :class="isSending || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
+                        <template x-if="!isSending">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        </template>
+                        <template x-if="isSending">
+                            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </template>
                     </button>
                 </form>
             </div>
@@ -295,4 +333,5 @@
 </div>
 @endif
 </div>
+
 @endsection

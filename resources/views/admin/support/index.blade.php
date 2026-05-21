@@ -25,7 +25,10 @@
 
 @section('content')
 
+<div class="admin-page">
+
 @if(session('success'))
+
 <div class="glass-card-strong mb-6 p-4 border-r-4 border-r-green-400 flex items-center gap-3 rounded-2xl" x-data="{ show: true }" x-show="show" x-transition>
     <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span class="text-sm text-green-800 font-medium">{{ session('success') }}</span>
@@ -81,13 +84,15 @@ $openCount = $tickets->filter(fn($t) => ($t['status'] ?? '') === 'open')->count(
 $inProgressCount = $tickets->filter(fn($t) => ($t['status'] ?? '') === 'in_progress')->count();
 $closedCount = $tickets->filter(fn($t) => ($t['status'] ?? '') === 'closed')->count();
 $totalCount = $tickets->count();
+$breachCount = 0; // SLA data not available via API - kept as 0
 @endphp
 
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-indigo-100 text-indigo-700">📫</div><div><div class="text-2xl font-bold text-gray-900">{{ $totalCount }}</div><div class="text-xs text-gray-500 mt-0.5">کل تیکت‌ها</div></div></div></div>
-    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-yellow-100 text-yellow-700">🟡</div><div><div class="text-2xl font-bold text-gray-900">{{ $openCount }}</div><div class="text-xs text-gray-500 mt-0.5">باز</div></div></div></div>
-    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-blue-100 text-blue-700">🔵</div><div><div class="text-2xl font-bold text-gray-900">{{ $inProgressCount }}</div><div class="text-xs text-gray-500 mt-0.5">در حال بررسی</div></div></div></div>
-    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-green-100 text-green-700">✅</div><div><div class="text-2xl font-bold text-gray-900">{{ $closedCount }}</div><div class="text-xs text-gray-500 mt-0.5">بسته شده</div></div></div></div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-indigo-100 text-indigo-700">📫</div><div><div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\NumberHelper::formatFa($totalCount) }}</div><div class="text-xs text-gray-500 mt-0.5">کل تیکت‌ها</div></div></div></div>
+    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-yellow-100 text-yellow-700">🟡</div><div><div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\NumberHelper::formatFa($openCount) }}</div><div class="text-xs text-gray-500 mt-0.5">باز</div></div></div></div>
+    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-blue-100 text-blue-700">🔵</div><div><div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\NumberHelper::formatFa($inProgressCount) }}</div><div class="text-xs text-gray-500 mt-0.5">در حال بررسی</div></div></div></div>
+    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-green-100 text-green-700">✅</div><div><div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\NumberHelper::formatFa($closedCount) }}</div><div class="text-xs text-gray-500 mt-0.5">بسته شده</div></div></div></div>
+    <div class="ticket-stat-card"><div class="flex items-center gap-3"><div class="ticket-stat-card__icon bg-gray-100 text-gray-600">⚠️</div><div><div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\NumberHelper::formatFa($breachCount) }}</div><div class="text-xs text-gray-500 mt-0.5">SLA نقض شده</div></div></div></div>
 </div>
 
 {{-- Actions --}}
@@ -128,7 +133,7 @@ $totalCount = $tickets->count();
 <div class="glass-card-strong overflow-hidden rounded-2xl">
 <div class="overflow-x-auto scrollbar-thin">
 <table class="w-full text-right border-collapse">
-<thead><tr class="border-b border-gray-100 bg-gray-50/50"><th class="p-3 pr-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">شماره</th><th class="p-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">موضوع</th><th class="p-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">وضعیت</th><th class="p-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">اولویت</th><th class="p-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">تاریخ</th><th class="p-3 pl-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">عملیات</th></tr></thead>
+<thead><tr><th class="p-3 pr-5">شماره</th><th class="p-3">موضوع</th><th class="p-3">وضعیت</th><th class="p-3">اولویت</th><th class="p-3">تاریخ</th><th class="p-3 pl-5">عملیات</th></tr></thead>
 <tbody>
 @forelse($tickets as $t)
 <tr class="ticket-row border-b border-gray-100" x-show="
@@ -172,4 +177,15 @@ $totalCount = $tickets->count();
 </div>
 </div>
 
+{{-- Pagination --}}
+@if(method_exists($tickets, 'links'))
+<div class="mt-6 flex justify-center">
+{{ $tickets->links() }}
+</div>
+@endif
+
+<x-module-features module="support" />
+@include('admin.support.guide')
+</div>
 @endsection
+
