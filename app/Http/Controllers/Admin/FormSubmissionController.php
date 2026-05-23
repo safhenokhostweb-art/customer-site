@@ -50,7 +50,7 @@ class FormSubmissionController extends Controller
         $columnOrder = Session::get('submission_column_order', $this->defaultColumnOrder($dataKeys));
         $forms = Form::orderBy('title')->get(['id', 'title']);
 
-        return view('admin.forms.submissions.index', compact('submissions', 'dataKeys', 'columnOrder', 'forms'));
+        return view('forms::admin.forms.submissions.index', compact('submissions', 'dataKeys', 'columnOrder', 'forms'));
     }
 
     public function updateColumnOrder(Request $request)

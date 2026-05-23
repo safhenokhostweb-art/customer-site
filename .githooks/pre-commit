@@ -1,0 +1,33 @@
+#!/bin/sh
+# PHASE 5 — PRE-COMMIT DRIFT CHECK (customer-site)
+# Validates that new files don't duplicate saas-platform shared modules.
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT" || exit 0
+
+SAAS_DRIFT_SCRIPT="$REPO_ROOT/../saas-platform/scripts/drift-detect.php"
+
+if [ ! -f "$SAAS_DRIFT_SCRIPT" ]; then
+    exit 0
+fi
+
+# Only run on PHP files and Blade files
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(php|blade\.php)$' || true)
+
+if [ -z "$CHANGED_FILES" ]; then
+    exit 0
+fi
+
+# Run drift check from customer-site perspective
+php "$SAAS_DRIFT_SCRIPT" --check-blade --check-controllers --check-ownership 2>&1
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo ""
+    echo "❌ PRE-COMMIT DRIFT CHECK FAILED"
+    echo "   New files duplicate saas-platform shared modules."
+    echo "   Use shared packages instead of duplicating code."
+    exit 1
+fi
+
+exit 0

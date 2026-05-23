@@ -47,7 +47,6 @@ use App\Http\Controllers\Admin\SeoAdvancedController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use App\Http\Controllers\Admin\FormController;
 use App\Http\Controllers\Admin\FormSubmissionController;
-use App\Http\Controllers\Front\FormController as FrontFormController;
 use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\CurrencyReformController;
 use App\Http\Controllers\Admin\CaptchaController;
@@ -161,16 +160,6 @@ Route::middleware('install.check')->group(function () {
     });
     Route::middleware('module:business_card')->group(function () {
         Route::get('/card/{slug}', [FrontBusinessCardController::class, 'show'])->name('business-card.show');
-    });
-
-    Route::middleware('module:forms')->group(function () {
-        Route::get('/forms', [FrontFormController::class, 'index'])->name('forms.index');
-        Route::get('/forms/{slug}', [FrontFormController::class, 'show'])->name('forms.show');
-        // Wave 7.0b: throttle the public submit endpoint (10/minute scoped
-        // to identity + slug — see AppServiceProvider::configureFormsWriteRateLimiters).
-        Route::post('/forms/{slug}', [FrontFormController::class, 'submit'])
-            ->middleware('throttle:forms-submit')
-            ->name('forms.submit');
     });
 
     // محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) — فقط برای سایت مالک

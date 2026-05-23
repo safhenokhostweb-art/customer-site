@@ -26,9 +26,9 @@ class FormController extends Controller
             ->withCount('submissions')
             ->withCount(['fields' => fn ($q) => $q->where('is_active', true)])
             ->latest()
-            ->get();
+            ->paginate(12);
 
-        return view('admin.forms.index', compact('forms'));
+        return view('forms::admin.forms.index', compact('forms'));
     }
 
     public function create()
@@ -38,7 +38,7 @@ class FormController extends Controller
                 ->with('error', 'جدول فرم‌ها وجود ندارد. لطفاً دستور php artisan migrate را اجرا کنید.');
         }
 
-        return view('admin.forms.create');
+        return view('forms::admin.forms.create');
     }
 
     public function store(Request $request)
@@ -70,7 +70,7 @@ class FormController extends Controller
     {
         $form->load('fields');
 
-        return view('admin.forms.edit', compact('form'));
+        return view('forms::admin.forms.edit', compact('form'));
     }
 
     public function update(Request $request, Form $form)
@@ -127,7 +127,7 @@ class FormController extends Controller
             }
         }
 
-        return view('admin.forms.preview', compact('form', 'captcha'));
+        return view('forms::admin.forms.preview', compact('form', 'captcha'));
     }
 
     public function storeField(Request $request, Form $form)

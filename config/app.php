@@ -179,7 +179,6 @@ return [
         /*
          * Shared Module Service Providers...
          */
-        SaasPlatform\Modules\Tickets\Providers\TicketsServiceProvider::class,
     ],
 
 ];
