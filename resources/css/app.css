@@ -31,6 +31,9 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../../../saas-platform/packages/saas-platform/modules/forms/resources/views/**/*.blade.php';
+@source '../../../saas-platform/packages/saas-platform/modules/tickets/resources/views/**/*.blade.php';
+@source '../../../saas-platform/packages/saas-platform/modules/forms/resources/**/*.php';
 
 @theme {
     --font-sans: 'Vazirmatn', 'Tahoma', ui-sans-serif, system-ui, sans-serif;

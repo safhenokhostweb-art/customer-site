@@ -15,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \SaaSPlatform\Modules\Forms\Contracts\FormServiceInterface::class,
+            \SaaSPlatform\Modules\Forms\Services\FormService::class
+        );
     }
 
     public function boot(): void

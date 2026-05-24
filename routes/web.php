@@ -45,8 +45,8 @@ use App\Http\Controllers\Admin\AdvertisementController;
 use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Admin\SeoAdvancedController;
 use App\Http\Controllers\Admin\PlatformModuleController;
-use App\Http\Controllers\Admin\FormController;
-use App\Http\Controllers\Admin\FormSubmissionController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormSubmissionController;
 use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\CurrencyReformController;
 use App\Http\Controllers\Admin\CaptchaController;
@@ -428,19 +428,21 @@ Route::middleware('install.check')->group(function () {
                 ->name('wallet.index')->defaults('slug', 'wallet');
         });
         Route::middleware(['module:forms', 'permission:forms'])->group(function () {
-            Route::get('forms', [FormController::class, 'index'])->name('forms.index');
-            Route::get('forms/create', [FormController::class, 'create'])->name('forms.create');
-            Route::post('forms', [FormController::class, 'store'])->name('forms.store');
-            Route::get('forms/{form}/edit', [FormController::class, 'edit'])->name('forms.edit');
-            Route::put('forms/{form}', [FormController::class, 'update'])->name('forms.update');
-            Route::delete('forms/{form}', [FormController::class, 'destroy'])->name('forms.destroy');
-            Route::get('forms/{form}/preview', [FormController::class, 'preview'])->name('forms.preview');
-            Route::post('forms/{form}/fields', [FormController::class, 'storeField'])->name('forms.fields.store');
-            Route::delete('forms/fields/{field}', [FormController::class, 'destroyField'])->name('forms.fields.destroy');
-            Route::patch('forms/fields/{field}/toggle', [FormController::class, 'toggleField'])->name('forms.fields.toggle');
-            Route::get('forms/submissions', [FormSubmissionController::class, 'index'])->name('forms.submissions.index');
-            Route::get('forms/submissions/export', [FormSubmissionController::class, 'export'])->name('forms.submissions.export');
-            Route::post('forms/submissions/column-order', [FormSubmissionController::class, 'updateColumnOrder'])->name('forms.submissions.column-order');
+            Route::resource('forms', FormController::class)->names([
+                'index'   => 'admin.forms.index',
+                'create'  => 'admin.forms.create',
+                'store'   => 'admin.forms.store',
+                'edit'    => 'admin.forms.edit',
+                'update'  => 'admin.forms.update',
+                'destroy' => 'admin.forms.destroy',
+            ]);
+            Route::get('forms/{form}/preview', [FormController::class, 'preview'])->name('admin.forms.preview');
+            Route::post('forms/{form}/fields', [FormController::class, 'storeField'])->name('admin.forms.fields.store');
+            Route::delete('forms/fields/{field}', [FormController::class, 'destroyField'])->name('admin.forms.fields.destroy');
+            Route::patch('forms/fields/{field}/toggle', [FormController::class, 'toggleField'])->name('admin.forms.fields.toggle');
+            Route::get('forms/submissions', [FormSubmissionController::class, 'index'])->name('admin.forms.submissions.index');
+            Route::get('forms/submissions/export', [FormSubmissionController::class, 'export'])->name('admin.forms.submissions.export');
+            Route::post('forms/submissions/column-order', [FormSubmissionController::class, 'updateColumnOrder'])->name('admin.forms.submissions.column-order');
         });
         Route::middleware('permission:captcha')->group(function () {
             Route::get('captcha', [CaptchaController::class, 'index'])->name('captcha.index');
