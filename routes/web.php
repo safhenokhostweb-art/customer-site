@@ -429,20 +429,20 @@ Route::middleware('install.check')->group(function () {
         });
         Route::middleware(['module:forms', 'permission:forms'])->group(function () {
             Route::resource('forms', FormController::class)->names([
-                'index'   => 'admin.forms.index',
-                'create'  => 'admin.forms.create',
-                'store'   => 'admin.forms.store',
-                'edit'    => 'admin.forms.edit',
-                'update'  => 'admin.forms.update',
-                'destroy' => 'admin.forms.destroy',
+                'index'   => 'forms.index',
+                'create'  => 'forms.create',
+                'store'   => 'forms.store',
+                'edit'    => 'forms.edit',
+                'update'  => 'forms.update',
+                'destroy' => 'forms.destroy',
             ]);
-            Route::get('forms/{form}/preview', [FormController::class, 'preview'])->name('admin.forms.preview');
-            Route::post('forms/{form}/fields', [FormController::class, 'storeField'])->name('admin.forms.fields.store');
-            Route::delete('forms/fields/{field}', [FormController::class, 'destroyField'])->name('admin.forms.fields.destroy');
-            Route::patch('forms/fields/{field}/toggle', [FormController::class, 'toggleField'])->name('admin.forms.fields.toggle');
-            Route::get('forms/submissions', [FormSubmissionController::class, 'index'])->name('admin.forms.submissions.index');
-            Route::get('forms/submissions/export', [FormSubmissionController::class, 'export'])->name('admin.forms.submissions.export');
-            Route::post('forms/submissions/column-order', [FormSubmissionController::class, 'updateColumnOrder'])->name('admin.forms.submissions.column-order');
+            Route::get('forms/{form}/preview', [FormController::class, 'preview'])->name('forms.preview');
+            Route::post('forms/{form}/fields', [FormController::class, 'storeField'])->name('forms.fields.store');
+            Route::delete('forms/fields/{field}', [FormController::class, 'destroyField'])->name('forms.fields.destroy');
+            Route::patch('forms/fields/{field}/toggle', [FormController::class, 'toggleField'])->name('forms.fields.toggle');
+            Route::get('forms/submissions', [FormSubmissionController::class, 'index'])->name('forms.submissions.index');
+            Route::get('forms/submissions/export', [FormSubmissionController::class, 'export'])->name('forms.submissions.export');
+            Route::post('forms/submissions/column-order', [FormSubmissionController::class, 'updateColumnOrder'])->name('forms.submissions.column-order');
         });
         Route::middleware('permission:captcha')->group(function () {
             Route::get('captcha', [CaptchaController::class, 'index'])->name('captcha.index');
