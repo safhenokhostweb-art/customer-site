@@ -13,7 +13,7 @@ class SupportApiClient
 {
     public function index(License $license): array
     {
-        $response = $this->request('get', '/api/support-tickets', $license, []);
+        $response = $this->request('get', '/api/tenant/tickets', $license, []);
 
         return [
             'tickets' => collect($response['tickets'] ?? []),
@@ -23,20 +23,18 @@ class SupportApiClient
 
     public function find(License $license, int|string $ticketId): array
     {
-        $result = $this->index($license);
-        $tickets = $result['tickets'] instanceof Collection ? $result['tickets'] : collect($result['tickets']);
-        $ticket = $tickets->firstWhere('id', (int) $ticketId);
+        $response = $this->request('get', '/api/tenant/tickets/' . (int) $ticketId, $license, []);
 
         return [
-            'ticket' => $ticket,
-            'error' => $result['error'] ?: ($ticket ? null : 'تیکت مورد نظر یافت نشد.'),
+            'ticket' => ($response['success'] ?? false) ? ($response['ticket'] ?? null) : null,
+            'error' => ($response['success'] ?? false) ? null : ($response['message'] ?? 'تیکت مورد نظر یافت نشد.'),
         ];
     }
 
     public function store(License $license, array $payload, array $uploadedFiles = []): array
     {
         $payload['attachments'] = $uploadedFiles;
-        $response = $this->request('post', '/api/support-tickets', $license, $payload);
+        $response = $this->request('post', '/api/tenant/tickets', $license, $payload);
 
         if (!($response['success'] ?? false)) {
             $this->deleteUploadedFiles($uploadedFiles);
@@ -48,7 +46,7 @@ class SupportApiClient
     public function reply(License $license, int|string $ticketId, array $payload, array $uploadedFiles = []): array
     {
         $payload['attachments'] = $uploadedFiles;
-        $response = $this->request('post', '/api/support-tickets/' . (int) $ticketId . '/reply', $license, $payload);
+        $response = $this->request('post', '/api/tenant/tickets/' . (int) $ticketId . '/reply', $license, $payload);
 
         if (!($response['success'] ?? false)) {
             $this->deleteUploadedFiles($uploadedFiles);
@@ -61,23 +59,29 @@ class SupportApiClient
     {
         $uploadedFiles = [];
         foreach ($files as $file) {
-            if (!$file || !$file->isValid()) {
-                continue;
-            }
+    // Skip invalid or missing files
+    if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) {
+        continue;
+    }
 
-            $path = $file->store('support-tickets/' . now()->format('Y/m'), 'public');
-            if (!$path) {
-                continue;
-            }
+    // Verify file actually exists
+    if (!$file->getRealPath() || !file_exists($file->getRealPath())) {
+        continue;
+    }
 
-            $uploadedFiles[] = [
-                'name' => $file->getClientOriginalName(),
-                'path' => $path,
-                'url' => asset(Storage::url($path)),
-                'size' => $file->getSize(),
-                'mime' => $file->getMimeType(),
-            ];
-        }
+    $path = $file->store('support-tickets/' . now()->format('Y/m'), 'public');
+    if (!$path) {
+        continue;
+    }
+
+    $uploadedFiles[] = [
+        'name' => $file->getClientOriginalName(),
+        'path' => $path,
+        'url' => asset(Storage::url($path)),
+        'size' => $file->getSize(),
+        'mime' => $file->getMimeType(),
+    ];
+}
 
         return $uploadedFiles;
     }

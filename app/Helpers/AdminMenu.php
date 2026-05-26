@@ -561,8 +561,118 @@ class AdminMenu
 
     public static function getTitle(string $key): string
     {
+        // PHASE 7.25 — TASK 5: prefer manifest label over hardcoded constant
+        $manifestLabel = self::getManifestLabel($key);
+        if ($manifestLabel !== null) {
+            return $manifestLabel;
+        }
+
         return self::MENU_KEYS[$key]
             ?? self::PLATFORM_MODULE_LABELS[$key]
             ?? str_replace('_', ' ', $key);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PHASE 7.25 — TASK 5: Module-manifest-driven menu resolution
+    // Canonical governance: module menu items MUST derive from
+    // config('module-manifest-{slug}').menu[] (PHASE 7.15 AD-2).
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Manifest key → AdminMenu key mapping.
+     * Maps manifest menu item keys to the AdminMenu keys used in getStaticGroups().
+     */
+    protected static function getManifestKeyMap(): array
+    {
+        return [
+            // forms manifest menu items → AdminMenu keys
+            'forms'             => 'forms',
+            'forms-submissions' => 'forms_submissions',
+            // tickets manifest menu items → AdminMenu keys
+            'tickets'           => 'support',
+            'tickets-sla'       => 'support_history',
+        ];
+    }
+
+    /**
+     * Read a menu item label from the relevant module manifest.
+     * Returns null if no manifest is loaded or the key has no manifest entry.
+     */
+    protected static function getManifestLabel(string $adminMenuKey): ?string
+    {
+        // Reverse-map: AdminMenu key → manifest item key
+        $reverseMap = array_flip(self::getManifestKeyMap());
+        $manifestItemKey = $reverseMap[$adminMenuKey] ?? null;
+        if ($manifestItemKey === null) {
+            return null;
+        }
+
+        // Determine which manifest to read from
+        $manifestSlug = str_starts_with($manifestItemKey, 'forms') ? 'forms' : 'tickets';
+
+        $manifest = config('module-manifest-' . $manifestSlug);
+        if (!is_array($manifest)) {
+            return null;
+        }
+
+        foreach ($manifest['menu'] ?? [] as $item) {
+            if (($item['key'] ?? '') === $manifestItemKey) {
+                return $item['label'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Read a route name from the relevant module manifest.
+     * Returns null if no manifest is loaded or the key has no manifest entry.
+     */
+    public static function getManifestRoute(string $adminMenuKey): ?string
+    {
+        $reverseMap = array_flip(self::getManifestKeyMap());
+        $manifestItemKey = $reverseMap[$adminMenuKey] ?? null;
+        if ($manifestItemKey === null) {
+            return null;
+        }
+
+        $manifestSlug = str_starts_with($manifestItemKey, 'forms') ? 'forms' : 'tickets';
+
+        $manifest = config('module-manifest-' . $manifestSlug);
+        if (!is_array($manifest)) {
+            return null;
+        }
+
+        foreach ($manifest['menu'] ?? [] as $item) {
+            if (($item['key'] ?? '') === $manifestItemKey) {
+                return $item['route'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all module manifest menu items across all loaded manifests.
+     * Used by validators to confirm manifest-driven rendering is active.
+     *
+     * @return array<string, array{key: string, label: string, route: string, manifest_slug: string}>
+     */
+    public static function getAllManifestMenuItems(): array
+    {
+        $items = [];
+        foreach (['forms', 'tickets'] as $slug) {
+            $manifest = config('module-manifest-' . $slug);
+            if (!is_array($manifest)) {
+                continue;
+            }
+            foreach ($manifest['menu'] ?? [] as $item) {
+                if (!isset($item['key'])) {
+                    continue;
+                }
+                $items[$item['key']] = array_merge($item, ['manifest_slug' => $slug]);
+            }
+        }
+        return $items;
     }
 }

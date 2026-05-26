@@ -8,6 +8,22 @@ use App\Http\Requests\Admin\StoreSupportRequest;
 use App\Models\License;
 use App\Services\SupportApiClient;
 
+/**
+ * PHASE 7.25 — TASK 4: Tenant API Proxy Consumer (NOT a module owner).
+ *
+ * This controller does NOT own module business logic. It is a thin HTTP bridge:
+ *   customer-site → SupportApiClient → saas-platform /api/tenant/tickets
+ *
+ * It does NOT:
+ *   ✗ hold local ticket DB models
+ *   ✗ duplicate ticket service logic
+ *   ✗ own view authority (views are in _legacy/ pending package view migration)
+ *
+ * Migration path: PHASE 7.3 will replace local views with tickets:: package views
+ * once tickets::site.* views are refactored to be platform-agnostic.
+ *
+ * @deprecated-views PHASE 7.15 — views at admin.support.* should be tickets::site.*
+ */
 class SupportController extends Controller
 {
     public function __construct(
@@ -55,6 +71,15 @@ class SupportController extends Controller
         $uploadedFiles = $this->supportApiClient->uploadAttachments($request->file('attachments', []));
         $validated = $request->validated();
 
+        // تبدیل tags از string به array
+        $tags = null;
+        if (isset($validated['tags']) && is_string($validated['tags'])) {
+            $tags = array_values(array_filter(
+                array_map('trim', explode('،', $validated['tags'])),
+                fn($tag) => $tag !== ''
+            ));
+        }
+
         $response = $this->supportApiClient->store($license, [
             'subject' => $validated['subject'],
             'message' => $validated['message'],
@@ -62,7 +87,7 @@ class SupportController extends Controller
             'customer_name' => $validated['name'] ?? null,
             'priority' => $validated['priority'] ?? 'normal',
             'category' => $validated['category'] ?? null,
-            'tags' => $validated['tags'] ?? null,
+            'tags' => $tags,
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {

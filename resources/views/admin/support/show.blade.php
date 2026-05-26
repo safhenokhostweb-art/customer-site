@@ -1,3 +1,4 @@
+{{-- @deprecated PHASE 7.15 — Use tickets::site.tickets.show (canonical package view). Route to: tickets.site.show --}}
 @php
     use App\Helpers\Jalali;
     // Use hardcoded defaults since Setting model doesn't exist in customer-site
@@ -300,11 +301,17 @@
                 </div>
                 @endif
                 @if(!empty($ticket['tags']))
-                <div class="flex justify-between">
-                    <span class="text-gray-500">برچسب‌ها</span>
-                    <span class="font-medium text-left" dir="ltr">{{ $ticket['tags'] }}</span>
-                </div>
-                @endif
+<div class="flex justify-between">
+    <span class="text-gray-500">برچسب‌ها</span>
+    <span class="font-medium text-left" dir="ltr">
+        @if(is_array($ticket['tags']))
+            {{ implode('، ', $ticket['tags']) }}
+        @else
+            {{ $ticket['tags'] }}
+        @endif
+    </span>
+</div>
+@endif
                 <div class="flex justify-between">
                     <span class="text-gray-500">تاریخ ایجاد</span>
                     <span class="font-medium">{{ Jalali::formatFa(\Carbon\Carbon::parse($ticket['created_at'] ?? now()), 'Y/m/d H:i') }}</span>
