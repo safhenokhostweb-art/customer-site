@@ -44,6 +44,33 @@ class CaptchaService implements CaptchaServiceInterface
         ];
     }
 
+    public function isAuthCaptchaEnabled(): bool
+    {
+        if (!$this->isModuleEnabled()) {
+            return false;
+        }
+
+        return (string) Setting::get('auth_captcha_enabled', '0') === '1';
+    }
+
+    public function isShopCaptchaEnabled(): bool
+    {
+        if (!$this->isModuleEnabled()) {
+            return false;
+        }
+        return (string) Setting::get('shop_captcha_enabled', '0') === '1';
+    }
+
+    public function getAuthCaptchaConfig(): array
+    {
+        if (!$this->isAuthCaptchaEnabled()) {
+            return ['enabled' => false, 'type' => null, 'hcaptcha_site_key' => '', 'hcaptcha_secret_key' => ''];
+        }
+        $cfg = $this->getForSite(null);
+        $cfg['enabled'] = true;
+
+        return $cfg;
+    }
 
     /**
      * Phase 5 / Wave 5.3 / P1-5: تولید پایلود کپچا برای فرم‌های فروشگاه.

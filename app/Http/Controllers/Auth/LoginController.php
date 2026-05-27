@@ -16,15 +16,16 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         $captcha = ['enabled' => false, 'type' => null, 'hcaptcha_site_key' => '', 'persian_code' => '', 'normal_text' => ''];
-        $cfg = CaptchaService::getAuthCaptchaConfig();
+        $captchaService = app(CaptchaService::class);
+        $cfg = $captchaService->getAuthCaptchaConfig();
         if ($cfg['enabled']) {
             $captcha['enabled'] = true;
             $captcha['type'] = $cfg['type'];
             $captcha['hcaptcha_site_key'] = $cfg['hcaptcha_site_key'];
             if ($cfg['type'] === CaptchaService::TYPE_PERSIAN_NUMBER) {
-                $captcha['persian_code'] = CaptchaService::generatePersianNumber(4);
+                $captcha['persian_code'] = $captchaService->generatePersianNumber(4);
             } elseif ($cfg['type'] === CaptchaService::TYPE_NORMAL) {
-                $gen = CaptchaService::generateNormal();
+                $gen = $captchaService->generateNormal();
                 $captcha['normal_text'] = $gen['text'];
             }
         }
@@ -34,7 +35,8 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $cfg = CaptchaService::getAuthCaptchaConfig();
+        $captchaService = app(CaptchaService::class);
+        $cfg = $captchaService->getAuthCaptchaConfig();
         if ($cfg['enabled']) {
             $captchaValid = false;
             $captchaError = 'کپچا اشتباه است یا منقضی شده. لطفا دوباره تلاش کنید.';
@@ -43,18 +45,18 @@ class LoginController extends Controller
                 if (trim($token) === '') {
                     $captchaError = 'لطفا کپچا را تکمیل کنید.';
                 } else {
-                    $captchaValid = CaptchaService::verifyHcaptcha($token, $cfg['hcaptcha_secret_key']);
+                    $captchaValid = $captchaService->verifyHcaptcha($token, $cfg['hcaptcha_secret_key']);
                     if (!$captchaValid) {
                         $captchaError = 'کپچا تأیید نشد. لطفا دوباره تلاش کنید یا صفحه را بروز کنید.';
                     }
                 }
             } elseif ($cfg['type'] === CaptchaService::TYPE_PERSIAN_NUMBER) {
-                $captchaValid = CaptchaService::validatePersianNumber($request->input('captcha_answer', ''));
+                $captchaValid = $captchaService->validatePersianNumber($request->input('captcha_answer', ''));
                 if (!$captchaValid) {
                     $captchaError = 'کپچا اشتباه است یا منقضی شده. لطفا صفحه را بروز کنید و دوباره عدد نمایش‌داده‌شده را وارد کنید.';
                 }
             } else {
-                $captchaValid = CaptchaService::validateNormal($request->input('captcha_answer', ''));
+                $captchaValid = $captchaService->validateNormal($request->input('captcha_answer', ''));
                 if (!$captchaValid) {
                     $captchaError = 'کپچا اشتباه است یا منقضی شده. لطفا صفحه را بروز کنید و دوباره جواب را وارد کنید.';
                 }
