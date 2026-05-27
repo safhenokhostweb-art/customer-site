@@ -277,6 +277,18 @@ Route::middleware('install.check')->group(function () {
             Route::post('support/{ticketId}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('support.reply');
         });
 
+        // Phase 9.1 — Canonical tickets.site.* route name aliases.
+        // The canonical package views use tickets.site.* route names.
+        // These aliases make route('tickets.site.index') etc. resolve correctly
+        // in customer-site context, overriding the package's DB-based routes.
+        Route::middleware(['permission:support', 'throttle:30,1'])->name('tickets.site.')->prefix('support')->group(function () {
+            Route::get('/', [AdminSupportController::class, 'index'])->name('index');
+            Route::get('/create', [AdminSupportController::class, 'create'])->name('create');
+            Route::post('/', [AdminSupportController::class, 'store'])->name('store');
+            Route::get('/{ticketId}', [AdminSupportController::class, 'show'])->whereNumber('ticketId')->name('show');
+            Route::post('/{ticketId}/replies', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('replies.store');
+        });
+
         // Phase 5 / Wave 3 / P1-2: لاگ فعالیت ادمین (فقط نمایش؛ نوشتن از سرویس‌ها انجام می‌شود).
         Route::get('activity-log', [\App\Http\Controllers\Admin\AdminActivityLogController::class, 'index'])->name('activity-log.index');
         Route::middleware(['module:reviews', 'permission:reviews'])->group(function () {
@@ -465,3 +477,9 @@ Route::middleware('install.check')->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
     });
 });
+
+Route::get('/support', [\App\Http\Controllers\Admin\SupportController::class, 'index'])->name('admin.support.index');
+Route::get('/support/create', [\App\Http\Controllers\Admin\SupportController::class, 'create'])->name('admin.support.create');
+Route::post('/support', [\App\Http\Controllers\Admin\SupportController::class, 'store'])->name('admin.support.store');
+Route::get('/support/{ticketId}', [\App\Http\Controllers\Admin\SupportController::class, 'show'])->name('admin.support.show');
+Route::post('/support/{ticketId}/reply', [\App\Http\Controllers\Admin\SupportController::class, 'reply'])->name('admin.support.reply');

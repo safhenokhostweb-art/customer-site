@@ -5,11 +5,20 @@ namespace App\Providers;
 use App\Models\Page;
 use App\Models\Product;
 use App\Observers\ProductObserver;
+use App\Repositories\SiteRepository;
+use App\Services\CaptchaService;
+use SaaSPlatform\CoreUtils\Contracts\Repositories\SiteRepositoryInterface;
+use SaaSPlatform\CoreUtils\Contracts\Services\ActivityLoggerInterface;
+use SaaSPlatform\CoreUtils\Contracts\Services\AuthUserResolverInterface;
+use SaaSPlatform\CoreUtils\Contracts\Services\CaptchaServiceInterface;
+use SaaSPlatform\CoreUtils\Contracts\Services\DateFormatterInterface;
+use SaaSPlatform\CoreUtils\Contracts\Services\ModuleLicenseServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use SaaSPlatform\CoreUtils\Contracts\TenantContextContract;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +28,49 @@ class AppServiceProvider extends ServiceProvider
             \SaaSPlatform\Modules\Forms\Contracts\FormServiceInterface::class,
             \SaaSPlatform\Modules\Forms\Services\FormService::class
         );
+
+        $this->app->bind(
+            CaptchaServiceInterface::class,
+            CaptchaService::class
+        );
+
+        $this->app->bind(
+            SiteRepositoryInterface::class,
+            SiteRepository::class
+        );
+
+        $this->app->bind(
+            AuthUserResolverInterface::class,
+            \App\Services\AuthUserResolverAdapter::class
+        );
+
+        $this->app->bind(
+            ModuleLicenseServiceInterface::class,
+            \App\Services\NullModuleLicenseAdapter::class
+        );
+
+        $this->app->bind(
+            DateFormatterInterface::class,
+            \App\Services\JalaliDateFormatterAdapter::class
+        );
+
+// Bind ActivityLoggerInterface
+$this->app->bind(
+    ActivityLoggerInterface::class,
+    function () {
+        return new class implements ActivityLoggerInterface {
+            public function log(string $action, ?string $description = null, ?object $subject = null, array $properties = []): void
+            {
+                // No-op implementation for tenant site
+            }
+
+            public function getActivityLog(string $entity, ?int $entityId = null, int $limit = 50): array
+            {
+                return [];
+            }
+        };
+    }
+);
     }
 
     public function boot(): void

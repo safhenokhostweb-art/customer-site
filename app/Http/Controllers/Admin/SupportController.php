@@ -6,23 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReplySupportRequest;
 use App\Http\Requests\Admin\StoreSupportRequest;
 use App\Models\License;
+use App\Models\User;
 use App\Services\SupportApiClient;
+use SaaSPlatform\Modules\Tickets\Dto\TicketProxyData;
 
 /**
- * PHASE 7.25 — TASK 4: Tenant API Proxy Consumer (NOT a module owner).
+ * Phase 9.1 — Canonical Frontend Consumer.
  *
- * This controller does NOT own module business logic. It is a thin HTTP bridge:
+ * This controller is a thin HTTP bridge:
  *   customer-site → SupportApiClient → saas-platform /api/tenant/tickets
  *
- * It does NOT:
- *   ✗ hold local ticket DB models
- *   ✗ duplicate ticket service logic
- *   ✗ own view authority (views are in _legacy/ pending package view migration)
+ * Frontend Authority: ALL views rendered here use tickets::site.tickets.* ONLY.
+ * No local ticket views are rendered by this controller.
  *
- * Migration path: PHASE 7.3 will replace local views with tickets:: package views
- * once tickets::site.* views are refactored to be platform-agnostic.
- *
- * @deprecated-views PHASE 7.15 — views at admin.support.* should be tickets::site.*
+ * Data adaptation: API array responses are wrapped in TicketProxyData DTOs
+ * so that canonical Blade views can use object-style property access.
  */
 class SupportController extends Controller
 {
@@ -30,35 +28,58 @@ class SupportController extends Controller
         protected SupportApiClient $supportApiClient
     ) {}
 
+    public function index()
+    {
+        [$license, $rawTickets, $error] = $this->loadTickets();
+
+        $tickets = TicketProxyData::collectionFromApiResult($rawTickets);
+        $stats   = TicketProxyData::statsFrom($tickets);
+
+        return view('tickets::site.tickets.index', [
+            'tickets' => $tickets,
+            'stats'   => $stats,
+            'error'   => $error,
+        ]);
+    }
+
     public function create()
     {
         $license = License::current();
+        $users   = User::orderBy('name')->get(['id', 'name', 'email', 'mobile']);
 
-        return view('admin.support.create', compact('license'));
+        return view('tickets::site.tickets.create', [
+            'license'            => $license,
+            'users'              => $users,
+            'attachmentsEnabled' => false,
+        ]);
     }
 
     public function show(int|string $ticketId)
     {
         $license = License::current();
-        $ticket = null;
-        $error = null;
+        $ticket  = null;
+        $error   = null;
 
         if ($license && !empty($license->license_key) && !empty($license->domain)) {
-            $result = $this->supportApiClient->find($license, $ticketId);
-            $ticket = $result['ticket'];
-            $error = $result['error'];
+            $result     = $this->supportApiClient->find($license, $ticketId);
+            $rawTicket  = $result['ticket'];
+            $error      = $result['error'];
+
+            if ($rawTicket) {
+                $ticket = TicketProxyData::fromArray(is_array($rawTicket) ? $rawTicket : (array) $rawTicket);
+            }
         } else {
             $error = 'لایسنس فعالی یافت نشد.';
         }
 
-        return view('admin.support.show', compact('license', 'ticket', 'error'));
-    }
+        if (!$ticket) {
+            abort(404);
+        }
 
-    public function index()
-    {
-        [$license, $tickets, $error] = $this->loadTickets();
-
-        return view('admin.support.index', compact('license', 'tickets', 'error'));
+        return view('tickets::site.tickets.show', [
+            'ticket' => $ticket,
+            'error'  => $error,
+        ]);
     }
 
     public function store(StoreSupportRequest $request)
@@ -69,9 +90,8 @@ class SupportController extends Controller
         }
 
         $uploadedFiles = $this->supportApiClient->uploadAttachments($request->file('attachments', []));
-        $validated = $request->validated();
+        $validated     = $request->validated();
 
-        // تبدیل tags از string به array
         $tags = null;
         if (isset($validated['tags']) && is_string($validated['tags'])) {
             $tags = array_values(array_filter(
@@ -80,18 +100,28 @@ class SupportController extends Controller
             ));
         }
 
+        $forUserId = $request->input('for_user_id');
+        if ($forUserId) {
+            $targetUser = User::find($forUserId);
+            if ($targetUser) {
+                $validated['email'] = $targetUser->email;
+                $validated['name']  = $targetUser->name;
+            }
+        }
+
         $response = $this->supportApiClient->store($license, [
-            'subject' => $validated['subject'],
-            'message' => $validated['message'],
-            'customer_email' => $validated['email'],
-            'customer_name' => $validated['name'] ?? null,
-            'priority' => $validated['priority'] ?? 'normal',
-            'category' => $validated['category'] ?? null,
-            'tags' => $tags,
+            'subject'        => $validated['subject'],
+            'message'        => $validated['message'] ?? $validated['description'] ?? '',
+            'customer_email' => $validated['email'] ?? null,
+            'customer_name'  => $validated['name'] ?? null,
+            'priority'       => $validated['priority'] ?? 'normal',
+            'category'       => $validated['category'] ?? null,
+            'tags'           => $tags,
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {
-            return redirect()->route('admin.support.index')->with('success', 'تیکت شما با موفقیت ثبت شد. به‌زودی پاسخ داده می‌شود.');
+            return redirect()->route('tickets.site.index')
+                ->with('success', 'تیکت شما با موفقیت ثبت شد. به‌زودی پاسخ داده می‌شود.');
         }
 
         return back()->with('error', $response['message'] ?? 'خطا در ثبت تیکت.')->withInput();
@@ -99,9 +129,14 @@ class SupportController extends Controller
 
     public function history()
     {
-        [$license, $tickets, $error] = $this->loadTickets();
+        [$license, $rawTickets, $error] = $this->loadTickets();
 
-        return view('admin.support.history', compact('license', 'tickets', 'error'));
+        $tickets = TicketProxyData::collectionFromApiResult($rawTickets);
+
+        return view('tickets::site.tickets.history', [
+            'tickets' => $tickets,
+            'error'   => $error,
+        ]);
     }
 
     public function reply(ReplySupportRequest $request, int|string $ticketId)
@@ -112,15 +147,16 @@ class SupportController extends Controller
         }
 
         $uploadedFiles = $this->supportApiClient->uploadAttachments($request->file('attachments', []));
-        $validated = $request->validated();
+        $validated     = $request->validated();
 
         $response = $this->supportApiClient->reply($license, $ticketId, [
-            'message' => $validated['message'],
-            'customer_name' => auth()->user()->name ?? 'مشتری',
+            'message'       => $validated['message'],
+            'customer_name' => auth()->user()?->name ?? 'مشتری',
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {
-            return redirect()->route('admin.support.show', $ticketId)->with('success', 'پاسخ شما با موفقیت ثبت شد.');
+            return redirect()->route('tickets.site.show', $ticketId)
+                ->with('success', 'پاسخ شما با موفقیت ثبت شد.');
         }
 
         return back()->with('error', $response['message'] ?? 'خطا در ثبت پاسخ.')->withInput();
@@ -130,12 +166,12 @@ class SupportController extends Controller
     {
         $license = License::current();
         $tickets = collect();
-        $error = null;
+        $error   = null;
 
         if ($license && !empty($license->license_key) && !empty($license->domain)) {
-            $result = $this->supportApiClient->index($license);
+            $result  = $this->supportApiClient->index($license);
             $tickets = $result['tickets'];
-            $error = $result['error'];
+            $error   = $result['error'];
         } else {
             $error = 'لایسنس فعالی یافت نشد.';
         }
