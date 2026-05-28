@@ -47,6 +47,10 @@ use App\Http\Controllers\Admin\SeoAdvancedController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use SaaSPlatform\Modules\Forms\Http\Controllers\FormController;
 use SaaSPlatform\Modules\Forms\Http\Controllers\FormSubmissionController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormBuilderController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormAnalyticsController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormAutomationController;
+use SaaSPlatform\Modules\Forms\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\CurrencyReformController;
 use App\Http\Controllers\Admin\CaptchaController;
@@ -449,9 +453,31 @@ Route::middleware('install.check')->group(function () {
                 'destroy' => 'forms.destroy',
             ]);
             Route::get('forms/{form}/preview', [FormController::class, 'preview'])->name('forms.preview');
+            Route::post('forms/{form}/duplicate', [FormController::class, 'duplicate'])->name('forms.duplicate');
             Route::post('forms/{form}/fields', [FormController::class, 'storeField'])->name('forms.fields.store');
             Route::delete('forms/fields/{field}', [FormController::class, 'destroyField'])->name('forms.fields.destroy');
             Route::patch('forms/fields/{field}/toggle', [FormController::class, 'toggleField'])->name('forms.fields.toggle');
+
+            // Enterprise Builder (Phase 10.2.6 — mirrored from package routes with tenant middleware)
+            Route::get('forms/{form}/builder', [FormBuilderController::class, 'show'])->name('forms.builder');
+            Route::post('forms/{form}/builder/fields', [FormBuilderController::class, 'storeField'])->name('forms.builder.fields.store');
+            Route::put('forms/{form}/builder/fields/{field}', [FormBuilderController::class, 'updateField'])->name('forms.builder.fields.update');
+            Route::delete('forms/{form}/builder/fields/{field}', [FormBuilderController::class, 'destroyField'])->name('forms.builder.fields.destroy');
+            Route::post('forms/{form}/builder/fields/{field}/duplicate', [FormBuilderController::class, 'duplicateField'])->name('forms.builder.fields.duplicate');
+            Route::post('forms/{form}/builder/sort', [FormBuilderController::class, 'sortFields'])->name('forms.builder.sort');
+            Route::put('forms/{form}/builder/settings', [FormBuilderController::class, 'updateSettings'])->name('forms.builder.settings');
+
+            // Analytics, Automation, Templates (tenant-accessible)
+            Route::get('forms/{form}/analytics', [FormAnalyticsController::class, 'show'])->name('forms.analytics');
+            Route::get('forms/{form}/automation', [FormAutomationController::class, 'index'])->name('forms.automation.index');
+            Route::post('forms/{form}/automation', [FormAutomationController::class, 'store'])->name('forms.automation.store');
+            Route::put('forms/{form}/automation/{automation}', [FormAutomationController::class, 'update'])->name('forms.automation.update');
+            Route::delete('forms/{form}/automation/{automation}', [FormAutomationController::class, 'destroy'])->name('forms.automation.destroy');
+            Route::patch('forms/{form}/automation/{automation}/toggle', [FormAutomationController::class, 'toggle'])->name('forms.automation.toggle');
+            Route::post('forms/{form}/save-as-template', [FormTemplateController::class, 'store'])->name('forms.templates.store');
+            Route::post('forms/{form}/apply-template', [FormTemplateController::class, 'apply'])->name('forms.templates.apply');
+
+            // Submissions
             Route::get('forms/submissions', [FormSubmissionController::class, 'index'])->name('forms.submissions.index');
             Route::get('forms/submissions/export', [FormSubmissionController::class, 'export'])->name('forms.submissions.export');
             Route::post('forms/submissions/column-order', [FormSubmissionController::class, 'updateColumnOrder'])->name('forms.submissions.column-order');
