@@ -1,0 +1,349 @@
+name: Frontend Governance Enforcement — Customer Site
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'resources/views/**/*.blade.php'
+      - 'resources/css/**'
+      - 'resources/js/**'
+      - 'tailwind.config.js'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'resources/views/**/*.blade.php'
+      - 'resources/css/**'
+      - 'resources/js/**'
+      - 'tailwind.config.js'
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 1 — Static Blade Analysis (fast, no Laravel boot required)
+  # Blocks PRs instantly without full setup — first gate
+  # ─────────────────────────────────────────────────────────────────────────────
+  static-blade-analysis:
+    name: Static Blade Analysis (fast)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for forbidden raw controls in changed Blade files
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD -- '*.blade.php' 2>/dev/null \
+                 || git diff --name-only HEAD~1 HEAD -- '*.blade.php' 2>/dev/null \
+                 || find resources/views -name '*.blade.php' 2>/dev/null \
+                 || echo "")
+
+          if [ -z "$CHANGED" ]; then
+            echo "No Blade files changed — skipping static analysis"
+            exit 0
+          fi
+
+          VIOLATIONS=0
+          for f in $CHANGED; do
+            if [ ! -f "$f" ]; then continue; fi
+
+            # Skip Alpine template blocks (legitimate client-side rendered controls)
+            if grep -q "<template x-for" "$f"; then
+              echo "⚠  $f — contains Alpine x-for template (client-side exception)"
+              continue
+            fi
+
+            for TAG in button input select textarea; do
+              LINES=$(grep -nP "<${TAG}[\s>\/]" "$f" 2>/dev/null || true)
+              if [ -n "$LINES" ]; then
+                echo "✗ Raw <${TAG}> in $f:"
+                echo "$LINES" | head -5
+                VIOLATIONS=$((VIOLATIONS + 1))
+              fi
+            done
+          done
+
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo ""
+            echo "❌ $VIOLATIONS raw control violation(s) detected."
+            echo "   Replace with x-core-ui::button / x-core-ui::input / x-core-ui::select / x-core-ui::textarea"
+            exit 1
+          fi
+
+          echo "✓ All changed Blade files pass raw-control check."
+
+      - name: Check for hardcoded hex colors in changed files
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD -- '*.blade.php' '*.css' '*.js' 2>/dev/null \
+                 || git diff --name-only HEAD~1 HEAD -- '*.blade.php' '*.css' '*.js' 2>/dev/null \
+                 || echo "")
+
+          if [ -z "$CHANGED" ]; then exit 0; fi
+
+          VIOLATIONS=0
+          for f in $CHANGED; do
+            if [ ! -f "$f" ]; then continue; fi
+            if grep -nP 'style\s*=\s*["\'][^"\']*#[0-9a-fA-F]{3,8}' "$f" 2>/dev/null | grep -q .; then
+              echo "✗ Hardcoded hex in inline style: $f"
+              grep -nP 'style\s*=\s*["\'][^"\']*#[0-9a-fA-F]{3,8}' "$f" | head -3
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+          done
+
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo ""
+            echo "❌ Hardcoded color violations detected. Use var(--ui-*) CSS tokens."
+            exit 1
+          fi
+
+          echo "✓ No hardcoded colors in changed files."
+
+      - name: Check CSS imports canonical design-tokens
+        run: |
+          if [ -f "resources/css/app.css" ]; then
+            if ! grep -q "design-tokens" resources/css/app.css; then
+              echo "❌ resources/css/app.css does not import canonical design-tokens.css"
+              echo "   Add: @import '../../../saas-platform/packages/saas-platform/core-utils/resources/css/design-tokens.css';"
+              exit 1
+            fi
+            echo "✓ app.css imports canonical design tokens."
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 2 — Component Authority
+  # ─────────────────────────────────────────────────────────────────────────────
+  component-authority:
+    name: Component Authority
+    runs-on: ubuntu-latest
+    needs: [static-blade-analysis]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
+          php artisan key:generate
+
+      - name: Validate Component Authority
+        run: |
+          php artisan frontend:validate-components \
+            --strict \
+            --json > /tmp/component-authority.json 2>&1
+          EXITCODE=$?
+          cat /tmp/component-authority.json
+          exit $EXITCODE
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Upload component authority report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cs-component-authority-report
+          path: /tmp/component-authority.json
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 3 — Responsive Governance
+  # ─────────────────────────────────────────────────────────────────────────────
+  responsive-governance:
+    name: Responsive Governance
+    runs-on: ubuntu-latest
+    needs: [static-blade-analysis]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
+          php artisan key:generate
+
+      - name: Validate Responsive Governance
+        run: |
+          php artisan frontend:validate-responsive \
+            --strict \
+            --json > /tmp/responsive-governance.json 2>&1
+          EXITCODE=$?
+          cat /tmp/responsive-governance.json
+          exit $EXITCODE
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Upload responsive report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cs-responsive-governance-report
+          path: /tmp/responsive-governance.json
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 4 — Enterprise Governance (master score >= 95)
+  # ─────────────────────────────────────────────────────────────────────────────
+  enterprise-governance:
+    name: Enterprise Frontend Governance (≥95)
+    runs-on: ubuntu-latest
+    needs: [component-authority]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
+          php artisan key:generate
+
+      - name: Validate Enterprise Governance
+        run: |
+          php artisan frontend:validate-enterprise-governance \
+            --fail-below=95 \
+            --json > /tmp/enterprise-governance.json 2>&1
+          EXITCODE=$?
+          cat /tmp/enterprise-governance.json
+          exit $EXITCODE
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Upload enterprise governance report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cs-enterprise-governance-report
+          path: /tmp/enterprise-governance.json
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # JOB 5 — Frontend Parity (zero drift with saas-platform canonical package)
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend-parity:
+    name: Frontend Parity (Zero Drift)
+    runs-on: ubuntu-latest
+    needs: [enterprise-governance]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy environment
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
+          php artisan key:generate
+
+      - name: Validate Frontend Parity
+        run: |
+          php artisan frontend:validate-canonical-parity \
+            --strict \
+            --fail-on-warning \
+            --json > /tmp/frontend-parity.json 2>&1
+          EXITCODE=$?
+          cat /tmp/frontend-parity.json
+          exit $EXITCODE
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Auto-heal check (dry run)
+        run: |
+          php artisan frontend:auto-heal \
+            --dry-run \
+            --json > /tmp/auto-heal.json 2>&1
+          cat /tmp/auto-heal.json
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Drift lockdown report
+        run: |
+          php artisan frontend:lockdown-report \
+            --json > /tmp/lockdown-report.json 2>&1
+          cat /tmp/lockdown-report.json
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+      - name: Upload parity report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cs-frontend-parity-report
+          path: |
+            /tmp/frontend-parity.json
+            /tmp/auto-heal.json
+            /tmp/lockdown-report.json
