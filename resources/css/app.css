@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Phase 10.0 — Canonical design token system (single source of truth) */
+@import '../../../saas-platform/packages/saas-platform/core-utils/resources/css/design-tokens.css';
+
 @font-face {
     font-family: 'Vazirmatn';
     src: local('Vazirmatn'), local('Vazirmatn Regular'),

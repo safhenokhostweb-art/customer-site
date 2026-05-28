@@ -54,4 +54,46 @@
 .account-sidebar-shell .border-slate-200 {
     border-color: color-mix(in srgb, var(--admin-sidebar-border) 40%, transparent) !important;
 }
+#admin-sidebar .sidebar-link {
+    color: var(--admin-sidebar-text) !important;
+}
+#admin-sidebar .sidebar-link:hover {
+    background: var(--admin-sidebar-hover) !important;
+    color: #fff !important;
+    transform: none !important;
+}
+#admin-sidebar .sidebar-link.active {
+    background: var(--admin-sidebar-active) !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    box-shadow: inset -3px 0 0 var(--admin-sidebar-accent) !important;
+}
+#admin-sidebar .sidebar-link svg {
+    color: var(--admin-sidebar-muted) !important;
+}
+#admin-sidebar .sidebar-link:hover svg,
+#admin-sidebar .sidebar-link.active svg {
+    color: var(--admin-sidebar-accent) !important;
+    transform: none !important;
+}
+#admin-sidebar .sidebar-group-toggle:hover {
+    background: var(--admin-sidebar-hover) !important;
+}
+#admin-sidebar .sidebar-group-label {
+    color: var(--admin-sidebar-muted) !important;
+    border-bottom-color: var(--admin-sidebar-border) !important;
+}
+#admin-sidebar .sidebar-group-toggle[aria-expanded="true"] .sidebar-group-label {
+    color: var(--admin-sidebar-accent) !important;
+    border-bottom-color: color-mix(in srgb, var(--admin-sidebar-accent) 35%, transparent) !important;
+}
+#admin-sidebar .sidebar-group-caret {
+    color: var(--admin-sidebar-muted) !important;
+}
+#admin-sidebar .sidebar-group-caret.is-open {
+    color: var(--admin-sidebar-accent) !important;
+}
+#admin-sidebar .admin-sidebar-footer {
+    border-top-color: var(--admin-sidebar-border) !important;
+}
 </style>

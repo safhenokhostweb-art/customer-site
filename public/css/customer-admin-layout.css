@@ -1319,3 +1319,10 @@ button:focus-visible {
 .account-dashboard-tile--blue {
     background: linear-gradient(145deg, #2563eb 0%, #1e3a8a 100%);
 }
+
+/* Form builder: zero out admin-main padding so the builder fills the viewport correctly */
+.admin-main:has(#forms-builder) {
+    padding: 0;
+    overflow: hidden;
+}
+/* Global input overrides should not bleed into the form builder — reset handled via #forms-builder scoped CSS in builder.blade.php */
