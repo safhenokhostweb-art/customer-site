@@ -45,7 +45,7 @@ class SetUserMobile extends Command
         $user->mobile = $mobile;
         $user->save();
 
-        $this->info("موبایل برای کاربر «{$user->name}» ({$user->email}) تنظیم شد.");
+        $this->info("موبایل برای کاربر «{$user->name}» ({$user->mobile}) تنظیم شد.");
         return self::SUCCESS;
     }
 }

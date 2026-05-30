@@ -161,9 +161,8 @@ class InstallController extends Controller
         }
 
         User::create([
-            'name' => $request->name,
-            'mobile' => $request->mobile,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'mobile'   => $request->mobile,
             'password' => Hash::make($request->password),
             'is_admin' => true,
         ]);

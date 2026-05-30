@@ -18,8 +18,7 @@ class ProfileUpdateRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'mobile' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
+            'mobile' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'bio' => ['nullable', 'string', 'max:1000'],
             'birth_date' => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
                 if ($value && !\App\Helpers\Jalali::toCarbon($value)) {
@@ -40,7 +39,6 @@ class ProfileUpdateRequest extends FormRequest
             'company_role' => ['nullable', 'string', 'max:100'],
             'company_address' => ['nullable', 'string', 'max:500'],
             'company_phone' => ['nullable', 'string', 'max:30'],
-            'company_email' => ['nullable', 'email', 'max:255'],
             'notify_email' => ['nullable', 'boolean'],
             'notify_sms' => ['nullable', 'boolean'],
             'marketing' => ['nullable', 'boolean'],
@@ -53,7 +51,6 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => 'نام',
-            'email' => 'ایمیل',
             'mobile' => 'موبایل',
             'bio' => 'درباره من',
             'birth_date' => 'تاریخ تولد',

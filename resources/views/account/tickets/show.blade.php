@@ -257,6 +257,28 @@
             mp.className = 'text-sm leading-relaxed whitespace-pre-wrap';
             mp.textContent = r.message || '';
             bl.appendChild(np); bl.appendChild(mp);
+            if (r.attachments && r.attachments.length > 0) {
+                const isImgAtt = att => /^image\//i.test(att.mime||'') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.name||'');
+                const attDiv = document.createElement('div');
+                attDiv.className = 'flex flex-wrap gap-1.5 mt-2';
+                r.attachments.filter(att => att.url).forEach(att => {
+                    if (isImgAtt(att)) {
+                        const a = document.createElement('a');
+                        a.href = att.url; a.target = '_blank'; a.className = 'block mt-1.5';
+                        const img = document.createElement('img');
+                        img.src = att.url; img.loading = 'lazy'; img.alt = att.name || 'تصویر';
+                        img.className = 'rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer';
+                        a.appendChild(img); attDiv.appendChild(a);
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = att.url; a.target = '_blank';
+                        a.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all';
+                        a.textContent = att.name || 'فایل';
+                        attDiv.appendChild(a);
+                    }
+                });
+                if (attDiv.hasChildNodes()) bl.appendChild(attDiv);
+            }
             const ts = document.createElement('span');
             ts.className = 'text-[10px] text-gray-400 mt-1 px-1 block' + (isStaff ? '' : ' text-left');
             ts.textContent = time;
@@ -431,6 +453,30 @@
                                     @endif
                                 </p>
                                 <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ $reply->message }}</p>
+                                @if($reply->attachments && is_array($reply->attachments))
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    @foreach($reply->attachments as $file)
+                                    @if(!empty($file['url']))
+                                    @php
+                                        $attName  = $file['name'] ?? 'فایل';
+                                        $attIsImg = preg_match('/^image\//i', $file['mime'] ?? '') || preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i', $attName);
+                                    @endphp
+                                    @if($attIsImg)
+                                    <a href="{{ $file['url'] }}" target="_blank" class="block mt-1">
+                                        <img src="{{ $file['url'] }}" loading="lazy" alt="{{ $attName }}"
+                                             class="rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer">
+                                    </a>
+                                    @else
+                                    <a href="{{ $file['url'] }}" target="_blank"
+                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                                        <span class="truncate max-w-[100px]">{{ $attName }}</span>
+                                    </a>
+                                    @endif
+                                    @endif
+                                    @endforeach
+                                </div>
+                                @endif
                             </div>
                             <span class="text-[10px] text-gray-400 mt-1 px-1 block {{ $isStaff ? '' : 'text-left' }}">
                                 {{ \App\Helpers\Jalali::formatFa($reply->created_at, 'H:i') }}
@@ -454,6 +500,7 @@
             <div class="msg-chat-footer">
                 <form method="POST"
                       action="{{ route('account.tickets.reply', $ticket->id) }}"
+                      enctype="multipart/form-data"
                       @submit.prevent="sendReply($event.target)">
                     @csrf
                     <div class="flex items-end gap-2">
@@ -465,6 +512,9 @@
                                       placeholder="پیام خود را بنویسید..."
                                       @keydown.enter.prevent="if(!$event.shiftKey) sendReply($el.closest('form'))"></textarea>
                             <small class="text-[10px] text-gray-400 mt-0.5 block mr-2">اینتر = ارسال | Shift+Enter = خط جدید</small>
+                            <input type="file" name="attachments[]" multiple
+                                   accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.zip,.txt"
+                                   class="mt-1.5 text-xs text-gray-500 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:px-2.5 file:py-1 file:text-xs file:font-medium hover:file:bg-indigo-100">
                         </div>
                         <button type="submit"
                                 :disabled="isSending || !message.trim()"

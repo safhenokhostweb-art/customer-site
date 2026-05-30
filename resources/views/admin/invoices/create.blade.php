@@ -14,8 +14,8 @@
                         <input type="text" name="customer_name" value="{{ old('customer_name') }}" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">ایمیل *</label>
-                        <input type="email" name="customer_email" value="{{ old('customer_email') }}" required>
+                        <label class="form-label">موبایل *</label>
+                        <input type="text" name="customer_mobile" value="{{ old('customer_mobile') }}" required>
                     </div>
                 </div>
                 <div class="form-group">

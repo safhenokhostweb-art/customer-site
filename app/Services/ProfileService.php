@@ -30,8 +30,7 @@ class ProfileService
 
         $user->update([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'mobile' => $data['mobile'] ?? null,
+            'mobile' => $data['mobile'],
             'bio' => $data['bio'] ?? null,
             'birth_date' => $birthDate,
             'phone' => $data['phone'] ?? null,
@@ -41,7 +40,6 @@ class ProfileService
             'company_role' => $data['company_role'] ?? null,
             'company_address' => $data['company_address'] ?? null,
             'company_phone' => $data['company_phone'] ?? null,
-            'company_email' => $data['company_email'] ?? null,
             'notification_preferences' => $notificationPrefs,
             'privacy_settings' => $privacySettings,
         ]);

@@ -30,13 +30,11 @@ class RegisterController extends Controller
         $data = $request->validate([
             'name'                  => ['required', 'string', 'max:100'],
             'mobile'                => ['required', 'string', 'unique:users,mobile'],
-            'email'                 => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password'              => ['required', 'confirmed', Password::min(6)],
         ], [
             'name.required'         => 'نام الزامی است.',
             'mobile.required'       => 'شماره موبایل الزامی است.',
             'mobile.unique'         => 'این شماره موبایل قبلاً ثبت شده است.',
-            'email.unique'          => 'این ایمیل قبلاً ثبت شده است.',
             'password.required'     => 'رمز عبور الزامی است.',
             'password.confirmed'    => 'تکرار رمز عبور مطابقت ندارد.',
             'password.min'          => 'رمز عبور باید حداقل ۶ کاراکتر باشد.',
@@ -51,7 +49,6 @@ class RegisterController extends Controller
         $user = User::create([
             'name'     => $data['name'],
             'mobile'   => $mobile,
-            'email'    => $data['email'] ?: null,
             'password' => Hash::make($data['password']),
             'is_admin' => false,
         ]);

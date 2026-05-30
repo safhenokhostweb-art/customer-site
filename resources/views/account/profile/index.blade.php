@@ -49,12 +49,8 @@
                         <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="form-input">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">ایمیل *</label>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">موبایل</label>
-                        <input type="text" name="mobile" value="{{ old('mobile', $user->mobile) }}" class="form-input">
+                        <label class="form-label">موبایل *</label>
+                        <input type="text" name="mobile" value="{{ old('mobile', $user->mobile) }}" required class="form-input">
                     </div>
                     <div class="form-group md:col-span-2">
                         <label class="form-label">درباره من</label>
@@ -96,19 +92,10 @@
                         <label class="form-label">تلفن شرکت</label>
                         <input type="text" name="company_phone" value="{{ old('company_phone', $user->company_phone) }}" class="form-input">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">ایمیل شرکت</label>
-                        <input type="email" name="company_email" value="{{ old('company_email', $user->company_email) }}" class="form-input">
-                    </div>
                 </div>
                 <hr class="my-6 border-slate-200">
                 <h3 class="font-semibold text-slate-800 mb-4">تنظیمات اعلان</h3>
                 <div class="space-y-3">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="hidden" name="notify_email" value="0">
-                        <input type="checkbox" name="notify_email" value="1" {{ $user->getNotificationPreference('notify_email', true) ? 'checked' : '' }}>
-                        <span>اعلان‌های ایمیلی</span>
-                    </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="hidden" name="notify_sms" value="0">
                         <input type="checkbox" name="notify_sms" value="1" {{ $user->getNotificationPreference('notify_sms') ? 'checked' : '' }}>
@@ -123,11 +110,6 @@
                 <hr class="my-6 border-slate-200">
                 <h3 class="font-semibold text-slate-800 mb-4">تنظیمات حریم خصوصی</h3>
                 <div class="space-y-3">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="hidden" name="show_email" value="0">
-                        <input type="checkbox" name="show_email" value="1" {{ $user->getPrivacySetting('show_email') ? 'checked' : '' }}>
-                        <span>نمایش ایمیل به دیگران</span>
-                    </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="hidden" name="show_phone" value="0">
                         <input type="checkbox" name="show_phone" value="1" {{ $user->getPrivacySetting('show_phone') ? 'checked' : '' }}>

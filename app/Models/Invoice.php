@@ -11,7 +11,7 @@ class Invoice extends Model
         'invoice_number',
         'user_id',
         'customer_name',
-        'customer_email',
+        'customer_mobile',
         'customer_phone',
         'subtotal',
         'total',

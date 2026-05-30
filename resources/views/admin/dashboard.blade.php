@@ -228,9 +228,9 @@
         <span class="q-link__label">سفارشات اخیر</span>
     </a>
     @endif
-    <a href="{{ route('admin.user_tickets.index') }}" class="q-link">
+    <a href="{{ route('admin.inbox.index') }}" class="q-link">
         <span class="q-link__icon bg-emerald-50 text-emerald-600">💬</span>
-        <span class="q-link__label">تیکت‌های کاربران</span>
+        <span class="q-link__label">صندوق پشتیبانی</span>
     </a>
     <a href="{{ route('admin.posts.index') }}" class="q-link">
         <span class="q-link__icon bg-teal-50 text-teal-600">✍️</span>

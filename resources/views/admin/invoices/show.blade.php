@@ -15,7 +15,7 @@
                 <div>
                     <span class="text-slate-500 text-sm">مشتری</span>
                     <p class="font-medium">{{ $invoice->customer_name }}</p>
-                    <p class="text-sm text-slate-600">{{ $invoice->customer_email }}</p>
+                    <p class="text-sm text-slate-600">{{ $invoice->customer_mobile }}</p>
                     @if($invoice->customer_phone)
                         <p class="text-sm text-slate-600">{{ $invoice->customer_phone }}</p>
                     @endif

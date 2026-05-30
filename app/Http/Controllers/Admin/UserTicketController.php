@@ -59,7 +59,7 @@ class UserTicketController extends Controller
 
     public function create()
     {
-        $users = User::orderBy('name')->get(['id', 'name', 'email', 'mobile']);
+        $users = User::orderBy('name')->get(['id', 'name', 'mobile']);
         return view('admin.user-tickets.create', compact('users'));
     }
 
@@ -84,8 +84,8 @@ class UserTicketController extends Controller
             'category'       => $data['category'] ?? null,
             'status'         => Ticket::STATUS_OPEN,
             'customer_id'    => $targetUser?->id,
-            'customer_name'  => $targetUser?->name ?? 'ادمین',
-            'customer_email' => $targetUser?->email ?? null,
+            'customer_name'   => $targetUser?->name ?? 'ادمین',
+            'customer_mobile' => $targetUser?->mobile ?? null,
             'site_id'        => null,
         ]);
 
@@ -105,7 +105,7 @@ class UserTicketController extends Controller
             ->findOrFail($id);
 
         $endUser    = $ticket->customer_id ? User::find($ticket->customer_id) : null;
-        $agentUsers = User::where('is_admin', true)->get(['id', 'name', 'email', 'mobile']);
+        $agentUsers = User::where('is_admin', true)->get(['id', 'name', 'mobile']);
         $smsEnabled = (bool) Setting::get('user_tickets.sms_enabled', false);
 
         return view('admin.user-tickets.show', compact('ticket', 'endUser', 'agentUsers', 'smsEnabled'));

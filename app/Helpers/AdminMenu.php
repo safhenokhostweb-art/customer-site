@@ -44,10 +44,9 @@ class AdminMenu
         'modules' => 'ماژول‌ها',
         'modules_changelog' => 'تاریخچه ماژول‌ها',
         'module_store' => 'فروشگاه ماژول',
-        'support'      => 'پشتیبانی پلتفرم',
+        'support'         => 'صندوق پشتیبانی',
         'support_history' => 'تاریخچه تیکت‌ها',
-        'users_panel'  => 'پنل کاربران',
-        'user_tickets' => 'تیکت‌های کاربران',
+        'users_panel'     => 'پنل کاربران',
         'activity_log' => 'لاگ فعالیت ادمین',
         'advanced_search' => 'جستجوی پیشرفته',
         'menu' => 'منو و ناوبری',
@@ -126,10 +125,9 @@ class AdminMenu
         'modules' => 'admin.modules.index',
         'modules_changelog' => 'admin.modules.changelog',
         'module_store' => 'admin.module-store.index',
-        'support'      => 'tickets.site.index',
+        'support'         => 'admin.inbox.index',
         'support_history' => 'admin.support.history',
-        'users_panel'  => 'admin.users.index',
-        'user_tickets' => 'admin.user-tickets.index',
+        'users_panel'     => 'admin.users.index',
         'activity_log' => 'admin.activity-log.index',
         'advanced_search' => 'admin.modules.show',
         'menu' => 'admin.menus.index',
@@ -224,9 +222,8 @@ class AdminMenu
         'modules' => 'admin.modules.*',
         'modules_changelog' => 'admin.modules.changelog',
         'module_store' => 'admin.module-store.index',
-        'support'      => 'tickets.site.*',
+        'support'      => 'admin.inbox.*',
         'users_panel'  => 'admin.users.*',
-        'user_tickets' => 'admin.user-tickets.*',
         'activity_log' => 'admin.activity-log.*',
         'advanced_search' => 'admin.modules.show',
         'menu' => 'admin.menus.index',
@@ -293,12 +290,12 @@ class AdminMenu
             // صفحات و منو نزدیک هم؛ سپس وبلاگ؛ جستجوی پیشرفته در انتهای بلوک محتوا
             'محتوا و ساختار سایت' => ['pages', 'menu', 'categories', 'post_series', 'posts', 'advanced_search'],
             'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon'],
-            'تیکت و پشتیبانی کاربران' => ['users_panel', 'user_tickets'],
+            'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
             'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
             'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
-            'لایسنس، ماژول‌ها و پشتیبانی' => ['license', 'modules', 'modules_changelog', 'module_store', 'support', 'support_history', 'bank_gateway', 'activity_log'],
+            'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
         ];
     }
 
@@ -470,8 +467,8 @@ class AdminMenu
             return true;
         }
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
-                             'license', 'modules', 'modules_changelog', 'support', 'support_history',
-                             'activity_log', 'user_tickets', 'users_panel'], true)) {
+                             'license', 'modules', 'modules_changelog', 'support',
+                             'activity_log', 'users_panel'], true)) {
             return true;
         }
         if ($key === 'module_store') {

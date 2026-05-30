@@ -69,7 +69,7 @@ class SupportController extends Controller
     public function create()
     {
         $license = License::current();
-        $users   = User::orderBy('name')->get(['id', 'name', 'email', 'mobile']);
+        $users   = User::orderBy('name')->get(['id', 'name', 'mobile']);
 
         return view('tickets::site.tickets.create', [
             'license'            => $license,
@@ -130,16 +130,16 @@ class SupportController extends Controller
         if ($forUserId) {
             $targetUser = User::find($forUserId);
             if ($targetUser) {
-                $validated['email'] = $targetUser->email;
-                $validated['name']  = $targetUser->name;
+                $validated['mobile'] = $targetUser->mobile;
+                $validated['name']   = $targetUser->name;
             }
         }
 
         $response = $this->supportApiClient->store($license, [
-            'subject'        => $validated['subject'],
-            'message'        => $validated['message'] ?? $validated['description'] ?? '',
-            'customer_email' => $validated['email'] ?? null,
-            'customer_name'  => $validated['name'] ?? null,
+            'subject'         => $validated['subject'],
+            'message'         => $validated['message'] ?? $validated['description'] ?? '',
+            'customer_mobile' => $validated['mobile'] ?? null,
+            'customer_name'   => $validated['name'] ?? null,
             'priority'       => $validated['priority'] ?? 'normal',
             'category'       => $validated['category'] ?? null,
             'tags'           => $tags,
@@ -232,5 +232,20 @@ class SupportController extends Controller
         }
 
         return [$license, $tickets, $error];
+    }
+
+    public function downloadAttachment(string $path)
+    {
+        $path = ltrim($path, '/');
+
+        if (str_contains($path, '..') || ! str_starts_with($path, 'ticket-attachments/')) {
+            abort(403);
+        }
+
+        if (! \Illuminate\Support\Facades\Storage::disk('private')->exists($path)) {
+            abort(404);
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('private')->response($path);
     }
 }

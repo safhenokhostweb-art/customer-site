@@ -2,120 +2,312 @@
 @section('title', 'پشتیبانی')
 @section('header', 'پشتیبانی و تیکت‌ها')
 
+@push('head')
+@include('partials.ticket-styles')
+@endpush
+
 @section('content')
 
-{{-- Stats --}}
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-    <div class="account-card p-4 text-center">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-slate-100 flex items-center justify-center">
-            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+{{-- Stat Cards --}}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+
+    <div class="account-card p-4 col-span-2 sm:col-span-1">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-600 flex items-center justify-center shrink-0 text-xl">📫</div>
+            <div>
+                <div class="text-2xl font-bold text-slate-800">{{ \App\Helpers\NumberHelper::formatFa($stats['total']) }}</div>
+                <div class="text-xs text-slate-500 mt-0.5">کل تیکت‌ها</div>
+            </div>
         </div>
-        <div class="text-2xl font-bold text-slate-800">{{ $stats['total'] }}</div>
-        <div class="text-xs text-slate-500 mt-0.5">کل تیکت‌ها</div>
     </div>
-    <div class="account-card p-4 text-center" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fde68a;">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-amber-100 flex items-center justify-center">
-            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+
+    <div class="account-card p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                <span class="relative flex h-5 w-5 items-center justify-center">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-40"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                </span>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-amber-700">{{ \App\Helpers\NumberHelper::formatFa($stats['open']) }}</div>
+                <div class="text-xs text-amber-600 mt-0.5">منتظر بررسی</div>
+            </div>
         </div>
-        <div class="text-2xl font-bold text-amber-700">{{ $stats['open'] }}</div>
-        <div class="text-xs text-amber-600 mt-0.5">منتظر بررسی</div>
     </div>
-    <div class="account-card p-4 text-center" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#bfdbfe;">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-blue-100 flex items-center justify-center">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+
+    <div class="account-card p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 animate-spin" style="animation-duration:3s" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-blue-700">{{ \App\Helpers\NumberHelper::formatFa($stats['in_progress']) }}</div>
+                <div class="text-xs text-blue-600 mt-0.5">در حال بررسی</div>
+            </div>
         </div>
-        <div class="text-2xl font-bold text-blue-700">{{ $stats['in_progress'] }}</div>
-        <div class="text-xs text-blue-600 mt-0.5">در حال بررسی</div>
     </div>
-    <div class="account-card p-4 text-center" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#bbf7d0;">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+
+    <div class="account-card p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-emerald-700">{{ \App\Helpers\NumberHelper::formatFa($stats['closed']) }}</div>
+                <div class="text-xs text-emerald-600 mt-0.5">پاسخ داده شده</div>
+            </div>
         </div>
-        <div class="text-2xl font-bold text-emerald-700">{{ $stats['closed'] }}</div>
-        <div class="text-xs text-emerald-600 mt-0.5">پاسخ داده شده</div>
     </div>
+
 </div>
 
-{{-- Ticket List --}}
-<div class="account-card">
-    <div class="account-card-header flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-            <span>تیکت‌های من</span>
-        </div>
-        <a href="{{ route('account.tickets.create') }}" class="btn btn-primary btn-sm">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-            تیکت جدید
-        </a>
-    </div>
+{{-- Filter + Table --}}
+<div x-data="{
+    search: '',
+    status: '',
+    priority: '',
+    allChecked: false,
+    visibleCount: {{ $tickets->count() }},
+    get hasFilters() { return this.search !== '' || this.status !== '' || this.priority !== ''; }
+}"
+x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-row')].filter(r => r.style.display !== 'none').length })">
 
-    @if($tickets->isEmpty())
-        <div class="account-card-body text-center py-16">
-            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
-                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    {{-- Filter Bar --}}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 mb-3">
+        <div class="flex flex-wrap items-center gap-2.5">
+
+            {{-- Search --}}
+            <div class="relative flex-1" style="min-width:200px">
+                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                </svg>
+                <input type="text" x-model="search"
+                       placeholder="جستجوی موضوع یا شماره تیکت..."
+                       class="w-full pr-9 pl-3 py-2 rounded-xl border border-gray-200 bg-gray-50/60 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
+            </div>
+
+            {{-- Status --}}
+            <div class="relative">
+                <select x-model="status"
+                        class="appearance-none pr-4 pl-8 py-2 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all cursor-pointer" style="min-width:150px">
+                    <option value="">همه وضعیت‌ها</option>
+                    <option value="open">باز</option>
+                    <option value="in_progress">در حال بررسی</option>
+                    <option value="closed">بسته</option>
+                </select>
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                 </svg>
             </div>
-            <h3 class="font-semibold text-slate-600 mb-1">هنوز تیکتی ثبت نکرده‌اید</h3>
-            <p class="text-sm text-slate-400 mb-5">سوال یا مشکلی دارید؟ یک تیکت پشتیبانی ثبت کنید.</p>
-            <a href="{{ route('account.tickets.create') }}" class="btn btn-primary">ثبت اولین تیکت</a>
+
+            {{-- Priority --}}
+            <div class="relative">
+                <select x-model="priority"
+                        class="appearance-none pr-4 pl-8 py-2 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all cursor-pointer" style="min-width:150px">
+                    <option value="">همه اولویت‌ها</option>
+                    <option value="high">بالا</option>
+                    <option value="normal">عادی</option>
+                    <option value="low">کم</option>
+                </select>
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </div>
+
+            {{-- Clear Button --}}
+            <button x-show="hasFilters"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    @click="search=''; status=''; priority=''"
+                    class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all whitespace-nowrap">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                پاک کردن
+            </button>
+
         </div>
-    @else
-        <div class="divide-y divide-slate-100">
+    </div>
+
+    {{-- Table Card --}}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        @if($tickets->isEmpty())
+            <div class="text-center py-16">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-600 mb-1">هنوز تیکتی ثبت نکرده‌اید</h3>
+                <p class="text-sm text-slate-400 mb-5">سوال یا مشکلی دارید؟ یک تیکت پشتیبانی ثبت کنید.</p>
+                <a href="{{ route('account.tickets.create') }}" class="btn btn-primary">ثبت اولین تیکت</a>
+            </div>
+        @else
+        <div class="overflow-x-auto">
+        <table class="w-full text-right" style="min-width:760px; border-collapse:collapse">
+            <thead>
+                <tr style="background:#f9fafb; border-bottom:1px solid #f3f4f6">
+                    <th class="px-4 py-3.5 w-10">
+                        <input type="checkbox" @change="allChecked = $event.target.checked"
+                               class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    </th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">شماره</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">سایت</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">موضوع</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">وضعیت</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">اولویت</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">مسئول</th>
+                    <th class="px-3 py-3.5 text-xs font-semibold text-gray-500 text-right">تاریخ</th>
+                    <th class="px-4 py-3.5 text-xs font-semibold text-gray-500 text-left">عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
             @foreach($tickets as $ticket)
-                <a href="{{ route('account.tickets.show', $ticket->id) }}"
-                   class="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/80 transition-colors group">
+            @php
+                $p      = $ticket->priority ?? 'normal';
+                $pLabel = $p === 'high' ? 'بالا' : ($p === 'low' ? 'کم' : 'عادی');
+                $pBadge = $p === 'high'
+                    ? 'bg-red-50 text-red-600 border-red-200'
+                    : ($p === 'low' ? 'bg-gray-50 text-gray-500 border-gray-200' : 'bg-blue-50 text-blue-600 border-blue-200');
+                $pDot   = $p === 'high' ? 'bg-red-500' : ($p === 'low' ? 'bg-gray-400' : 'bg-blue-500');
+                $staffCount = $ticket->staff_replies_count ?? 0;
+            @endphp
+            <tr class="ticket-row"
+                data-subject="{{ $ticket->subject }}"
+                data-ticket-no="{{ $ticket->ticket_number }}"
+                data-status="{{ $ticket->status }}"
+                data-priority="{{ $p }}"
+                x-show="
+                    (!search || $el.dataset.subject?.toLowerCase().includes(search.toLowerCase()) || $el.dataset.ticketNo?.toLowerCase().includes(search.toLowerCase())) &&
+                    (!status   || $el.dataset.status   === status) &&
+                    (!priority || $el.dataset.priority === priority)
+                "
+                style="border-bottom:1px solid #f9fafb; transition:background 0.12s"
+                onmouseenter="this.style.background='rgba(238,242,255,0.45)'"
+                onmouseleave="this.style.background=''">
 
-                    {{-- Status indicator --}}
-                    <div class="shrink-0 pt-0.5">
-                        @if($ticket->status === 'open')
-                            <span class="relative flex h-2.5 w-2.5">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                            </span>
-                        @elseif($ticket->status === 'in_progress')
-                            <span class="h-2.5 w-2.5 rounded-full bg-blue-500 block"></span>
-                        @else
-                            <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 block"></span>
+                {{-- Checkbox --}}
+                <td class="px-4 py-3.5">
+                    <input type="checkbox" :checked="allChecked"
+                           class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                </td>
+
+                {{-- Ticket Number --}}
+                <td class="px-3 py-3.5">
+                    <a href="{{ route('account.tickets.show', $ticket->id) }}"
+                       class="font-mono font-bold text-indigo-600 text-xs bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors whitespace-nowrap">
+                        {{ $ticket->ticket_number }}
+                    </a>
+                </td>
+
+                {{-- Site --}}
+                <td class="px-3 py-3.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                        <span class="text-xs text-gray-600 whitespace-nowrap">{{ $siteName }}</span>
+                    </div>
+                </td>
+
+                {{-- Subject --}}
+                <td class="px-3 py-3.5" style="max-width:260px">
+                    <a href="{{ route('account.tickets.show', $ticket->id) }}" class="block">
+                        <span class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">{{ $ticket->subject }}</span>
+                        @if($ticket->category)
+                        <span class="inline-block mt-0.5 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-px rounded font-mono leading-tight">{{ $ticket->category }}</span>
                         @endif
-                    </div>
+                    </a>
+                </td>
 
-                    {{-- Main content --}}
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <span class="font-semibold text-slate-800 group-hover:text-indigo-700 transition-colors truncate text-sm">
-                                {{ $ticket->subject }}
-                            </span>
-                            @if($ticket->priority === 'high')
-                                <span class="badge badge-danger text-[10px] shrink-0">فوری</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
-                            <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{{ $ticket->ticket_number }}</span>
-                            @if($ticket->category)
-                                <span>· {{ ['technical'=>'فنی','billing'=>'مالی','product'=>'محصول','other'=>'سایر'][$ticket->category] ?? $ticket->category }}</span>
-                            @endif
-                            <span>· {{ \App\Helpers\Jalali::formatFa($ticket->created_at, 'Y/m/d') }}</span>
-                        </div>
-                    </div>
+                {{-- Status --}}
+                <td class="px-3 py-3.5">
+                    @if($ticket->status === 'open')
+                        <span class="tkt-badge bg-yellow-50 text-yellow-700 border-yellow-200">
+                            <span class="pdot bg-yellow-500"></span>باز
+                        </span>
+                    @elseif($ticket->status === 'in_progress')
+                        <span class="tkt-badge bg-blue-50 text-blue-700 border-blue-200">
+                            <span class="pdot bg-blue-500"></span>در حال بررسی
+                        </span>
+                    @else
+                        <span class="tkt-badge bg-green-50 text-green-700 border-green-200">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>بسته
+                        </span>
+                    @endif
+                </td>
 
-                    {{-- Status badge + arrow --}}
-                    <div class="shrink-0 flex items-center gap-2">
-                        @if($ticket->status === 'open')
-                            <span class="badge badge-warning hidden sm:inline-flex">باز</span>
-                        @elseif($ticket->status === 'in_progress')
-                            <span class="badge badge-info hidden sm:inline-flex">در بررسی</span>
-                        @else
-                            <span class="badge badge-success hidden sm:inline-flex">بسته</span>
-                        @endif
-                        <svg class="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors -scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                {{-- Priority + Reply Count --}}
+                <td class="px-3 py-3.5">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border {{ $pBadge }}">
+                            <span class="pdot {{ $pDot }}"></span>{{ $pLabel }}
+                        </span>
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-500 text-white font-bold" style="font-size:10px">
+                            {{ \App\Helpers\NumberHelper::formatFa($staffCount) }}
+                        </span>
                     </div>
-                </a>
+                </td>
+
+                {{-- Assignee --}}
+                <td class="px-3 py-3.5">
+                    @if($ticket->assignee)
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold shrink-0" style="font-size:10px">{{ mb_substr($ticket->assignee->name, 0, 1) }}</div>
+                            <span class="text-xs text-gray-600 truncate" style="max-width:90px">{{ $ticket->assignee->name }}</span>
+                        </div>
+                    @else
+                        <span class="text-xs text-gray-400 italic">تخصیص نیافته</span>
+                    @endif
+                </td>
+
+                {{-- Date --}}
+                <td class="px-3 py-3.5 whitespace-nowrap">
+                    <span class="text-xs text-gray-600">{{ \App\Helpers\Jalali::formatFa($ticket->created_at, 'Y/m/d') }}</span>
+                    <div class="text-gray-400 mt-0.5" style="font-size:10px">{{ \App\Helpers\Jalali::formatFa($ticket->created_at, 'H:i') }}</div>
+                </td>
+
+                {{-- Actions --}}
+                <td class="px-4 py-3.5 text-left">
+                    <a href="{{ route('account.tickets.show', $ticket->id) }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        مشاهده
+                    </a>
+                </td>
+            </tr>
             @endforeach
+
+            {{-- No results after filter --}}
+            <tr x-show="hasFilters && visibleCount === 0">
+                <td colspan="9" class="text-center py-12">
+                    <p class="text-gray-400 text-sm">نتیجه‌ای با این فیلترها یافت نشد.</p>
+                    <button @click="search=''; status=''; priority=''" class="mt-2 text-xs text-indigo-600 hover:underline">پاک کردن فیلترها</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
         </div>
-        @if($tickets->hasPages())
-            <div class="px-5 py-4 border-t border-slate-100">{{ $tickets->links() }}</div>
+
+        {{-- Create + Pagination --}}
+        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <a href="{{ route('account.tickets.create') }}" class="btn-gradient">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                تیکت جدید
+            </a>
+            @if($tickets->hasPages())
+            <div>{{ $tickets->withQueryString()->links() }}</div>
+            @endif
+        </div>
         @endif
-    @endif
+    </div>
+
 </div>
+
 @endsection

@@ -31,12 +31,6 @@
                    inputmode="numeric">
         </div>
 
-        <div>
-            <label class="form-label" for="reg-email">ایمیل <span style="color:#94a3b8; font-weight:400; font-size:.75rem">(اختیاری)</span></label>
-            <input id="reg-email" type="email" name="email" value="{{ old('email') }}"
-                   placeholder="example@email.com"
-                   class="form-control" autocomplete="email">
-        </div>
 
         <div>
             <label class="form-label" for="reg-password">رمز عبور <span style="color:#ef4444">*</span></label>

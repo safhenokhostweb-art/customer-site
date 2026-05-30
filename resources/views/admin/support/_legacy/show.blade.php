@@ -287,8 +287,8 @@
                     <span class="font-medium">{{ ($ticket['priority'] ?? 'normal') === 'high' ? 'بالا' : (($ticket['priority'] ?? 'normal') === 'low' ? 'کم' : 'عادی') }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">ایمیل</span>
-                    <span class="font-medium text-left" dir="ltr">{{ $ticket['customer_email'] ?? '—' }}</span>
+                    <span class="text-gray-500">موبایل</span>
+                    <span class="font-medium text-left" dir="ltr">{{ $ticket['customer_mobile'] ?? '—' }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500">نام</span>

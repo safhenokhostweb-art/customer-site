@@ -20,6 +20,10 @@ class TicketController extends Controller
         $tickets = Ticket::withoutTenantIsolation()
             ->where('customer_id', auth()->id())
             ->whereNull('site_id')
+            ->with('assignee:id,name')
+            ->withCount([
+                'replies as staff_replies_count' => fn($q) => $q->where('author_type', 'staff')->where('is_internal', false),
+            ])
             ->orderByDesc('created_at')
             ->paginate(15);
 
@@ -30,7 +34,9 @@ class TicketController extends Controller
             'closed'      => Ticket::withoutTenantIsolation()->where('customer_id', auth()->id())->whereNull('site_id')->where('status', 'closed')->count(),
         ];
 
-        return view('account.tickets.index', compact('tickets', 'stats'));
+        $siteName = \App\Helpers\SiteHelper::siteName();
+
+        return view('account.tickets.index', compact('tickets', 'stats', 'siteName'));
     }
 
     public function create()
@@ -56,8 +62,8 @@ class TicketController extends Controller
             'category'       => $data['category'] ?? null,
             'status'         => Ticket::STATUS_OPEN,
             'customer_id'    => $user->id,
-            'customer_name'  => $user->name,
-            'customer_email' => $user->email ?? null,
+            'customer_name'   => $user->name,
+            'customer_mobile' => $user->mobile ?? null,
             'site_id'        => null,
         ]);
 
@@ -106,6 +112,7 @@ class TicketController extends Controller
                 'author_type' => $r->author_type,
                 'author_name' => $r->user?->name ?? ($r->author_type === 'staff' ? 'پشتیبانی' : ($r->customer_name ?? 'شما')),
                 'created_at'  => $r->created_at->toIso8601String(),
+                'attachments' => is_array($r->attachments) ? $r->attachments : [],
             ])->values(),
             'last_id' => $replies->last()?->id ?? $lastId,
         ]);
@@ -125,15 +132,38 @@ class TicketController extends Controller
             return back()->with('error', 'تیکت بسته شده است.');
         }
 
-        $data = $request->validate(['message' => ['required', 'string', 'max:5000']]);
+        $data = $request->validate([
+            'message'       => ['required', 'string', 'max:5000'],
+            'attachments'   => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'],
+        ]);
+
+        $attachments = [];
+        foreach ($request->file('attachments', []) as $file) {
+            if (!$file->isValid() || $file->getSize() === 0) {
+                continue;
+            }
+            $path = $file->store('user-tickets/' . now()->format('Y/m'), 'public');
+            if (!$path) {
+                continue;
+            }
+            $attachments[] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'url'  => asset(\Illuminate\Support\Facades\Storage::url($path)),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+            ];
+        }
 
         $reply = TicketReply::create([
             'ticket_id'     => $ticket->id,
             'message'       => $data['message'],
             'author_type'   => TicketReply::AUTHOR_CUSTOMER,
             'is_internal'   => false,
-            'customer_name' => auth()->user()->name,
-            'customer_email'=> auth()->user()->email ?? null,
+            'customer_name'   => auth()->user()->name,
+            'customer_mobile' => auth()->user()->mobile ?? null,
+            'attachments'   => $attachments ?: null,
         ]);
 
         $this->notifyAdmin($ticket, 'پاسخ کاربر');
@@ -147,6 +177,7 @@ class TicketController extends Controller
                     'author_name' => auth()->user()->name ?? 'شما',
                     'is_internal' => false,
                     'created_at'  => $reply->created_at->toIso8601String(),
+                    'attachments' => $attachments,
                 ],
             ]);
         }

@@ -24,7 +24,7 @@ class DashboardController extends Controller
         if (SiteHelper::shopEnabled()) {
             $ordersQuery = Order::where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                    ->orWhere('customer_email', $user->email);
+                    ->orWhere('customer_mobile', $user->mobile);
             });
             $ordersCount = $ordersQuery->count();
             $ordersTotal = (float) $ordersQuery->sum('total');
@@ -45,13 +45,13 @@ class DashboardController extends Controller
 
         $recentOrders = SiteHelper::shopEnabled()
             ? Order::where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)->orWhere('customer_email', $user->email);
+                $q->where('user_id', $user->id)->orWhere('customer_mobile', $user->mobile);
             })->latest()->take(5)->get()
             : collect();
 
         $recentInvoices = SiteHelper::moduleEnabled('invoice')
             ? Invoice::where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)->orWhere('customer_email', $user->email);
+                $q->where('user_id', $user->id)->orWhere('customer_mobile', $user->mobile);
             })->latest()->take(5)->get()
             : collect();
 

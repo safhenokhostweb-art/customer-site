@@ -21,7 +21,6 @@ class UserPanelController extends Controller
         if ($search = $request->input('q')) {
             $query->where(function ($b) use ($search) {
                 $b->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%");
             });
         }
@@ -97,8 +96,8 @@ class UserPanelController extends Controller
             'priority'       => 'normal',
             'status'         => Ticket::STATUS_OPEN,
             'customer_id'    => $user->id,
-            'customer_name'  => $user->name,
-            'customer_email' => $user->email,
+            'customer_name'   => $user->name,
+            'customer_mobile' => $user->mobile,
             'site_id'        => null,
         ]);
 

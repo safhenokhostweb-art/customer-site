@@ -14,7 +14,6 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'email',
         'mobile',
         'avatar',
         'bio',
@@ -26,7 +25,6 @@ class User extends Authenticatable
         'company_role',
         'company_address',
         'company_phone',
-        'company_email',
         'notification_preferences',
         'privacy_settings',
         'password',
@@ -41,7 +39,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'birth_date' => 'date',
             'password' => 'hashed',
             'is_admin' => 'boolean',

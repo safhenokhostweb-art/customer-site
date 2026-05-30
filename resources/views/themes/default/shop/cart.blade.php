@@ -82,9 +82,9 @@
                 @error('customer_name')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div style="margin-bottom: 1rem;">
-                <label for="customer_email" class="form-label">ایمیل</label>
-                <input type="email" id="customer_email" name="customer_email" class="form-input" value="{{ old('customer_email') }}" required>
-                @error('customer_email')<p class="form-error">{{ $message }}</p>@enderror
+                <label for="customer_mobile" class="form-label">موبایل</label>
+                <input type="text" id="customer_mobile" name="customer_mobile" class="form-input" value="{{ old('customer_mobile') }}" required>
+                @error('customer_mobile')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div style="margin-bottom: 1rem;">
                 <label for="customer_phone" class="form-label">تلفن</label>

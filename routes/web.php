@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Admin\ModuleController as AdminModuleController;
 use App\Http\Controllers\Admin\ModuleChangeLogController as AdminModuleChangeLogController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
+use App\Http\Controllers\Admin\UnifiedSupportController as AdminUnifiedSupportController;
 use App\Http\Controllers\GuideSearchController;
 use App\Http\Controllers\Front\SitemapController;
 use App\Http\Controllers\Front\PlatformProductsController;
@@ -527,6 +528,22 @@ Route::middleware('install.check')->group(function () {
             Route::patch('/{id}/priority',[AdminUserTicketController::class, 'priority'])->whereNumber('id')->name('priority');
         });
 
+    // ─── Unified Support Inbox (ادمین ↔ پلتفرم + ادمین ↔ کاربر در یک صفحه) ─────
+    Route::middleware(['auth', 'admin', 'throttle:60,1'])
+        ->prefix('admin/inbox')
+        ->name('admin.inbox.')
+        ->group(function () {
+            Route::get('/',                               [AdminUnifiedSupportController::class, 'index'])->name('index');
+            Route::get('/create',                        [AdminUnifiedSupportController::class, 'create'])->name('create');
+            Route::post('/',                             [AdminUnifiedSupportController::class, 'store'])->name('store');
+            Route::get('/{channel}/{id}',                [AdminUnifiedSupportController::class, 'show'])->where('channel', 'platform|user')->whereNumber('id')->name('show');
+            Route::get('/{channel}/{id}/poll',           [AdminUnifiedSupportController::class, 'poll'])->where('channel', 'platform|user')->whereNumber('id')->name('poll');
+            Route::post('/{channel}/{id}/reply',         [AdminUnifiedSupportController::class, 'reply'])->where('channel', 'platform|user')->whereNumber('id')->name('reply');
+            Route::patch('/user/{id}/status',            [AdminUnifiedSupportController::class, 'updateStatus'])->whereNumber('id')->name('user.status');
+            Route::patch('/user/{id}/assign',            [AdminUnifiedSupportController::class, 'assign'])->whereNumber('id')->name('user.assign');
+            Route::patch('/user/{id}/priority',          [AdminUnifiedSupportController::class, 'priority'])->whereNumber('id')->name('user.priority');
+        });
+
     // Support module — defined OUTSIDE the admin prefix group so names are tickets.site.*
     // (not admin.tickets.site.*), overriding the package's /tickets routes in the name registry.
     // AdminMenu uses tickets.site.index; Blade views in the tickets module also use tickets.site.*.
@@ -538,6 +555,9 @@ Route::middleware('install.check')->group(function () {
             Route::post('/', [AdminSupportController::class, 'store'])->name('tickets.site.store');
             Route::get('/history', [AdminSupportController::class, 'history'])->name('admin.support.history');
             Route::get('/settings', [AdminSupportController::class, 'chatSettings'])->name('tickets.site.settings');
+            Route::get('/attachments/{path}', [AdminSupportController::class, 'downloadAttachment'])
+                ->where('path', '.*')
+                ->name('tickets.site.attachment.download');
             Route::get('/{ticketId}', [AdminSupportController::class, 'show'])->whereNumber('ticketId')->name('tickets.site.show');
             Route::get('/{ticketId}/poll', [AdminSupportController::class, 'poll'])->whereNumber('ticketId')->name('tickets.site.poll');
             Route::post('/{ticketId}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('admin.support.reply');

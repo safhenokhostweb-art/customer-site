@@ -42,7 +42,7 @@ class MakeUserAdmin extends Command
         $user->is_admin = true;
         $user->save();
 
-        $this->info("کاربر «{$user->name}» ({$user->email}) به ادمین تبدیل شد. اکنون می‌تواند به پنل مدیریت وارد شود.");
+        $this->info("کاربر «{$user->name}» ({$user->mobile}) به ادمین تبدیل شد. اکنون می‌تواند به پنل مدیریت وارد شود.");
         return self::SUCCESS;
     }
 }

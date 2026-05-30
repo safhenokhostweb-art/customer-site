@@ -122,17 +122,27 @@
             bl.appendChild(np);
             bl.appendChild(mp);
             if (r.attachments && r.attachments.length > 0) {
+                const isImgAtt = att => /^image\//i.test(att.mime||'') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.name||'');
                 const attDiv = document.createElement('div');
                 attDiv.className = 'flex flex-wrap gap-1.5 mt-2';
-                r.attachments.forEach(att => {
-                    const a = document.createElement('a');
-                    a.href = att.url || '#';
-                    a.target = '_blank';
-                    a.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all';
-                    a.textContent = att.name || 'فایل';
-                    attDiv.appendChild(a);
+                r.attachments.filter(att => att.url || att.path).forEach(att => {
+                    const aUrl = att.url || '#';
+                    if (isImgAtt(att)) {
+                        const a = document.createElement('a');
+                        a.href = aUrl; a.target = '_blank'; a.className = 'block mt-1.5';
+                        const img = document.createElement('img');
+                        img.src = aUrl; img.loading = 'lazy'; img.alt = att.name || 'تصویر';
+                        img.className = 'rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer';
+                        a.appendChild(img); attDiv.appendChild(a);
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = aUrl; a.target = '_blank';
+                        a.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all';
+                        a.textContent = att.name || 'فایل';
+                        attDiv.appendChild(a);
+                    }
                 });
-                bl.appendChild(attDiv);
+                if (attDiv.hasChildNodes()) bl.appendChild(attDiv);
             }
             const ts = document.createElement('span');
             ts.className = 'text-[10px] text-gray-400 mt-1 px-1';
@@ -246,12 +256,12 @@
                     <div class="flex items-center gap-3 flex-wrap">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                                {{ mb_substr($ticket->customer_name ?? $ticket->customer_email ?? 'ک', 0, 1) }}
+                                {{ mb_substr($ticket->customer_name ?? $ticket->customer_mobile ?? 'ک', 0, 1) }}
                             </div>
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">{{ $ticket->customer_name ?? 'کاربر' }}</p>
-                                @if($ticket->customer_email)
-                                <p class="text-xs text-gray-400" dir="ltr">{{ $ticket->customer_email }}</p>
+                                @if($ticket->customer_mobile)
+                                <p class="text-xs text-gray-400" dir="ltr">{{ $ticket->customer_mobile }}</p>
                                 @endif
                             </div>
                         </div>
@@ -276,14 +286,14 @@
                          class="flex-1 overflow-y-auto p-4 space-y-1 chat-bg flex flex-col"
                          style="max-height:460px; scroll-behavior:smooth">
 
-                        @php $custInitial = mb_substr($ticket->customer_name ?? $ticket->customer_email ?? 'ک', 0, 1); @endphp
+                        @php $custInitial = mb_substr($ticket->customer_name ?? $ticket->customer_mobile ?? 'ک', 0, 1); @endphp
 
                         {{-- Initial message --}}
                         <div class="flex items-end gap-2 max-w-[85%] sm:max-w-[75%] mb-4" style="align-self:flex-start">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm" style="background-color:var(--ui-indigo)">{{ $custInitial }}</div>
                             <div>
                                 <div class="bubble-customer px-4 py-2.5 shadow-sm">
-                                    <p class="text-xs font-bold mb-1 opacity-80">{{ $ticket->customer_name ?? $ticket->customer_email ?? 'کاربر' }}</p>
+                                    <p class="text-xs font-bold mb-1 opacity-80">{{ $ticket->customer_name ?? $ticket->customer_mobile ?? 'کاربر' }}</p>
                                     <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ $ticket->description }}</p>
                                 </div>
                                 <span class="text-[10px] text-gray-400 mt-1 px-1 block">{{ \App\Helpers\Jalali::formatFa($ticket->created_at, 'Y/m/d H:i') }}</span>
@@ -328,11 +338,23 @@
                                         <div class="flex flex-wrap gap-1.5 mt-2">
                                             @foreach($reply->attachments as $file)
                                             @if(isset($file['url']) || isset($file['path']))
-                                            <a href="{{ $file['url'] ?? asset('storage/' . $file['path']) }}" target="_blank"
+                                            @php
+                                                $attUrl  = $file['url'] ?? asset('storage/' . $file['path']);
+                                                $attName = $file['name'] ?? 'فایل';
+                                                $attIsImg = preg_match('/^image\//i', $file['mime'] ?? '') || preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i', $attName);
+                                            @endphp
+                                            @if($attIsImg)
+                                            <a href="{{ $attUrl }}" target="_blank" class="block mt-1">
+                                                <img src="{{ $attUrl }}" loading="lazy" alt="{{ $attName }}"
+                                                     class="rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer">
+                                            </a>
+                                            @else
+                                            <a href="{{ $attUrl }}" target="_blank"
                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all">
                                                 <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
-                                                <span class="truncate max-w-[120px]">{{ $file['name'] ?? 'فایل' }}</span>
+                                                <span class="truncate max-w-[120px]">{{ $attName }}</span>
                                             </a>
+                                            @endif
                                             @endif
                                             @endforeach
                                         </div>
@@ -474,7 +496,7 @@
                             <div class="pr-3">
                                 <p class="text-xs font-semibold text-gray-700">تیکت ایجاد شد</p>
                                 <p class="text-[10px] text-gray-400 mt-0.5">{{ \App\Helpers\Jalali::formatFa($ticket->created_at, 'Y/m/d H:i') }}</p>
-                                <p class="text-[10px] text-gray-500 mt-0.5">توسط: {{ $ticket->customer_name ?? $ticket->customer_email ?? 'کاربر' }}</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">توسط: {{ $ticket->customer_name ?? $ticket->customer_mobile ?? 'کاربر' }}</p>
                             </div>
                         </div>
                         @if($ticket->assignee)
@@ -533,10 +555,10 @@
                         <dt class="text-gray-400 text-xs">مسئول</dt>
                         <dd class="font-semibold text-xs text-gray-700">{{ $ticket->assignee?->name ?? 'تخصیص نیافته' }}</dd>
                     </div>
-                    @if($ticket->customer_email)
+                    @if($ticket->customer_mobile)
                     <div class="flex justify-between gap-2">
-                        <dt class="text-gray-400 text-xs">ایمیل</dt>
-                        <dd class="font-semibold text-xs text-gray-700 truncate max-w-[150px]" dir="ltr">{{ $ticket->customer_email }}</dd>
+                        <dt class="text-gray-400 text-xs">موبایل</dt>
+                        <dd class="font-semibold text-xs text-gray-700 truncate max-w-[150px]" dir="ltr">{{ $ticket->customer_mobile }}</dd>
                     </div>
                     @endif
                     @if($ticket->category)

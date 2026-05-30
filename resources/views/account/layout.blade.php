@@ -109,6 +109,11 @@
         .btn-secondary:hover { background: #cbd5e1; }
         .btn-danger { background: #dc2626; color: #fff; }
         .btn-danger:hover { background: #b91c1c; }
+        /* Prevent platform theme `a { color }` from overriding button-styled anchors */
+        a.btn-primary, a.btn-danger { color: #fff; }
+        a.btn-secondary { color: #475569; }
+        a.btn-gradient { color: #fff; }
+        a[class*="text-white"] { color: #fff; }
         .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
         .badge { display: inline-flex; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
         .badge-success { background: #dcfce7; color: #166534; }

@@ -25,7 +25,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
-        'number', 'user_id', 'customer_name', 'customer_email', 'customer_phone', 'customer_address',
+        'number', 'user_id', 'customer_name', 'customer_mobile', 'customer_phone', 'customer_address',
         'note', 'subtotal', 'total', 'status', 'restocked_at', 'payment_method', 'coupon_id', 'discount_amount',
     ];
 

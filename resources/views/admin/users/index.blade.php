@@ -160,8 +160,8 @@
         $activeCount = $stats ? (int)$stats->active_count : 0;
         $totalTickets = $stats ? (int)$stats->total : 0;
         $avatarColors = ['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777'];
-        $color = $avatarColors[crc32($u->name ?? $u->email ?? '') % count($avatarColors)];
-        $initial = mb_strtoupper(mb_substr($u->name ?? $u->email ?? '؟', 0, 1));
+        $color = $avatarColors[crc32($u->name ?? $u->mobile ?? '') % count($avatarColors)];
+        $initial = mb_strtoupper(mb_substr($u->name ?? '؟', 0, 1));
     @endphp
     <div class="user-card">
         <div class="user-card__accent" style="background: {{ $activeCount > 0 ? 'linear-gradient(180deg,#10b981,#059669)' : 'linear-gradient(180deg,#d1d5db,#9ca3af)' }}"></div>
@@ -173,10 +173,7 @@
             @endif
             <div class="flex-1 min-w-0">
                 <h3 class="font-bold text-sm text-gray-900 truncate">{{ $u->name ?? '—' }}</h3>
-                <p class="text-xs text-gray-500 truncate">{{ $u->email ?? '—' }}</p>
-                @if($u->mobile)
-                <p class="text-xs text-gray-400 mt-0.5">{{ $u->mobile }}</p>
-                @endif
+                <p class="text-xs text-gray-500 truncate">{{ $u->mobile ?? '—' }}</p>
             </div>
             @if($activeCount > 0)
             <span class="active-badge shrink-0">

@@ -24,8 +24,8 @@ class InvoiceController extends Controller
     {
         $data = $request->validate([
             'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email',
-            'customer_phone' => 'nullable|string|max:50',
+            'customer_mobile' => 'required|string|max:20',
+            'customer_phone'  => 'nullable|string|max:50',
             'items' => 'required|array|min:1',
             'items.*.title' => 'required|string|max:255',
             'items.*.price' => 'required|numeric|min:0',
@@ -39,7 +39,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNumber,
             'customer_name' => $data['customer_name'],
-            'customer_email' => $data['customer_email'],
+            'customer_mobile' => $data['customer_mobile'],
             'customer_phone' => $data['customer_phone'] ?? null,
             'subtotal' => $subtotal,
             'total' => $subtotal,
