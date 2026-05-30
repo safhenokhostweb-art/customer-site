@@ -96,4 +96,76 @@
 #admin-sidebar .admin-sidebar-footer {
     border-top-color: var(--admin-sidebar-border) !important;
 }
+
+/* ═══ رنگ‌بندی گروه‌های منو — هر گروه رنگ خاص خودش ═══ */
+#admin-sidebar .admin-sidebar-group { --grp-color: var(--admin-sidebar-accent); }
+
+/* ۱ اصلی → indigo */
+#admin-sidebar .admin-sidebar-group:nth-child(1) { --grp-color: #6366f1; }
+/* ۲ محتوا و ساختار → sky */
+#admin-sidebar .admin-sidebar-group:nth-child(2) { --grp-color: #0284c7; }
+/* ۳ فروشگاه → emerald */
+#admin-sidebar .admin-sidebar-group:nth-child(3) { --grp-color: #059669; }
+/* ۴ تیکت و پشتیبانی → rose */
+#admin-sidebar .admin-sidebar-group:nth-child(4) { --grp-color: #e11d48; }
+/* ۵ فرم‌ها و ارتباط → amber */
+#admin-sidebar .admin-sidebar-group:nth-child(5) { --grp-color: #d97706; }
+/* ۶ اشتراک و آموزش → violet */
+#admin-sidebar .admin-sidebar-group:nth-child(6) { --grp-color: #7c3aed; }
+/* ۷ کسب‌وکار و نمایش → teal */
+#admin-sidebar .admin-sidebar-group:nth-child(7) { --grp-color: #0d9488; }
+/* ۸ ظاهر، امنیت و تنظیمات → slate */
+#admin-sidebar .admin-sidebar-group:nth-child(8) { --grp-color: #64748b; }
+/* ۹ لایسنس، ماژول‌ها → orange */
+#admin-sidebar .admin-sidebar-group:nth-child(9) { --grp-color: #ea580c; }
+/* ۱۰ ماژول‌های از پلتفرم → purple */
+#admin-sidebar .admin-sidebar-group:nth-child(10) { --grp-color: #9333ea; }
+
+#admin-sidebar .admin-sidebar-group .sidebar-group-label {
+    color: var(--grp-color) !important;
+    border-bottom-color: color-mix(in srgb, var(--grp-color) 30%, transparent) !important;
+}
+#admin-sidebar .admin-sidebar-group .sidebar-group-caret {
+    color: var(--grp-color) !important;
+    opacity: 0.7;
+}
+#admin-sidebar .admin-sidebar-group .sidebar-link:hover {
+    background: color-mix(in srgb, var(--grp-color) 18%, transparent) !important;
+    color: #fff !important;
+}
+#admin-sidebar .admin-sidebar-group .sidebar-link.active {
+    background: color-mix(in srgb, var(--grp-color) 28%, transparent) !important;
+    color: #fff !important;
+    box-shadow: inset -3px 0 0 var(--grp-color) !important;
+}
+#admin-sidebar .admin-sidebar-group .sidebar-link:hover svg,
+#admin-sidebar .admin-sidebar-group .sidebar-link.active svg {
+    color: var(--grp-color) !important;
+}
+
+/* ═══ رنگ‌بندی گروه‌های منو — پنل کاربر (account-sidebar) ═══ */
+#account-sidebar .mb-4 { --grp-color: var(--admin-sidebar-accent); }
+/* ۱ اصلی */
+#account-sidebar .mb-4:nth-child(1) { --grp-color: #6366f1; }
+/* ۲ خرید و اشتراک */
+#account-sidebar .mb-4:nth-child(2) { --grp-color: #059669; }
+/* ۳ تعامل */
+#account-sidebar .mb-4:nth-child(3) { --grp-color: #0284c7; }
+/* ۴ حساب کاربری */
+#account-sidebar .mb-4:nth-child(4) { --grp-color: #7c3aed; }
+
+#account-sidebar .mb-4 > div.px-3.py-2.text-xs {
+    color: var(--grp-color) !important;
+    border-bottom-color: color-mix(in srgb, var(--grp-color) 30%, transparent) !important;
+    font-weight: 700 !important;
+}
+#account-sidebar .mb-4 .account-sidebar-link:hover {
+    background: color-mix(in srgb, var(--grp-color) 18%, transparent) !important;
+    color: #fff !important;
+}
+#account-sidebar .mb-4 .account-sidebar-link.active {
+    background: color-mix(in srgb, var(--grp-color) 28%, transparent) !important;
+    color: #fff !important;
+    box-shadow: inset -3px 0 0 var(--grp-color) !important;
+}
 </style>

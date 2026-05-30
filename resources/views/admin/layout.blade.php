@@ -109,7 +109,7 @@
                     </details>
                     <h1 class="admin-page-title">@yield('header', 'پنل مدیریت')</h1>
                 </div>
-                <span class="admin-header-user">{{ auth()->user()->mobile ?? auth()->user()->email }}</span>
+                <span class="admin-header-user">{{ auth()->user()?->mobile ?? auth()->user()?->email }}</span>
             </header>
 
             <main class="admin-main">
@@ -149,6 +149,8 @@
     </div>
 
     @include('partials.admin-notifications-widget')
+    @include('partials.chat-sounds')
+    @include('admin.partials.user-ticket-notifier')
 
     <script>
     (function(){

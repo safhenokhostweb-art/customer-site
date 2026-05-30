@@ -20,9 +20,18 @@ class ProfileAvatarController extends Controller
         }
 
         $file = $request->file('avatar');
-        $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
-        $dir = 'avatar/' . date('Y/m');
-        $path = $file->storeAs($dir, $filename, 'uploads');
+        $ext = $file->extension() ?: $file->getClientOriginalExtension();
+        if (empty($ext)) {
+            return back()->withErrors(['avatar' => 'نوع فایل تصویر شناسایی نشد. لطفاً یک فایل JPEG، PNG، GIF یا WEBP آپلود کنید.']);
+        }
+        $filename = Str::random(20) . '.' . $ext;
+        $relDir = 'avatar/' . date('Y/m');
+        $absDir = public_path('uploads' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relDir));
+        if (!is_dir($absDir)) {
+            mkdir($absDir, 0755, true);
+        }
+        $file->move($absDir, $filename);
+        $path = $relDir . '/' . $filename;
 
         $user->update(['avatar' => $path]);
 

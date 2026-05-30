@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\PageController as FrontPageController;
 use App\Http\Controllers\Front\BlogController;
@@ -59,6 +60,9 @@ use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Account\DashboardController as AccountDashboardController;
+use App\Http\Controllers\Account\TicketController as AccountTicketController;
+use App\Http\Controllers\Admin\UserTicketController as AdminUserTicketController;
+use App\Http\Controllers\Admin\UserPanelController as AdminUserPanelController;
 use App\Http\Controllers\Account\OrderController as AccountOrderController;
 use App\Http\Controllers\Account\SubscriptionController as AccountSubscriptionController;
 use App\Http\Controllers\Account\FormController as AccountFormController;
@@ -102,9 +106,11 @@ Route::middleware('install.check')->group(function () {
     Route::get('/site-api/menus', [SiteMenuApiController::class, 'index'])->name('site-api.menus');
 
     // Auth
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+    Route::get('/login',    [LoginController::class,   'showLoginForm'])->name('login');
+    Route::post('/login',   [LoginController::class,   'login']);
+    Route::get('/register', [RegisterController::class, 'showForm'])->name('register')->middleware('guest');
+    Route::post('/register',[RegisterController::class, 'register'])->middleware('guest');
+    Route::post('/logout',  [LoginController::class,   'logout'])->name('logout')->middleware('auth');
 
     // End User Dashboard (حساب من)
     Route::prefix('account')->name('account.')->middleware('auth')->group(function () {
@@ -133,6 +139,17 @@ Route::middleware('install.check')->group(function () {
         Route::get('/profile/deletion', [AccountProfileDeletionController::class, 'index'])->name('profile.deletion.index');
         Route::post('/profile/deletion', [AccountProfileDeletionController::class, 'store'])->name('profile.deletion.store');
         Route::post('/profile/deletion/cancel', [AccountProfileDeletionController::class, 'cancel'])->name('profile.deletion.cancel');
+
+        // تیکت‌های پشتیبانی کاربر نهایی
+        Route::prefix('tickets')->name('tickets.')->group(function () {
+            Route::get('/',                     [AccountTicketController::class, 'index'])->name('index');
+            Route::get('/create',               [AccountTicketController::class, 'create'])->name('create');
+            Route::post('/',                    [AccountTicketController::class, 'store'])->name('store');
+            Route::get('/check-activity',       [AccountTicketController::class, 'checkActivity'])->name('check-activity');
+            Route::get('/{id}',                 [AccountTicketController::class, 'show'])->whereNumber('id')->name('show');
+            Route::get('/{id}/poll',            [AccountTicketController::class, 'poll'])->whereNumber('id')->name('poll');
+            Route::post('/{id}/reply',          [AccountTicketController::class, 'reply'])->whereNumber('id')->name('reply');
+        });
     });
 
     // Front: corporate + blog + optional shop
@@ -271,26 +288,6 @@ Route::middleware('install.check')->group(function () {
             Route::get('license/refresh-config', [AdminLicenseController::class, 'refreshConfigGet'])->name('license.refresh-config.get');
             Route::get('license/test-config', [AdminLicenseController::class, 'testSiteConfig'])->name('license.test-config');
             Route::post('license/refresh-modules', [AdminLicenseController::class, 'refreshModules'])->name('license.refresh-modules');
-        });
-        Route::middleware(['permission:support', 'throttle:30,1'])->group(function () {
-            Route::get('support', [AdminSupportController::class, 'index'])->name('support.index');
-            Route::get('support/create', [AdminSupportController::class, 'create'])->name('support.create');
-            Route::post('support', [AdminSupportController::class, 'store'])->name('support.store');
-            Route::get('support/history', [AdminSupportController::class, 'history'])->name('support.history');
-            Route::get('support/{ticketId}', [AdminSupportController::class, 'show'])->whereNumber('ticketId')->name('support.show');
-            Route::post('support/{ticketId}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('support.reply');
-        });
-
-        // Phase 9.1 — Canonical tickets.site.* route name aliases.
-        // The canonical package views use tickets.site.* route names.
-        // These aliases make route('tickets.site.index') etc. resolve correctly
-        // in customer-site context, overriding the package's DB-based routes.
-        Route::middleware(['permission:support', 'throttle:30,1'])->name('tickets.site.')->prefix('support')->group(function () {
-            Route::get('/', [AdminSupportController::class, 'index'])->name('index');
-            Route::get('/create', [AdminSupportController::class, 'create'])->name('create');
-            Route::post('/', [AdminSupportController::class, 'store'])->name('store');
-            Route::get('/{ticketId}', [AdminSupportController::class, 'show'])->whereNumber('ticketId')->name('show');
-            Route::post('/{ticketId}/replies', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('replies.store');
         });
 
         // Phase 5 / Wave 3 / P1-2: لاگ فعالیت ادمین (فقط نمایش؛ نوشتن از سرویس‌ها انجام می‌شود).
@@ -502,10 +499,49 @@ Route::middleware('install.check')->group(function () {
 
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
     });
+
+    // پنل کاربری — مشاهده کاربران و چت مستقیم
+    Route::middleware(['auth', 'admin', 'throttle:60,1'])
+        ->prefix('admin/users')
+        ->name('admin.users.')
+        ->group(function () {
+            Route::get('/',                  [AdminUserPanelController::class, 'index'])->name('index');
+            Route::get('/{id}/chat',         [AdminUserPanelController::class, 'chat'])->whereNumber('id')->name('chat');
+            Route::post('/{id}/start-chat',  [AdminUserPanelController::class, 'startChat'])->whereNumber('id')->name('startChat');
+        });
+
+    // تیکت‌های کاربران نهایی (ادمین سایت ↔ کاربران)
+    Route::middleware(['auth', 'admin', 'throttle:60,1'])
+        ->prefix('admin/user-tickets')
+        ->name('admin.user-tickets.')
+        ->group(function () {
+            Route::get('/',               [AdminUserTicketController::class, 'index'])->name('index');
+            Route::get('/create',         [AdminUserTicketController::class, 'create'])->name('create');
+            Route::post('/',              [AdminUserTicketController::class, 'store'])->name('store');
+            Route::get('/{id}',           [AdminUserTicketController::class, 'show'])->whereNumber('id')->name('show');
+            Route::get('/{id}/poll',      [AdminUserTicketController::class, 'poll'])->whereNumber('id')->name('poll');
+            Route::get('/check-new',      [AdminUserTicketController::class, 'checkNew'])->name('check-new');
+            Route::post('/{id}/reply',    [AdminUserTicketController::class, 'reply'])->whereNumber('id')->name('reply');
+            Route::patch('/{id}/status',  [AdminUserTicketController::class, 'updateStatus'])->whereNumber('id')->name('status');
+            Route::patch('/{id}/assign',  [AdminUserTicketController::class, 'assign'])->whereNumber('id')->name('assign');
+            Route::patch('/{id}/priority',[AdminUserTicketController::class, 'priority'])->whereNumber('id')->name('priority');
+        });
+
+    // Support module — defined OUTSIDE the admin prefix group so names are tickets.site.*
+    // (not admin.tickets.site.*), overriding the package's /tickets routes in the name registry.
+    // AdminMenu uses tickets.site.index; Blade views in the tickets module also use tickets.site.*.
+    Route::middleware(['auth', 'admin', 'license.valid', 'permission:dashboard', 'permission:support', 'throttle:30,1'])
+        ->prefix('admin/support')
+        ->group(function () {
+            Route::get('/', [AdminSupportController::class, 'index'])->name('tickets.site.index');
+            Route::get('/create', [AdminSupportController::class, 'create'])->name('tickets.site.create');
+            Route::post('/', [AdminSupportController::class, 'store'])->name('tickets.site.store');
+            Route::get('/history', [AdminSupportController::class, 'history'])->name('admin.support.history');
+            Route::get('/settings', [AdminSupportController::class, 'chatSettings'])->name('tickets.site.settings');
+            Route::get('/{ticketId}', [AdminSupportController::class, 'show'])->whereNumber('ticketId')->name('tickets.site.show');
+            Route::get('/{ticketId}/poll', [AdminSupportController::class, 'poll'])->whereNumber('ticketId')->name('tickets.site.poll');
+            Route::post('/{ticketId}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('admin.support.reply');
+            Route::post('/{ticketId}/replies', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('tickets.site.replies.store');
+        });
 });
 
-Route::get('/support', [\App\Http\Controllers\Admin\SupportController::class, 'index'])->name('admin.support.index');
-Route::get('/support/create', [\App\Http\Controllers\Admin\SupportController::class, 'create'])->name('admin.support.create');
-Route::post('/support', [\App\Http\Controllers\Admin\SupportController::class, 'store'])->name('admin.support.store');
-Route::get('/support/{ticketId}', [\App\Http\Controllers\Admin\SupportController::class, 'show'])->name('admin.support.show');
-Route::post('/support/{ticketId}/reply', [\App\Http\Controllers\Admin\SupportController::class, 'reply'])->name('admin.support.reply');

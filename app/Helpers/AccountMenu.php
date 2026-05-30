@@ -8,45 +8,48 @@ namespace App\Helpers;
 class AccountMenu
 {
     public const MENU_KEYS = [
-        'overview' => 'خلاصه',
-        'profile' => 'پروفایل',
-        'orders' => 'سفارشات من',
+        'overview'      => 'خلاصه',
+        'profile'       => 'پروفایل',
+        'orders'        => 'سفارشات من',
         'subscriptions' => 'اشتراک‌های من',
+        'tickets'       => 'پشتیبانی',
         'notifications' => 'اعلان‌ها',
-        'security' => 'امنیت',
+        'security'      => 'امنیت',
     ];
 
     public const MENU_ROUTES = [
-        'overview' => 'account.dashboard',
-        'profile' => 'account.profile.index',
-        'orders' => 'account.orders.index',
+        'overview'      => 'account.dashboard',
+        'profile'       => 'account.profile.index',
+        'orders'        => 'account.orders.index',
         'subscriptions' => 'account.subscriptions.index',
+        'tickets'       => 'account.tickets.index',
         'notifications' => 'account.notifications.index',
-        'security' => 'account.security.index',
+        'security'      => 'account.security.index',
     ];
 
     public const MENU_ROUTE_PATTERNS = [
-        'overview' => 'account.dashboard',
-        'profile' => 'account.profile.*',
-        'orders' => 'account.orders.*',
+        'overview'      => 'account.dashboard',
+        'profile'       => 'account.profile.*',
+        'orders'        => 'account.orders.*',
         'subscriptions' => 'account.subscriptions.*',
+        'tickets'       => 'account.tickets.*',
         'notifications' => 'account.notifications.*',
-        'security' => 'account.security.*',
+        'security'      => 'account.security.*',
     ];
 
     public static function getGroups(): array
     {
         return [
-            'اصلی' => ['overview', 'profile'],
+            'اصلی'           => ['overview', 'profile'],
             'خرید و اشتراک' => ['orders', 'subscriptions'],
-            'تعامل' => ['notifications'],
-            'حساب کاربری' => ['security'],
+            'تعامل'          => ['tickets', 'notifications'],
+            'حساب کاربری'   => ['security'],
         ];
     }
 
     public static function isVisible(string $key): bool
     {
-        if (in_array($key, ['overview', 'profile', 'notifications', 'security'])) {
+        if (in_array($key, ['overview', 'profile', 'notifications', 'security', 'tickets'])) {
             return true;
         }
         if ($key === 'orders') {

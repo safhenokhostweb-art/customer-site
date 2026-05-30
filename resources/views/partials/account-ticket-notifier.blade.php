@@ -1,0 +1,80 @@
+@php
+use SaaSPlatform\Modules\Tickets\Models\Ticket as _ATTicket;
+use SaaSPlatform\Modules\Tickets\Models\TicketReply as _ATReply;
+
+$_atIds = _ATTicket::withoutTenantIsolation()
+    ->where('customer_id', auth()->id())
+    ->whereNull('site_id')
+    ->pluck('id');
+
+$_atLastReplyId = $_atIds->isNotEmpty()
+    ? (_ATReply::whereIn('ticket_id', $_atIds)->max('id') ?? 0)
+    : 0;
+@endphp
+
+@if($_atIds->isNotEmpty())
+<div id="atn-banner"
+     style="display:none;position:fixed;top:0;right:0;left:0;z-index:9100;padding:0.7rem 1.25rem;background:linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%);color:#fff;box-shadow:0 4px 24px rgba(99,102,241,0.4);animation:atnSlide .35s ease">
+    <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;gap:0.875rem">
+        <svg style="width:1.125rem;height:1.125rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        <span id="atn-text" style="flex:1;font-size:0.85rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <a id="atn-link" href="#"
+           style="padding:0.25rem 0.85rem;background:rgba(255,255,255,0.9);color:#4f46e5;border-radius:0.4rem;font-size:0.75rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
+            مشاهده پاسخ
+        </a>
+        <button onclick="document.getElementById('atn-banner').style.display='none'"
+                style="display:flex;align-items:center;justify-content:center;width:1.625rem;height:1.625rem;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:50%;color:#fff;font-size:1rem;cursor:pointer;padding:0;flex-shrink:0"
+                aria-label="بستن">×</button>
+    </div>
+</div>
+<style>
+@keyframes atnSlide{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+<script>
+(function(){
+    var lastId = {{ (int) $_atLastReplyId }};
+    var banner = document.getElementById('atn-banner');
+    var bannerText = document.getElementById('atn-text');
+    var bannerLink = document.getElementById('atn-link');
+    var dismissTimer = null;
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+
+    function showBanner(text, url){
+        bannerText.textContent = text;
+        bannerLink.href = url;
+        banner.style.display = 'block';
+        banner.style.animation = 'none';
+        void banner.offsetWidth;
+        banner.style.animation = 'atnSlide .35s ease';
+        if (dismissTimer) clearTimeout(dismissTimer);
+        dismissTimer = setTimeout(function(){ banner.style.display = 'none'; }, 8000);
+    }
+
+    function check(){
+        fetch('/account/tickets/check-activity?last_id=' + lastId, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfMeta ? csrfMeta.content : ''
+            }
+        })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(data){
+            if (!data || data.new_count === 0) return;
+            lastId = data.last_id;
+            if (window.CS) window.CS.play('notify');
+            var first = data.replies[0];
+            var text = 'پاسخ جدید دریافت شد: ' + (first.subject || 'تیکت شما');
+            if (data.new_count > 1) text += ' (+' + (data.new_count - 1) + ' مورد دیگر)';
+            showBanner(text, first.url);
+        })
+        .catch(function(){});
+    }
+
+    setTimeout(check, 6000);
+    setInterval(check, 16000);
+})();
+</script>
+@endif

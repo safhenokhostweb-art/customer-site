@@ -55,6 +55,17 @@ class SupportApiClient
         return $response;
     }
 
+    public function poll(License $license, int|string $ticketId, int $lastId = 0): array
+    {
+        $params   = $lastId > 0 ? ['last_id' => $lastId] : [];
+        $response = $this->request('get', '/api/tenant/tickets/' . (int) $ticketId . '/poll', $license, $params);
+
+        return [
+            'replies' => $response['replies'] ?? [],
+            'last_id' => (int) ($response['last_id'] ?? $lastId),
+        ];
+    }
+
     public function uploadAttachments(array $files): array
     {
         $uploadedFiles = [];

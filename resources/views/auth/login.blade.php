@@ -39,6 +39,11 @@
         <button type="submit" class="btn btn-primary w-full">ورود</button>
     </form>
 </div>
+
+<div class="auth-login-footer-text">
+    حساب کاربری ندارید؟
+    <a href="{{ route('register') }}">ثبت‌نام رایگان</a>
+</div>
 @if(!empty($captcha['enabled']) && ($captcha['type'] ?? '') === 'hcaptcha' && !empty($captcha['hcaptcha_site_key']))
 @push('scripts')
 <script src="https://js.hcaptcha.com/1/api.js?hl=fa" async defer></script>

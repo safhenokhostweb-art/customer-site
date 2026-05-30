@@ -341,7 +341,7 @@
                         <span class="badge badge-success mr-2">فعال</span>
                     @endif
                 </div>
-                <a href="{{ route('admin.support.index') }}" class="btn btn-secondary btn-sm">پشتیبانی</a>
+                <a href="{{ route('tickets.site.index') }}" class="btn btn-secondary btn-sm">پشتیبانی</a>
             </div>
         </div>
     </div>

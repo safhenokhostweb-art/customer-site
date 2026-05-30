@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\StoreSupportRequest;
 use App\Models\License;
 use App\Models\User;
 use App\Services\SupportApiClient;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use SaaSPlatform\Modules\Tickets\Dto\TicketProxyData;
 
 /**
@@ -35,11 +37,33 @@ class SupportController extends Controller
         $tickets = TicketProxyData::collectionFromApiResult($rawTickets);
         $stats   = TicketProxyData::statsFrom($tickets);
 
-        return view('tickets::site.tickets.index', [
-            'tickets' => $tickets,
-            'stats'   => $stats,
-            'error'   => $error,
-        ]);
+        // Agent workload — active tickets grouped by assignee
+        $agentWorkload = $tickets
+            ->filter(fn($t) => in_array($t->status, ['open', 'in_progress']) && $t->assignee !== null)
+            ->groupBy(fn($t) => $t->assignee->name)
+            ->map(fn($group, $name) => ['name' => $name, 'count' => $group->count()])
+            ->sortByDesc('count')
+            ->values();
+
+        $totalActive = max(
+            $tickets->whereIn('status', ['open', 'in_progress'])->count(),
+            1
+        );
+
+        // Priority × status heatmap (open + in_progress columns only)
+        $heatmap = collect([
+            ['key' => 'high',   'label' => 'بالا'],
+            ['key' => 'normal', 'label' => 'عادی'],
+            ['key' => 'low',    'label' => 'کم'],
+        ])->map(fn($row) => array_merge($row, [
+            'open'        => $tickets->where('priority', $row['key'])->where('status', 'open')->count(),
+            'in_progress' => $tickets->where('priority', $row['key'])->where('status', 'in_progress')->count(),
+            'closed'      => $tickets->where('priority', $row['key'])->where('status', 'closed')->count(),
+        ]))->toArray();
+
+        return view('tickets::site.tickets.admin_index', compact(
+            'tickets', 'stats', 'error', 'agentWorkload', 'totalActive', 'heatmap'
+        ));
     }
 
     public function create()
@@ -50,7 +74,7 @@ class SupportController extends Controller
         return view('tickets::site.tickets.create', [
             'license'            => $license,
             'users'              => $users,
-            'attachmentsEnabled' => false,
+            'attachmentsEnabled' => true,
         ]);
     }
 
@@ -77,8 +101,10 @@ class SupportController extends Controller
         }
 
         return view('tickets::site.tickets.show', [
-            'ticket' => $ticket,
-            'error'  => $error,
+            'ticket'             => $ticket,
+            'error'              => $error,
+            'activities'         => collect(),
+            'attachmentsEnabled' => true,
         ]);
     }
 
@@ -127,6 +153,11 @@ class SupportController extends Controller
         return back()->with('error', $response['message'] ?? 'خطا در ثبت تیکت.')->withInput();
     }
 
+    public function chatSettings()
+    {
+        return view('tickets::site.tickets.settings');
+    }
+
     public function history()
     {
         [$license, $rawTickets, $error] = $this->loadTickets();
@@ -155,11 +186,35 @@ class SupportController extends Controller
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {
+            if ($request->ajax() || $request->wantsJson()) {
+                $replies   = $response['ticket']['replies'] ?? [];
+                $lastReply = !empty($replies) ? end($replies) : null;
+                return response()->json(['success' => true, 'reply' => $lastReply ?: null]);
+            }
             return redirect()->route('tickets.site.show', $ticketId)
                 ->with('success', 'پاسخ شما با موفقیت ثبت شد.');
         }
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => false, 'message' => $response['message'] ?? 'خطا در ثبت پاسخ.'], 422);
+        }
+
         return back()->with('error', $response['message'] ?? 'خطا در ثبت پاسخ.')->withInput();
+    }
+
+    public function poll(Request $request, int|string $ticketId): JsonResponse
+    {
+        $license = License::current();
+        if (! $license || empty($license->license_key) || empty($license->domain)) {
+            return response()->json(['replies' => [], 'last_id' => 0]);
+        }
+
+        $result = $this->supportApiClient->poll($license, $ticketId, (int) $request->query('last_id', 0));
+
+        return response()->json([
+            'replies' => $result['replies'],
+            'last_id' => $result['last_id'],
+        ]);
     }
 
     protected function loadTickets(): array
