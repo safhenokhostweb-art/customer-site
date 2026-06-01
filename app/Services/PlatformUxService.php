@@ -115,6 +115,23 @@ class PlatformUxService
     }
 
     /**
+     * پریست تم اختصاص‌داده‌شده توسط ادمین پلتفرم به این سایت.
+     * اگر ادمین از پنل saas-platform یک ThemeProfile به این سایت اختصاص داده باشد،
+     * slug آن پریست اینجا برگردانده می‌شود.
+     * برتری: Platform > Setting محلی
+     */
+    public function getAssignedThemePresetSlug(): ?string
+    {
+        $config = $this->getSiteConfig();
+        $slug   = $config['theme_preset_slug'] ?? null;
+        if (!empty($slug)) {
+            return $slug;
+        }
+        // Fallback به Setting محلی سایت مشتری
+        return Setting::get('theme_preset_slug') ?: null;
+    }
+
+    /**
      * منوهای ارسالی از پلتفرم (بر اساس موقعیت: header, footer, sidebar).
      * هر عنصر آرایه: ['name' => ..., 'items' => [...]]
      */

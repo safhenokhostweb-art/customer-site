@@ -271,8 +271,10 @@ Route::middleware('install.check')->group(function () {
             Route::put('menus/{menu}/items/{item}', [AdminMenuController::class, 'updateItem'])->name('menus.items.update');
             Route::delete('menus/{menu}/items/{item}', [AdminMenuController::class, 'destroyItem'])->name('menus.items.destroy');
             Route::post('menus/{menu}/reorder', [AdminMenuController::class, 'reorder'])->name('menus.reorder');
-            Route::get('theme-design', [ThemeDesignController::class, 'index'])->name('theme-design.index');
-            Route::put('theme-design', [ThemeDesignController::class, 'update'])->name('theme-design.update');
+            Route::get('theme-design',               [ThemeDesignController::class, 'index'])->name('theme-design.index');
+            Route::put('theme-design',               [ThemeDesignController::class, 'update'])->name('theme-design.update');
+            Route::post('theme-design/preset',       [ThemeDesignController::class, 'activatePreset'])->name('theme-design.preset');
+            Route::post('theme-design/reset-preset', [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
         });
         Route::get('builder-health', [\App\Http\Controllers\Admin\BuilderHealthController::class, 'index'])->name('builder-health.index');
         Route::middleware(['module:currency_reform', 'permission:currency_reform'])->group(function () {

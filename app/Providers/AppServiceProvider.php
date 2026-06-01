@@ -54,7 +54,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\JalaliDateFormatterAdapter::class
         );
 
-// Bind ActivityLoggerInterface
+        // PHASE UI-THEME.1 — Enterprise Theme Engine (tenant resolver)
+        $this->app->singleton(\App\Services\ThemeEngine\TenantThemeResolver::class);
+
+        // Bind ActivityLoggerInterface
 $this->app->bind(
     ActivityLoggerInterface::class,
     function () {

@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{{ asset('css/admin-modules.css') }}?v={{ @filemtime(public_path('css/admin-modules.css')) ?: time() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.platform-styles')
+    {{-- Theme Engine: injected LAST so it overrides all static and partial-generated CSS vars --}}
+    @include('partials.theme-engine-tokens')
     @include('admin.partials.persian-date-admin-styles')
     <style>
         @keyframes badge-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(239,68,68,0)}}
