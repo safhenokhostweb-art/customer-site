@@ -310,4 +310,6 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
 
 </div>
 
+@include('partials.support-features')
+
 @endsection

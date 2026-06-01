@@ -310,4 +310,7 @@
     </div>
 
 </div>{{-- end x-data --}}
+
+@include('partials.support-features')
+
 @endsection

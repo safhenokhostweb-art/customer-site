@@ -109,7 +109,79 @@
                     </details>
                     <h1 class="admin-page-title">@yield('header', 'پنل مدیریت')</h1>
                 </div>
-                <span class="admin-header-user">{{ auth()->user()?->mobile ?? auth()->user()?->email }}</span>
+                {{-- Profile Dropdown --}}
+                @php
+                    $adminUser = auth()->user();
+                    $adminAvatarUrl = $adminUser->avatar ? url($adminUser->avatar) : null;
+                    $adminInitial   = mb_substr($adminUser->name ?? $adminUser->mobile, 0, 1);
+                @endphp
+                <div x-data="{ open: false }" @click.outside="open = false" class="relative" style="z-index:50">
+                    <button @click="open = !open" type="button"
+                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all group">
+                        {{-- Avatar --}}
+                        @if($adminAvatarUrl)
+                        <img src="{{ $adminAvatarUrl }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm admin-avatar-img" alt="{{ $adminUser->name }}">
+                        @else
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center ring-2 ring-white shadow-sm admin-avatar-initials">
+                            <span class="text-xs font-bold text-white">{{ $adminInitial }}</span>
+                        </div>
+                        @endif
+                        <div class="hidden sm:block text-right">
+                            <p class="text-xs font-semibold text-gray-700 leading-none">{{ $adminUser->name ?? 'ادمین' }}</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5 leading-none">{{ $adminUser->mobile }}</p>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    {{-- Dropdown --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                         class="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2"
+                         style="display:none">
+                        {{-- User info --}}
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                @if($adminAvatarUrl)
+                                <img src="{{ $adminAvatarUrl }}" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-100">
+                                @else
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                                    <span class="text-sm font-bold text-white">{{ $adminInitial }}</span>
+                                </div>
+                                @endif
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 truncate">{{ $adminUser->name ?? 'ادمین' }}</p>
+                                    <p class="text-xs text-gray-400 truncate">{{ $adminUser->mobile }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Links --}}
+                        <div class="py-1">
+                            <a href="{{ route('admin.profile.index') }}"
+                               class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                ویرایش پروفایل
+                            </a>
+                            <a href="{{ route('admin.dashboard') }}"
+                               class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+                                داشبورد
+                            </a>
+                        </div>
+                        <div class="border-t border-gray-100 pt-1">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                        class="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                                    خروج از حساب
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <main class="admin-main">

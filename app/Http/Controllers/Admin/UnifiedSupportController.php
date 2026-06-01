@@ -112,13 +112,21 @@ class UnifiedSupportController extends Controller
         $endUser    = ($channel === 'user' && ($ticket->customer_id ?? null))
             ? User::find((int) $ticket->customer_id)
             : null;
-        $agentUsers = User::where('is_admin', true)->get(['id', 'name', 'email', 'mobile']);
+        $agentUsers = User::where('is_admin', true)->get(['id', 'name', 'mobile']);
         $smsEnabled = (bool) Setting::get('user_tickets.sms_enabled', false);
         $hasLicense = (bool) License::current()?->license_key;
 
+        $sidebarTickets = Ticket::withoutTenantIsolation()
+            ->whereNull('site_id')
+            ->select(['id', 'ticket_number', 'subject', 'status', 'priority', 'customer_name', 'updated_at'])
+            ->orderByDesc('updated_at')
+            ->limit(60)
+            ->get();
+
         return view('admin.unified-support.show', compact(
             'ticket', 'channel', 'id',
-            'endUser', 'agentUsers', 'smsEnabled', 'hasLicense'
+            'endUser', 'agentUsers', 'smsEnabled', 'hasLicense',
+            'sidebarTickets'
         ));
     }
 
@@ -371,21 +379,37 @@ class UnifiedSupportController extends Controller
         ]);
 
         $attachments = [];
-        foreach ($request->file('attachments', []) as $file) {
-            if (!$file->isValid() || $file->getSize() === 0) {
+        $uploadedFiles = $request->file('attachments', []);
+        if (!is_array($uploadedFiles)) {
+            $uploadedFiles = [$uploadedFiles];
+        }
+
+        foreach ($uploadedFiles as $file) {
+            if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) {
                 continue;
             }
-            $path = $file->store('support-tickets/' . now()->format('Y/m'), 'public');
-            if (!$path) {
-                continue;
+            try {
+                $subdir   = 'tickets/' . now()->format('Y/m');
+                $destDir  = public_path('uploads/' . $subdir);
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0775, true);
+                }
+                $ext      = $file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'bin');
+                $origName = $file->getClientOriginalName();
+                $origMime = $file->getMimeType();
+                $origSize = $file->getSize();
+                $filename = \Illuminate\Support\Str::random(32) . '.' . $ext;
+                $file->move($destDir, $filename);
+                $attachments[] = [
+                    'name' => $origName,
+                    'path' => 'uploads/' . $subdir . '/' . $filename,
+                    'url'  => url('uploads/' . $subdir . '/' . $filename),
+                    'size' => $origSize,
+                    'mime' => $origMime,
+                ];
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('UnifiedSupportController::replyUser file upload error: ' . $e->getMessage());
             }
-            $attachments[] = [
-                'name' => $file->getClientOriginalName(),
-                'path' => $path,
-                'url'  => asset(Storage::url($path)),
-                'size' => $file->getSize(),
-                'mime' => $file->getMimeType(),
-            ];
         }
 
         $isInternal = $request->boolean('is_internal', false);

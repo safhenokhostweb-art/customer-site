@@ -138,6 +138,18 @@
     padding: 0.75rem 1rem;
 }
 
+/* ── Attachment mosaic ── */
+.att-mosaic{display:flex;flex-wrap:wrap;gap:2px;border-radius:.75rem;overflow:hidden;margin-top:.5rem}
+.att-mosaic .att-cell{position:relative;overflow:hidden;flex-shrink:0}
+.att-mosaic .att-cell a{display:block;height:100%}
+.att-mosaic .att-cell img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;transition:opacity .18s}
+.att-mosaic .att-cell img:hover{opacity:.88}
+.att-more{position:absolute;inset:0;background:rgba(0,0,0,.52);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;pointer-events:none}
+.att-mosaic.n1{max-width:230px}.att-mosaic.n1 .att-cell{width:100%}.att-mosaic.n1 .att-cell img{max-height:180px;border-radius:.75rem}
+.att-mosaic.n2{max-width:280px}.att-mosaic.n2 .att-cell{width:calc(50% - 1px)}.att-mosaic.n2 .att-cell img{height:148px}
+.att-mosaic.n3{max-width:280px}.att-mosaic.n3 .att-cell:first-child{width:100%}.att-mosaic.n3 .att-cell:first-child img{height:148px}.att-mosaic.n3 .att-cell:not(:first-child){width:calc(50% - 1px)}.att-mosaic.n3 .att-cell:not(:first-child) img{height:108px}
+.att-mosaic.n4{max-width:280px}.att-mosaic.n4 .att-cell{width:calc(50% - 1px)}.att-mosaic.n4 .att-cell img{height:108px}
+
 /* ── Mobile toggle ── */
 @media (max-width: 768px) {
     .msg-wrap { flex-direction: column; height: auto; min-height: 100dvh; }
@@ -172,6 +184,44 @@
         showToast: false,
         toastText: '',
         listSearch: '',
+        selectedFiles: [],
+        _rawFiles: [],
+
+        get imgFiles() { return this.selectedFiles.filter(f => f.isImage); },
+        get docFiles() { return this.selectedFiles.filter(f => !f.isImage); },
+        get mosaicCls() { const n=this.imgFiles.length; return n===1?'n1':n===2?'n2':n===3?'n3':'n4'; },
+
+        handleFileChange(e) {
+            const files = Array.from(e.target.files || []);
+            this._rawFiles = files;
+            this.selectedFiles = files.map((f,i) => ({
+                _pos: i,
+                name: f.name,
+                size: f.size>1048576 ? (f.size/1048576).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB',
+                isImage: f.type.startsWith('image/'),
+                preview: null,
+            }));
+            files.forEach((f,i) => {
+                if (f.type.startsWith('image/')) {
+                    const r = new FileReader();
+                    r.onload = ev => {
+                        const item = this.selectedFiles.find(x => x._pos===i);
+                        if (item) item.preview = ev.target.result;
+                    };
+                    r.readAsDataURL(f);
+                }
+            });
+        },
+        removeFile(pos) {
+            this.selectedFiles = this.selectedFiles.filter(f => f._pos !== pos);
+            const inp = this.$refs.fileInputUser;
+            if (inp) {
+                const dt = new DataTransfer();
+                this.selectedFiles.forEach(f => { if (this._rawFiles[f._pos]) dt.items.add(this._rawFiles[f._pos]); });
+                inp.files = dt.files;
+            }
+        },
+
         scrollDown() {
             let el = this.$refs.chatMessages;
             if(el) { el.scrollTop = el.scrollHeight; this.showScrollBtn = false; }
@@ -220,6 +270,8 @@
                     if (window.CS) window.CS.play('send');
                 }
                 this.message = '';
+                this.selectedFiles = []; this._rawFiles = [];
+                if (this.$refs.fileInputUser) this.$refs.fileInputUser.value = '';
             } catch(e) { console.error(e); }
             finally { this.isSending = false; }
         },
@@ -258,26 +310,27 @@
             mp.textContent = r.message || '';
             bl.appendChild(np); bl.appendChild(mp);
             if (r.attachments && r.attachments.length > 0) {
-                const isImgAtt = att => /^image\//i.test(att.mime||'') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.name||'');
-                const attDiv = document.createElement('div');
-                attDiv.className = 'flex flex-wrap gap-1.5 mt-2';
-                r.attachments.filter(att => att.url).forEach(att => {
-                    if (isImgAtt(att)) {
-                        const a = document.createElement('a');
-                        a.href = att.url; a.target = '_blank'; a.className = 'block mt-1.5';
-                        const img = document.createElement('img');
-                        img.src = att.url; img.loading = 'lazy'; img.alt = att.name || 'تصویر';
-                        img.className = 'rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer';
-                        a.appendChild(img); attDiv.appendChild(a);
-                    } else {
-                        const a = document.createElement('a');
-                        a.href = att.url; a.target = '_blank';
-                        a.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all';
-                        a.textContent = att.name || 'فایل';
-                        attDiv.appendChild(a);
-                    }
+                const isImg = a => /^image\//i.test(a.mime||'')||/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(a.name||'');
+                const imgs = r.attachments.filter(a => a.url && isImg(a));
+                const docs = r.attachments.filter(a => a.url && !isImg(a));
+                if (imgs.length > 0) {
+                    const n = imgs.length, mc = n===1?'n1':n===2?'n2':n===3?'n3':'n4';
+                    const mosaic = document.createElement('div'); mosaic.className = 'att-mosaic ' + mc;
+                    imgs.slice(0, Math.min(n, 4)).forEach((att, i) => {
+                        const cell = document.createElement('div'); cell.className = 'att-cell';
+                        const a = document.createElement('a'); a.href = att.url; a.target = '_blank';
+                        const img = document.createElement('img'); img.src = att.url; img.loading = 'lazy'; img.alt = att.name || 'تصویر';
+                        a.appendChild(img); cell.appendChild(a);
+                        if (i === 3 && n > 4) { const m = document.createElement('div'); m.className = 'att-more'; m.textContent = '+' + (n - 3); cell.appendChild(m); }
+                        mosaic.appendChild(cell);
+                    });
+                    bl.appendChild(mosaic);
+                }
+                docs.forEach(att => {
+                    const a = document.createElement('a'); a.href = att.url; a.target = '_blank';
+                    a.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 mt-1 mr-1';
+                    a.textContent = att.name || 'فایل'; bl.appendChild(a);
                 });
-                if (attDiv.hasChildNodes()) bl.appendChild(attDiv);
             }
             const ts = document.createElement('span');
             ts.className = 'text-[10px] text-gray-400 mt-1 px-1 block' + (isStaff ? '' : ' text-left');
@@ -454,28 +507,24 @@
                                 </p>
                                 <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ $reply->message }}</p>
                                 @if($reply->attachments && is_array($reply->attachments))
-                                <div class="flex flex-wrap gap-1.5 mt-2">
-                                    @foreach($reply->attachments as $file)
-                                    @if(!empty($file['url']))
-                                    @php
-                                        $attName  = $file['name'] ?? 'فایل';
-                                        $attIsImg = preg_match('/^image\//i', $file['mime'] ?? '') || preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i', $attName);
-                                    @endphp
-                                    @if($attIsImg)
-                                    <a href="{{ $file['url'] }}" target="_blank" class="block mt-1">
-                                        <img src="{{ $file['url'] }}" loading="lazy" alt="{{ $attName }}"
-                                             class="rounded-xl max-h-52 max-w-[220px] object-cover hover:opacity-90 transition-opacity shadow-sm border border-white/60 cursor-pointer">
-                                    </a>
-                                    @else
-                                    <a href="{{ $file['url'] }}" target="_blank"
-                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
-                                        <span class="truncate max-w-[100px]">{{ $attName }}</span>
-                                    </a>
-                                    @endif
-                                    @endif
+                                @php
+                                    $rImgs=array_values(array_filter($reply->attachments,fn($a)=>!empty($a['url'])&&(preg_match('/^image\//i',$a['mime']??'')||preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i',$a['name']??''))));
+                                    $rDocs=array_values(array_filter($reply->attachments,fn($a)=>!empty($a['url'])&&!(preg_match('/^image\//i',$a['mime']??'')||preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i',$a['name']??''))));
+                                    $rIc=count($rImgs);$rMc=$rIc===1?'n1':($rIc===2?'n2':($rIc===3?'n3':'n4'));
+                                @endphp
+                                @if($rImgs)
+                                <div class="att-mosaic {{ $rMc }}">
+                                    @foreach(array_slice($rImgs,0,4) as $ri=>$rImg)
+                                    <div class="att-cell"><a href="{{ $rImg['url'] }}" target="_blank"><img src="{{ $rImg['url'] }}" loading="lazy" alt="{{ $rImg['name']??'تصویر' }}"></a>@if($ri===3&&$rIc>4)<div class="att-more">+{{ $rIc-3 }}</div>@endif</div>
                                     @endforeach
                                 </div>
+                                @endif
+                                @foreach($rDocs as $rDoc)
+                                <a href="{{ $rDoc['url'] }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 mt-1 mr-1">
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372"/></svg>
+                                    {{ $rDoc['name']??'فایل' }}
+                                </a>
+                                @endforeach
                                 @endif
                             </div>
                             <span class="text-[10px] text-gray-400 mt-1 px-1 block {{ $isStaff ? '' : 'text-left' }}">
@@ -485,11 +534,13 @@
                     </div>
                 @endforeach
 
-                {{-- Scroll button --}}
-                <div x-show="showScrollBtn" x-transition class="sticky bottom-2 flex justify-center w-full">
-                    <button @click="scrollDown"
-                            class="bg-white text-gray-600 rounded-full px-4 py-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-all text-xs font-medium flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                {{-- Compact scroll pill --}}
+                <div x-show="showScrollBtn" x-transition
+                     @click="scrollDown()"
+                     style="position:sticky;bottom:.75rem;display:flex;justify-content:center;pointer-events:none">
+                    <button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-indigo-600 text-white text-[11px] font-semibold shadow-lg hover:bg-indigo-700 transition-all cursor-pointer"
+                            style="pointer-events:all">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                         پیام‌های جدید
                     </button>
                 </div>
@@ -511,15 +562,47 @@
                                       class="w-full rounded-2xl border border-gray-200 resize-none py-3 px-4 text-sm transition-all bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                                       placeholder="پیام خود را بنویسید..."
                                       @keydown.enter.prevent="if(!$event.shiftKey) sendReply($el.closest('form'))"></textarea>
-                            <small class="text-[10px] text-gray-400 mt-0.5 block mr-2">اینتر = ارسال | Shift+Enter = خط جدید</small>
-                            <input type="file" name="attachments[]" multiple
-                                   accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.zip,.txt"
-                                   class="mt-1.5 text-xs text-gray-500 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:px-2.5 file:py-1 file:text-xs file:font-medium hover:file:bg-indigo-100">
+                            <div class="flex items-center gap-3 mt-1.5 mr-1">
+                                <small class="text-[10px] text-gray-400">Enter = ارسال &nbsp;|&nbsp; Shift+Enter = خط جدید</small>
+                                <label class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-indigo-600 cursor-pointer transition-colors mr-auto">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32"/></svg>
+                                    پیوست
+                                    <input type="file" name="attachments[]" multiple x-ref="fileInputUser"
+                                           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.zip,.txt"
+                                           class="hidden" @change="handleFileChange($event)">
+                                </label>
+                            </div>
+                            {{-- File preview mosaic --}}
+                            <div x-show="selectedFiles.length > 0" x-transition class="mt-2 space-y-1.5">
+                                <div x-show="imgFiles.length > 0" class="att-mosaic" :class="mosaicCls">
+                                    <template x-for="(f,i) in imgFiles.slice(0,4)" :key="f._pos">
+                                        <div class="att-cell" style="position:relative">
+                                            <template x-if="f.preview"><a :href="f.preview" target="_blank"><img :src="f.preview" :alt="f.name"></a></template>
+                                            <template x-if="!f.preview"><div style="width:100%;height:100%;min-height:60px;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><span style="font-size:.6rem;color:#94a3b8">...</span></div></template>
+                                            <div x-show="i===3&&imgFiles.length>4" class="att-more" x-text="'+'+(imgFiles.length-3)"></div>
+                                            <button type="button" @click.stop="removeFile(f._pos)" style="position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:9999px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:none;z-index:5">×</button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div x-show="docFiles.length > 0" class="flex flex-wrap gap-1">
+                                    <template x-for="f in docFiles" :key="f._pos">
+                                        <div class="flex items-center gap-1 bg-white border border-emerald-200 rounded-lg px-2 py-1" style="max-width:160px">
+                                            <svg style="width:13px;height:13px;color:#94a3b8;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364L18.375 12.739"/></svg>
+                                            <div style="min-width:0;flex:1"><div x-text="f.name" style="font-size:.65rem;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div><div x-text="f.size" style="font-size:.6rem;color:#94a3b8"></div></div>
+                                            <button type="button" @click.stop="removeFile(f._pos)" style="width:14px;height:14px;border-radius:9999px;background:#fee2e2;color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;border:none;flex-shrink:0">×</button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="flex items-center gap-1" style="font-size:.65rem;color:#059669;font-weight:600">
+                                    <svg style="width:11px;height:11px" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span x-text="selectedFiles.length + ' فایل آماده ارسال'"></span>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit"
                                 :disabled="isSending || !message.trim()"
-                                class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all shrink-0 mb-4"
-                                :class="(isSending || !message.trim()) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
+                                class="flex items-center justify-center rounded-full w-11 h-11 transition-all shrink-0 mb-5"
+                                :class="(isSending || !message.trim()) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
                             <template x-if="!isSending">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                             </template>

@@ -64,6 +64,7 @@ use App\Http\Controllers\Account\DashboardController as AccountDashboardControll
 use App\Http\Controllers\Account\TicketController as AccountTicketController;
 use App\Http\Controllers\Admin\UserTicketController as AdminUserTicketController;
 use App\Http\Controllers\Admin\UserPanelController as AdminUserPanelController;
+use App\Http\Controllers\Admin\ConversationMergePermissionController as AdminConversationMergePermissionController;
 use App\Http\Controllers\Account\OrderController as AccountOrderController;
 use App\Http\Controllers\Account\SubscriptionController as AccountSubscriptionController;
 use App\Http\Controllers\Account\FormController as AccountFormController;
@@ -216,6 +217,8 @@ Route::middleware('install.check')->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'license.valid', 'permission:dashboard'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::post('image/upload', [ImageUploadController::class, 'store'])->name('image.upload');
+        Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('profile.index');
+        Route::put('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('profile.update');
         Route::middleware('permission:pages')->group(function () {
             Route::resource('pages', AdminPageController::class);
         });
@@ -509,6 +512,16 @@ Route::middleware('install.check')->group(function () {
             Route::get('/',                  [AdminUserPanelController::class, 'index'])->name('index');
             Route::get('/{id}/chat',         [AdminUserPanelController::class, 'chat'])->whereNumber('id')->name('chat');
             Route::post('/{id}/start-chat',  [AdminUserPanelController::class, 'startChat'])->whereNumber('id')->name('startChat');
+        });
+
+    // مدیریت دسترسی ادغام مکالمات موبایل (فقط ادمین سایت)
+    Route::middleware(['auth', 'admin'])
+        ->prefix('admin/conversation-merge')
+        ->name('admin.conversation-merge.')
+        ->group(function () {
+            Route::get('/permissions',              [AdminConversationMergePermissionController::class, 'index'])->name('permissions');
+            Route::post('/permissions',             [AdminConversationMergePermissionController::class, 'grant'])->name('grant');
+            Route::delete('/permissions/{userId}',  [AdminConversationMergePermissionController::class, 'revoke'])->whereNumber('userId')->name('revoke');
         });
 
     // تیکت‌های کاربران نهایی (ادمین سایت ↔ کاربران)

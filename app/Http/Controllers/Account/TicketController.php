@@ -139,21 +139,37 @@ class TicketController extends Controller
         ]);
 
         $attachments = [];
-        foreach ($request->file('attachments', []) as $file) {
-            if (!$file->isValid() || $file->getSize() === 0) {
+        $uploadedFiles = $request->file('attachments', []);
+        if (!is_array($uploadedFiles)) {
+            $uploadedFiles = [$uploadedFiles];
+        }
+
+        foreach ($uploadedFiles as $file) {
+            if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) {
                 continue;
             }
-            $path = $file->store('user-tickets/' . now()->format('Y/m'), 'public');
-            if (!$path) {
-                continue;
+            try {
+                $subdir   = 'tickets/' . now()->format('Y/m');
+                $destDir  = public_path('uploads/' . $subdir);
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0775, true);
+                }
+                $ext      = $file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'bin');
+                $origName = $file->getClientOriginalName();
+                $origMime = $file->getMimeType();
+                $origSize = $file->getSize();
+                $filename = \Illuminate\Support\Str::random(32) . '.' . $ext;
+                $file->move($destDir, $filename);
+                $attachments[] = [
+                    'name' => $origName,
+                    'path' => 'uploads/' . $subdir . '/' . $filename,
+                    'url'  => url('uploads/' . $subdir . '/' . $filename),
+                    'size' => $origSize,
+                    'mime' => $origMime,
+                ];
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('TicketController::reply file upload error: ' . $e->getMessage());
             }
-            $attachments[] = [
-                'name' => $file->getClientOriginalName(),
-                'path' => $path,
-                'url'  => asset(\Illuminate\Support\Facades\Storage::url($path)),
-                'size' => $file->getSize(),
-                'mime' => $file->getMimeType(),
-            ];
         }
 
         $reply = TicketReply::create([

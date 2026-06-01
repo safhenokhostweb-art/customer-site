@@ -70,30 +70,32 @@ class SupportApiClient
     {
         $uploadedFiles = [];
         foreach ($files as $file) {
-    // Skip invalid or missing files
-    if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) {
-        continue;
-    }
-
-    // Verify file actually exists
-    if (!$file->getRealPath() || !file_exists($file->getRealPath())) {
-        continue;
-    }
-
-    $path = $file->store('support-tickets/' . now()->format('Y/m'), 'public');
-    if (!$path) {
-        continue;
-    }
-
-    $uploadedFiles[] = [
-        'name' => $file->getClientOriginalName(),
-        'path' => $path,
-        'url' => asset(Storage::url($path)),
-        'size' => $file->getSize(),
-        'mime' => $file->getMimeType(),
-    ];
-}
-
+            if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) {
+                continue;
+            }
+            try {
+                $subdir   = 'tickets/' . now()->format('Y/m');
+                $destDir  = public_path('uploads/' . $subdir);
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0775, true);
+                }
+                $ext      = $file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'bin');
+                $origName = $file->getClientOriginalName();
+                $origMime = $file->getMimeType();
+                $origSize = $file->getSize();
+                $filename = \Illuminate\Support\Str::random(32) . '.' . $ext;
+                $file->move($destDir, $filename);
+                $uploadedFiles[] = [
+                    'name' => $origName,
+                    'path' => 'uploads/' . $subdir . '/' . $filename,
+                    'url'  => url('uploads/' . $subdir . '/' . $filename),
+                    'size' => $origSize,
+                    'mime' => $origMime,
+                ];
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('SupportApiClient::uploadAttachments error: ' . $e->getMessage());
+            }
+        }
         return $uploadedFiles;
     }
 

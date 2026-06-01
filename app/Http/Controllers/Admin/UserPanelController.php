@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use SaaSPlatform\Modules\Tickets\Models\Ticket;
 
@@ -16,16 +17,45 @@ class UserPanelController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::where('is_admin', false)->orderByDesc('created_at');
+        $query = User::where('is_admin', false);
 
-        if ($search = $request->input('q')) {
-            $query->where(function ($b) use ($search) {
-                $b->where('name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%");
-            });
+        // جستجو
+        if ($q = $request->input('q')) {
+            $query->where(fn ($b) =>
+                $b->where('name', 'like', "%{$q}%")
+                  ->orWhere('mobile', 'like', "%{$q}%")
+            );
         }
 
-        $users = $query->paginate(24)->withQueryString();
+        // فیلتر وضعیت چت
+        $statusFilter = $request->input('status');
+        if ($statusFilter === 'with_chat') {
+            $ids = Ticket::withoutTenantIsolation()->whereNull('site_id')
+                ->whereNotNull('customer_id')->distinct()->pluck('customer_id');
+            $query->whereIn('id', $ids);
+        } elseif ($statusFilter === 'active_chat') {
+            $ids = Ticket::withoutTenantIsolation()->whereNull('site_id')
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
+                ->whereNotNull('customer_id')->distinct()->pluck('customer_id');
+            $query->whereIn('id', $ids);
+        } elseif ($statusFilter === 'no_chat') {
+            $ids = Ticket::withoutTenantIsolation()->whereNull('site_id')
+                ->whereNotNull('customer_id')->distinct()->pluck('customer_id');
+            $query->whereNotIn('id', $ids);
+        }
+
+        // فیلتر بازه تاریخ
+        if ($from = $request->input('from_date')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+        if ($to = $request->input('to_date')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        // مرتب‌سازی
+        $query->orderBy('created_at', $request->input('sort', 'newest') === 'oldest' ? 'asc' : 'desc');
+
+        $users   = $query->paginate(24)->withQueryString();
         $userIds = $users->pluck('id')->toArray();
 
         $ticketStats = Ticket::withoutTenantIsolation()
@@ -36,15 +66,46 @@ class UserPanelController extends Controller
             ->get()
             ->keyBy('customer_id');
 
-        $totalUsers = User::where('is_admin', false)->count();
+        // آمار کلی
+        $totalUsers    = User::where('is_admin', false)->count();
+        $newToday      = User::where('is_admin', false)->whereDate('created_at', today())->count();
+        $newThisMonth  = User::where('is_admin', false)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
         $usersWithActive = Ticket::withoutTenantIsolation()
             ->whereNull('site_id')
             ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->whereNotNull('customer_id')
             ->distinct('customer_id')
             ->count('customer_id');
+        $totalTickets = Ticket::withoutTenantIsolation()
+            ->whereNull('site_id')
+            ->whereNotNull('customer_id')
+            ->count();
 
-        return view('admin.users.index', compact('users', 'ticketStats', 'totalUsers', 'usersWithActive'));
+        // روند ثبت‌نام ۳۰ روز گذشته
+        $trendRaw = User::where('is_admin', false)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $trend = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $date    = now()->subDays($i)->format('Y-m-d');
+            $trend[] = [
+                'label' => now()->subDays($i)->format('m/d'),
+                'count' => (int) ($trendRaw->get($date)?->count ?? 0),
+            ];
+        }
+
+        return view('admin.users.index', compact(
+            'users', 'ticketStats', 'totalUsers', 'usersWithActive',
+            'newToday', 'newThisMonth', 'totalTickets', 'trend'
+        ));
     }
 
     public function chat(Request $request, int $id)
@@ -90,15 +151,15 @@ class UserPanelController extends Controller
         $user = User::where('is_admin', false)->findOrFail($id);
 
         $ticket = Ticket::withoutTenantIsolation()->create([
-            'ticket_number'  => 'UC-' . now()->format('ymd') . '-' . strtoupper(Str::random(4)),
-            'subject'        => 'گفتگو با ' . $user->name,
-            'description'    => 'گفتگوی مستقیم آغاز‌شده از پنل کاربران',
-            'priority'       => 'normal',
-            'status'         => Ticket::STATUS_OPEN,
-            'customer_id'    => $user->id,
+            'ticket_number'   => 'UC-' . now()->format('ymd') . '-' . strtoupper(Str::random(4)),
+            'subject'         => 'گفتگو با ' . $user->name,
+            'description'     => 'گفتگوی مستقیم آغاز‌شده از پنل کاربران',
+            'priority'        => 'normal',
+            'status'          => Ticket::STATUS_OPEN,
+            'customer_id'     => $user->id,
             'customer_name'   => $user->name,
             'customer_mobile' => $user->mobile,
-            'site_id'        => null,
+            'site_id'         => null,
         ]);
 
         $this->notifyUser($user, $ticket);
