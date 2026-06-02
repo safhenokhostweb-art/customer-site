@@ -22,7 +22,9 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('role_user');
         Schema::dropIfExists('role_has_permissions');
+        Schema::enableForeignKeyConstraints();
     }
 };

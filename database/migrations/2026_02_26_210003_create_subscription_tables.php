@@ -33,7 +33,9 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('subscriptions');
         Schema::dropIfExists('subscription_plans');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -41,8 +41,10 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('course_enrollments');
         Schema::dropIfExists('course_classes');
         Schema::dropIfExists('courses');
+        Schema::enableForeignKeyConstraints();
     }
 };

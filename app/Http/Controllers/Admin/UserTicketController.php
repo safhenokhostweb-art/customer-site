@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Setting;
+use App\Models\User;
 use App\Services\SmsService;
+use App\Services\TicketConversationBridge;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,10 @@ use SaaSPlatform\Modules\Tickets\Models\TicketReply;
  */
 class UserTicketController extends Controller
 {
-    public function __construct(protected SmsService $sms) {}
+    public function __construct(
+        protected SmsService $sms,
+        protected TicketConversationBridge $bridge,
+    ) {}
 
     public function index(Request $request)
     {
@@ -88,6 +92,13 @@ class UserTicketController extends Controller
             'customer_mobile' => $targetUser?->mobile ?? null,
             'site_id'        => null,
         ]);
+
+        $this->bridge->syncNewTicket(
+            ticket: $ticket,
+            creatorId: (string) auth()->id(),
+            creatorType: 'admin',
+            targetUserId: $targetUser ? (string) $targetUser->id : null,
+        );
 
         if ($targetUser && $request->boolean('send_sms')) {
             $this->notifyUser($targetUser, $ticket, 'تیکت جدید از طرف پشتیبانی');
@@ -185,6 +196,14 @@ class UserTicketController extends Controller
             'user_id'     => auth()->id(),
             'attachments' => $attachments ?: null,
         ]);
+
+        $this->bridge->syncReply(
+            reply: $reply,
+            ticket: $ticket,
+            senderId: (string) auth()->id(),
+            senderType: 'admin',
+            attachments: $attachments,
+        );
 
         if (!$isInternal && $ticket->status === Ticket::STATUS_OPEN) {
             $ticket->update(['status' => Ticket::STATUS_IN_PROGRESS]);

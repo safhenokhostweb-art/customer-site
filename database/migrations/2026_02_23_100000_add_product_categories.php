@@ -22,9 +22,11 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::table('products', function (Blueprint $table) {
             $table->dropForeign(['category_id']);
         });
         Schema::dropIfExists('product_categories');
+        Schema::enableForeignKeyConstraints();
     }
 };

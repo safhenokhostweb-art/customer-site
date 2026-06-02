@@ -8,7 +8,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
+        channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -23,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'module' => \App\Http\Middleware\EnsureModuleEnabled::class,
             'license.valid' => \App\Http\Middleware\EnsureLicenseValid::class,
+            // PHASE M3.2 — DOMAIN A: Support Module License Gate
+            'support.license' => \App\Http\Middleware\SupportModuleLicenseCheck::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\SetTenantContext::class,

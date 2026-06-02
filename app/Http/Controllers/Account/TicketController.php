@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
-use App\Services\SmsService;
 use App\Models\Setting;
+use App\Services\SmsService;
+use App\Services\TicketConversationBridge;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,7 +14,10 @@ use SaaSPlatform\Modules\Tickets\Models\TicketReply;
 
 class TicketController extends Controller
 {
-    public function __construct(protected SmsService $sms) {}
+    public function __construct(
+        protected SmsService $sms,
+        protected TicketConversationBridge $bridge,
+    ) {}
 
     public function index(Request $request)
     {
@@ -66,6 +70,12 @@ class TicketController extends Controller
             'customer_mobile' => $user->mobile ?? null,
             'site_id'        => null,
         ]);
+
+        $this->bridge->syncNewTicket(
+            ticket: $ticket,
+            creatorId: (string) $user->id,
+            creatorType: 'user',
+        );
 
         $this->notifyAdmin($ticket, 'تیکت جدید');
 
@@ -181,6 +191,14 @@ class TicketController extends Controller
             'customer_mobile' => auth()->user()->mobile ?? null,
             'attachments'   => $attachments ?: null,
         ]);
+
+        $this->bridge->syncReply(
+            reply: $reply,
+            ticket: $ticket,
+            senderId: (string) auth()->id(),
+            senderType: 'user',
+            attachments: $attachments,
+        );
 
         $this->notifyAdmin($ticket, 'پاسخ کاربر');
 

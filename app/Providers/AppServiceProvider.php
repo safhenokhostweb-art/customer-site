@@ -57,6 +57,16 @@ class AppServiceProvider extends ServiceProvider
         // PHASE UI-THEME.1 — Enterprise Theme Engine (tenant resolver)
         $this->app->singleton(\App\Services\ThemeEngine\TenantThemeResolver::class);
 
+        // PHASE M3.2 — DOMAIN A: Tenant Support Runtime
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantChannelRegistry::class);
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantPresenceService::class);
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantAttachmentService::class);
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantIsolationValidator::class);
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantMessageService::class);
+        $this->app->singleton(\App\Services\TenantSupportRuntime\TenantConversationService::class);
+        $this->app->singleton(\App\Services\SupportModuleLicenseGate::class);
+        $this->app->singleton(\App\Services\TicketConversationBridge::class);
+
         // Bind ActivityLoggerInterface
 $this->app->bind(
     ActivityLoggerInterface::class,

@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\SmsService;
 use App\Services\SupportApiClient;
+use App\Services\TicketConversationBridge;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +29,7 @@ class UnifiedSupportController extends Controller
     public function __construct(
         protected SupportApiClient $apiClient,
         protected SmsService $sms,
+        protected TicketConversationBridge $bridge,
     ) {}
 
     // ─── Index ──────────────────────────────────────────────────────────────
@@ -327,6 +329,13 @@ class UnifiedSupportController extends Controller
             'site_id'        => null,
         ]);
 
+        $this->bridge->syncNewTicket(
+            ticket: $ticket,
+            creatorId: (string) auth()->id(),
+            creatorType: 'admin',
+            targetUserId: $targetUser ? (string) $targetUser->id : null,
+        );
+
         if ($targetUser && $request->boolean('send_sms')) {
             $this->notifyUser($targetUser, $ticket, 'تیکت جدید از طرف پشتیبانی');
         }
@@ -422,6 +431,14 @@ class UnifiedSupportController extends Controller
             'user_id'     => auth()->id(),
             'attachments' => $attachments ?: null,
         ]);
+
+        $this->bridge->syncReply(
+            reply: $reply,
+            ticket: $ticket,
+            senderId: (string) auth()->id(),
+            senderType: 'admin',
+            attachments: $attachments,
+        );
 
         if (!$isInternal && $ticket->status === Ticket::STATUS_OPEN) {
             $ticket->update(['status' => Ticket::STATUS_IN_PROGRESS]);

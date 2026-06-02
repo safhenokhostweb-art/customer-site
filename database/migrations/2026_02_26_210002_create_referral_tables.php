@@ -27,7 +27,9 @@ return new class extends Migration {
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('referrals');
         Schema::dropIfExists('referral_codes');
+        Schema::enableForeignKeyConstraints();
     }
 };
