@@ -107,6 +107,12 @@ class UnifiedSupportController extends Controller
             ? $this->findPlatformTicket($id)
             : $this->findUserTicket($id);
 
+        // اگر در user-channel پیدا نشد (مثلاً تیکت site_id دارد)، platform را امتحان کن
+        if (!$ticket && $channel === 'user') {
+            $ticket  = $this->findPlatformTicket($id);
+            $channel = $ticket ? 'platform' : 'user';
+        }
+
         if (!$ticket) {
             abort(404);
         }
@@ -175,6 +181,38 @@ class UnifiedSupportController extends Controller
         return $channel === 'platform'
             ? $this->replyPlatform($request, $id)
             : $this->replyUser($request, $id);
+    }
+
+    // ─── Bulk action (user-channel only) ────────────────────────────────────
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('action');
+        $ids    = array_filter(array_map('intval', (array) $request->input('ids', [])));
+
+        if (empty($ids) || !in_array($action, ['close', 'reopen', 'delete'], true)) {
+            return back()->with('error', 'عملیات یا انتخاب معتبر نیست.');
+        }
+
+        // فقط تیکت‌های user-channel (site_id=null) مجاز هستند
+        $tickets = Ticket::withoutTenantIsolation()->whereNull('site_id')->whereIn('id', $ids)->get();
+        $count   = 0;
+
+        foreach ($tickets as $ticket) {
+            match ($action) {
+                'close'  => $ticket->status !== 'closed'
+                                ? $ticket->update(['status' => 'closed', 'closed_at' => now()])
+                                : null,
+                'reopen' => $ticket->status === 'closed'
+                                ? $ticket->update(['status' => 'open', 'closed_at' => null])
+                                : null,
+                'delete' => $ticket->delete(),
+            };
+            $count++;
+        }
+
+        $labels = ['close' => 'بسته شدند', 'reopen' => 'بازگشایی شدند', 'delete' => 'حذف شدند'];
+        return back()->with('success', "{$count} تیکت {$labels[$action]}.");
     }
 
     // ─── User-ticket specific controls ──────────────────────────────────────

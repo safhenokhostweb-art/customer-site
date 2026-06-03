@@ -39,11 +39,12 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
-            'notification_preferences' => 'array',
-            'privacy_settings' => 'array',
+            'birth_date'                => 'date',
+            'password'                  => 'hashed',
+            'is_admin'                  => 'boolean',
+            'is_site_admin'             => 'boolean',
+            'notification_preferences'  => 'array',
+            'privacy_settings'          => 'array',
         ];
     }
 
@@ -59,7 +60,9 @@ class User extends Authenticatable
 
     public function isTenantAdmin(): bool
     {
-        return (bool) ($this->is_admin ?? false) || $this->hasRole(Role::TENANT_ADMIN);
+        return (bool) ($this->is_admin      ?? false)
+            || (bool) ($this->is_site_admin ?? false)
+            || $this->hasRole(Role::TENANT_ADMIN);
     }
 
     public function hasPermission(string $slug): bool

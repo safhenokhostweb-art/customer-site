@@ -21,9 +21,7 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
-        $tickets = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
+        $tickets = $this->customerScope()
             ->with('assignee:id,name')
             ->withCount([
                 'replies as staff_replies_count' => fn($q) => $q->where('author_type', 'staff')->where('is_internal', false),
@@ -31,11 +29,12 @@ class TicketController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15);
 
+        $base  = $this->customerScope();
         $stats = [
-            'total'       => Ticket::withoutTenantIsolation()->where('customer_id', auth()->id())->whereNull('site_id')->count(),
-            'open'        => Ticket::withoutTenantIsolation()->where('customer_id', auth()->id())->whereNull('site_id')->where('status', 'open')->count(),
-            'in_progress' => Ticket::withoutTenantIsolation()->where('customer_id', auth()->id())->whereNull('site_id')->where('status', 'in_progress')->count(),
-            'closed'      => Ticket::withoutTenantIsolation()->where('customer_id', auth()->id())->whereNull('site_id')->where('status', 'closed')->count(),
+            'total'       => (clone $base)->count(),
+            'open'        => (clone $base)->where('status', 'open')->count(),
+            'in_progress' => (clone $base)->where('status', 'in_progress')->count(),
+            'closed'      => (clone $base)->where('status', 'closed')->count(),
         ];
 
         $siteName = \App\Helpers\SiteHelper::siteName();
@@ -85,15 +84,11 @@ class TicketController extends Controller
 
     public function show(int $id)
     {
-        $ticket = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
+        $ticket = $this->customerScope()
             ->with(['replies' => fn($q) => $q->where('is_internal', false)->orderBy('created_at')])
             ->findOrFail($id);
 
-        $allTickets = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
+        $allTickets = $this->customerScope()
             ->orderByDesc('updated_at')
             ->get();
 
@@ -102,10 +97,7 @@ class TicketController extends Controller
 
     public function poll(Request $request, int $id): JsonResponse
     {
-        $ticket = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
-            ->findOrFail($id);
+        $ticket = $this->customerScope()->findOrFail($id);
 
         $lastId = (int) $request->query('last_id', 0);
 
@@ -130,10 +122,7 @@ class TicketController extends Controller
 
     public function reply(Request $request, int $id)
     {
-        $ticket = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
-            ->findOrFail($id);
+        $ticket = $this->customerScope()->findOrFail($id);
 
         if ($ticket->status === Ticket::STATUS_CLOSED) {
             if ($request->wantsJson() || $request->ajax()) {
@@ -222,10 +211,7 @@ class TicketController extends Controller
     public function checkActivity(Request $request): JsonResponse
     {
         $lastId    = (int) $request->query('last_id', 0);
-        $ticketIds = Ticket::withoutTenantIsolation()
-            ->where('customer_id', auth()->id())
-            ->whereNull('site_id')
-            ->pluck('id');
+        $ticketIds = $this->customerScope()->pluck('id');
 
         if ($ticketIds->isEmpty()) {
             return response()->json(['new_count' => 0, 'last_id' => $lastId, 'replies' => []]);
@@ -250,6 +236,22 @@ class TicketController extends Controller
                 'url'           => route('account.tickets.show', $r->ticket_id),
             ])->values(),
         ]);
+    }
+
+    /**
+     * Base query scoped to the authenticated customer's tickets.
+     * Matches by customer_id OR customer_mobile (handles tickets created via mobile API
+     * where customer_id is not set but customer_mobile is).
+     */
+    private function customerScope(): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = auth()->user();
+        return Ticket::withoutTenantIsolation()->where(function ($q) use ($user) {
+            $q->where('customer_id', $user->id);
+            if ($user->mobile) {
+                $q->orWhere('customer_mobile', $user->mobile);
+            }
+        });
     }
 
     private function generateNumber(): string

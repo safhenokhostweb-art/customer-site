@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\SupportConversationController;
 use App\Http\Controllers\Api\SupportMessageController;
 use App\Http\Controllers\Api\SupportPresenceController;
+use App\Http\Controllers\Api\Mobile\CustomerMobileAuthController;
+use App\Http\Controllers\Api\Mobile\CustomerMobileTicketController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +20,35 @@ use Illuminate\Support\Facades\Route;
 | No platform routes are registered here.
 |
 */
+
+// ─── Mobile API for end users ────────────────────────────────────────────────
+// کاربران نهایی با آدرس http://customer-site.test وارد اپ می‌شوند
+
+Route::prefix('mobile')->group(function () {
+    // لاگین (بدون احراز هویت)
+    Route::post('auth/token',   [CustomerMobileAuthController::class, 'token']);
+
+    // روت‌های نیازمند توکن
+    Route::middleware('mobile.auth')->group(function () {
+        Route::post('auth/logout', [CustomerMobileAuthController::class, 'logout']);
+
+        // تیکت‌های پشتیبانی کاربر نهایی
+        Route::get('tickets',                    [CustomerMobileTicketController::class, 'index']);
+        Route::post('tickets',                   [CustomerMobileTicketController::class, 'store']);
+        Route::get('tickets/{id}',               [CustomerMobileTicketController::class, 'show'])->where('id', '[0-9]+');
+        Route::post('tickets/{id}/reply',        [CustomerMobileTicketController::class, 'reply'])->where('id', '[0-9]+');
+
+        // endpoint ساختگی برای سازگاری با Flutter runtime manifest
+        Route::get('runtime/manifest', fn() => response()->json([
+            'success'     => true,
+            'role'        => 'end_user',
+            'is_admin'    => false,
+            'is_site_admin' => false,
+        ]));
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 Route::middleware(['auth:sanctum', 'support.license'])->group(function () {
 

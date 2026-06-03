@@ -225,6 +225,7 @@
     @include('partials.admin-notifications-widget')
     @include('partials.chat-sounds')
     @include('admin.partials.user-ticket-notifier')
+    @include('admin.partials.floating-search-widget')
 
     <script>
     (function(){

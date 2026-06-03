@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'license.valid' => \App\Http\Middleware\EnsureLicenseValid::class,
             // PHASE M3.2 — DOMAIN A: Support Module License Gate
             'support.license' => \App\Http\Middleware\SupportModuleLicenseCheck::class,
+            // Mobile end-user auth
+            'mobile.auth' => \App\Http\Middleware\AuthenticateMobileUser::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\SetTenantContext::class,

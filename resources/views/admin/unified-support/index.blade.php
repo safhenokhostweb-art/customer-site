@@ -11,6 +11,13 @@
     status: @js($status),
     priority: '',
     channel: @js($channel),
+    customerFilter: '',
+    bulkSelected: [],
+    get allUserIds() {
+        return Array.from(document.querySelectorAll('.ticket-check')).map(el => el.value);
+    },
+    toggleAll(checked) { this.bulkSelected = checked ? this.allUserIds : []; },
+    get bulkCount() { return this.bulkSelected.length; }
 }">
 
     {{-- Flash --}}
@@ -145,14 +152,51 @@
         </div>
     </div>
 
-    {{-- ─── Filter Bar — identical to main admin pattern ────────────────── --}}
+    {{-- ─── Bulk Toolbar ─────────────────────────────────────────────────── --}}
+    <div x-show="bulkCount > 0" x-transition
+         class="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-2xl px-5 py-3.5 mb-4 flex-wrap">
+        <span class="text-sm font-semibold text-teal-800" x-text="bulkCount + ' تیکت انتخاب شده'"></span>
+        <form method="POST" action="{{ route('admin.inbox.bulk') }}" class="flex items-center gap-2 flex-wrap">
+            @csrf
+            <template x-for="id in bulkSelected" :key="id">
+                <input type="hidden" name="ids[]" :value="id">
+            </template>
+            <button type="submit" name="action" value="close"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition-all">
+                بستن
+            </button>
+            <button type="submit" name="action" value="reopen"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all">
+                بازگشایی
+            </button>
+            <button type="submit" name="action" value="delete"
+                    onclick="return confirm('آیا از حذف تیکت‌های انتخاب‌شده اطمینان دارید؟ این عمل قابل بازگشت نیست.')"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all">
+                حذف انتخاب‌شده
+            </button>
+        </form>
+        <button @click="bulkSelected = []" class="mr-auto text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            لغو انتخاب
+        </button>
+    </div>
+
+    {{-- ─── Filter Bar ─────────────────────────────────────────────────────── --}}
     <div class="glass-filter-bar mb-5">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div class="relative flex-1 min-w-0 w-full sm:w-auto">
-                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="text" x-model="search" placeholder="جستجوی موضوع یا شماره تیکت..."
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+            {{-- جستجوی موضوع/شماره --}}
+            <div class="relative flex-1 min-w-0 w-full sm:w-auto" style="min-width:180px">
+                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" x-model="search" placeholder="موضوع یا شماره تیکت..."
                        class="w-full pr-9 pl-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
             </div>
+            {{-- فیلتر مخاطب (نام یا موبایل) --}}
+            <div class="relative w-full sm:w-auto" style="min-width:180px">
+                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-teal-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+                <input type="text" x-model="customerFilter" placeholder="نام یا موبایل مخاطب..."
+                       :class="customerFilter ? 'border-teal-400 bg-teal-50/60' : 'border-gray-200 bg-white/80'"
+                       class="w-full pr-9 pl-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400 transition-all">
+            </div>
+            {{-- وضعیت --}}
             <select x-model="status" style="max-width:10rem"
                     class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all w-full sm:w-auto">
                 <option value="">همه وضعیت‌ها</option>
@@ -160,6 +204,7 @@
                 <option value="in_progress">در حال بررسی</option>
                 <option value="closed">بسته</option>
             </select>
+            {{-- اولویت --}}
             <select x-model="priority" style="max-width:10rem"
                     class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all w-full sm:w-auto">
                 <option value="">همه اولویت‌ها</option>
@@ -167,7 +212,8 @@
                 <option value="normal">🔵 عادی</option>
                 <option value="low">⚪ کم</option>
             </select>
-            <button @click="search=''; status=''; priority=''"
+            {{-- پاک کردن --}}
+            <button @click="search=''; status=''; priority=''; customerFilter=''"
                     class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm text-gray-500 hover:bg-gray-50 transition-all justify-center w-full sm:w-auto">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 پاک کردن
@@ -181,7 +227,12 @@
     <table class="w-full text-right border-collapse" style="min-width:640px">
     <thead>
         <tr class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-            <th class="p-3 pr-5 text-xs font-bold text-gray-500 uppercase">شماره</th>
+            <th class="p-3 pr-4 w-8">
+                <input type="checkbox" class="rounded text-teal-600"
+                       @change="toggleAll($event.target.checked)"
+                       title="انتخاب همه تیکت‌های کاربری">
+            </th>
+            <th class="p-3 text-xs font-bold text-gray-500 uppercase">شماره</th>
             <th class="p-3 text-xs font-bold text-gray-500 uppercase">کانال</th>
             <th class="p-3 text-xs font-bold text-gray-500 uppercase">موضوع</th>
             <th class="p-3 text-xs font-bold text-gray-500 uppercase">مخاطب</th>
@@ -205,21 +256,32 @@
         data-subject="{{ $ticket->subject }}"
         data-ticket-no="{{ $ticket->ticket_number }}"
         data-customer="{{ $ticket->customer_name ?? '' }}"
+        data-customer-mobile="{{ $ticket->customer_mobile ?? '' }}"
         data-status="{{ $ticket->status }}"
         data-channel="{{ $ch }}"
         data-priority="{{ $p }}"
         x-show="
+            (channel === 'all' || $el.dataset.channel === channel) &&
             (!search || $el.dataset.subject.toLowerCase().includes(search.toLowerCase()) || $el.dataset.ticketNo.includes(search) || $el.dataset.customer.toLowerCase().includes(search.toLowerCase())) &&
+            (!customerFilter || $el.dataset.customer.toLowerCase().includes(customerFilter.toLowerCase()) || $el.dataset.customerMobile.includes(customerFilter)) &&
             (!status || $el.dataset.status === status) &&
-            (!priority || $el.dataset.priority === priority) &&
-            (channel === 'all' || $el.dataset.channel === channel)
+            (!priority || $el.dataset.priority === priority)
         "
         x-transition:enter="transition ease-out duration-150"
         x-transition:enter-start="opacity-0 translate-y-1"
         x-transition:enter-end="opacity-100 translate-y-0">
 
+        {{-- Checkbox (فقط تیکت‌های user-channel) --}}
+        <td class="p-3 pr-4">
+            @if($ch === 'user')
+            <input type="checkbox" class="ticket-check rounded text-teal-600"
+                   value="{{ $ticket->id }}"
+                   x-model="bulkSelected">
+            @endif
+        </td>
+
         {{-- شماره --}}
-        <td class="p-3 pr-5">
+        <td class="p-3">
             <span class="font-mono font-bold text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg border border-indigo-100">{{ $ticket->ticket_number }}</span>
         </td>
 
@@ -292,7 +354,7 @@
     </tr>
     @empty
     <tr>
-        <td colspan="8" class="text-center py-16">
+        <td colspan="9" class="text-center py-16">
             <div class="flex flex-col items-center gap-3">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-3xl shadow-sm">📭</div>
                 <p class="text-gray-600 font-semibold">هیچ تیکتی یافت نشد</p>

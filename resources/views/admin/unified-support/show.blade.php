@@ -204,11 +204,19 @@
         },
         async sendReply(form) {
             if (this.isSending) return;
-            const text = (this.noteMode ? this.noteText : this.message).trim();
-            if (!text) return;
+            const text     = (this.noteMode ? this.noteText : this.message).trim();
+            const hasFiles = this._rawFiles && this._rawFiles.length > 0;
+            if (!text && !hasFiles) return;
             this.isSending = true;
             try {
-                const fd  = new FormData(form);
+                const fd = new FormData(form);
+                // اگر _rawFiles دارد اما input خالی شده، دوباره اضافه کن
+                if (hasFiles) {
+                    const inp = this.$refs.fileInput;
+                    if (inp && (!inp.files || inp.files.length === 0)) {
+                        this._rawFiles.forEach(f => fd.append('attachments[]', f, f.name));
+                    }
+                }
                 const res = await fetch(form.action, { method:'POST', headers:{ 'X-Requested-With':'XMLHttpRequest', Accept:'application/json'}, body: fd });
                 if (!res.ok) { const e = await res.json().catch(()=>({})); alert(e.message || 'خطا در ارسال'); return; }
                 const data = await res.json();
@@ -238,8 +246,8 @@
             const bubbleCls = isInternal ? 'bubble-internal' : (isStaff ? 'bubble-staff' : 'bubble-customer');
 
             const w = document.createElement('div');
-            w.className = 'flex items-end gap-2 max-w-[78%] mb-4' + (onRight ? ' flex-row-reverse' : '');
-            w.style.cssText = 'align-self:' + (onRight ? 'flex-end' : 'flex-start') + ';opacity:0;transform:translateY(6px);transition:all .25s';
+            w.className = 'flex items-end gap-2 max-w-[78%] mb-4' + (onRight ? '' : ' flex-row-reverse');
+            w.style.cssText = 'align-self:' + (onRight ? 'flex-start' : 'flex-end') + ';opacity:0;transform:translateY(6px);transition:all .25s';
 
             const av = document.createElement('div');
             av.className = 'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm';
@@ -247,7 +255,7 @@
             av.textContent = name.charAt(0);
 
             const bw = document.createElement('div');
-            bw.style.cssText = 'display:flex;flex-direction:column;align-items:' + (onRight ? 'flex-end' : 'flex-start');
+            bw.style.cssText = 'display:flex;flex-direction:column;align-items:' + (onRight ? 'flex-start' : 'flex-end');
 
             const bl = document.createElement('div');
             bl.className = bubbleCls + ' px-4 py-2.5 shadow-sm';
@@ -370,7 +378,9 @@
                     <p class="text-sm font-bold text-slate-800 truncate">{{ $ticket->subject }}</p>
                     <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         <span class="font-mono bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded">{{ $ticket->ticket_number }}</span>
-                        @if($channel === 'platform')
+                        @if($channel === 'platform' && ($ticket->site ?? null))
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:linear-gradient(135deg,#0d9488,#0891b2)">👤 ادمین سایت</span>
+                        @elseif($channel === 'platform')
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🏢 پلتفرم</span>
                         @else
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background:linear-gradient(135deg,#0d9488,#0891b2)">👤 کاربر</span>
@@ -438,11 +448,11 @@
                     </div>
                 @endif
 
-                <div class="flex items-end gap-2 max-w-[78%] mb-4 {{ $onRight ? 'flex-row-reverse' : '' }}"
-                     style="align-self: {{ $onRight ? 'flex-end' : 'flex-start' }}">
+                <div class="flex items-end gap-2 max-w-[78%] mb-4 {{ $onRight ? '' : 'flex-row-reverse' }}"
+                     style="align-self: {{ $onRight ? 'flex-start' : 'flex-end' }}">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
                          style="background-color: {{ $rColor }}">{{ mb_substr($rName, 0, 1) }}</div>
-                    <div class="flex flex-col items-{{ $onRight ? 'end' : 'start' }}">
+                    <div class="flex flex-col items-{{ $onRight ? 'start' : 'end' }}">
                         <div class="{{ $rBubble }} px-4 py-2.5 shadow-sm">
                             <p class="text-xs font-bold mb-1 opacity-70">
                                 {{ $rName }}
@@ -712,13 +722,20 @@
 
             @endif
 
-            {{-- Platform info --}}
+            {{-- Channel info --}}
             @if($channel === 'platform')
             <div class="msgr-info-sec">
+                @if($ticket->site ?? null)
+                <div class="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-teal-700">
+                    <div class="font-bold mb-1">👤 تیکت ادمین سایت</div>
+                    <p class="text-teal-600 leading-relaxed">این تیکت از طریق نرم‌افزار سایت مشتری ثبت شده و از این پنل قابل مدیریت است.</p>
+                </div>
+                @else
                 <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs text-purple-700">
                     <div class="font-bold mb-1">🏢 تیکت پلتفرم</div>
                     <p class="text-purple-600 leading-relaxed">این تیکت به ادمین اصلی پلتفرم ارسال شده و از طریق API پاسخ می‌گیرد.</p>
                 </div>
+                @endif
             </div>
             @endif
 

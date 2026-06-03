@@ -41,6 +41,17 @@ class UserTicketController extends Controller
                   ->orWhere('ticket_number', 'like', "%{$q}%");
             });
         }
+        if ($userId = $request->input('user_id')) {
+            $user = User::find($userId);
+            if ($user) {
+                $query->where(function ($b) use ($user) {
+                    $b->where('customer_id', $user->id);
+                    if ($user->mobile) {
+                        $b->orWhere('customer_mobile', $user->mobile);
+                    }
+                });
+            }
+        }
 
         $tickets = $query->with(['assignee'])->orderByDesc('created_at')->paginate(20)->withQueryString();
 
@@ -48,7 +59,9 @@ class UserTicketController extends Controller
             ->with('assignee:id,name')
             ->get(['id', 'status', 'priority', 'assigned_to']);
 
-        $agentUsers = User::where('is_admin', true)->get(['id', 'name']);
+        $agentUsers  = User::where('is_admin', true)->get(['id', 'name']);
+        $regularUsers = User::where('is_admin', false)->where('is_site_admin', false)
+            ->orderBy('name')->get(['id', 'name', 'mobile']);
 
         $stats = [
             'total'            => $allTickets->count(),
@@ -58,7 +71,7 @@ class UserTicketController extends Controller
             'avg_response_hours' => 4,
         ];
 
-        return view('admin.user-tickets.index', compact('tickets', 'stats', 'allTickets', 'agentUsers'));
+        return view('admin.user-tickets.index', compact('tickets', 'stats', 'allTickets', 'agentUsers', 'regularUsers'));
     }
 
     public function create()
@@ -282,6 +295,55 @@ class UserTicketController extends Controller
                 'url'           => route('admin.user-tickets.show', $t->id),
             ])->values(),
         ]);
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('action');
+        $ids    = array_filter(array_map('intval', (array) $request->input('ids', [])));
+
+        if (empty($ids) || !in_array($action, ['close', 'reopen', 'delete'], true)) {
+            return back()->with('error', 'عملیات یا انتخاب معتبر نیست.');
+        }
+
+        $tickets = Ticket::withoutTenantIsolation()->whereNull('site_id')->whereIn('id', $ids)->get();
+        $count   = 0;
+
+        foreach ($tickets as $ticket) {
+            match ($action) {
+                'close'  => $this->applyClose($ticket),
+                'reopen' => $this->applyReopen($ticket),
+                'delete' => $ticket->delete(),
+            };
+            $count++;
+        }
+
+        $labels = ['close' => 'بسته شدند', 'reopen' => 'بازگشایی شدند', 'delete' => 'حذف شدند'];
+        return back()->with('success', "{$count} تیکت {$labels[$action]}.");
+    }
+
+    private function applyClose(Ticket $ticket): void
+    {
+        if ($ticket->status !== 'closed') {
+            $ticket->update(['status' => 'closed', 'closed_at' => now()]);
+        }
+    }
+
+    private function applyReopen(Ticket $ticket): void
+    {
+        if ($ticket->status === 'closed') {
+            $ticket->update(['status' => 'open', 'closed_at' => null]);
+        }
+    }
+
+    public function destroy(int $id)
+    {
+        $ticket = Ticket::withoutTenantIsolation()->whereNull('site_id')->findOrFail($id);
+        $number = $ticket->ticket_number;
+        $ticket->delete();
+
+        return redirect()->route('admin.user-tickets.index')
+            ->with('success', 'تیکت #' . $number . ' با موفقیت حذف شد.');
     }
 
     private function generateNumber(): string

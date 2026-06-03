@@ -541,6 +541,8 @@ Route::middleware('install.check')->group(function () {
             Route::patch('/{id}/status',  [AdminUserTicketController::class, 'updateStatus'])->whereNumber('id')->name('status');
             Route::patch('/{id}/assign',  [AdminUserTicketController::class, 'assign'])->whereNumber('id')->name('assign');
             Route::patch('/{id}/priority',[AdminUserTicketController::class, 'priority'])->whereNumber('id')->name('priority');
+            Route::delete('/{id}',        [AdminUserTicketController::class, 'destroy'])->whereNumber('id')->name('destroy');
+            Route::post('/bulk',          [AdminUserTicketController::class, 'bulkAction'])->name('bulk');
         });
 
     // ─── Unified Support Inbox (ادمین ↔ پلتفرم + ادمین ↔ کاربر در یک صفحه) ─────
@@ -557,6 +559,7 @@ Route::middleware('install.check')->group(function () {
             Route::patch('/user/{id}/status',            [AdminUnifiedSupportController::class, 'updateStatus'])->whereNumber('id')->name('user.status');
             Route::patch('/user/{id}/assign',            [AdminUnifiedSupportController::class, 'assign'])->whereNumber('id')->name('user.assign');
             Route::patch('/user/{id}/priority',          [AdminUnifiedSupportController::class, 'priority'])->whereNumber('id')->name('user.priority');
+            Route::post('/bulk',                         [AdminUnifiedSupportController::class, 'bulkAction'])->name('bulk');
         });
 
     // Support module — defined OUTSIDE the admin prefix group so names are tickets.site.*

@@ -10,17 +10,11 @@
     search: '',
     status: '',
     priority: '',
-    get filteredRows() {
-        return Array.from(document.querySelectorAll('.ticket-row')).filter(row => {
-            const s = row.dataset.subject?.toLowerCase() ?? '';
-            const n = row.dataset.ticketNo ?? '';
-            const c = row.dataset.customer?.toLowerCase() ?? '';
-            const matchSearch = !this.search || s.includes(this.search.toLowerCase()) || n.includes(this.search) || c.includes(this.search.toLowerCase());
-            const matchStatus   = !this.status   || row.dataset.status   === this.status;
-            const matchPriority = !this.priority || row.dataset.priority === this.priority;
-            return matchSearch && matchStatus && matchPriority;
-        });
-    }
+    userFilter: '',
+    bulkSelected: [],
+    get allIds() { return Array.from(document.querySelectorAll('.ticket-check')).map(el => el.value); },
+    toggleAll(checked) { this.bulkSelected = checked ? this.allIds : []; },
+    get bulkCount() { return this.bulkSelected.length; }
 }">
 
     {{-- Flash --}}
@@ -258,34 +252,82 @@
     </div>
 
     {{-- ─── Actions Bar ─── --}}
-    <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+    <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <a href="{{ route('admin.user-tickets.create') }}" class="btn-gradient">
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
             تیکت جدید
         </a>
         <span class="text-xs text-gray-400">مجموع {{ \App\Helpers\NumberHelper::formatFa($allTickets->count()) }} تیکت ثبت شده</span>
     </div>
 
+    {{-- ─── Bulk Toolbar ─── --}}
+    <div x-show="bulkCount > 0" x-transition
+         class="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-2xl px-5 py-3.5 mb-4">
+        <span class="text-sm font-semibold text-indigo-800" x-text="bulkCount + ' تیکت انتخاب شده'"></span>
+        <form method="POST" action="{{ route('admin.user-tickets.bulk') }}" class="flex items-center gap-2" id="bulk-form">
+            @csrf
+            <template x-for="id in bulkSelected" :key="id">
+                <input type="hidden" name="ids[]" :value="id">
+            </template>
+            <button type="submit" name="action" value="close"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition-all">
+                بستن
+            </button>
+            <button type="submit" name="action" value="reopen"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all">
+                بازگشایی
+            </button>
+            <button type="submit" name="action" value="delete"
+                    onclick="return confirm('آیا از حذف تیکت‌های انتخاب‌شده اطمینان دارید؟ این عمل قابل بازگشت نیست.')"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all">
+                حذف انتخاب‌شده
+            </button>
+        </form>
+        <button @click="bulkSelected = []" class="mr-auto text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            لغو انتخاب
+        </button>
+    </div>
+
     {{-- ─── Filter Bar ─── --}}
     <div class="glass-filter-bar mb-5">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+            {{-- جستجوی متنی --}}
             <div class="relative flex-1 min-w-0 w-full sm:w-auto">
                 <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" placeholder="جستجوی موضوع، نام کاربر یا شماره تیکت..."
                        class="w-full pr-9 pl-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
             </div>
+            {{-- فیلتر وضعیت --}}
             <select x-model="status" style="max-width:10rem" class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all w-full sm:w-auto">
                 <option value="">همه وضعیت‌ها</option>
                 <option value="open">باز</option>
                 <option value="in_progress">در حال بررسی</option>
                 <option value="closed">بسته</option>
             </select>
+            {{-- فیلتر اولویت --}}
             <select x-model="priority" style="max-width:10rem" class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all w-full sm:w-auto">
                 <option value="">همه اولویت‌ها</option>
                 <option value="high">🔴 بالا</option>
                 <option value="normal">🔵 عادی</option>
                 <option value="low">⚪ کم</option>
             </select>
+            {{-- فیلتر کاربر خاص (server-side) --}}
+            <form method="GET" action="{{ route('admin.user-tickets.index') }}" class="flex items-center gap-2 w-full sm:w-auto">
+                @foreach(request()->except('user_id', 'page') as $k => $v)
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endforeach
+                <select name="user_id" onchange="this.form.submit()"
+                        style="max-width:14rem"
+                        class="px-4 py-2.5 rounded-xl border {{ request('user_id') ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-white/80' }} text-sm focus:ring-2 focus:ring-indigo-200 transition-all w-full sm:w-auto">
+                    <option value="">همه کاربران</option>
+                    @foreach($regularUsers as $ru)
+                    <option value="{{ $ru->id }}" @selected(request('user_id') == $ru->id)>
+                        {{ $ru->name ?: $ru->mobile }} — {{ $ru->mobile }}
+                    </option>
+                    @endforeach
+                </select>
+            </form>
+            {{-- پاک کردن --}}
             <button @click="search=''; status=''; priority=''"
                     class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm text-gray-500 hover:bg-gray-50 transition-all w-full sm:w-auto justify-center">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -300,6 +342,10 @@
     <table class="w-full text-right border-collapse" style="min-width:680px">
         <thead>
             <tr class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <th class="p-3 pr-5 w-8">
+                    <input type="checkbox" class="rounded text-indigo-600"
+                           @change="toggleAll($event.target.checked)">
+                </th>
                 <th class="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider">شماره</th>
                 <th class="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider">موضوع / کاربر</th>
                 <th class="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider">وضعیت</th>
@@ -332,6 +378,11 @@
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100">
 
+            <td class="p-3 pr-5">
+                <input type="checkbox" class="ticket-check rounded text-indigo-600"
+                       value="{{ $ticket->id }}"
+                       x-model="bulkSelected">
+            </td>
             <td class="p-3">
                 <span class="font-mono font-bold text-indigo-700 text-xs bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">{{ $ticket->ticket_number }}</span>
             </td>
@@ -384,16 +435,29 @@
             </td>
 
             <td class="p-3 pl-5">
-                <a href="{{ route('admin.user-tickets.show', $ticket->id) }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all hover:shadow-sm whitespace-nowrap">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    مشاهده
-                </a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('admin.user-tickets.show', $ticket->id) }}"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all hover:shadow-sm whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        مشاهده
+                    </a>
+                    <form method="POST" action="{{ route('admin.user-tickets.destroy', $ticket->id) }}"
+                          x-data
+                          @submit.prevent="if(confirm('آیا از حذف تیکت {{ $ticket->ticket_number }} اطمینان دارید؟ این عمل قابل بازگشت نیست.')) $el.submit()">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all hover:shadow-sm whitespace-nowrap">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                            حذف
+                        </button>
+                    </form>
+                </div>
             </td>
         </tr>
         @empty
         <tr>
-            <td colspan="7" class="text-center py-16">
+            <td colspan="8" class="text-center py-16">
                 <div class="flex flex-col items-center gap-3">
                     <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-3xl shadow-sm">📭</div>
                     <p class="text-gray-600 font-semibold">هیچ تیکتی یافت نشد</p>
