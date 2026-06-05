@@ -6,8 +6,14 @@
 @endpush
 
 @section('content')
+@php
+    $frNotice = \App\Models\Setting::get('tickets.fr_customer_notice',
+        'این درخواست صرفاً به عنوان پیشنهاد دریافت می‌گردد و پس از امکان‌سنجی، بررسی فنی و تأیید نهایی، نتیجه از طریق همین تیکت یا سایر کانال‌های اطلاع‌رسانی به شما اعلام خواهد شد.'
+    );
+@endphp
 <div class="max-w-2xl mx-auto" x-data="{
     channel: 'user',
+    ticketType: 'support',
     userSearch: '',
     selectedUser: null,
     get canSubmitPlatform() { return @js($hasLicense ? 'true' : 'false') === 'true'; }
@@ -69,7 +75,7 @@
                         <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl shrink-0">🏢</div>
                         <div>
                             <div class="font-bold text-sm text-gray-800">به پلتفرم اصلی</div>
-                            <div class="text-xs text-gray-500 mt-0.5">ارسال تیکت پشتیبانی به تیم پلتفرم</div>
+                            <div class="text-xs text-gray-500 mt-0.5">پشتیبانی یا درخواست ویژگی به تیم SaaS</div>
                         </div>
                         <div x-show="channel === 'platform'" class="mr-auto">
                             <div class="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
@@ -96,6 +102,67 @@
 
         {{-- Pass chosen channel to controller --}}
         <input type="hidden" name="channel" :value="channel">
+
+        {{-- Pass ticket type (only relevant for platform channel) --}}
+        <input type="hidden" name="type" :value="channel === 'platform' ? ticketType : 'support'">
+
+        {{-- ─── نوع تیکت — فقط برای کانال پلتفرم ──────────────────────────── --}}
+        <div x-show="channel === 'platform'" x-transition>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">نوع درخواست</label>
+            <div class="grid grid-cols-2 gap-3">
+
+                {{-- پشتیبانی --}}
+                <label class="cursor-pointer">
+                    <input type="radio" name="_type_sel" value="support" x-model="ticketType" class="sr-only">
+                    <div :class="ticketType === 'support' ? 'ring-2 ring-indigo-500 border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white hover:border-indigo-200'"
+                         class="rounded-2xl border p-4 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg shrink-0">💬</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-sm text-gray-800">پشتیبانی</div>
+                                <div class="text-xs text-gray-500 mt-0.5">مشکل یا سوال فنی</div>
+                            </div>
+                            <div x-show="ticketType === 'support'" class="shrink-0">
+                                <div class="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+
+                {{-- درخواست ویژگی --}}
+                <label class="cursor-pointer">
+                    <input type="radio" name="_type_sel" value="feature_request" x-model="ticketType" class="sr-only">
+                    <div :class="ticketType === 'feature_request' ? 'ring-2 ring-purple-500 border-purple-300 bg-purple-50' : 'border-gray-200 bg-white hover:border-purple-200'"
+                         class="rounded-2xl border p-4 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-lg shrink-0">💡</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-sm text-gray-800">درخواست ویژگی</div>
+                                <div class="text-xs text-gray-500 mt-0.5">پیشنهاد بهبود محصول</div>
+                            </div>
+                            <div x-show="ticketType === 'feature_request'" class="shrink-0">
+                                <div class="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+
+            </div>
+
+            {{-- Section M: Customer notice --}}
+            <div x-show="ticketType === 'feature_request'" x-transition
+                 class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3"
+                 style="display:none">
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                    <p class="text-xs text-amber-800 leading-relaxed">{{ $frNotice }}</p>
+                </div>
+            </div>
+        </div>
 
         {{-- User selector (only for 'user' channel) --}}
         <div x-show="channel === 'user'" x-transition>
@@ -125,7 +192,7 @@
         {{-- Message --}}
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">
-                <span x-text="channel === 'platform' ? 'شرح مشکل' : 'متن تیکت'"></span>
+                <span x-text="channel === 'platform' && ticketType === 'feature_request' ? 'شرح درخواست' : (channel === 'platform' ? 'شرح مشکل' : 'متن تیکت')"></span>
                 <span class="text-red-500">*</span>
             </label>
             <textarea name="message" required rows="5"
@@ -167,7 +234,7 @@
                     :class="channel === 'platform' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-teal-600 hover:bg-teal-700'"
                     class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-                <span x-text="channel === 'platform' ? 'ارسال به پلتفرم' : 'ثبت تیکت کاربری'"></span>
+                <span x-text="channel === 'platform' && ticketType === 'feature_request' ? 'ارسال درخواست ویژگی' : (channel === 'platform' ? 'ارسال به پلتفرم' : 'ثبت تیکت کاربری')"></span>
             </button>
             <a href="{{ route('admin.inbox.index') }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">انصراف</a>
         </div>

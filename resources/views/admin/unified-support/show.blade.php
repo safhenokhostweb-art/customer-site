@@ -524,7 +524,7 @@
 
                 <form @submit.prevent="sendReply($el)"
                       action="{{ route('admin.inbox.reply', ['channel' => $channel, 'id' => $id]) }}"
-                      method="POST" enctype="multipart/form-data">
+                      method="POST" enctype="multipart/form-data" novalidate>
                     @csrf
                     @if($channel === 'user')
                     <input type="hidden" name="is_internal" :value="noteMode ? '1' : '0'">

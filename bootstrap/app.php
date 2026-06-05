@@ -41,5 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         // Wave 8.0b — prune tenant admin_activity_log (respect AUDIT_PRUNE_DRY_RUN)
         $schedule->command('admin-activity-log:prune')->dailyAt('03:05');
+        // Subscription — expire overdue subscriptions every hour
+        $schedule->command('subscriptions:expire')->hourly();
     })
     ->create();

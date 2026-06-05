@@ -13,15 +13,19 @@ class StoreSupportRequest extends FormRequest
 
     public function rules(): array
     {
+        $isFeatureRequest = $this->input('type') === 'feature_request';
+
         return [
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string|max:5000',
-            'mobile' => 'required|string|max:20',
-            'name' => 'nullable|string|max:255',
-            'priority' => 'nullable|in:low,normal,high',
-            'category' => 'nullable|string|max:50',
-            'tags' => 'nullable|string|max:500',
-            'attachments' => 'nullable|array|max:5',
+            'subject'       => 'required|string|max:255',
+            'message'       => 'required|string|max:5000',
+            // موبایل برای درخواست ویژگی اختیاری است (ادمین سایت خودش ارسال‌کننده است)
+            'mobile'        => $isFeatureRequest ? 'nullable|string|max:20' : 'required|string|max:20',
+            'name'          => 'nullable|string|max:255',
+            'priority'      => 'nullable|in:low,normal,high',
+            'category'      => 'nullable|string|max:50',
+            'type'          => 'nullable|in:support,feature_request',
+            'tags'          => 'nullable|string|max:500',
+            'attachments'   => 'nullable|array|max:5',
             'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,zip|max:10240',
         ];
     }

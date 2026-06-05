@@ -3,6 +3,23 @@
 
 @push('head')
 @include('partials.ticket-styles')
+<style>
+@keyframes awaitsPulse{0%,100%{background-color:transparent}50%{background-color:rgba(20,184,166,.06)}}
+.ticket-awaits-reply{animation:awaitsPulse 2.4s ease-in-out infinite}
+.ticket-awaits-reply:hover{animation:none}
+@keyframes badgeFade{0%,100%{opacity:1}50%{opacity:.55}}
+.awaits-reply-badge{animation:badgeFade 1.8s ease-in-out infinite}
+
+/* ── Feature Request row identity ── */
+.ticket-row-fr{border-right:3px solid #8b5cf6!important;background:linear-gradient(to left,rgba(139,92,246,.03),transparent)}
+.ticket-row-fr:hover{background:rgba(139,92,246,.07)!important;animation:none!important}
+.fr-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.15rem .55rem;border-radius:9999px;font-size:.62rem;font-weight:700;background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;white-space:nowrap;vertical-align:middle}
+
+/* ── Type quick-tabs ── */
+.type-qtab{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .9rem;border-radius:.65rem;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid #e5e7eb;background:#f9fafb;color:#475569;transition:all .15s;white-space:nowrap}
+.type-qtab:hover,.type-qtab.qtab-active-fr{background:#f3e8ff;color:#6d28d9;border-color:#ddd6fe}
+.type-qtab.qtab-active-all{background:#eef2ff;color:#4338ca;border-color:#c7d2fe}
+</style>
 @endpush
 
 @section('content')
@@ -11,6 +28,7 @@
     status: @js($status),
     priority: '',
     channel: @js($channel),
+    ticketType: '',
     customerFilter: '',
     bulkSelected: [],
     get allUserIds() {
@@ -55,6 +73,7 @@
                 : 'bg-white text-gray-600 border-gray-200 hover:border-' . $tab['color'] . '-300 hover:text-' . $tab['color'] . '-600';
         @endphp
         <a href="{{ route('admin.inbox.index', ['channel' => $tab['key'], 'status' => $status, 'q' => $q]) }}"
+           @click="if('{{ $tab['key'] }}' === 'user') ticketType = ''"
            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl border text-sm font-semibold transition-all {{ $base }}">
             <span>{{ $tab['icon'] }}</span>
             <span>{{ $tab['label'] }}</span>
@@ -80,6 +99,33 @@
             </span>
             @endif
         </div>
+    </div>
+
+    {{-- ─── Type Quick-tabs (فقط کانال پلتفرم یا همه) ─────────────────── --}}
+    <div class="flex items-center gap-2 mb-4 flex-wrap" x-show="channel !== 'user'" x-transition>
+        <button @click="ticketType = ''"
+                :class="ticketType === '' ? 'qtab-active-all' : ''"
+                class="type-qtab">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5"/></svg>
+            همه
+        </button>
+        <button @click="ticketType = 'support'"
+                :class="ticketType === 'support' ? 'qtab-active-all' : ''"
+                class="type-qtab">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            پشتیبانی
+        </button>
+        <button @click="ticketType = 'feature_request'"
+                :class="ticketType === 'feature_request' ? 'qtab-active-fr' : ''"
+                class="type-qtab">
+            💡
+            درخواست ویژگی
+            @if(($stats['fr_open'] ?? 0) > 0)
+            <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[9px] font-bold bg-purple-100 text-purple-700">
+                {{ $stats['fr_open'] }}
+            </span>
+            @endif
+        </button>
     </div>
 
     {{-- ─── Stat Cards ───────────────────────────────────────────────────── --}}
@@ -212,8 +258,17 @@
                 <option value="normal">🔵 عادی</option>
                 <option value="low">⚪ کم</option>
             </select>
+            {{-- نوع تیکت (فقط کانال پلتفرم) --}}
+            <template x-if="channel !== 'user'">
+                <select x-model="ticketType" style="max-width:10rem"
+                        class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all w-full sm:w-auto">
+                    <option value="">💬 همه انواع</option>
+                    <option value="support">🔧 پشتیبانی</option>
+                    <option value="feature_request">💡 درخواست ویژگی</option>
+                </select>
+            </template>
             {{-- پاک کردن --}}
-            <button @click="search=''; status=''; priority=''; customerFilter=''"
+            <button @click="search=''; status=''; priority=''; customerFilter=''; ticketType=''"
                     class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm text-gray-500 hover:bg-gray-50 transition-all justify-center w-full sm:w-auto">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 پاک کردن
@@ -250,9 +305,17 @@
         $pDot  = $p === 'high' ? 'bg-red-500' : ($p === 'low' ? 'bg-gray-400' : 'bg-blue-500');
         $pLbl  = $p === 'high' ? 'بالا' : ($p === 'low' ? 'کم' : 'عادی');
         $ch    = $ticket->channel ?? 'user';
+        $isFR  = method_exists($ticket, 'isFeatureRequest') ? $ticket->isFeatureRequest() : (($ticket->type ?? 'support') === 'feature_request');
+        $ticketTypeVal = $ticket->type ?? 'support';
         $showUrl = route('admin.inbox.show', ['channel' => $ch, 'id' => $ticket->id]);
+        $needsReply = $ticket->status !== 'closed'
+            && $ch === 'user'
+            && ($ticket->last_reply_author ?? null) === 'customer';
     @endphp
-    <tr class="ticket-row border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+    <tr class="ticket-row border-b border-gray-50 transition-colors
+               {{ $isFR ? 'ticket-row-fr' : 'hover:bg-gray-50/50' }}
+               {{ $needsReply && !$isFR ? 'ticket-awaits-reply' : '' }}"
+        @if($needsReply && !$isFR) style="border-right:3px solid #14b8a6" @endif
         data-subject="{{ $ticket->subject }}"
         data-ticket-no="{{ $ticket->ticket_number }}"
         data-customer="{{ $ticket->customer_name ?? '' }}"
@@ -260,12 +323,14 @@
         data-status="{{ $ticket->status }}"
         data-channel="{{ $ch }}"
         data-priority="{{ $p }}"
+        data-type="{{ $ticketTypeVal }}"
         x-show="
             (channel === 'all' || $el.dataset.channel === channel) &&
             (!search || $el.dataset.subject.toLowerCase().includes(search.toLowerCase()) || $el.dataset.ticketNo.includes(search) || $el.dataset.customer.toLowerCase().includes(search.toLowerCase())) &&
             (!customerFilter || $el.dataset.customer.toLowerCase().includes(customerFilter.toLowerCase()) || $el.dataset.customerMobile.includes(customerFilter)) &&
-            (!status || $el.dataset.status === status) &&
-            (!priority || $el.dataset.priority === priority)
+            (!status   || $el.dataset.status   === status)   &&
+            (!priority || $el.dataset.priority === priority)  &&
+            (!ticketType || $el.dataset.type === ticketType)
         "
         x-transition:enter="transition ease-out duration-150"
         x-transition:enter-start="opacity-0 translate-y-1"
@@ -300,10 +365,33 @@
 
         {{-- موضوع --}}
         <td class="p-3">
-            <a href="{{ $showUrl }}" class="group">
-                <span class="text-sm font-semibold text-gray-800 group-hover:text-indigo-700 transition-colors">{{ Str::limit($ticket->subject, 40) }}</span>
+            <a href="{{ $showUrl }}" class="group block">
+                {{-- سطر اول: بج FR (اگر درخواست ویژگی است) --}}
+                @if($isFR)
+                <div class="mb-1">
+                    <span class="fr-badge">
+                        💡 درخواست ویژگی
+                        @if($ticket->fr_status ?? null)
+                        <span class="opacity-60">· {{ method_exists($ticket,'frStatusLabel') ? $ticket->frStatusLabel() : $ticket->fr_status }}</span>
+                        @endif
+                    </span>
+                </div>
+                @endif
+                {{-- سطر دوم: عنوان + بج پاسخ --}}
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-sm font-semibold transition-colors
+                        {{ $isFR ? 'text-purple-900 group-hover:text-purple-700' : 'text-gray-800 group-hover:text-indigo-700' }}">
+                        {{ Str::limit($ticket->subject, 42) }}
+                    </span>
+                    @if($needsReply)
+                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-teal-100 text-teal-700 border border-teal-200 awaits-reply-badge shrink-0">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        پاسخ دهید
+                    </span>
+                    @endif
+                </div>
                 @if($ticket->category)
-                <span class="mr-2 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ $ticket->category }}</span>
+                <span class="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{{ $ticket->category }}</span>
                 @endif
             </a>
         </td>

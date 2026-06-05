@@ -75,6 +75,8 @@ class SupportController extends Controller
             'license'            => $license,
             'users'              => $users,
             'attachmentsEnabled' => true,
+            // Section K: Customer Site Admin can submit Feature Request tickets to SaaS platform
+            'isSiteAdminContext' => true,
         ]);
     }
 
@@ -135,14 +137,25 @@ class SupportController extends Controller
             }
         }
 
+        $ticketType = $validated['type'] ?? 'support';
+
+        // برای درخواست ویژگی، اگر موبایل ارائه نشد از موبایل ادمین سایت استفاده کن
+        $customerMobile = $validated['mobile'] ?? null;
+        $customerName   = $validated['name'] ?? null;
+        if ($ticketType === 'feature_request' && empty($customerMobile)) {
+            $customerMobile = auth()->user()?->mobile;
+            $customerName   = $customerName ?: auth()->user()?->name;
+        }
+
         $response = $this->supportApiClient->store($license, [
             'subject'         => $validated['subject'],
             'message'         => $validated['message'] ?? $validated['description'] ?? '',
-            'customer_mobile' => $validated['mobile'] ?? null,
-            'customer_name'   => $validated['name'] ?? null,
-            'priority'       => $validated['priority'] ?? 'normal',
-            'category'       => $validated['category'] ?? null,
-            'tags'           => $tags,
+            'customer_mobile' => $customerMobile,
+            'customer_name'   => $customerName,
+            'priority'        => $validated['priority'] ?? 'normal',
+            'category'        => $validated['category'] ?? null,
+            'type'            => $ticketType,
+            'tags'            => $tags,
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {

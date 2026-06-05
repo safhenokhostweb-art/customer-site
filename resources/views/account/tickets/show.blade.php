@@ -347,8 +347,28 @@
             this.showToast = true;
             clearTimeout(this._toastTimer);
             this._toastTimer = setTimeout(() => { this.showToast = false; }, 5000);
+            // صدا
+            if (window.CS) window.CS.play('receive');
+            // عنوان پنجره
+            if (!document.hasFocus()) {
+                const orig = document.title;
+                document.title = '🔔 پاسخ جدید دریافت شد';
+                window.addEventListener('focus', () => { document.title = orig; }, { once: true });
+            }
+            // مرورگر نوتیفیکیشن
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification('پشتیبانی پاسخ داد', {
+                        body: body ? body.substring(0, 100) : 'پاسخ جدید دریافت کردید',
+                        icon: '/favicon.ico', dir: 'rtl', tag: 'ticket-reply'
+                    });
+                } catch(e) {}
+            }
         }
      }">
+
+    @include('partials.notification-permission', ['context' => 'customer'])
+    </script>
 
     {{-- Toast --}}
     <div x-show="showToast" x-transition

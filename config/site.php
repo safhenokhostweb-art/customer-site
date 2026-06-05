@@ -28,6 +28,19 @@ return [
     'platform_url' => rtrim(env('PLATFORM_URL', ''), '/'),
 
     /*
+    | شناسهٔ این سایت در جدول sites پلتفرم اصلی.
+    | مورد استفادهٔ Education Center برای دریافت مقالات، راهنماها، و مسیرهای یادگیری.
+    */
+    'platform_site_id' => env('PLATFORM_SITE_ID') ? (int) env('PLATFORM_SITE_ID') : null,
+
+    /*
+    | توکن Sanctum ایجادشده در پلتفرم با نام customer-site-education-sync.
+    | با این توکن از api/v1/education/sync/{siteId}/... احراز هویت می‌شود.
+    | هرگز این مقدار را مستقیم در کد یا config ننویسید؛ فقط در .env تعریف کنید.
+    */
+    'platform_api_token' => env('PLATFORM_API_TOKEN', ''),
+
+    /*
     | مدت کش تنظیمات و اعلان‌های پلتفرم (ثانیه).
     | پس از این مدت، درخواست بعدی به API پلتفرم می‌رود و دادهٔ تازه می‌گیرد.
     | پیش‌فرض ۳۰۰ = ۵ دقیقه (اعلان‌ها بدون بازخوانی دستی به‌روز می‌شوند).

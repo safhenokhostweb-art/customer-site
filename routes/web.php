@@ -119,8 +119,13 @@ Route::middleware('install.check')->group(function () {
         Route::get('/', AccountDashboardController::class)->name('dashboard');
         Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AccountOrderController::class, 'show'])->name('orders.show');
-        Route::post('/subscriptions/{subscription}/cancel', [AccountSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
         Route::get('/subscriptions', [AccountSubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::get('/subscriptions/plans', [AccountSubscriptionController::class, 'plans'])->name('subscriptions.plans');
+        Route::post('/subscriptions/subscribe', [AccountSubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
+        Route::post('/subscriptions/cancel-pending', [AccountSubscriptionController::class, 'cancelPending'])->name('subscriptions.cancel-pending');
+        Route::delete('/subscriptions/{subscription}/delete-pending', [AccountSubscriptionController::class, 'deletePending'])->name('subscriptions.delete-pending');
+        Route::get('/subscriptions/{subscription}', [AccountSubscriptionController::class, 'show'])->name('subscriptions.show');
+        Route::post('/subscriptions/{subscription}/cancel', [AccountSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
         Route::get('/forms', [AccountFormController::class, 'index'])->name('forms.index');
         Route::get('/notifications', [AccountNotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/read', [AccountNotificationController::class, 'markAsRead'])->name('notifications.read');
@@ -180,6 +185,10 @@ Route::middleware('install.check')->group(function () {
     Route::middleware('module:invoice')->group(function () {
         Route::get('/invoice/{invoiceNumber}', [FrontInvoiceController::class, 'show'])->name('invoice.show');
         Route::get('/invoice/{invoiceNumber}/pay', [FrontInvoiceController::class, 'pay'])->name('invoice.pay');
+    });
+    Route::middleware(['module:subscription', 'auth'])->group(function () {
+        Route::get('/subscription/pay/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'pay'])->name('subscriptions.pay');
+        Route::post('/subscription/confirm/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'confirm'])->name('subscriptions.confirm');
     });
     Route::middleware('module:business_card')->group(function () {
         Route::get('/card/{slug}', [FrontBusinessCardController::class, 'show'])->name('business-card.show');
@@ -307,7 +316,18 @@ Route::middleware('install.check')->group(function () {
             Route::get('referrals', [ReferralController::class, 'index'])->name('referrals.index');
         });
         Route::middleware(['module:subscription', 'permission:subscription'])->group(function () {
+            Route::get('subscriptions/dashboard', [\App\Http\Controllers\Admin\SubscriptionDashboardController::class, 'index'])->name('subscriptions.dashboard');
             Route::resource('subscriptions', SubscriptionPlanController::class)->parameters(['subscriptions' => 'subscription']);
+            Route::get('subscribers', [\App\Http\Controllers\Admin\SubscriberController::class, 'index'])->name('subscribers.index');
+            Route::get('subscribers/export', [\App\Http\Controllers\Admin\SubscriberController::class, 'export'])->name('subscribers.export');
+            Route::get('subscribers/assign', [\App\Http\Controllers\Admin\SubscriberController::class, 'createAssign'])->name('subscribers.assign.form');
+            Route::post('subscribers/assign', [\App\Http\Controllers\Admin\SubscriberController::class, 'assign'])->name('subscribers.assign');
+            Route::get('subscribers/pending', [\App\Http\Controllers\Admin\SubscriberController::class, 'pendingRequests'])->name('subscribers.pending');
+            Route::get('subscribers/{subscriber}', [\App\Http\Controllers\Admin\SubscriberController::class, 'show'])->name('subscribers.show');
+            Route::post('subscribers/{subscriber}/cancel', [\App\Http\Controllers\Admin\SubscriberController::class, 'cancel'])->name('subscribers.cancel');
+            Route::post('subscribers/{subscriber}/reactivate', [\App\Http\Controllers\Admin\SubscriberController::class, 'reactivate'])->name('subscribers.reactivate');
+            Route::post('subscribers/{subscriber}/approve', [\App\Http\Controllers\Admin\SubscriberController::class, 'approveRequest'])->name('subscribers.approve');
+            Route::delete('subscribers/{subscriber}/destroy', [\App\Http\Controllers\Admin\SubscriberController::class, 'destroyRequest'])->name('subscribers.destroy');
         });
         Route::middleware(['module:whatsapp', 'permission:whatsapp'])->group(function () {
             Route::get('whatsapp', [MessagingController::class, 'index'])->name('whatsapp.index');
@@ -580,6 +600,16 @@ Route::middleware('install.check')->group(function () {
             Route::get('/{ticketId}/poll', [AdminSupportController::class, 'poll'])->whereNumber('ticketId')->name('tickets.site.poll');
             Route::post('/{ticketId}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('admin.support.reply');
             Route::post('/{ticketId}/replies', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('tickets.site.replies.store');
+        });
+
+    // ─── Education Center — مرکز آموزش (Phase EDU-12) ──────────────────────
+    // فقط محتوای مرتبط با ویژگی‌های فعال سایت نمایش داده می‌شود (Rule 1)
+    Route::middleware(['auth', 'admin'])
+        ->prefix('admin/education-center')
+        ->name('admin.education-center.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\EducationCenterController::class, 'index'])->name('index');
+            Route::get('/{slug}', [\App\Http\Controllers\Admin\EducationCenterController::class, 'show'])->name('show');
         });
 });
 

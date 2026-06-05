@@ -26,6 +26,13 @@ class TicketController extends Controller
             ->withCount([
                 'replies as staff_replies_count' => fn($q) => $q->where('author_type', 'staff')->where('is_internal', false),
             ])
+            ->addSelect([
+                'last_reply_author' => TicketReply::select('author_type')
+                    ->whereColumn('ticket_id', 'tickets.id')
+                    ->where('is_internal', false)
+                    ->orderByDesc('created_at')
+                    ->limit(1),
+            ])
             ->orderByDesc('created_at')
             ->paginate(15);
 
@@ -268,6 +275,20 @@ class TicketController extends Controller
             if ($adminPhone && Setting::get('user_tickets.sms_enabled', false)) {
                 $this->sms->send($adminPhone,
                     "{$event}: تیکت {$ticket->ticket_number} از طرف {$ticket->customer_name}"
+                );
+            }
+        } catch (\Throwable) {}
+
+        // Push notification به ادمین‌هایی که subscribe هستند
+        try {
+            $pushService = app(\App\Services\PushNotificationService::class);
+            $admins = \App\Models\User::where('is_admin', true)->pluck('id');
+            foreach ($admins as $adminId) {
+                $pushService->sendToUser(
+                    $adminId,
+                    'پیام جدید از مشتری',
+                    "{$ticket->ticket_number}: " . str($ticket->subject)->limit(60),
+                    route('admin.inbox.show', ['channel' => 'user', 'id' => $ticket->id])
                 );
             }
         } catch (\Throwable) {}

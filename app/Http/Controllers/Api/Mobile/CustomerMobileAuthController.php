@@ -14,8 +14,11 @@ class CustomerMobileAuthController extends Controller
     public function token(Request $request): JsonResponse
     {
         $request->validate([
-            'mobile'   => 'required|string|regex:/^09[0-9]{9}$/',
-            'password' => 'required|string',
+            'mobile'      => 'required|string|regex:/^09[0-9]{9}$/',
+            'password'    => 'required|string',
+            'device_id'   => 'nullable|string',
+            'platform'    => 'nullable|string',
+            'app_version' => 'nullable|string',
         ]);
 
         $user = User::where('mobile', $request->mobile)->first();
@@ -28,21 +31,25 @@ class CustomerMobileAuthController extends Controller
         $plainToken = Str::random(60);
         $user->update(['api_token' => hash('sha256', $plainToken)]);
 
+        $sessionId  = 'cs-' . $user->id . '-' . now()->timestamp;
+        $expiresAt  = now()->addDays(30)->toIso8601String();
+
         return response()->json([
             'data' => [
                 'token'      => $plainToken,
-                'expires_at' => now()->addDays(30)->toIso8601String(),
+                'expires_at' => $expiresAt,
                 'user' => [
-                    'id'            => $user->id,
+                    'id'            => (string) $user->id,
                     'name'          => $user->name ?? $user->mobile,
                     'mobile'        => $user->mobile,
-                    'is_admin'      => (bool) ($user->is_admin      ?? false),
-                    'is_site_admin' => (bool) ($user->is_site_admin ?? false),
+                    'roles'         => ['end_user'],
+                    'is_admin'      => false,
+                    'is_site_admin' => false,
                     'site_id'       => null,
                 ],
                 'session' => [
-                    'session_id' => 'cs-' . $user->id . '-' . now()->timestamp,
-                    'expires_at' => now()->addDays(30)->toIso8601String(),
+                    'session_id' => $sessionId,
+                    'expires_at' => $expiresAt,
                 ],
             ],
             'meta' => ['tenant_id' => 'customer-site'],
@@ -51,10 +58,37 @@ class CustomerMobileAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $user = auth()->user();
+        $user = $request->user();
         if ($user) {
             $user->update(['api_token' => null]);
         }
         return response()->json(['message' => 'خروج موفق.']);
+    }
+
+    public function refreshToken(Request $request): JsonResponse
+    {
+        // توکن فعلی را از header می‌خوانیم
+        $header = $request->header('Authorization', '');
+        $currentToken = str_starts_with($header, 'Bearer ') ? substr($header, 7) : null;
+
+        if (!$currentToken) {
+            return response()->json(['message' => 'توکن یافت نشد.'], 401);
+        }
+
+        $user = User::where('api_token', hash('sha256', $currentToken))->first();
+        if (!$user) {
+            return response()->json(['message' => 'توکن نامعتبر است.'], 401);
+        }
+
+        // توکن جدید صادر کن
+        $newToken = Str::random(60);
+        $user->update(['api_token' => hash('sha256', $newToken)]);
+
+        return response()->json([
+            'data' => [
+                'token'      => $newToken,
+                'expires_at' => now()->addDays(30)->toIso8601String(),
+            ],
+        ]);
     }
 }

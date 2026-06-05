@@ -3,6 +3,13 @@
 
 @push('head')
 @include('partials.ticket-styles')
+<style>
+@keyframes awaitsPulse{0%,100%{background-color:transparent}50%{background-color:rgba(99,102,241,.06)}}
+.ticket-awaits-reply{animation:awaitsPulse 2.4s ease-in-out infinite}
+.ticket-awaits-reply:hover{animation:none}
+@keyframes badgeFade{0%,100%{opacity:1}50%{opacity:.55}}
+.awaits-reply-badge{animation:badgeFade 1.8s ease-in-out infinite}
+</style>
 @endpush
 
 @section('content')
@@ -362,8 +369,11 @@
             $pBg  = $p === 'high'  ? 'bg-red-50 text-red-700 border-red-200'  : ($p === 'low' ? 'bg-gray-50 text-gray-500 border-gray-200' : 'bg-blue-50 text-blue-600 border-blue-200');
             $pDot = $p === 'high'  ? 'bg-red-500' : ($p === 'low' ? 'bg-gray-400' : 'bg-blue-500');
             $pLbl = $p === 'high'  ? 'بالا' : ($p === 'low' ? 'کم' : 'عادی');
+            $needsReply = $ticket->status !== 'closed'
+                && ($lastReplyAuthors ?? collect())->get($ticket->id) === 'customer';
         @endphp
-        <tr class="ticket-row border-b border-gray-50 hover:bg-indigo-50/30 transition-colors group"
+        <tr class="ticket-row border-b border-gray-50 hover:bg-indigo-50/30 transition-colors group {{ $needsReply ? 'ticket-awaits-reply' : '' }}"
+            style="{{ $needsReply ? 'border-right:3px solid #6366f1' : '' }}"
             data-subject="{{ $ticket->subject }}"
             data-ticket-no="{{ $ticket->ticket_number }}"
             data-customer="{{ $ticket->customer_name }}"
@@ -389,7 +399,15 @@
 
             <td class="p-3">
                 <a href="{{ route('admin.user-tickets.show', $ticket->id) }}" class="group/link">
-                    <span class="text-sm font-semibold text-gray-800 group-hover/link:text-indigo-700 transition-colors">{{ Str::limit($ticket->subject, 42) }}</span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-sm font-semibold text-gray-800 group-hover/link:text-indigo-700 transition-colors">{{ Str::limit($ticket->subject, 42) }}</span>
+                        @if($needsReply)
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 awaits-reply-badge shrink-0">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            پیام کاربر — پاسخ دهید
+                        </span>
+                        @endif
+                    </div>
                     @if($ticket->category)
                     <span class="ml-2 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ $ticket->category }}</span>
                     @endif

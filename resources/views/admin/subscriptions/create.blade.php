@@ -1,51 +1,252 @@
 @extends('admin.layout')
 @section('title', 'پلن اشتراک جدید')
-@section('header', 'پلن اشتراک جدید')
 @section('content')
-<div class="admin-page max-w-2xl">
-    <div class="card">
-        <div class="card-header">اطلاعات پلن</div>
-        <div class="card-body">
-            <form action="{{ route('admin.subscriptions.store') }}" method="post">
-                @csrf
-                <div class="form-group">
-                    <label class="form-label">نام پلن *</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="مثلاً پلن ماهانه">
+
+<div class="plnfrm" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif;max-width:860px">
+
+<div class="plnfrm__head">
+    <div>
+        <h1 class="plnfrm__title">ایجاد پلن اشتراک جدید</h1>
+        <p class="plnfrm__sub">اطلاعات کامل پلن را وارد کنید.</p>
+    </div>
+    <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary btn-sm">← بازگشت</a>
+</div>
+
+@if($errors->any())
+<div class="alert alert-danger">
+    <ul class="list-disc list-inside text-sm space-y-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+</div>
+@endif
+
+<form action="{{ route('admin.subscriptions.store') }}" method="POST" enctype="multipart/form-data" id="plan-form">
+@csrf
+
+<div class="plnfrm__grid">
+
+    {{-- ═══ ستون اصلی ═══ --}}
+    <div class="plnfrm__main">
+
+        {{-- اطلاعات اصلی --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">
+                <span class="plnfrm__step">۱</span> اطلاعات پایه
+            </div>
+            <div class="plnfrm__card-body">
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">نام پلن <span class="plnfrm__req">*</span></label>
+                    <input type="text" name="name" id="plan-name" value="{{ old('name') }}" required
+                           placeholder="مثلاً: پلن طلایی" class="plnfrm__input">
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">قیمت (تومان) *</label>
-                        <input type="number" name="price" value="{{ old('price') }}" required min="0" placeholder="50000">
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">اسلاگ (URL) <span class="plnfrm__hint">اختیاری — از نام خودکار ساخته می‌شود</span></label>
+                    <input type="text" name="slug" id="plan-slug" value="{{ old('slug') }}"
+                           placeholder="plan-slug" class="plnfrm__input plnfrm__input--mono" dir="ltr">
+                </div>
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">توضیحات</label>
+                    <textarea id="subscription-description-editor" name="description"
+                              class="plnfrm__textarea" rows="3"
+                              placeholder="توضیح کوتاه این پلن برای کاربر...">{{ old('description') }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        {{-- قیمت‌گذاری --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">
+                <span class="plnfrm__step">۲</span> قیمت‌گذاری
+            </div>
+            <div class="plnfrm__card-body">
+                <div class="plnfrm__row-3">
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">قیمت اصلی (تومان) <span class="plnfrm__req">*</span></label>
+                        <input type="number" name="price" value="{{ old('price', 0) }}" required min="0"
+                               placeholder="۰ = رایگان" class="plnfrm__input" id="price-main">
+                        <span class="plnfrm__field-note">۰ = رایگان</span>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">مدت *</label>
-                        <select name="duration" required>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">
+                            قیمت ویژه (تومان)
+                            <span class="plnfrm__badge-sale">تخفیف</span>
+                        </label>
+                        <input type="number" name="special_price" value="{{ old('special_price') }}" min="0"
+                               placeholder="خالی = بدون تخفیف" class="plnfrm__input">
+                        <span class="plnfrm__field-note">کمتر از قیمت اصلی وارد کنید</span>
+                    </div>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">محدودیت کاربر</label>
+                        <input type="number" name="max_users" value="{{ old('max_users') }}" min="1"
+                               placeholder="خالی = نامحدود" class="plnfrm__input">
+                    </div>
+                </div>
+                <div class="plnfrm__divider"></div>
+                <div class="plnfrm__row-2">
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">کد تخفیف</label>
+                        <input type="text" name="discount_code" value="{{ old('discount_code') }}"
+                               placeholder="SUMMER30" class="plnfrm__input plnfrm__input--mono" dir="ltr" maxlength="50">
+                        <span class="plnfrm__field-note">وقتی کاربر این کد را وارد کند، تخفیف اعمال می‌شود</span>
+                    </div>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">درصد تخفیف با کد</label>
+                        <div class="plnfrm__input-group">
+                            <input type="number" name="discount_percent" value="{{ old('discount_percent') }}"
+                                   min="0" max="100" step="0.5" placeholder="۲۰" class="plnfrm__input">
+                            <span class="plnfrm__input-suffix">٪</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- مدت و آزمایشی --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">
+                <span class="plnfrm__step">۳</span> مدت و دوره آزمایشی
+            </div>
+            <div class="plnfrm__card-body">
+                <div class="plnfrm__row-3">
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">نوع مدت <span class="plnfrm__req">*</span></label>
+                        <select name="duration" required class="plnfrm__select">
                             <option value="month" {{ old('duration') === 'month' ? 'selected' : '' }}>ماهانه</option>
-                            <option value="year" {{ old('duration') === 'year' ? 'selected' : '' }}>سالانه</option>
+                            <option value="year"  {{ old('duration') === 'year'  ? 'selected' : '' }}>سالانه</option>
                         </select>
                     </div>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">تعداد واحد <span class="plnfrm__req">*</span></label>
+                        <input type="number" name="duration_count" value="{{ old('duration_count', 1) }}" required min="1"
+                               class="plnfrm__input">
+                    </div>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">روزهای آزمایشی رایگان</label>
+                        <input type="number" name="trial_days" value="{{ old('trial_days', 0) }}" min="0"
+                               class="plnfrm__input">
+                        <span class="plnfrm__field-note">۰ = بدون دوره آزمایشی</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">تعداد واحد مدت *</label>
-                    <input type="number" name="duration_count" value="{{ old('duration_count', 1) }}" required min="1" placeholder="1">
+            </div>
+        </div>
+
+        {{-- امکانات --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">
+                <span class="plnfrm__step">۴</span> لیست امکانات پلن
+            </div>
+            <div class="plnfrm__card-body">
+                <div id="features-container" class="plnfrm__feats">
+                    @foreach(old('features', ['']) as $f)
+                    <div class="plnfrm__feat-row">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="plnfrm__feat-icon" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <input type="text" name="features[]" value="{{ $f }}"
+                               placeholder="مثلاً: دسترسی کامل به محتوا" class="plnfrm__feat-input">
+                        <button type="button" onclick="this.closest('.plnfrm__feat-row').remove()"
+                                class="plnfrm__feat-del" title="حذف">×</button>
+                    </div>
+                    @endforeach
                 </div>
-                <div class="form-group">
-                    <label class="form-label">توضیحات</label>
-                    <textarea id="subscription-description-editor" name="description" class="w-full min-h-[160px]" placeholder="امکانات پلن...">{{ old('description') }}</textarea>
+                <button type="button" id="add-feature" class="plnfrm__feat-add">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    افزودن امکان
+                </button>
+            </div>
+        </div>
+
+    </div>{{-- /main --}}
+
+    {{-- ═══ ستون کناری ═══ --}}
+    <div class="plnfrm__side">
+
+        {{-- پیش‌نمایش --}}
+        <div class="plnfrm__preview" id="preview-card">
+            <div class="plnfrm__preview-top" id="prev-top" style="border-top:4px solid #4f46e5">
+                <div id="prev-img-wrap" style="display:none">
+                    <img id="prev-img" src="" alt="" class="plnfrm__preview-img">
                 </div>
-                <div class="form-group">
-                    <label class="flex items-center gap-2 cursor-pointer">
+                <p class="plnfrm__preview-name" id="prev-name">نام پلن</p>
+                <div class="plnfrm__preview-price">
+                    <span class="plnfrm__preview-amount" id="prev-price" style="color:#4f46e5">۰ تومان</span>
+                </div>
+            </div>
+            <div class="plnfrm__preview-feats" id="prev-feats"></div>
+            <div class="plnfrm__preview-footer">
+                <div class="plnfrm__preview-btn" id="prev-top-color" style="background:#4f46e5">خرید اشتراک</div>
+            </div>
+        </div>
+
+        {{-- ظاهر --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">ظاهر و نمایش</div>
+            <div class="plnfrm__card-body">
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">تصویر کارت پلن</label>
+                    <div class="plnfrm__upload-area" id="img-upload-area">
+                        <input type="file" name="image" id="img-input" accept="image/*" class="plnfrm__upload-input">
+                        <label for="img-input" class="plnfrm__upload-label">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28" style="color:#94a3b8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span>کلیک برای انتخاب تصویر</span>
+                            <small>PNG, JPG تا ۲ مگابایت</small>
+                        </label>
+                        <img id="img-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:.5rem;margin:0 auto .5rem">
+                    </div>
+                </div>
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">رنگ کارت</label>
+                    <div class="plnfrm__color-row">
+                        <input type="color" name="color" id="color-picker" value="{{ old('color', '#4f46e5') }}"
+                               class="plnfrm__color-input">
+                        <input type="text" id="color-text" value="{{ old('color', '#4f46e5') }}"
+                               class="plnfrm__input plnfrm__input--mono" dir="ltr" maxlength="9"
+                               placeholder="#4f46e5">
+                    </div>
+                    {{-- رنگ‌های پیش‌فرض --}}
+                    <div class="plnfrm__swatches">
+                        @foreach(['#4f46e5','#7c3aed','#0284c7','#059669','#d97706','#e11d48','#475569','#1e293b'] as $sw)
+                        <button type="button" class="plnfrm__swatch" style="background:{{ $sw }}"
+                                onclick="setColor('{{ $sw }}')" title="{{ $sw }}"></button>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">متن بج (اختیاری)</label>
+                    <input type="text" name="badge_text" value="{{ old('badge_text') }}"
+                           placeholder="پیشنهادی / محبوب‌ترین" class="plnfrm__input" maxlength="50">
+                </div>
+                <div class="plnfrm__field">
+                    <label class="plnfrm__label">ترتیب نمایش</label>
+                    <input type="number" name="order" value="{{ old('order', 0) }}" min="0" class="plnfrm__input">
+                </div>
+                <div class="plnfrm__checks">
+                    <label class="plnfrm__check">
+                        <input type="checkbox" name="highlighted" value="1" {{ old('highlighted') ? 'checked' : '' }}>
+                        <span>نمایش به عنوان پیشنهاد ویژه</span>
+                    </label>
+                    <label class="plnfrm__check">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
                         <span>پلن فعال است</span>
                     </label>
                 </div>
-                <div class="admin-page-tools mt-6">
-                    <button type="submit" class="btn btn-primary">ذخیره پلن</button>
-                    <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary">انصراف</a>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+
+        <button type="submit" class="plnfrm__submit">ذخیره پلن</button>
+        <a href="{{ route('admin.subscriptions.index') }}" class="plnfrm__cancel">انصراف</a>
+
+    </div>{{-- /side --}}
+
+</div>{{-- /grid --}}
+</form>
 </div>
-@include('admin.partials.tinymce-field-init', ['selector' => '#subscription-description-editor', 'uploadContext' => 'featured', 'height' => 300])
+
+@include('admin.partials.tinymce-field-init', ['selector' => '#subscription-description-editor', 'uploadContext' => 'featured', 'height' => 180])
+
+
+@push('head')
+@include('admin.subscriptions._plan_form_styles')
+@endpush
+
+@push('scripts')
+@include('admin.subscriptions._plan_form_scripts')
+@endpush
+
 @endsection

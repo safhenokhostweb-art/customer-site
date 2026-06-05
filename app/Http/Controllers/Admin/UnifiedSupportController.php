@@ -70,6 +70,9 @@ class UnifiedSupportController extends Controller
             'platform_total'=> $platformTickets->count(),
             'user_open'     => $userTickets->where('status', 'open')->count(),
             'user_total'    => $userTickets->count(),
+            // تعداد درخواست‌های ویژگی باز در کانال پلتفرم
+            'fr_open'       => $platformTickets->filter(fn($t) => $t->isFeatureRequest() && $t->status !== 'closed')->count(),
+            'fr_total'      => $platformTickets->filter(fn($t) => $t->isFeatureRequest())->count(),
         ];
 
         $hasLicense = (bool) License::current()?->license_key;
@@ -266,16 +269,28 @@ class UnifiedSupportController extends Controller
 
     private function loadUserTickets(): \Illuminate\Support\Collection
     {
-        return Ticket::withoutTenantIsolation()
+        $tickets = Ticket::withoutTenantIsolation()
             ->whereNull('site_id')
             ->with('assignee:id,name')
             ->orderByDesc('created_at')
+            ->get();
+
+        $ticketIds = $tickets->pluck('id');
+        $lastAuthors = \SaaSPlatform\Modules\Tickets\Models\TicketReply::query()
+            ->selectRaw('ticket_id, author_type')
+            ->whereIn('ticket_id', $ticketIds)
+            ->where('is_internal', false)
+            ->orderByDesc('created_at')
             ->get()
-            ->map(function ($t) {
-                $proxy          = TicketProxyData::fromEloquent($t);
-                $proxy->channel = 'user';
-                return $proxy;
-            });
+            ->unique('ticket_id')
+            ->pluck('author_type', 'ticket_id');
+
+        return $tickets->map(function ($t) use ($lastAuthors) {
+            $proxy                    = TicketProxyData::fromEloquent($t);
+            $proxy->channel           = 'user';
+            $proxy->last_reply_author = $lastAuthors->get($t->id);
+            return $proxy;
+        });
     }
 
     private function findPlatformTicket(int $id): ?TicketProxyData
@@ -323,19 +338,32 @@ class UnifiedSupportController extends Controller
             'message'  => ['required', 'string', 'max:5000'],
             'priority' => ['nullable', 'in:low,normal,high'],
             'category' => ['nullable', 'string', 'max:100'],
+            'type'     => ['nullable', 'in:support,feature_request'],
         ]);
 
+        $ticketType    = $data['type'] ?? 'support';
         $uploadedFiles = $this->apiClient->uploadAttachments($request->file('attachments', []));
-        $response = $this->apiClient->store($license, [
-            'subject'  => $data['subject'],
-            'message'  => $data['message'],
-            'priority' => $data['priority'] ?? 'normal',
-            'category' => $data['category'] ?? null,
+        $response      = $this->apiClient->store($license, [
+            'subject'         => $data['subject'],
+            'message'         => $data['message'],
+            'priority'        => $data['priority'] ?? 'normal',
+            'category'        => $data['category'] ?? null,
+            'type'            => $ticketType,
+            // برای درخواست ویژگی، از موبایل ادمین سایت برای شناسایی استفاده می‌شود
+            'customer_mobile' => $ticketType === 'feature_request'
+                ? (auth()->user()?->mobile ?? null)
+                : null,
+            'customer_name'   => $ticketType === 'feature_request'
+                ? (auth()->user()?->name ?? null)
+                : null,
         ], $uploadedFiles);
 
         if ($response['success'] ?? false) {
+            $msg = ($ticketType === 'feature_request')
+                ? 'درخواست ویژگی با موفقیت ارسال شد. پس از بررسی تیم، از طریق همین تیکت مطلع می‌شوید.'
+                : 'تیکت به پلتفرم با موفقیت ارسال شد.';
             return redirect()->route('admin.inbox.index', ['channel' => 'platform'])
-                ->with('success', 'تیکت به پلتفرم با موفقیت ارسال شد.');
+                ->with('success', $msg);
         }
 
         return back()->with('error', $response['message'] ?? 'خطا در ثبت تیکت.')->withInput();

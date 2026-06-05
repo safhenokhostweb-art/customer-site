@@ -21,18 +21,20 @@ class CustomerMobileTicketController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $user = auth()->user();
+        $user = $request->user();
 
-        $tickets = Ticket::withoutTenantIsolation()
-            ->whereNull('site_id')
-            ->where(function ($q) use ($user) {
+        $query = Ticket::withoutTenantIsolation()->whereNull('site_id');
+
+        if (!($user->is_admin ?? false)) {
+            $query->where(function ($q) use ($user) {
                 $q->where('customer_id', $user->id);
                 if ($user->mobile) {
                     $q->orWhere('customer_mobile', $user->mobile);
                 }
-            })
-            ->orderByDesc('created_at')
-            ->paginate(20);
+            });
+        }
+
+        $tickets = $query->orderByDesc('created_at')->paginate(20);
 
         return response()->json([
             'data' => $tickets->getCollection()->map(fn($t) => $this->summary($t))->values(),
@@ -41,16 +43,16 @@ class CustomerMobileTicketController extends Controller
                 'last_page'    => $tickets->lastPage(),
                 'total'        => $tickets->total(),
                 'per_page'     => $tickets->perPage(),
-                'role'         => 'end_user',
+                'role'         => ($request->user()->is_admin ?? false) ? 'admin' : 'end_user',
             ],
         ]);
     }
 
     // ── GET /api/mobile/tickets/{id} ─────────────────────────────────────────
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $user   = auth()->user();
+        $user   = $request->user();
         $ticket = $this->findForUser($id, $user);
 
         if (!$ticket) {
@@ -64,7 +66,10 @@ class CustomerMobileTicketController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $user      = auth()->user();
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
         $validated = $request->validate([
             'subject'     => 'required|string|max:255',
             'description' => 'required|string',
@@ -101,7 +106,7 @@ class CustomerMobileTicketController extends Controller
 
     public function reply(Request $request, int $id): JsonResponse
     {
-        $user   = auth()->user();
+        $user   = $request->user();
         $ticket = $this->findForUser($id, $user);
 
         if (!$ticket) {
@@ -179,14 +184,18 @@ class CustomerMobileTicketController extends Controller
 
     private function findForUser(int $id, User $user): ?Ticket
     {
-        return Ticket::withoutTenantIsolation()
-            ->whereNull('site_id')
-            ->where(function ($q) use ($user) {
+        $query = Ticket::withoutTenantIsolation()->whereNull('site_id');
+
+        if (!($user->is_admin ?? false)) {
+            $query->where(function ($q) use ($user) {
                 $q->where('customer_id', $user->id);
                 if ($user->mobile) {
                     $q->orWhere('customer_mobile', $user->mobile);
                 }
-            })
+            });
+        }
+
+        return $query
             ->with(['replies' => fn($q) => $q->where('is_internal', false)->orderBy('created_at')])
             ->find($id);
     }

@@ -570,6 +570,12 @@ a.sidebar-link:hover,
     color: var(--ui-danger-text, #991b1b);
 }
 
+.admin-flash--info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+
 .admin-errors {
     margin-bottom: 1.25rem;
     padding: 1rem;

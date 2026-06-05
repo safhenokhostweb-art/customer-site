@@ -4,6 +4,21 @@
 
 @push('head')
 @include('partials.ticket-styles')
+<style>
+@keyframes needsReplyPulse {
+    0%,100% { background-color: transparent; }
+    50%      { background-color: rgba(245,158,11,0.08); }
+}
+.ticket-row--needs-reply {
+    animation: needsReplyPulse 2.4s ease-in-out infinite;
+}
+.ticket-row--needs-reply:hover { animation: none; }
+@keyframes badgePulse {
+    0%,100% { opacity:1; }
+    50%      { opacity:.55; }
+}
+.needs-reply-badge { animation: badgePulse 1.8s ease-in-out infinite; }
+</style>
 @endpush
 
 @section('content')
@@ -176,8 +191,10 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                     : ($p === 'low' ? 'bg-gray-50 text-gray-500 border-gray-200' : 'bg-blue-50 text-blue-600 border-blue-200');
                 $pDot   = $p === 'high' ? 'bg-red-500' : ($p === 'low' ? 'bg-gray-400' : 'bg-blue-500');
                 $staffCount = $ticket->staff_replies_count ?? 0;
+                $needsReply = $ticket->status !== 'closed'
+                    && ($ticket->last_reply_author ?? null) === 'staff';
             @endphp
-            <tr class="ticket-row"
+            <tr class="ticket-row {{ $needsReply ? 'ticket-row--needs-reply' : '' }}"
                 data-subject="{{ $ticket->subject }}"
                 data-ticket-no="{{ $ticket->ticket_number }}"
                 data-status="{{ $ticket->status }}"
@@ -187,7 +204,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                     (!status   || $el.dataset.status   === status) &&
                     (!priority || $el.dataset.priority === priority)
                 "
-                style="border-bottom:1px solid #f9fafb; transition:background 0.12s"
+                style="border-bottom:1px solid #f9fafb; transition:background 0.12s{{ $needsReply ? ';border-right:3px solid #f59e0b' : '' }}"
                 onmouseenter="this.style.background='rgba(238,242,255,0.45)'"
                 onmouseleave="this.style.background=''">
 
@@ -214,9 +231,17 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                 </td>
 
                 {{-- Subject --}}
-                <td class="px-3 py-3.5" style="max-width:260px">
+                <td class="px-3 py-3.5" style="max-width:280px">
                     <a href="{{ route('account.tickets.show', $ticket->id) }}" class="block">
-                        <span class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">{{ $ticket->subject }}</span>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">{{ $ticket->subject }}</span>
+                            @if($needsReply)
+                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 needs-reply-badge whitespace-nowrap shrink-0">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                پاسخ کارشناس — پاسخ دهید
+                            </span>
+                            @endif
+                        </div>
                         @if($ticket->category)
                         <span class="inline-block mt-0.5 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-px rounded font-mono leading-tight">{{ $ticket->category }}</span>
                         @endif

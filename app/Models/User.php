@@ -29,6 +29,7 @@ class User extends Authenticatable
         'privacy_settings',
         'password',
         'is_admin',
+        'api_token',
     ];
 
     protected $hidden = [

@@ -55,6 +55,15 @@ class UserTicketController extends Controller
 
         $tickets = $query->with(['assignee'])->orderByDesc('created_at')->paginate(20)->withQueryString();
 
+        $lastReplyAuthors = TicketReply::query()
+            ->selectRaw('ticket_id, author_type')
+            ->whereIn('ticket_id', $tickets->pluck('id'))
+            ->where('is_internal', false)
+            ->orderByDesc('created_at')
+            ->get()
+            ->unique('ticket_id')
+            ->pluck('author_type', 'ticket_id');
+
         $allTickets = Ticket::withoutTenantIsolation()->whereNull('site_id')
             ->with('assignee:id,name')
             ->get(['id', 'status', 'priority', 'assigned_to']);
@@ -71,7 +80,7 @@ class UserTicketController extends Controller
             'avg_response_hours' => 4,
         ];
 
-        return view('admin.user-tickets.index', compact('tickets', 'stats', 'allTickets', 'agentUsers', 'regularUsers'));
+        return view('admin.user-tickets.index', compact('tickets', 'stats', 'allTickets', 'agentUsers', 'regularUsers', 'lastReplyAuthors'));
     }
 
     public function create()
@@ -360,6 +369,17 @@ class UserTicketController extends Controller
                     "{$message}: {$ticket->ticket_number} — {$ticket->subject}"
                 );
             }
+        } catch (\Throwable) {}
+
+        // Push notification به کاربر
+        try {
+            $pushService = app(\App\Services\PushNotificationService::class);
+            $pushService->sendToUser(
+                $user->id,
+                'پاسخ جدید به تیکت شما',
+                "{$ticket->ticket_number}: " . str($ticket->subject)->limit(60),
+                route('account.tickets.show', $ticket->id)
+            );
         } catch (\Throwable) {}
     }
 }

@@ -65,6 +65,20 @@ $_utLastId = \SaaSPlatform\Modules\Tickets\Models\Ticket::withoutTenantIsolation
             banner.style.animation = 'none';
             void banner.offsetWidth;
             banner.style.animation = 'utSlide .35s ease';
+            // عنوان پنجره
+            if (!document.hasFocus()) {
+                var orig = document.title;
+                document.title = '🔔 ' + data.new_count + ' تیکت جدید | ' + orig;
+                window.addEventListener('focus', function(){ document.title = orig; }, {once:true});
+            }
+            // مرورگر نوتیفیکیشن
+            if ('Notification' in window && Notification.permission === 'granted') {
+                var first = data.tickets[0];
+                try { new Notification(data.new_count + ' تیکت جدید', {
+                    body: first ? (first.ticket_number + (first.customer_name ? ' — ' + first.customer_name : '')) : '',
+                    icon: '/favicon.ico', dir: 'rtl', tag: 'ut-new'
+                }); } catch(e) {}
+            }
         })
         .catch(function(){});
     }

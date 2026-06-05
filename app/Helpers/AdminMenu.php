@@ -52,6 +52,7 @@ class AdminMenu
         'menu' => 'منو و ناوبری',
         'bank_gateway' => 'درگاه بانکی',
         'accounting' => 'حسابداری',
+        'education_center' => 'مرکز آموزش',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -133,6 +134,7 @@ class AdminMenu
         'menu' => 'admin.menus.index',
         'bank_gateway' => 'admin.modules.show',
         'accounting' => 'admin.accounting.index',
+        'education_center' => 'admin.education-center.index',
         'seo_advanced' => 'admin.seo-advanced.index',
         'analytics' => 'admin.analytics.index',
         'announcements' => 'admin.announcements.index',
@@ -229,6 +231,7 @@ class AdminMenu
         'menu' => 'admin.menus.index',
         'bank_gateway' => 'admin.modules.show',
         'accounting' => 'admin.accounting.*',
+        'education_center' => 'admin.education-center.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
@@ -296,6 +299,7 @@ class AdminMenu
             'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
+            'آموزش و راهنما' => ['education_center'],
         ];
     }
 
@@ -468,7 +472,7 @@ class AdminMenu
         }
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
-                             'activity_log', 'users_panel'], true)) {
+                             'activity_log', 'users_panel', 'education_center'], true)) {
             return true;
         }
         if ($key === 'module_store') {
