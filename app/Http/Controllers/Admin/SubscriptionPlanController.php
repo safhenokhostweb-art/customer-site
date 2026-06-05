@@ -57,10 +57,9 @@ class SubscriptionPlanController extends Controller
         $features = array_values(array_filter($data['features'] ?? [], fn($f) => filled($f)));
         $data['features'] = count($features) ? $features : null;
 
-        // پس از validation، image یا null است یا یک UploadedFile معتبر
         $imgFile = $data['image'] ?? null;
         unset($data['image']);
-        if ($imgFile instanceof \Illuminate\Http\UploadedFile) {
+        if (self::fileExistsOnDisk($imgFile)) {
             $data['image'] = $imgFile->store('subscriptions', 'public');
         }
 
