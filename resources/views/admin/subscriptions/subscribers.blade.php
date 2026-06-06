@@ -13,10 +13,18 @@
     <div class="subs-page__actions">
         <a href="{{ route('admin.subscriptions.dashboard') }}" class="btn btn-secondary btn-sm">داشبورد</a>
         <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary btn-sm">پلن‌ها</a>
+        <a href="{{ route('admin.subscribers.pending') }}" class="btn btn-sm" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            درخواست‌های pending
+        </a>
+        <a href="{{ route('admin.subscribers.assign.form') }}" class="btn btn-primary btn-sm">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            ثبت دستی
+        </a>
         <a href="{{ route('admin.subscribers.export') }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}"
-           class="btn btn-outline-secondary btn-sm">
+           class="btn btn-secondary btn-sm">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            خروجی CSV
+            CSV
         </a>
     </div>
 </div>
@@ -52,6 +60,7 @@
             <option value="">همه وضعیت‌ها</option>
             <option value="active"    {{ request('status')==='active'    ?'selected':'' }}>فعال</option>
             <option value="trial"     {{ request('status')==='trial'     ?'selected':'' }}>آزمایشی</option>
+            <option value="pending"   {{ request('status')==='pending'   ?'selected':'' }}>در انتظار</option>
             <option value="cancelled" {{ request('status')==='cancelled' ?'selected':'' }}>لغو شده</option>
             <option value="expired"   {{ request('status')==='expired'   ?'selected':'' }}>منقضی</option>
         </select>
@@ -117,7 +126,18 @@
                     @endif
                 </td>
                 <td>
-                    <a href="{{ route('admin.subscribers.show', $sub) }}" class="btn btn-secondary btn-sm">جزئیات</a>
+                    <div style="display:flex;gap:.375rem;flex-wrap:wrap;align-items:center">
+                        <a href="{{ route('admin.subscribers.show', $sub) }}" class="btn btn-secondary btn-sm">جزئیات</a>
+                        <form method="POST" action="{{ route('admin.subscribers.delete', $sub) }}"
+                              onsubmit="return confirm('اشتراک «{{ $sub->plan?->name }}» برای {{ $sub->user?->name ?? $sub->user?->mobile }} حذف شود؟');"
+                              style="display:inline">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm"
+                                    style="background:#fff1f2;color:#be123c;border:1px solid #fecdd3;padding:.25rem .625rem;border-radius:.375rem;font-size:.75rem;font-weight:600;cursor:pointer;font-family:Vazirmatn,Tahoma,sans-serif">
+                                حذف
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
@@ -189,6 +209,7 @@
 .sub-badge--trial     { background: #dbeafe; color: #1d4ed8; }
 .sub-badge--cancelled { background: #fee2e2; color: #be123c; }
 .sub-badge--expired   { background: #f1f5f9; color: #64748b; }
+.sub-badge--pending   { background: #fff7ed; color: #c2410c; }
 
 /* Days */
 .subs-days { font-size: .8rem; font-weight: 700; color: #15803d; }

@@ -24,3 +24,4 @@ cursor-rules-sync.local.json
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/public/uploads/

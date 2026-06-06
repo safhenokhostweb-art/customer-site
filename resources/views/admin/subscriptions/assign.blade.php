@@ -28,11 +28,15 @@
         <div class="form-group">
             <label class="form-label">جستجو و انتخاب کاربر *</label>
             <div class="assign-search-wrap">
-                <input type="text" id="user-search" placeholder="نام یا موبایل کاربر را تایپ کنید..."
-                       class="assign-search-input" autocomplete="off">
+                <svg class="assign-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" id="user-search"
+                       placeholder="نام، نام خانوادگی یا شماره موبایل..."
+                       class="assign-search-input" autocomplete="off" dir="rtl">
                 <input type="hidden" name="user_id" id="user_id_hidden" required>
+                <div id="user-results" class="assign-results" style="display:none"></div>
             </div>
-            <div id="user-results" class="assign-results" style="display:none"></div>
             <div id="selected-user" class="assign-selected" style="display:none">
                 <div class="assign-selected__info">
                     <div class="assign-selected__avatar" id="sel-avatar"></div>
@@ -70,7 +74,7 @@
                         @else {{ \App\Helpers\NumberHelper::formatFa($plan->getEffectivePrice()) }} <small>تومان</small>
                         @endif
                     </p>
-                    <p class="assign-plan-card__dur">{{ \App\Helpers\NumberHelper::formatFa($plan->duration_count) }} {{ $plan->duration === 'year' ? 'سال' : 'ماه' }}</p>
+                    <p class="assign-plan-card__dur">{{ $plan->getDurationLabel() }}</p>
                 </div>
             </label>
             @endforeach
@@ -127,16 +131,17 @@
 .assign-pg__title { font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0 0 .25rem; }
 .assign-pg__sub { font-size: .85rem; color: #64748b; margin: 0; }
 
-.assign-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden; -webkit-box-shadow: 0 1px 4px rgba(0,0,0,.05); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-.assign-card__head { padding: .875rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: .9rem; font-weight: 700; color: #374151; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: .625rem; }
+.assign-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; -webkit-box-shadow: 0 1px 4px rgba(0,0,0,.05); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.assign-card__head { padding: .875rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 1rem 1rem 0 0; font-size: .9rem; font-weight: 700; color: #374151; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: .625rem; }
 .assign-card__step { width: 24px; height: 24px; border-radius: 50%; background: -webkit-linear-gradient(135deg,#4f46e5,#7c3aed); background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; font-size: .72rem; font-weight: 800; display: -webkit-inline-box; display: -ms-inline-flexbox; display: inline-flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: center; -ms-flex-pack: center; justify-content: center; -ms-flex-negative: 0; flex-shrink: 0; }
 .assign-card__body { padding: 1.25rem; }
 
 /* user search */
 .assign-search-wrap { position: relative; }
-.assign-search-input { width: 100%; -webkit-box-sizing: border-box; box-sizing: border-box; padding: .625rem .875rem; border: 1.5px solid #e2e8f0; border-radius: .625rem; font-size: .9rem; font-family: Vazirmatn, Tahoma, sans-serif; outline: none; }
+.assign-search-icon { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; flex-shrink: 0; }
+.assign-search-input { width: 100%; -webkit-box-sizing: border-box; box-sizing: border-box; padding: .7rem .875rem .7rem 2.5rem; border: 1.5px solid #e2e8f0; border-radius: .75rem; font-size: .9rem; font-family: Vazirmatn, Tahoma, sans-serif; outline: none; padding-right: 2.5rem; }
 .assign-search-input:focus { border-color: #4f46e5; -webkit-box-shadow: 0 0 0 3px rgba(79,70,229,.1); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-.assign-results { position: absolute; top: 100%; right: 0; left: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: .625rem; -webkit-box-shadow: 0 8px 24px rgba(0,0,0,.12); box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 100; max-height: 220px; overflow-y: auto; margin-top: .25rem; }
+.assign-results { position: absolute; top: calc(100% + 4px); right: 0; left: 0; background: #fff; border: 1.5px solid #c7d2fe; border-radius: .75rem; -webkit-box-shadow: 0 12px 32px rgba(0,0,0,.15); box-shadow: 0 12px 32px rgba(0,0,0,.15); z-index: 9999; max-height: 260px; overflow-y: auto; }
 .assign-result-item { padding: .625rem .875rem; cursor: pointer; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: .5rem; border-bottom: 1px solid #f8fafc; }
 .assign-result-item:hover { background: #f0f4ff; }
 .assign-result-item:last-child { border-bottom: none; }
@@ -226,8 +231,13 @@
 
     searchInput.addEventListener('input', function () {
         var q = this.value.trim();
-        if (q.length < 2) { resultsBox.style.display = 'none'; return; }
+        if (q.length < 1) { resultsBox.style.display = 'none'; return; }
         renderResults(filterUsers(q));
+    });
+
+    searchInput.addEventListener('focus', function () {
+        var q = this.value.trim();
+        if (q.length >= 1) renderResults(filterUsers(q));
     });
 
     resultsBox.addEventListener('click', function (e) {

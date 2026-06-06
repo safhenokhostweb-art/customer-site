@@ -143,6 +143,14 @@
         <span class="ua-tile__value">{{ number_format($unreadNotificationsCount) }}</span>
         <span class="ua-tile__hint">خوانده‌نشده ←</span>
     </a>
+    @if(isset($pointsBalance))
+    <a href="{{ route('account.points.index') }}" class="ua-tile ua-tile--violet">
+        <span class="ua-tile__icon">✨</span>
+        <span class="ua-tile__label">امتیاز من</span>
+        <span class="ua-tile__value">{{ \App\Helpers\NumberHelper::formatFa($pointsBalance) }}</span>
+        <span class="ua-tile__hint">تاریخچه و مصرف ←</span>
+    </a>
+    @endif
 </div>
 
 {{-- ═══ دسترسی سریع ═══ --}}

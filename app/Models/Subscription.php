@@ -19,15 +19,18 @@ class Subscription extends Model
         'starts_at', 'ends_at', 'invoice_id',
         'trial_ends_at', 'cancelled_at', 'cancellation_reason',
         'renewed_at', 'auto_renew', 'notes', 'pending_reason',
+        'reminder_7d_sent_at', 'reminder_1d_sent_at',
     ];
 
     protected $casts = [
-        'starts_at'     => 'datetime',
-        'ends_at'       => 'datetime',
-        'trial_ends_at' => 'datetime',
-        'cancelled_at'  => 'datetime',
-        'renewed_at'    => 'datetime',
-        'auto_renew'    => 'boolean',
+        'starts_at'            => 'datetime',
+        'ends_at'              => 'datetime',
+        'trial_ends_at'        => 'datetime',
+        'cancelled_at'         => 'datetime',
+        'renewed_at'           => 'datetime',
+        'auto_renew'           => 'boolean',
+        'reminder_7d_sent_at'  => 'datetime',
+        'reminder_1d_sent_at'  => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -94,7 +97,7 @@ class Subscription extends Model
             self::STATUS_EXPIRED   => 'منقضی',
             self::STATUS_TRIAL     => 'آزمایشی',
             self::STATUS_PENDING   => 'در انتظار تأیید',
-            default                => $this->status,
+            default                => $this->status ?? 'نامشخص',
         };
     }
 

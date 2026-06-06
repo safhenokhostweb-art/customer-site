@@ -15,6 +15,7 @@ use App\Models\ProductStockNotification;
 use App\Models\ProductVariant;
 use App\Models\ShopCartEvent;
 use App\Services\CaptchaService;
+use App\Services\MembershipBenefitService;
 use App\Services\ShopWishlistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -331,11 +332,29 @@ class ShopController extends Controller
         if (! SiteHelper::shopEnabled()) {
             abort(404);
         }
-        $cart = ShopCartHelper::normalizeCart(session()->get('cart', []));
+        $cart     = ShopCartHelper::normalizeCart(session()->get('cart', []));
         session()->put('cart', $cart);
-        $pages = Page::published()->menu()->get();
+        $pages    = Page::published()->menu()->get();
+        $subtotal = (int) array_sum(array_map(
+            fn ($item) => (int) $item['price'] * (int) $item['quantity'],
+            $cart
+        ));
+        $user       = auth()->user();
+        $membership = app(MembershipBenefitService::class)
+            ->calculate($user, $cart, $subtotal);
 
-        return view(SiteHelper::view('shop.cart'), compact('cart', 'pages'));
+        $pointsBalance  = 0;
+        $maxSpendPoints = 0;
+        if ($user) {
+            $pointsSvc      = app(\App\Services\MembershipPointsService::class);
+            $pointsBalance  = $pointsSvc->getBalance($user);
+            $maxSpendPoints = $pointsSvc->maxSpendablePoints($user, $subtotal);
+        }
+
+        return view(SiteHelper::view('shop.cart'), compact(
+            'cart', 'pages', 'membership', 'subtotal',
+            'pointsBalance', 'maxSpendPoints'
+        ));
     }
 
     public function updateCart(Request $request)
@@ -416,18 +435,19 @@ class ShopController extends Controller
         }
         // Phase 5 / Wave 5.3 / P1-5: کپچا قبل از validate تا اگر معتبر نیست، order نسازد.
         // برای کاربر authenticated همیشه true برمی‌گردد (bypass).
-        if (! CaptchaService::validateShopCaptcha($request)) {
+        if (! app(CaptchaService::class)->validateShopCaptcha($request)) {
             return back()
                 ->withInput()
                 ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);
         }
         $request->validate([
-            'customer_name' => 'required|string|max:255',
+            'customer_name'    => 'required|string|max:255',
             'customer_mobile'  => 'required|string|max:20',
             'customer_phone'   => 'nullable|string|max:50',
             'customer_address' => 'required|string',
-            'note' => 'nullable|string|max:1000',
-            'coupon_code' => 'nullable|string|max:50',
+            'note'             => 'nullable|string|max:1000',
+            'coupon_code'      => 'nullable|string|max:50',
+            'points_to_spend'  => 'nullable|integer|min:0',
         ]);
         try {
             $order = DB::transaction(function () use ($cart, $request) {
@@ -523,39 +543,72 @@ class ShopController extends Controller
                     ];
                 }
 
+                $user = auth()->user();
+
+                // ── 1. Membership discount ────────────────────────────────────
+                $membership = app(MembershipBenefitService::class)
+                    ->calculate($user, $cart, (int) $subtotal);
+                $membershipDiscount = $membership->discountAmount;
+
+                // ── 2. Coupon discount (applied after membership) ─────────────
                 $coupon = null;
                 $discountAmount = 0;
+                $baseForCoupon  = max(0, $subtotal - $membershipDiscount);
                 if ($request->filled('coupon_code') && SiteHelper::moduleEnabled('coupon')) {
                     $coupon = Coupon::where('code', strtoupper(trim($request->coupon_code)))->lockForUpdate()->first();
                     if (! $coupon) {
                         throw new \InvalidArgumentException('کد تخفیف نامعتبر است.');
                     }
-
-                    $userId = auth()->id();
+                    $userId = $user?->id;
                     if (! $coupon->isValidForAmount((int) $subtotal, $cart, $userId)) {
                         throw new \InvalidArgumentException($coupon->min_order_amount
                             ? 'حداقل مبلغ سفارش برای این کوپن ' . number_format($coupon->min_order_amount) . ' تومان است.'
                             : 'این کوپن منقضی شده، به حد استفاده رسیده، یا برای سبد فعلی شما اعتبار ندارد.');
                     }
-                    $discountAmount = $coupon->calculateDiscount((int) $subtotal);
+                    $discountAmount = $coupon->calculateDiscount((int) $baseForCoupon);
                 }
 
-                $orderTotal = max(0, $subtotal - $discountAmount);
+                // ── 3. Points discount ────────────────────────────────────────
+                $pointsService   = app(\App\Services\MembershipPointsService::class);
+                $pointsToSpend   = 0;
+                $pointsDiscount  = 0;
+                $requestedPoints = (int) ($request->input('points_to_spend', 0));
+
+                if ($requestedPoints > 0 && $user) {
+                    $maxSpendable = $pointsService->maxSpendablePoints($user, (int) $subtotal);
+                    $pointsToSpend = min($requestedPoints, $maxSpendable);
+                    $pointsDiscount = $pointsService->pointsToToman($pointsToSpend);
+                }
+
+                $orderTotal = max(0, $subtotal - $membershipDiscount - $discountAmount - $pointsDiscount);
+
+                // ── 4. Calculate points to earn from this purchase ────────────
+                $pointsToEarn = $user ? $pointsService->calculatePurchasePoints($user, (int) $subtotal) : 0;
 
                 $order = Order::create([
-                    'number' => Order::generateNumber(),
-                    'user_id' => auth()->id(),
-                    'customer_name' => $request->customer_name,
-                    'customer_mobile' => $request->customer_mobile,
-                    'customer_phone' => $request->customer_phone,
-                    'customer_address' => $request->customer_address,
-                    'note' => $request->note,
-                    'subtotal' => $subtotal,
-                    'total' => $orderTotal,
-                    'discount_amount' => $discountAmount,
-                    'coupon_id' => $coupon?->id,
-                    'status' => 'pending',
+                    'number'                    => Order::generateNumber(),
+                    'user_id'                   => $user?->id,
+                    'customer_name'             => $request->customer_name,
+                    'customer_mobile'           => $request->customer_mobile,
+                    'customer_phone'            => $request->customer_phone,
+                    'customer_address'          => $request->customer_address,
+                    'note'                      => $request->note,
+                    'subtotal'                  => $subtotal,
+                    'total'                     => $orderTotal,
+                    'discount_amount'           => $discountAmount,
+                    'membership_discount_amount'=> $membershipDiscount,
+                    'membership_plan_name'      => $membership->planName ?: null,
+                    'points_discount_amount'    => $pointsDiscount,
+                    'points_spent'              => $pointsToSpend,
+                    'points_earned'             => $pointsToEarn,
+                    'coupon_id'                 => $coupon?->id,
+                    'status'                    => 'pending',
                 ]);
+
+                // ── 5. Spend points (inside transaction — atomic) ─────────────
+                if ($pointsToSpend > 0 && $user) {
+                    $pointsService->spendAtCheckout($user, $pointsToSpend, $order);
+                }
 
                 foreach ($items as $item) {
                     $order->items()->create($item['payload']);
@@ -592,7 +645,22 @@ class ShopController extends Controller
 
         session()->forget('cart');
 
-        return redirect()->route('shop.index')->with('success', 'سفارش شما ثبت شد. شماره: ' . $order->number);
+        // ── Earn points for this purchase (outside transaction) ───────────
+        if (auth()->check() && $order->points_earned > 0) {
+            try {
+                app(\App\Services\MembershipPointsService::class)
+                    ->earnFromPurchase(auth()->user(), $order);
+            } catch (\Throwable) {
+                // امتیاز کسب نشد اما سفارش ثبت شد — بدون خطا
+            }
+        }
+
+        $successMsg = 'سفارش شما ثبت شد. شماره: ' . $order->number;
+        if ($order->points_earned > 0) {
+            $successMsg .= ' | ' . \App\Helpers\NumberHelper::formatFa($order->points_earned) . ' امتیاز به حسابتان اضافه شد 🎉';
+        }
+
+        return redirect()->route('shop.index')->with('success', $successMsg);
     }
 
     public function wishlist(Request $request)
@@ -658,7 +726,7 @@ class ShopController extends Controller
             abort(404);
         }
         // Phase 5 / Wave 5.3 / P1-5: کپچا برای جلوگیری از spam درخواست‌های موجودی.
-        if (! CaptchaService::validateShopCaptcha($request)) {
+        if (! app(CaptchaService::class)->validateShopCaptcha($request)) {
             return back()
                 ->withInput()
                 ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);
@@ -693,7 +761,7 @@ class ShopController extends Controller
         }
         $product = Product::active()->where('slug', $slug)->firstOrFail();
         // Phase 5 / Wave 5.3 / P1-5: کپچا برای جلوگیری از spam ریویوی محصول.
-        if (! CaptchaService::validateShopCaptcha($request)) {
+        if (! app(CaptchaService::class)->validateShopCaptcha($request)) {
             return back()
                 ->withInput()
                 ->withErrors(['captcha_answer' => 'پاسخ کپچا نادرست است. لطفاً دوباره تلاش کنید.']);

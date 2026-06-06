@@ -2,7 +2,7 @@
 @section('title', 'پلن اشتراک جدید')
 @section('content')
 
-<div class="plnfrm" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif;max-width:860px">
+<div class="plnfrm" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif">
 
 <div class="plnfrm__head">
     <div>
@@ -109,7 +109,8 @@
                     <div class="plnfrm__field">
                         <label class="plnfrm__label">نوع مدت <span class="plnfrm__req">*</span></label>
                         <select name="duration" required class="plnfrm__select">
-                            <option value="month" {{ old('duration') === 'month' ? 'selected' : '' }}>ماهانه</option>
+                            <option value="day"   {{ old('duration') === 'day'   ? 'selected' : '' }}>روزانه (تعداد روز)</option>
+                            <option value="month" {{ old('duration', 'month') === 'month' ? 'selected' : '' }}>ماهانه</option>
                             <option value="year"  {{ old('duration') === 'year'  ? 'selected' : '' }}>سالانه</option>
                         </select>
                     </div>

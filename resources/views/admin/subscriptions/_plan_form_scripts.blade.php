@@ -1,4 +1,11 @@
 <script>
+function toggleDiscount(productId, checked) {
+    var item = document.getElementById('prod-item-' + productId);
+    var disc = document.getElementById('disc-' + productId);
+    if (item) item.classList.toggle('plnfrm__product-item--active', checked);
+    if (disc) disc.style.display = checked ? '' : 'none';
+}
+
 (function () {
     var colorPicker = document.getElementById('color-picker');
     var colorText   = document.getElementById('color-text');

@@ -99,6 +99,57 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════
+     MRR + Churn
+══════════════════════════════════════════════════ --}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem">
+
+    {{-- MRR --}}
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:1.25rem;padding:1.5rem 1.75rem;color:#fff;display:flex;flex-direction:column;gap:.5rem">
+        <div style="display:flex;align-items:center;gap:.625rem;font-size:.82rem;color:#94a3b8">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            MRR — درآمد ماهانه پایدار
+        </div>
+        <div style="font-size:1.8rem;font-weight:800;letter-spacing:-.02em">
+            {{ \App\Helpers\NumberHelper::formatFa(round($mrr)) }}
+            <span style="font-size:.95rem;font-weight:400;color:#94a3b8">تومان/ماه</span>
+        </div>
+        <div style="font-size:.77rem;color:#64748b">محاسبه‌شده از همه اشتراک‌های فعال — نرمال‌سازی ۳۰ روزه</div>
+    </div>
+
+    {{-- Churn --}}
+    @php $churnGood = $churnData['trend'] === 'good'; @endphp
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:1.25rem;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.5rem">
+        <div style="display:flex;align-items:center;gap:.625rem;font-size:.82rem;color:#6b7280">
+            <svg fill="none" stroke="{{ $churnGood ? '#059669' : '#dc2626' }}" viewBox="0 0 24 24" width="16" height="16">
+                @if($churnGood)
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                @else
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                @endif
+            </svg>
+            نرخ ریزش (Churn) — ماه جاری
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:.875rem">
+            <div style="font-size:1.8rem;font-weight:800;color:{{ $churnGood ? '#059669' : '#dc2626' }}">
+                {{ \App\Helpers\NumberHelper::formatFa($churnData['rate']) }}٪
+            </div>
+            <div style="font-size:.78rem;color:#9ca3af;margin-bottom:.35rem">
+                ماه قبل: {{ \App\Helpers\NumberHelper::formatFa($churnData['rate_prev']) }}٪
+                @if($churnGood)
+                    <span style="color:#059669">▼ بهتر</span>
+                @else
+                    <span style="color:#dc2626">▲ بدتر</span>
+                @endif
+            </div>
+        </div>
+        <div style="font-size:.77rem;color:#9ca3af">
+            {{ \App\Helpers\NumberHelper::formatFa($churnData['churned']) }} اشتراک لغو/منقضی این ماه
+        </div>
+    </div>
+
+</div>
+
+{{-- ══════════════════════════════════════════════════
      نمودار ۳۰ روز اخیر
 ══════════════════════════════════════════════════ --}}
 <div class="sub-chart-card">

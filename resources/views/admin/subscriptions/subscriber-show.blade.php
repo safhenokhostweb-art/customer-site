@@ -23,11 +23,11 @@
             <div class="subshow__card-body">
                 <div class="subshow__user">
                     <div class="subshow__user-avatar">
-                        {{ mb_substr($subscription->user->name ?? $subscription->user->mobile, 0, 1) }}
+                        {{ mb_substr(optional($subscription->user)->name ?? optional($subscription->user)->mobile ?? '?', 0, 1) }}
                     </div>
                     <div>
-                        <p class="subshow__user-name">{{ $subscription->user->name ?? '—' }}</p>
-                        <p class="subshow__user-mobile" dir="ltr">{{ $subscription->user->mobile }}</p>
+                        <p class="subshow__user-name">{{ optional($subscription->user)->name ?? '—' }}</p>
+                        <p class="subshow__user-mobile" dir="ltr">{{ optional($subscription->user)->mobile ?? '—' }}</p>
                     </div>
                     @if($subscription->user)
                     <a href="{{ route('admin.users.index') }}?search={{ urlencode($subscription->user->mobile) }}"
@@ -162,6 +162,12 @@
         </div>
         @endif
 
+        @php
+            $isLiveGateway  = config('subscription.live_gateway', env('PAYMENT_GATEWAY_LIVE', false));
+            $hasPaidInvoice = $subscription->invoice && $subscription->invoice->status === 'paid';
+            $canDelete      = ! ($isLiveGateway && $hasPaidInvoice);
+        @endphp
+
         {{-- عملیات: لغو --}}
         @if($subscription->isActive() || $subscription->isInTrial())
         <div class="subshow__action-card subshow__action-card--danger">
@@ -176,7 +182,7 @@
         </div>
         @endif
 
-        {{-- عملیات: فعال‌سازی مجدد --}}
+        {{-- عملیات: فعال‌سازی مجدد (لغو شده) --}}
         @if($subscription->isCancelled())
         <div class="subshow__action-card subshow__action-card--success">
             <p class="subshow__action-card__title">فعال‌سازی مجدد</p>
@@ -186,6 +192,41 @@
                 @csrf
                 <button type="submit" class="subshow__btn-success">فعال‌سازی مجدد</button>
             </form>
+        </div>
+        @endif
+
+        {{-- فعال‌سازی رایگان (pending/expired) --}}
+        @if($subscription->isPending() || $subscription->status === 'expired')
+        <div class="subshow__action-card subshow__action-card--success">
+            <p class="subshow__action-card__title">فعال‌سازی رایگان</p>
+            <p class="subshow__action-card__desc">بدون نیاز به پرداخت، اشتراک همین لحظه فعال می‌شود و تیکت اطلاع‌رسانی ارسال خواهد شد.</p>
+            <form method="POST" action="{{ route('admin.subscribers.activate-free', $subscription) }}"
+                  onsubmit="return confirm('اشتراک رایگان فعال شود؟');">
+                @csrf
+                <button type="submit" class="subshow__btn-success">فعال‌سازی رایگان</button>
+            </form>
+        </div>
+        @endif
+
+        {{-- حذف اشتراک --}}
+        @if($canDelete)
+        <div class="subshow__action-card" style="border:1px solid #fecdd3;background:#fff1f2">
+            <p class="subshow__action-card__title" style="color:#be123c">حذف اشتراک</p>
+            @if(!$isLiveGateway)
+            <p class="subshow__action-card__desc" style="color:#94a3b8;font-size:.72rem">درگاه آزمایشی — حذف همیشه مجاز است</p>
+            @else
+            <p class="subshow__action-card__desc">این اشتراک پرداخت ندارد و قابل حذف است.</p>
+            @endif
+            <form method="POST" action="{{ route('admin.subscribers.delete', $subscription) }}"
+                  onsubmit="return confirm('اشتراک کاملاً حذف شود؟ این عمل برگشت‌ناپذیر است.');">
+                @csrf @method('DELETE')
+                <button type="submit" class="subshow__btn-danger">حذف اشتراک</button>
+            </form>
+        </div>
+        @else
+        <div class="subshow__action-card" style="border:1px solid #e2e8f0;background:#f8fafc">
+            <p class="subshow__action-card__title" style="color:#64748b">حذف غیرمجاز</p>
+            <p class="subshow__action-card__desc">این اشتراک دارای پرداخت تأیید‌شده از درگاه واقعی است و قابل حذف نیست.</p>
         </div>
         @endif
 

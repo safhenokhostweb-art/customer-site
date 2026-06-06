@@ -121,17 +121,12 @@ class InstallController extends Controller
 
     public function storeAdmin(Request $request)
     {
-        $existingByEmail = User::query()->where('email', $request->input('email'))->first();
+        $existingByMobile = User::query()->where('mobile', $request->input('mobile'))->first();
 
-        if ($existingByEmail && ! $existingByEmail->is_admin) {
+        if ($existingByMobile && ! $existingByMobile->is_admin) {
             return back()->withErrors([
-                'email' => 'این ایمیل برای یک کاربر عادی ثبت شده و نمی‌توان به‌عنوان مدیر اولیهٔ نصب استفاده کرد.',
+                'mobile' => 'این شماره موبایل برای یک کاربر عادی ثبت شده و نمی‌توان به‌عنوان مدیر اولیهٔ نصب استفاده کرد.',
             ])->withInput();
-        }
-
-        $emailRules = ['required', 'email'];
-        if (! $existingByEmail) {
-            $emailRules[] = Rule::unique('users', 'email');
         }
 
         $request->validate([
@@ -140,16 +135,15 @@ class InstallController extends Controller
                 'required',
                 'string',
                 'regex:/^09[0-9]{9}$/',
-                Rule::unique('users', 'mobile')->ignore($existingByEmail?->id),
+                Rule::unique('users', 'mobile')->ignore($existingByMobile?->id),
             ],
-            'email' => $emailRules,
             'password' => 'required|min:6|confirmed',
         ]);
 
-        if ($existingByEmail) {
-            $existingByEmail->update([
-                'name' => $request->name,
-                'mobile' => $request->mobile,
+        if ($existingByMobile) {
+            $existingByMobile->update([
+                'name'     => $request->name,
+                'mobile'   => $request->mobile,
                 'password' => Hash::make($request->password),
                 'is_admin' => true,
             ]);

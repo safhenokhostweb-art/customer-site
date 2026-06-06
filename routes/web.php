@@ -75,6 +75,8 @@ use App\Http\Controllers\Account\ProfileAvatarController as AccountProfileAvatar
 use App\Http\Controllers\Account\ProfileAddressController as AccountProfileAddressController;
 use App\Http\Controllers\Account\ProfileActivityController as AccountProfileActivityController;
 use App\Http\Controllers\Account\ProfileDeletionController as AccountProfileDeletionController;
+use App\Http\Controllers\Account\PointsController as AccountPointsController;
+use App\Http\Controllers\Account\ReferralController as AccountReferralController;
 
 /*
 |--------------------------------------------------------------------------
@@ -143,6 +145,8 @@ Route::middleware('install.check')->group(function () {
         Route::patch('/profile/addresses/{address}/default', [AccountProfileAddressController::class, 'setDefault'])->name('profile.addresses.default');
         Route::delete('/profile/addresses/{address}', [AccountProfileAddressController::class, 'destroy'])->name('profile.addresses.destroy');
         Route::get('/profile/activity', [AccountProfileActivityController::class, 'index'])->name('profile.activity.index');
+        Route::get('/points', [AccountPointsController::class, 'index'])->name('points.index');
+        Route::get('/referrals', [AccountReferralController::class, 'index'])->name('referrals.index');
         Route::get('/profile/deletion', [AccountProfileDeletionController::class, 'index'])->name('profile.deletion.index');
         Route::post('/profile/deletion', [AccountProfileDeletionController::class, 'store'])->name('profile.deletion.store');
         Route::post('/profile/deletion/cancel', [AccountProfileDeletionController::class, 'cancel'])->name('profile.deletion.cancel');
@@ -189,6 +193,9 @@ Route::middleware('install.check')->group(function () {
     Route::middleware(['module:subscription', 'auth'])->group(function () {
         Route::get('/subscription/pay/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'pay'])->name('subscriptions.pay');
         Route::post('/subscription/confirm/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'confirm'])->name('subscriptions.confirm');
+    });
+    Route::middleware('module:subscription')->group(function () {
+        Route::get('/plans', [\App\Http\Controllers\Front\PricingController::class, 'index'])->name('pricing.index');
     });
     Route::middleware('module:business_card')->group(function () {
         Route::get('/card/{slug}', [FrontBusinessCardController::class, 'show'])->name('business-card.show');
@@ -328,6 +335,8 @@ Route::middleware('install.check')->group(function () {
             Route::post('subscribers/{subscriber}/reactivate', [\App\Http\Controllers\Admin\SubscriberController::class, 'reactivate'])->name('subscribers.reactivate');
             Route::post('subscribers/{subscriber}/approve', [\App\Http\Controllers\Admin\SubscriberController::class, 'approveRequest'])->name('subscribers.approve');
             Route::delete('subscribers/{subscriber}/destroy', [\App\Http\Controllers\Admin\SubscriberController::class, 'destroyRequest'])->name('subscribers.destroy');
+            Route::delete('subscribers/{subscriber}', [\App\Http\Controllers\Admin\SubscriberController::class, 'destroy'])->name('subscribers.delete');
+            Route::post('subscribers/{subscriber}/activate-free', [\App\Http\Controllers\Admin\SubscriberController::class, 'activateFree'])->name('subscribers.activate-free');
         });
         Route::middleware(['module:whatsapp', 'permission:whatsapp'])->group(function () {
             Route::get('whatsapp', [MessagingController::class, 'index'])->name('whatsapp.index');

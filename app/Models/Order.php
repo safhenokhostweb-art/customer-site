@@ -26,7 +26,9 @@ class Order extends Model
 
     protected $fillable = [
         'number', 'user_id', 'customer_name', 'customer_mobile', 'customer_phone', 'customer_address',
-        'note', 'subtotal', 'total', 'status', 'restocked_at', 'payment_method', 'coupon_id', 'discount_amount',
+        'note', 'subtotal', 'total', 'status', 'restocked_at', 'payment_method', 'coupon_id',
+        'discount_amount', 'membership_discount_amount', 'membership_plan_name',
+        'points_discount_amount', 'points_spent', 'points_earned',
     ];
 
     public function user()
@@ -40,6 +42,10 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'membership_discount_amount' => 'decimal:2',
+            'points_discount_amount' => 'decimal:2',
+            'points_spent' => 'integer',
+            'points_earned' => 'integer',
             'restocked_at' => 'datetime',
         ];
     }

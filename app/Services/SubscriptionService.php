@@ -20,7 +20,7 @@ class SubscriptionService
      */
     public function subscribe(User $user, SubscriptionPlan $plan, ?int $invoiceId = null): Subscription
     {
-        return DB::transaction(function () use ($user, $plan, $invoiceId) {
+        $subscription = DB::transaction(function () use ($user, $plan, $invoiceId) {
             $now = now();
 
             if ($plan->hasTrial() && $invoiceId === null) {
@@ -35,7 +35,7 @@ class SubscriptionService
                 $trialEnds = null;
             }
 
-            $subscription = Subscription::create([
+            $sub = Subscription::create([
                 'user_id'              => $user->id,
                 'subscription_plan_id' => $plan->id,
                 'status'               => $status,
@@ -49,16 +49,33 @@ class SubscriptionService
                 ? SubscriptionLog::ACTION_TRIAL
                 : SubscriptionLog::ACTION_SUBSCRIBED;
 
-            $this->log($subscription, $action, $user->id, 'user', [
+            $this->log($sub, $action, $user->id, 'user', [
                 'plan'  => $plan->name,
                 'price' => $plan->price,
             ]);
 
-            $this->notifySubscribed($user, $plan, $subscription);
-            $this->createActivationTicket($user, $plan, $subscription);
+            $this->notifySubscribed($user, $plan, $sub);
+            $this->createActivationTicket($user, $plan, $sub);
 
-            return $subscription;
+            return $sub;
         });
+
+        // کسب امتیاز بعد از فعال‌سازی (خارج از transaction)
+        try {
+            app(\App\Services\MembershipPointsService::class)
+                ->earnFromSubscription($user, $subscription);
+        } catch (\Throwable $e) {
+            Log::warning('SubscriptionService: points earn failed on subscribe', ['error' => $e->getMessage()]);
+        }
+
+        // پاداش referral هنگام اولین اشتراک
+        try {
+            app(\App\Services\ReferralService::class)->rewardReferral($user);
+        } catch (\Throwable $e) {
+            Log::warning('SubscriptionService: referral reward failed', ['error' => $e->getMessage()]);
+        }
+
+        return $subscription;
     }
 
     /**
@@ -117,8 +134,8 @@ class SubscriptionService
      */
     public function renew(Subscription $subscription, ?int $invoiceId = null): Subscription
     {
-        return DB::transaction(function () use ($subscription, $invoiceId) {
-            $plan    = $subscription->plan;
+        $renewed = DB::transaction(function () use ($subscription, $invoiceId) {
+            $plan     = $subscription->plan;
             $baseDate = ($subscription->isActive() && $subscription->ends_at?->isFuture())
                 ? $subscription->ends_at
                 : now();
@@ -139,6 +156,16 @@ class SubscriptionService
 
             return $subscription->fresh();
         });
+
+        // کسب امتیاز بعد از تمدید (خارج از transaction)
+        try {
+            app(\App\Services\MembershipPointsService::class)
+                ->earnFromRenewal($renewed->user, $renewed);
+        } catch (\Throwable $e) {
+            Log::warning('SubscriptionService: points earn failed on renew', ['error' => $e->getMessage()]);
+        }
+
+        return $renewed;
     }
 
     /**
@@ -215,33 +242,59 @@ class SubscriptionService
 
     /**
      * Create a subscription invoice in the invoices table.
+     * $discountAmount: مقدار تخفیف کوپن (اختیاری)
+     * $coupon: مدل کوپن برای ذخیره در یادداشت فاکتور (اختیاری)
      */
-    public function createInvoice(User $user, SubscriptionPlan $plan): \App\Models\Invoice
-    {
+    public function createInvoice(
+        User $user,
+        SubscriptionPlan $plan,
+        int $discountAmount = 0,
+        ?\App\Models\Coupon $coupon = null
+    ): \App\Models\Invoice {
         $number = 'SUB-' . now()->format('Ymd') . '-' . str_pad(
             \App\Models\Invoice::whereDate('created_at', today())->count() + 1,
             4, '0', STR_PAD_LEFT
         );
+
+        $basePrice      = (int) $plan->getEffectivePrice();
+        $discountAmount = min($discountAmount, $basePrice);
+        $finalTotal     = max(0, $basePrice - $discountAmount);
 
         $invoice = \App\Models\Invoice::create([
             'invoice_number'   => $number,
             'user_id'          => $user->id,
             'customer_name'    => $user->name ?? $user->mobile,
             'customer_mobile'  => $user->mobile,
-            'subtotal'         => $plan->price,
-            'total'            => $plan->price,
+            'subtotal'         => $basePrice,
+            'discount'         => $discountAmount,
+            'total'            => $finalTotal,
             'status'           => 'pending',
+            'notes'            => $coupon ? 'کد تخفیف: ' . $coupon->code : null,
         ]);
+
+        $itemTitle = 'اشتراک پلن ' . $plan->name . ' (' . $plan->getDurationLabel() . ')';
+        if ($coupon && $discountAmount > 0) {
+            $itemTitle .= ' — کد تخفیف: ' . $coupon->code;
+        }
 
         \App\Models\InvoiceItem::create([
             'invoice_id' => $invoice->id,
-            'title'      => 'اشتراک پلن ' . $plan->name . ' (' . $plan->getDurationLabel() . ')',
-            'price'      => $plan->price,
+            'title'      => $itemTitle,
+            'price'      => $basePrice,
             'quantity'   => 1,
-            'total'      => $plan->price,
+            'total'      => $finalTotal,
         ]);
 
         return $invoice;
+    }
+
+    /**
+     * ارسال notification (SMS + تیکت) پس از فعال‌سازی توسط ادمین — بدون ساخت subscription جدید.
+     */
+    public function notifyActivation(User $user, SubscriptionPlan $plan, Subscription $subscription): void
+    {
+        $this->notifySubscribed($user, $plan, $subscription);
+        $this->createActivationTicket($user, $plan, $subscription);
     }
 
     // ─── Private helpers ─────────────────────────────────────────────────────

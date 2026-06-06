@@ -14,10 +14,12 @@ class Invoice extends Model
         'customer_mobile',
         'customer_phone',
         'subtotal',
+        'discount',
         'total',
         'status',
         'payment_link',
         'paid_at',
+        'notes',
     ];
 
     protected $casts = ['paid_at' => 'datetime'];

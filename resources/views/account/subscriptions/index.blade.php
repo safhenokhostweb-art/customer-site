@@ -31,6 +31,15 @@
 </div>
 @endif
 
+{{-- پیام اطلاع‌رسانی --}}
+@php $pendingSub = $subscriptions->first(fn($s) => $s->isPending()); @endphp
+@if($pendingSub)
+<div style="display:flex;align-items:center;gap:.625rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:.875rem;padding:.875rem 1.125rem;margin-top:1rem;font-size:.82rem;color:#c2410c">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span>درخواست اشتراک «{{ $pendingSub->plan?->name }}» در انتظار بررسی ادمین است. برای لغو یا تغییر با پشتیبانی تماس بگیرید.</span>
+</div>
+@endif
+
 {{-- جدول تاریخچه --}}
 @if($subscriptions->isNotEmpty())
 <div class="accsub__card" style="margin-top:1.25rem">
@@ -56,23 +65,7 @@
                         <span class="accsub__badge accsub__badge--{{ $sub->status }}">{{ $sub->getStatusLabel() }}</span>
                     </td>
                     <td>
-                        <div style="display:-webkit-box;display:-ms-flexbox;display:flex;gap:.375rem;-ms-flex-wrap:wrap;flex-wrap:wrap">
-                            <a href="{{ route('account.subscriptions.show', $sub) }}" class="accsub__table-btn accsub__table-btn--sec">جزئیات</a>
-                            @if($sub->isActive() || $sub->isInTrial())
-                            <form method="POST" action="{{ route('account.subscriptions.cancel', $sub) }}"
-                                  onsubmit="return confirm('آیا از لغو اشتراک اطمینان دارید؟');" style="display:inline">
-                                @csrf
-                                <button type="submit" class="accsub__table-btn accsub__table-btn--danger">لغو</button>
-                            </form>
-                            @endif
-                            @if($sub->isPending())
-                            <form method="POST" action="{{ route('account.subscriptions.delete-pending', $sub) }}"
-                                  onsubmit="return confirm('درخواست اشتراک حذف شود؟');" style="display:inline">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="accsub__table-btn accsub__table-btn--danger">حذف درخواست</button>
-                            </form>
-                            @endif
-                        </div>
+                        <a href="{{ route('account.subscriptions.show', $sub) }}" class="accsub__table-btn accsub__table-btn--sec">جزئیات</a>
                     </td>
                 </tr>
                 @endforeach

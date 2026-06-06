@@ -36,6 +36,16 @@
             @endforeach
         </div>
 
+        @if($invoice->discount && $invoice->discount > 0)
+        <div class="subpay-card__discount">
+            <span class="subpay-card__discount-label">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="-ms-flex-negative:0;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                {{ $invoice->notes ?: 'تخفیف' }}
+            </span>
+            <span class="subpay-card__discount-amount">− {{ \App\Helpers\NumberHelper::formatFa($invoice->discount) }} تومان</span>
+        </div>
+        @endif
+
         {{-- ── جمع کل --}}
         <div class="subpay-card__total">
             <span class="subpay-card__total-label">جمع قابل پرداخت</span>
@@ -98,6 +108,9 @@
 .subpay-item__price small { font-size: .72rem; font-weight: 400; color: #94a3b8; }
 
 /* total */
+.subpay-card__discount { padding: .75rem 1.75rem; display:-webkit-box; display:-ms-flexbox; display:flex; -webkit-box-pack:justify; -ms-flex-pack:justify; justify-content:space-between; -webkit-box-align:center; -ms-flex-align:center; align-items:center; background:#f0fdf4; border-bottom:1px solid #bbf7d0; }
+.subpay-card__discount-label { display:-webkit-box; display:-ms-flexbox; display:flex; -webkit-box-align:center; -ms-flex-align:center; align-items:center; gap:.375rem; font-size:.8rem; color:#15803d; font-weight:600; font-family:monospace,'Courier New'; }
+.subpay-card__discount-amount { font-size:.875rem; font-weight:700; color:#16a34a; }
 .subpay-card__total { padding: 1.125rem 1.75rem; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-pack: justify; -ms-flex-pack: justify; justify-content: space-between; -webkit-box-align: center; -ms-flex-align: center; align-items: center; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
 .subpay-card__total-label { font-size: .875rem; font-weight: 600; color: #475569; }
 .subpay-card__total-amount { font-size: 1.5rem; font-weight: 800; color: #4f46e5; }

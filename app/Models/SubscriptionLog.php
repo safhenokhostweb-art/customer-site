@@ -7,13 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubscriptionLog extends Model
 {
-    public const ACTION_SUBSCRIBED   = 'subscribed';
-    public const ACTION_RENEWED      = 'renewed';
-    public const ACTION_CANCELLED    = 'cancelled';
-    public const ACTION_EXPIRED      = 'expired';
-    public const ACTION_TRIAL        = 'trial_started';
-    public const ACTION_REACTIVATED  = 'reactivated';
-    public const ACTION_PLAN_CHANGED = 'plan_changed';
+    public const ACTION_SUBSCRIBED    = 'subscribed';
+    public const ACTION_RENEWED       = 'renewed';
+    public const ACTION_CANCELLED     = 'cancelled';
+    public const ACTION_EXPIRED       = 'expired';
+    public const ACTION_TRIAL         = 'trial_started';
+    public const ACTION_REACTIVATED   = 'reactivated';
+    public const ACTION_PLAN_CHANGED  = 'plan_changed';
+    public const ACTION_REMINDER_7D   = 'reminder_7d_sent';
+    public const ACTION_REMINDER_1D   = 'reminder_1d_sent';
+    public const ACTION_RENEWAL_COUPON= 'renewal_coupon_generated';
 
     protected $fillable = [
         'subscription_id', 'user_id', 'action', 'details', 'performed_by',

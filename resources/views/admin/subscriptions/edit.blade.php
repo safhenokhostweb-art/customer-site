@@ -2,7 +2,7 @@
 @section('title', 'ویرایش پلن: ' . $subscription->name)
 @section('content')
 
-<div class="plnfrm" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif;max-width:860px">
+<div class="plnfrm" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif">
 
 <div class="plnfrm__head">
     <div>
@@ -85,6 +85,7 @@
                     <div class="plnfrm__field">
                         <label class="plnfrm__label">نوع مدت <span class="plnfrm__req">*</span></label>
                         <select name="duration" required class="plnfrm__select">
+                            <option value="day"   {{ old('duration', $subscription->duration) === 'day'   ? 'selected' : '' }}>روزانه (تعداد روز)</option>
                             <option value="month" {{ old('duration', $subscription->duration) === 'month' ? 'selected' : '' }}>ماهانه</option>
                             <option value="year"  {{ old('duration', $subscription->duration) === 'year'  ? 'selected' : '' }}>سالانه</option>
                         </select>
@@ -118,6 +119,132 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     افزودن امکان
                 </button>
+            </div>
+        </div>
+
+        {{-- مزایای اشتراک --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head"><span class="plnfrm__step">۵</span> مزایای عضویت</div>
+            <div class="plnfrm__card-body">
+                <div class="plnfrm__row-2">
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">تخفیف روی محصولات (%)</label>
+                        <div class="plnfrm__input-group">
+                            <input type="number" name="product_discount_percent"
+                                   value="{{ old('product_discount_percent', $subscription->product_discount_percent ?? 0) }}"
+                                   min="0" max="100" class="plnfrm__input">
+                            <span class="plnfrm__input-suffix">٪</span>
+                        </div>
+                        <span class="plnfrm__field-note">تخفیف اتوماتیک روی خرید محصولات مرتبط</span>
+                    </div>
+                    <div class="plnfrm__field">
+                        <label class="plnfrm__label">ضریب امتیاز وفاداری</label>
+                        <input type="number" name="loyalty_multiplier"
+                               value="{{ old('loyalty_multiplier', $subscription->loyalty_multiplier ?? 1) }}"
+                               min="1" max="10" class="plnfrm__input">
+                        <span class="plnfrm__field-note">۱ = عادی، ۲ = دو برابر امتیاز</span>
+                    </div>
+                </div>
+                <div class="plnfrm__checks" style="margin-top:.5rem">
+                    <label class="plnfrm__check">
+                        <input type="checkbox" name="free_shipping" value="1"
+                               {{ old('free_shipping', $subscription->free_shipping ?? false) ? 'checked' : '' }}>
+                        <span>🚚 ارسال رایگان برای سفارشات</span>
+                    </label>
+                    <label class="plnfrm__check">
+                        <input type="checkbox" name="vip_support" value="1"
+                               {{ old('vip_support', $subscription->vip_support ?? false) ? 'checked' : '' }}>
+                        <span>🎧 پشتیبانی VIP اولویت‌دار</span>
+                    </label>
+                    <label class="plnfrm__check">
+                        <input type="checkbox" name="early_access" value="1"
+                               {{ old('early_access', $subscription->early_access ?? false) ? 'checked' : '' }}>
+                        <span>⭐ دسترسی زودهنگام به محصولات جدید</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        {{-- محصولات مرتبط --}}
+        <div class="plnfrm__card">
+            <div class="plnfrm__card-head">
+                <span class="plnfrm__step">۶</span>
+                محصولات مرتبط با این اشتراک
+                <span class="plnfrm__hint">مشترکین تخفیف ویژه روی محصولات انتخاب‌شده دریافت می‌کنند</span>
+            </div>
+            <div class="plnfrm__card-body">
+
+                {{-- همه محصولات toggle --}}
+                <div class="prod-scope-row">
+                    <label class="prod-scope-toggle">
+                        <input type="hidden" name="apply_to_all_products" value="0">
+                        <input type="checkbox" name="apply_to_all_products" value="1" id="apply_all_cb"
+                               {{ old('apply_to_all_products', $subscription->apply_to_all_products) ? 'checked' : '' }}
+                               onchange="toggleAllScope(this.checked)">
+                        <span class="prod-scope-track"></span>
+                        <div class="prod-scope-label">
+                            <strong>شامل همه محصولات</strong>
+                            <small>تخفیف اشتراک به‌صورت خودکار روی تمام محصولات فعال اعمال می‌شود</small>
+                        </div>
+                    </label>
+                    <label class="prod-scope-toggle" style="margin-top:.625rem">
+                        <input type="hidden" name="coupon_override" value="0">
+                        <input type="checkbox" name="coupon_override" value="1" id="coupon_override_cb"
+                               {{ old('coupon_override', $subscription->coupon_override) ? 'checked' : '' }}>
+                        <span class="prod-scope-track"></span>
+                        <div class="prod-scope-label">
+                            <strong>اعمال تخفیف حتی با کوپن فعال</strong>
+                            <small>اگر فعال نباشد، محصولاتی که کوپن تخفیف دارند از تخفیف اشتراک محروم می‌شوند</small>
+                        </div>
+                    </label>
+                </div>
+
+                {{-- انتخاب محصولات خاص --}}
+                <div id="products-selector" style="{{ old('apply_to_all_products', $subscription->apply_to_all_products) ? 'display:none' : '' }}">
+                    <div class="prod-search-wrap">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" class="prod-search-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="prod-search" placeholder="جستجوی محصول..." class="prod-search-input" autocomplete="off">
+                        <span id="prod-selected-count" class="prod-count-badge" style="display:none"></span>
+                    </div>
+
+                    @php $linkedProducts = $subscription->products->keyBy('id'); @endphp
+                    <div class="prod-list" id="prod-list">
+                        @forelse($allProducts as $prod)
+                        @php
+                            $linked       = $linkedProducts->get($prod->id);
+                            $isLinked     = $linked !== null;
+                            $discPct      = $linked?->pivot->discount_percent ?? $subscription->product_discount_percent ?? 0;
+                            $couponOvr    = $linked?->pivot->override_coupon_exclusion ?? false;
+                        @endphp
+                        <div class="prod-item {{ $isLinked ? 'prod-item--sel' : '' }}" id="pi-{{ $prod->id }}" data-name="{{ mb_strtolower($prod->title) }}">
+                            <label class="prod-item__check-label">
+                                <input type="checkbox" name="product_ids[]" value="{{ $prod->id }}"
+                                       class="prod-item__cb"
+                                       onchange="onProdCheck({{ $prod->id }}, this.checked)"
+                                       {{ $isLinked ? 'checked' : '' }}>
+                                <span class="prod-item__check-box"></span>
+                                <span class="prod-item__name">{{ $prod->title }}</span>
+                            </label>
+                            <div class="prod-item__extras" id="pex-{{ $prod->id }}" style="{{ $isLinked ? '' : 'display:none' }}">
+                                <div class="prod-item__disc-wrap">
+                                    <input type="number" name="product_discounts[{{ $prod->id }}]"
+                                           value="{{ $discPct }}"
+                                           min="0" max="100" class="prod-item__disc-input" placeholder="٪ تخفیف">
+                                    <span class="prod-item__disc-unit">٪</span>
+                                </div>
+                                <label class="prod-item__coupon-label" title="اعمال تخفیف حتی با کوپن فعال برای این محصول">
+                                    <input type="checkbox" name="product_coupon_overrides[{{ $prod->id }}]" value="1"
+                                           {{ $couponOvr ? 'checked' : '' }}>
+                                    <span>تخفیف با کوپن</span>
+                                </label>
+                            </div>
+                        </div>
+                        @empty
+                        <p class="prod-empty">هنوز محصولی ایجاد نشده.</p>
+                        @endforelse
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -226,10 +353,85 @@
 
 @push('head')
 @include('admin.subscriptions._plan_form_styles')
+<style>
+/* ── Product scope section ── */
+.prod-scope-row{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem 1.125rem;display:flex;flex-direction:column;gap:.25rem;margin-bottom:1rem}
+.prod-scope-toggle{display:flex;align-items:center;gap:.75rem;cursor:pointer}
+.prod-scope-toggle input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0}
+.prod-scope-track{width:40px;height:22px;background:#e2e8f0;border-radius:9999px;position:relative;flex-shrink:0;transition:background .2s}
+.prod-scope-track::after{content:'';position:absolute;top:3px;right:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:right .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.prod-scope-toggle input:checked~.prod-scope-track{background:#4f46e5}
+.prod-scope-toggle input:checked~.prod-scope-track::after{right:calc(100% - 19px)}
+.prod-scope-label{display:flex;flex-direction:column;gap:.1rem}
+.prod-scope-label strong{font-size:.85rem;color:#1e293b;font-weight:700}
+.prod-scope-label small{font-size:.75rem;color:#64748b}
+
+/* ── Product list ── */
+.prod-search-wrap{position:relative;display:flex;align-items:center;margin-bottom:.75rem}
+.prod-search-icon{position:absolute;right:.75rem;color:#94a3b8;pointer-events:none}
+.prod-search-input{width:100%;box-sizing:border-box;padding:.5rem .75rem .5rem 2.25rem;border:1.5px solid #e2e8f0;border-radius:.625rem;font-size:.875rem;font-family:Vazirmatn,Tahoma,sans-serif;outline:none}
+.prod-search-input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.prod-count-badge{position:absolute;left:.625rem;background:#4f46e5;color:#fff;font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:9999px;white-space:nowrap}
+.prod-list{display:flex;flex-direction:column;gap:.35rem;max-height:320px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:.625rem;padding:.5rem}
+.prod-list::-webkit-scrollbar{width:4px}.prod-list::-webkit-scrollbar-track{background:#f1f5f9}.prod-list::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:2px}
+.prod-item{border:1.5px solid #e2e8f0;border-radius:.5rem;padding:.5rem .75rem;transition:border-color .15s,background .15s}
+.prod-item--sel{border-color:#4f46e5;background:#eef2ff}
+.prod-item__check-label{display:flex;align-items:center;gap:.5rem;cursor:pointer;width:100%}
+.prod-item__cb{position:absolute;opacity:0;width:0;height:0}
+.prod-item__check-box{width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:.3rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.prod-item__cb:checked~.prod-item__check-box{background:#4f46e5;border-color:#4f46e5}
+.prod-item__cb:checked~.prod-item__check-box::after{content:'✓';color:#fff;font-size:.6rem;font-weight:900}
+.prod-item__name{font-size:.85rem;color:#334155;font-weight:500;flex:1}
+.prod-item__extras{display:flex;align-items:center;gap:.625rem;margin-top:.375rem;padding-right:1.375rem;flex-wrap:wrap}
+.prod-item__disc-wrap{display:flex;align-items:center;gap:.25rem}
+.prod-item__disc-input{width:60px;padding:.25rem .4rem;border:1px solid #e2e8f0;border-radius:.375rem;font-size:.8rem;text-align:center;font-family:Vazirmatn,Tahoma,sans-serif;outline:none}
+.prod-item__disc-input:focus{border-color:#4f46e5}
+.prod-item__disc-unit{font-size:.75rem;color:#64748b}
+.prod-item__coupon-label{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#64748b;cursor:pointer}
+.prod-item__coupon-label input{width:13px;height:13px;accent-color:#4f46e5}
+.prod-empty{font-size:.8rem;color:#94a3b8;padding:.5rem}
+</style>
 @endpush
 
 @push('scripts')
 @include('admin.subscriptions._plan_form_scripts')
+<script>
+function toggleAllScope(allSelected) {
+    var sel = document.getElementById('products-selector');
+    if (sel) sel.style.display = allSelected ? 'none' : '';
+}
+function onProdCheck(id, checked) {
+    var item = document.getElementById('pi-' + id);
+    var extras = document.getElementById('pex-' + id);
+    if (item) item.classList.toggle('prod-item--sel', checked);
+    if (extras) extras.style.display = checked ? '' : 'none';
+    updateProdCount();
+}
+function updateProdCount() {
+    var total = document.querySelectorAll('.prod-item__cb:checked').length;
+    var badge = document.getElementById('prod-selected-count');
+    if (badge) {
+        if (total > 0) {
+            badge.textContent = total + ' انتخاب‌شده';
+            badge.style.display = '';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+document.addEventListener('DOMContentLoaded', function () {
+    updateProdCount();
+    var searchInput = document.getElementById('prod-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            var q = this.value.trim().toLowerCase();
+            document.querySelectorAll('.prod-item[data-name]').forEach(function (el) {
+                el.style.display = (!q || el.dataset.name.indexOf(q) !== -1) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
 @endpush
 
 @endsection

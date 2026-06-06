@@ -10,7 +10,7 @@
     استفاده: @include('partials.shop-captcha')
 --}}
 @php
-    $captcha = \App\Services\CaptchaService::getShopCaptchaConfig();
+    $captcha = app(\App\Services\CaptchaService::class)->getShopCaptchaConfig();
 @endphp
 @if(!empty($captcha['enabled'] ?? false))
 <div class="shop-captcha-block" style="margin: 0.5rem 0;">

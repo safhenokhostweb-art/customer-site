@@ -3,24 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'description', 'price', 'special_price', 'discount_code', 'discount_percent',
+        'name', 'slug', 'description', 'price', 'special_price', 'discount_code',
         'duration', 'duration_count', 'is_active', 'order',
-        'trial_days', 'features', 'color', 'highlighted', 'badge_text', 'max_users', 'image',
+        'trial_days', 'features', 'benefits', 'color', 'highlighted', 'badge_text',
+        'max_users', 'image',
+        'product_discount_percent', 'apply_to_all_products', 'coupon_override',
+        'free_shipping', 'vip_support', 'early_access', 'loyalty_multiplier',
     ];
 
     protected $casts = [
-        'is_active'        => 'boolean',
-        'highlighted'      => 'boolean',
-        'features'         => 'array',
-        'price'            => 'decimal:0',
-        'special_price'    => 'decimal:0',
-        'discount_percent' => 'decimal:2',
+        'is_active'               => 'boolean',
+        'highlighted'             => 'boolean',
+        'apply_to_all_products'   => 'boolean',
+        'coupon_override'         => 'boolean',
+        'free_shipping'           => 'boolean',
+        'vip_support'             => 'boolean',
+        'early_access'            => 'boolean',
+        'features'                => 'array',
+        'benefits'                => 'array',
+        'price'               => 'decimal:0',
+        'special_price'       => 'decimal:0',
+        'loyalty_multiplier'  => 'float',
     ];
+
+    // ─── Relations ────────────────────────────────────────────────────────
 
     public function subscriptions(): HasMany
     {
@@ -32,6 +44,15 @@ class SubscriptionPlan extends Model
         return $this->subscriptions()->where('status', 'active');
     }
 
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'subscription_plan_products')
+            ->withPivot('discount_percent', 'override_coupon_exclusion')
+            ->withTimestamps();
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────
+
     public function isFree(): bool
     {
         return (float) $this->price === 0.0;
@@ -42,49 +63,48 @@ class SubscriptionPlan extends Model
         return $this->trial_days > 0;
     }
 
+    public function hasSpecialPrice(): bool
+    {
+        return $this->special_price !== null
+            && (float) $this->special_price > 0
+            && (float) $this->special_price < (float) $this->price;
+    }
+
     public function getDurationLabel(): string
     {
-        $unit = $this->duration === 'year' ? 'ساله' : 'ماهه';
-        return $this->duration_count . ' ' . $unit;
+        return match ($this->duration) {
+            'day'   => \App\Helpers\NumberHelper::formatFa($this->duration_count) . ' روزه',
+            'year'  => \App\Helpers\NumberHelper::formatFa($this->duration_count) . ' ساله',
+            default => \App\Helpers\NumberHelper::formatFa($this->duration_count) . ' ماهه',
+        };
     }
 
     public function getDurationInDays(): int
     {
-        return $this->duration === 'year'
-            ? $this->duration_count * 365
-            : $this->duration_count * 30;
+        return match ($this->duration) {
+            'day'   => $this->duration_count,
+            'year'  => $this->duration_count * 365,
+            default => $this->duration_count * 30,
+        };
     }
 
     public function getFeaturesArray(): array
     {
-        if (is_array($this->features)) {
-            return $this->features;
-        }
-        return [];
+        return is_array($this->features) ? $this->features : [];
     }
 
+    public function getBenefitsArray(): array
+    {
+        return is_array($this->benefits) ? $this->benefits : [];
+    }
+
+    /** قیمت مؤثر: اگر قیمت ویژه دارد آن را برمی‌گرداند */
     public function getEffectivePrice(): float
     {
-        if ($this->special_price !== null && (float) $this->special_price > 0) {
+        if ($this->hasSpecialPrice()) {
             return (float) $this->special_price;
         }
         return (float) $this->price;
-    }
-
-    public function hasDiscount(): bool
-    {
-        return ($this->special_price !== null && (float) $this->special_price < (float) $this->price)
-            || ($this->discount_percent !== null && (float) $this->discount_percent > 0);
-    }
-
-    public function getDiscountedPrice(string $code = ''): float
-    {
-        $base = $this->getEffectivePrice();
-        if ($code && $this->discount_code && strtolower($this->discount_code) === strtolower($code)
-            && $this->discount_percent > 0) {
-            return round($base * (1 - ($this->discount_percent / 100)));
-        }
-        return $base;
     }
 
     public function getFormattedPrice(): string
@@ -93,6 +113,30 @@ class SubscriptionPlan extends Model
         if ($effective === 0.0) {
             return 'رایگان';
         }
-        return number_format($effective) . ' تومان';
+        return \App\Helpers\NumberHelper::formatFa($effective) . ' تومان';
+    }
+
+    /** برچسب‌های مزایا برای نمایش در کارت */
+    public function getBenefitBadges(): array
+    {
+        $badges = [];
+
+        if ($this->product_discount_percent > 0) {
+            $badges[] = ['icon' => 'tag',      'label' => \App\Helpers\NumberHelper::formatFa($this->product_discount_percent) . '٪ تخفیف روی محصولات'];
+        }
+        if ($this->free_shipping) {
+            $badges[] = ['icon' => 'truck',    'label' => 'ارسال رایگان'];
+        }
+        if ($this->vip_support) {
+            $badges[] = ['icon' => 'headset',  'label' => 'پشتیبانی VIP اولویت‌دار'];
+        }
+        if ($this->early_access) {
+            $badges[] = ['icon' => 'star',     'label' => 'دسترسی زودهنگام به محصولات'];
+        }
+        if ($this->loyalty_multiplier > 1) {
+            $badges[] = ['icon' => 'gift',     'label' => 'ضریب امتیاز ×' . \App\Helpers\NumberHelper::formatFa($this->loyalty_multiplier)];
+        }
+
+        return $badges;
     }
 }

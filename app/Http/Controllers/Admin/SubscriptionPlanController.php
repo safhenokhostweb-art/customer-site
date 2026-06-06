@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SfUploadedFile;
 
 class SubscriptionPlanController extends Controller
 {
@@ -21,47 +23,59 @@ class SubscriptionPlanController extends Controller
 
     public function create()
     {
-        return view('admin.subscriptions.create');
+        $allProducts = \App\Models\Product::where('status', 'published')
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        return view('admin.subscriptions.create', compact('allProducts'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'             => 'required|string|max:255',
-            'slug'             => 'nullable|string|max:255',
-            'description'      => 'nullable|string',
-            'price'            => 'required|numeric|min:0',
-            'special_price'    => 'nullable|numeric|min:0',
-            'discount_code'    => 'nullable|string|max:50',
-            'discount_percent' => 'nullable|numeric|min:0|max:100',
-            'duration'         => 'required|in:month,year',
-            'duration_count'   => 'required|integer|min:1',
-            'trial_days'       => 'nullable|integer|min:0',
-            'features'         => 'nullable|array',
-            'features.*'       => 'nullable|string|max:200',
-            'color'            => 'nullable|string|max:20',
-            'highlighted'      => 'nullable|boolean',
-            'badge_text'       => 'nullable|string|max:50',
-            'max_users'        => 'nullable|integer|min:1',
-            'is_active'        => 'nullable|boolean',
-            'order'            => 'nullable|integer|min:0',
-            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'name'                    => 'required|string|max:255',
+            'slug'                    => 'nullable|string|max:255',
+            'description'             => 'nullable|string',
+            'price'                   => 'required|numeric|min:0',
+            'special_price'           => 'nullable|numeric|min:0',
+            'discount_code'           => 'nullable|string|max:50',
+            'duration'                => 'required|in:day,month,year',
+            'duration_count'          => 'required|integer|min:1',
+            'trial_days'              => 'nullable|integer|min:0',
+            'features'                => 'nullable|array',
+            'features.*'              => 'nullable|string|max:200',
+            'color'                   => 'nullable|string|max:20',
+            'highlighted'             => 'nullable|boolean',
+            'badge_text'              => 'nullable|string|max:50',
+            'max_users'               => 'nullable|integer|min:1',
+            'is_active'               => 'nullable|boolean',
+            'order'                   => 'nullable|integer|min:0',
+            'product_discount_percent'  => 'nullable|integer|min:0|max:100',
+            'apply_to_all_products'     => 'nullable|boolean',
+            'coupon_override'           => 'nullable|boolean',
+            'free_shipping'             => 'nullable|boolean',
+            'vip_support'               => 'nullable|boolean',
+            'early_access'              => 'nullable|boolean',
+            'loyalty_multiplier'        => 'nullable|integer|min:1|max:10',
         ]);
 
-        $data['slug']        = ($data['slug'] ?? null) ?: Str::slug($data['name']);
-        $data['is_active']   = $request->boolean('is_active');
-        $data['highlighted'] = $request->boolean('highlighted');
-        $data['trial_days']  = $data['trial_days'] ?? 0;
-        $data['order']       = $data['order'] ?? (SubscriptionPlan::max('order') + 1);
+        $data['slug']                    = ($data['slug'] ?? null) ?: Str::slug($data['name']);
+        $data['is_active']               = $request->boolean('is_active');
+        $data['highlighted']             = $request->boolean('highlighted');
+        $data['apply_to_all_products']   = $request->boolean('apply_to_all_products');
+        $data['coupon_override']         = $request->boolean('coupon_override');
+        $data['free_shipping']           = $request->boolean('free_shipping');
+        $data['vip_support']             = $request->boolean('vip_support');
+        $data['early_access']            = $request->boolean('early_access');
+        $data['trial_days']              = $data['trial_days'] ?? 0;
+        $data['loyalty_multiplier']      = $data['loyalty_multiplier'] ?? 1;
+        $data['product_discount_percent'] = $data['product_discount_percent'] ?? 0;
+        $data['order']                   = $data['order'] ?? (SubscriptionPlan::max('order') + 1);
 
         $features = array_values(array_filter($data['features'] ?? [], fn($f) => filled($f)));
         $data['features'] = count($features) ? $features : null;
 
-        $imgFile = $data['image'] ?? null;
-        unset($data['image']);
-        if (self::fileExistsOnDisk($imgFile)) {
-            $data['image'] = $imgFile->store('subscriptions', 'public');
-        }
+        $data['image'] = $this->storeImage($request);
 
         SubscriptionPlan::create($data);
 
@@ -71,58 +85,95 @@ class SubscriptionPlanController extends Controller
 
     public function edit(SubscriptionPlan $subscription)
     {
-        return view('admin.subscriptions.edit', compact('subscription'));
+        $subscription->load('products');
+        $allProducts = \App\Models\Product::where('status', 'published')
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        return view('admin.subscriptions.edit', compact('subscription', 'allProducts'));
     }
 
     public function update(Request $request, SubscriptionPlan $subscription)
     {
         $data = $request->validate([
-            'name'             => 'required|string|max:255',
-            'slug'             => 'nullable|string|max:255',
-            'description'      => 'nullable|string',
-            'price'            => 'required|numeric|min:0',
-            'special_price'    => 'nullable|numeric|min:0',
-            'discount_code'    => 'nullable|string|max:50',
-            'discount_percent' => 'nullable|numeric|min:0|max:100',
-            'duration'         => 'required|in:month,year',
-            'duration_count'   => 'required|integer|min:1',
-            'trial_days'       => 'nullable|integer|min:0',
-            'features'         => 'nullable|array',
-            'features.*'       => 'nullable|string|max:200',
-            'color'            => 'nullable|string|max:20',
-            'highlighted'      => 'nullable|boolean',
-            'badge_text'       => 'nullable|string|max:50',
-            'max_users'        => 'nullable|integer|min:1',
-            'is_active'        => 'nullable|boolean',
-            'order'            => 'nullable|integer|min:0',
-            'image'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'name'                    => 'required|string|max:255',
+            'slug'                    => 'nullable|string|max:255',
+            'description'             => 'nullable|string',
+            'price'                   => 'required|numeric|min:0',
+            'special_price'           => 'nullable|numeric|min:0',
+            'discount_code'           => 'nullable|string|max:50',
+            'duration'                => 'required|in:day,month,year',
+            'duration_count'          => 'required|integer|min:1',
+            'trial_days'              => 'nullable|integer|min:0',
+            'features'                => 'nullable|array',
+            'features.*'              => 'nullable|string|max:200',
+            'color'                   => 'nullable|string|max:20',
+            'highlighted'             => 'nullable|boolean',
+            'badge_text'              => 'nullable|string|max:50',
+            'max_users'               => 'nullable|integer|min:1',
+            'is_active'               => 'nullable|boolean',
+            'order'                   => 'nullable|integer|min:0',
+            'product_discount_percent'  => 'nullable|integer|min:0|max:100',
+            'apply_to_all_products'     => 'nullable|boolean',
+            'coupon_override'           => 'nullable|boolean',
+            'free_shipping'             => 'nullable|boolean',
+            'vip_support'               => 'nullable|boolean',
+            'early_access'              => 'nullable|boolean',
+            'loyalty_multiplier'        => 'nullable|integer|min:1|max:10',
+            'product_ids'               => 'nullable|array',
+            'product_ids.*'             => 'exists:products,id',
+            'product_discounts'         => 'nullable|array',
+            'product_discounts.*'       => 'nullable|integer|min:0|max:100',
+            'product_coupon_overrides'  => 'nullable|array',
         ]);
 
-        $data['slug']        = ($data['slug'] ?? null) ?: Str::slug($data['name']);
-        $data['is_active']   = $request->boolean('is_active');
-        $data['highlighted'] = $request->boolean('highlighted');
-        $data['trial_days']  = $data['trial_days'] ?? 0;
+        $data['slug']                    = ($data['slug'] ?? null) ?: Str::slug($data['name']);
+        $data['is_active']               = $request->boolean('is_active');
+        $data['highlighted']             = $request->boolean('highlighted');
+        $data['apply_to_all_products']   = $request->boolean('apply_to_all_products');
+        $data['coupon_override']         = $request->boolean('coupon_override');
+        $data['free_shipping']           = $request->boolean('free_shipping');
+        $data['vip_support']             = $request->boolean('vip_support');
+        $data['early_access']            = $request->boolean('early_access');
+        $data['trial_days']              = $data['trial_days'] ?? 0;
+        $data['loyalty_multiplier']      = $data['loyalty_multiplier'] ?? 1;
+        $data['product_discount_percent'] = $data['product_discount_percent'] ?? 0;
 
         $features = array_values(array_filter($data['features'] ?? [], fn($f) => filled($f)));
         $data['features'] = count($features) ? $features : null;
 
-        // پس از validation، image یا null است یا یک UploadedFile معتبر
-        $imgFile = $data['image'] ?? null;
-        unset($data['image']);
-
-        if ($imgFile instanceof \Illuminate\Http\UploadedFile) {
-            if ($subscription->image) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($subscription->image);
-            }
-            $data['image'] = $imgFile->store('subscriptions', 'public');
-        }
-
+        // حذف تصویر
         if ($request->boolean('remove_image') && $subscription->image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($subscription->image);
+            Storage::disk('public')->delete($subscription->image);
             $data['image'] = null;
         }
 
+        // آپلود تصویر جدید
+        $newImage = $this->storeImage($request);
+        if ($newImage !== null) {
+            if ($subscription->image) {
+                Storage::disk('public')->delete($subscription->image);
+            }
+            $data['image'] = $newImage;
+        }
+
+        // حذف فیلدهای pivot از $data
+        $productIds             = $data['product_ids'] ?? [];
+        $productDiscounts       = $data['product_discounts'] ?? [];
+        $productCouponOverrides = $data['product_coupon_overrides'] ?? [];
+        unset($data['product_ids'], $data['product_discounts'], $data['product_coupon_overrides']);
+
         $subscription->update($data);
+
+        // sync محصولات مرتبط
+        $syncData = [];
+        foreach ($productIds as $productId) {
+            $syncData[$productId] = [
+                'discount_percent'         => (int) ($productDiscounts[$productId] ?? $subscription->product_discount_percent),
+                'override_coupon_exclusion' => isset($productCouponOverrides[$productId]),
+            ];
+        }
+        $subscription->products()->sync($syncData);
 
         return redirect()->route('admin.subscriptions.index')
             ->with('success', 'پلن اشتراک به‌روزرسانی شد.');
@@ -136,12 +187,52 @@ class SubscriptionPlanController extends Controller
         }
 
         if ($subscription->image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($subscription->image);
+            Storage::disk('public')->delete($subscription->image);
         }
 
         $subscription->delete();
 
         return redirect()->route('admin.subscriptions.index')
             ->with('success', 'پلن حذف شد.');
+    }
+
+    /**
+     * آپلود تصویر پلن — مقاوم در برابر empty submit مرورگرها.
+     * اگر فایل معتبری آپلود نشده: null برمی‌گردد.
+     */
+    private function storeImage(Request $request): ?string
+    {
+        // از request->file() استفاده کن که همیشه Illuminate\Http\UploadedFile برمی‌گرداند
+        $file = $request->file('image');
+
+        if (! $file instanceof SfUploadedFile) {
+            return null;
+        }
+
+        // UPLOAD_ERR_OK = 0، هر مقدار دیگر یعنی آپلود نشد یا خالی است
+        if ($file->getError() !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        // اندازه صفر = فایلی انتخاب نشده (Firefox edge case)
+        if ($file->getSize() <= 0) {
+            return null;
+        }
+
+        // نام اصلی خالی = فایلی انتخاب نشده
+        if (! filled($file->getClientOriginalName())) {
+            return null;
+        }
+
+        try {
+            $path = $file->store('subscriptions', 'public');
+            return $path ?: null;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('SubscriptionPlan image upload failed', [
+                'error'    => $e->getMessage(),
+                'tmp_name' => $file->getPathname(),
+            ]);
+            return null;
+        }
     }
 }

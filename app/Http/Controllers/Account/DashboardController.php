@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\UserNotification;
+use App\Services\MembershipPointsService;
 
 class DashboardController extends Controller
 {
@@ -43,6 +44,8 @@ class DashboardController extends Controller
 
         $unreadNotificationsCount = UserNotification::where('user_id', $user->id)->unread()->count();
 
+        $pointsBalance = app(MembershipPointsService::class)->getBalance($user);
+
         $recentOrders = SiteHelper::shopEnabled()
             ? Order::where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)->orWhere('customer_mobile', $user->mobile);
@@ -68,7 +71,8 @@ class DashboardController extends Controller
             'unreadNotificationsCount',
             'recentOrders',
             'recentInvoices',
-            'recentNotifications'
+            'recentNotifications',
+            'pointsBalance'
         ));
     }
 }

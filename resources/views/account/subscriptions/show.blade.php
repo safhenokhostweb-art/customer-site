@@ -122,25 +122,20 @@
 {{-- عملیات --}}
 <div class="subdetail__actions">
     <a href="{{ route('account.subscriptions.index') }}" class="subdetail__btn subdetail__btn--back">← بازگشت</a>
-    @if($subscription->isActive() || $subscription->isInTrial())
-    <form method="POST" action="{{ route('account.subscriptions.cancel', $subscription) }}"
-          onsubmit="return confirm('آیا از لغو اشتراک اطمینان دارید؟');" style="display:inline">
-        @csrf
-        <button type="submit" class="subdetail__btn subdetail__btn--cancel">لغو اشتراک</button>
-    </form>
-    @endif
     @if($subscription->isPending())
-    <div class="subdetail__pending-notice">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="-ms-flex-negative:0;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>این اشتراک در انتظار تأیید و پرداخت است. پس از حذف می‌توانید اشتراک جدید ثبت کنید.</span>
+    <div class="subdetail__info-notice">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>این درخواست اشتراک در انتظار تأیید ادمین است. در صورت نیاز با پشتیبانی تماس بگیرید.</span>
     </div>
-    <form method="POST" action="{{ route('account.subscriptions.delete-pending', $subscription) }}"
-          onsubmit="return confirm('درخواست اشتراک حذف شود؟');" style="display:inline">
-        @csrf @method('DELETE')
-        <button type="submit" class="subdetail__btn subdetail__btn--cancel">حذف درخواست</button>
-    </form>
+    @elseif($subscription->isActive() || $subscription->isInTrial())
+    <div class="subdetail__info-notice subdetail__info-notice--green">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>اشتراک شما فعال است. برای لغو یا تغییر اشتراک با پشتیبانی تماس بگیرید.</span>
+    </div>
     @endif
+    @if(! $subscription->isActive() && ! $subscription->isInTrial())
     <a href="{{ route('account.subscriptions.plans') }}" class="subdetail__btn subdetail__btn--plans">مشاهده پلن‌ها</a>
+    @endif
 </div>
 
 </div>
@@ -215,7 +210,8 @@
 .subdetail__btn--cancel:hover { background: #ffe4e6; }
 .subdetail__btn--plans  { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
 .subdetail__btn--plans:hover { background: #e0e7ff; }
-.subdetail__pending-notice { display:-webkit-box; display:-ms-flexbox; display:flex; -webkit-box-align:center; -ms-flex-align:center; align-items:center; gap:.5rem; background:#fff7ed; border:1px solid #fed7aa; border-radius:.625rem; padding:.5rem .875rem; font-size:.8rem; color:#c2410c; width:100%; }
+.subdetail__info-notice { display:flex; align-items:center; gap:.5rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:.625rem; padding:.5rem .875rem; font-size:.8rem; color:#1e40af; width:100%; }
+.subdetail__info-notice--green { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
 </style>
 @endpush
 

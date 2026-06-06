@@ -143,6 +143,7 @@ class SubscriberController extends Controller
 
     /**
      * تأیید و فعال‌سازی درخواست pending.
+     * فقط اشتراک موجود را فعال می‌کند — subscription جدید نمی‌سازد.
      */
     public function approveRequest(Subscription $subscriber)
     {
@@ -153,6 +154,7 @@ class SubscriberController extends Controller
         $user = $subscriber->user;
         $plan = $subscriber->plan;
 
+        // به‌روزرسانی subscription موجود (بدون ساخت رکورد جدید)
         $subscriber->update([
             'status'     => Subscription::STATUS_ACTIVE,
             'starts_at'  => now(),
@@ -171,8 +173,8 @@ class SubscriberController extends Controller
             'details'         => ['approved_by' => auth()->user()->name],
         ]);
 
-        // ارسال تیکت + پیامک
-        $this->service->subscribe($user, $plan, $subscriber->invoice_id);
+        // فقط تیکت + پیامک — بدون ساخت subscription جدید
+        $this->service->notifyActivation($user, $plan, $subscriber);
 
         return back()->with('success', "اشتراک «{$plan->name}» برای {$user->name} تأیید و فعال شد.");
     }
@@ -193,6 +195,60 @@ class SubscriberController extends Controller
         $subscriber->delete();
 
         return back()->with('success', 'درخواست اشتراک حذف شد.');
+    }
+
+    /**
+     * حذف کامل هر اشتراک توسط ادمین.
+     * قانون: اگر درگاه پرداخت واقعی فعال باشد و فاکتور paid داشته باشد → حذف ممنوع.
+     * در حالت درگاه آزمایشی: همیشه حذف مجاز است.
+     */
+    public function destroy(Subscription $subscriber)
+    {
+        $isLiveGateway = config('subscription.live_gateway', env('PAYMENT_GATEWAY_LIVE', false));
+        $hasPaidInvoice = $subscriber->invoice && $subscriber->invoice->status === 'paid';
+
+        if ($isLiveGateway && $hasPaidInvoice) {
+            return back()->with('error', 'این اشتراک دارای پرداخت تأیید‌شده است و قابل حذف نیست.');
+        }
+
+        if ($subscriber->invoice && ! $hasPaidInvoice) {
+            $subscriber->invoice->update(['status' => 'cancelled']);
+        }
+
+        $subscriber->delete();
+
+        return back()->with('success', 'اشتراک حذف شد.');
+    }
+
+    /**
+     * فعال‌سازی رایگان اشتراک توسط ادمین (بدون نیاز به پرداخت).
+     */
+    public function activateFree(Subscription $subscriber)
+    {
+        if ($subscriber->isActive() || $subscriber->isInTrial()) {
+            return back()->with('error', 'این اشتراک قبلاً فعال است.');
+        }
+
+        $plan = $subscriber->plan;
+        $now  = now();
+
+        $subscriber->update([
+            'status'    => Subscription::STATUS_ACTIVE,
+            'starts_at' => $now,
+            'ends_at'   => $now->copy()->addDays($plan->getDurationInDays()),
+        ]);
+
+        \App\Models\SubscriptionLog::create([
+            'subscription_id' => $subscriber->id,
+            'user_id'         => auth()->id(),
+            'action'          => \App\Models\SubscriptionLog::ACTION_SUBSCRIBED,
+            'performed_by'    => 'admin',
+            'details'         => ['free_activation' => true, 'by' => auth()->user()->name],
+        ]);
+
+        $this->service->notifyActivation($subscriber->user, $plan, $subscriber->fresh());
+
+        return back()->with('success', "اشتراک «{$plan->name}» برای {$subscriber->user?->name} رایگان فعال شد.");
     }
 
     public function export(Request $request)

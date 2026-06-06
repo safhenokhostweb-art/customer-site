@@ -53,7 +53,7 @@
                             </div>
                         </td>
                         <td class="font-semibold">{{ \App\Helpers\NumberHelper::formatFa($p->price) }} تومان</td>
-                        <td>{{ \App\Helpers\NumberHelper::formatFa($p->duration_count) }} {{ $p->duration === 'year' ? 'ساله' : 'ماهه' }}</td>
+                        <td>{{ $p->getDurationLabel() }}</td>
                         <td>
                             @if($p->hasTrial())
                             <span class="badge badge-info">{{ \App\Helpers\NumberHelper::formatFa($p->trial_days) }} روز</span>

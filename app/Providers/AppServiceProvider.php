@@ -57,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
         // PHASE UI-THEME.1 — Enterprise Theme Engine (tenant resolver)
         $this->app->singleton(\App\Services\ThemeEngine\TenantThemeResolver::class);
 
+        // Membership Benefits Engine
+        $this->app->singleton(\App\Services\MembershipBenefitService::class);
+        $this->app->singleton(\App\Services\MembershipPointsService::class);
+
         // PHASE M3.2 — DOMAIN A: Tenant Support Runtime
         $this->app->singleton(\App\Services\TenantSupportRuntime\TenantChannelRegistry::class);
         $this->app->singleton(\App\Services\TenantSupportRuntime\TenantPresenceService::class);

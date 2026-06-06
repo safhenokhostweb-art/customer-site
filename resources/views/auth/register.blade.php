@@ -46,6 +46,16 @@
                    class="form-control" required dir="rtl" autocomplete="new-password">
         </div>
 
+        {{-- فیلد مخفی کد دعوت --}}
+        <input type="hidden" name="ref_code" value="{{ old('ref_code', $refCode ?? '') }}">
+
+        @if(!empty($refCode ?? ''))
+        <div style="display:flex;align-items:center;gap:.5rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.625rem;padding:.625rem 1rem;font-size:.8rem;color:#166534">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            کد دعوت فعال است — پس از اشتراک اول، هر دو طرف پاداش می‌گیرید!
+        </div>
+        @endif
+
         <button type="submit" class="btn btn-primary w-full" style="margin-top:1.25rem">
             ساخت حساب و ورود
         </button>

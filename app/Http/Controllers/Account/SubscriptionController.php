@@ -53,7 +53,7 @@ class SubscriptionController extends Controller
         $this->requireModule();
 
         $user   = auth()->user();
-        $plans  = SubscriptionPlan::where('is_active', true)->orderBy('order')->get();
+        $plans  = SubscriptionPlan::where('is_active', true)->orderBy('order')->with('products')->get();
         $active = $this->service->getActive($user);
 
         // اشتراک یا درخواست مسدودکننده (active/trial/pending)
@@ -73,7 +73,10 @@ class SubscriptionController extends Controller
     {
         $this->requireModule();
 
-        $request->validate(['plan_id' => 'required|exists:subscription_plans,id']);
+        $request->validate([
+            'plan_id'     => 'required|exists:subscription_plans,id',
+            'coupon_code' => 'nullable|string|max:50',
+        ]);
 
         $plan = SubscriptionPlan::findOrFail($request->plan_id);
         $user = auth()->user();
@@ -109,9 +112,36 @@ class SubscriptionController extends Controller
                 ->with('success', "اشتراک رایگان {$plan->name} فعال شد.");
         }
 
+        // بررسی کوپن تخفیف
+        $coupon         = null;
+        $discountAmount = 0;
+        $couponCode     = trim($request->coupon_code ?? '');
+
+        if ($couponCode) {
+            $coupon = \App\Models\Coupon::where('code', $couponCode)
+                ->where('is_active', true)
+                ->first();
+
+            if (! $coupon) {
+                return back()->with('error', 'کد تخفیف «' . $couponCode . '» معتبر نیست.');
+            }
+
+            $basePrice = (int) $plan->getEffectivePrice();
+            if (! $coupon->isValidForAmount($basePrice, [], $user->id)) {
+                return back()->with('error', 'این کد تخفیف برای اشتراک قابل استفاده نیست (منقضی، حداقل مبلغ یا محدودیت).');
+            }
+
+            $discountAmount = $coupon->calculateDiscount($basePrice);
+        }
+
         // پلن پولی: ساخت فاکتور + subscription pending + ریدایرکت به صفحه پرداخت
-        $invoice = $this->service->createInvoice($user, $plan);
+        $invoice = $this->service->createInvoice($user, $plan, $discountAmount, $coupon);
         $this->service->createPendingSubscription($user, $plan, $invoice->id);
+
+        // افزایش تعداد استفاده از کوپن
+        if ($coupon) {
+            $coupon->increment('used_count');
+        }
 
         session(['pending_subscription_plan' => $plan->id]);
 

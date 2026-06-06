@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Helpers\SiteHelper;
 use App\Models\Invoice;
+use App\Models\Subscription;
+use App\Models\SubscriptionLog;
 use App\Models\SubscriptionPlan;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionPaymentController extends Controller
 {
@@ -49,10 +52,17 @@ class SubscriptionPaymentController extends Controller
                 ->with('info', 'این فاکتور قبلاً پردازش شده است.');
         }
 
-        $planId = session('pending_subscription_plan');
+        // یافتن پلن: اول از pending subscription مرتبط با فاکتور، سپس از session
+        $pendingSub = Subscription::where('invoice_id', $invoice->id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        $planId = $pendingSub?->subscription_plan_id
+            ?? session('pending_subscription_plan');
+
         if (! $planId) {
             return redirect()->route('account.subscriptions.plans')
-                ->with('error', 'اطلاعات پلن یافت نشد. لطفاً مجدداً اقدام کنید.');
+                ->with('error', 'اطلاعات پلن یافت نشد. لطفاً دوباره پلن انتخاب کنید.');
         }
 
         $plan = SubscriptionPlan::find($planId);
@@ -61,23 +71,46 @@ class SubscriptionPaymentController extends Controller
                 ->with('error', 'پلن انتخابی یافت نشد.');
         }
 
-        // در اینجا می‌توان به درگاه پرداخت متصل شد.
-        // فعلاً: ایجاد subscription با وضعیت pending + در انتظار تأیید ادمین
-        $invoice->update(['status' => 'pending_confirmation']);
-
-        // ایجاد یا به‌روزرسانی subscription pending
-        $existingPending = \App\Models\Subscription::where('invoice_id', $invoice->id)
-            ->where('user_id', auth()->id())
-            ->first();
-
-        if (! $existingPending) {
-            $this->service->createPendingSubscription(auth()->user(), $plan, $invoice->id);
-        }
-
         session()->forget('pending_subscription_plan');
 
+        // ─── فعال‌سازی فوری — بدون نیاز به تأیید ادمین ───────────────────
+        // NOTE: وقتی ماژول bank_gateway اضافه شود، اینجا به ریدایرکت به درگاه تبدیل می‌شود.
+        $user = auth()->user();
+
+        DB::transaction(function () use ($invoice, $pendingSub, $plan, $user) {
+            $now = now();
+
+            $invoice->update(['status' => 'paid', 'paid_at' => $now]);
+
+            if ($pendingSub) {
+                $pendingSub->update([
+                    'status'    => Subscription::STATUS_ACTIVE,
+                    'starts_at' => $now,
+                    'ends_at'   => $now->copy()->addDays($plan->getDurationInDays()),
+                ]);
+                SubscriptionLog::create([
+                    'subscription_id' => $pendingSub->id,
+                    'user_id'         => $user->id,
+                    'action'          => SubscriptionLog::ACTION_SUBSCRIBED,
+                    'performed_by'    => 'user',
+                    'details'         => ['plan' => $plan->name, 'auto_activated' => true],
+                ]);
+                $this->service->notifyActivation($user, $plan, $pendingSub->fresh());
+            } else {
+                $sub = Subscription::create([
+                    'user_id'              => $user->id,
+                    'subscription_plan_id' => $plan->id,
+                    'status'               => Subscription::STATUS_ACTIVE,
+                    'starts_at'            => $now,
+                    'ends_at'              => $now->copy()->addDays($plan->getDurationInDays()),
+                    'invoice_id'           => $invoice->id,
+                ]);
+                $this->service->notifyActivation($user, $plan, $sub);
+            }
+        });
+
         return redirect()->route('account.subscriptions.index')
-            ->with('info', 'درخواست پرداخت شما ثبت شد و پس از تأیید توسط مدیریت فعال می‌شود.');
+            ->with('success', "اشتراک «{$plan->name}» با موفقیت فعال شد.");
     }
 
     /**
