@@ -193,6 +193,7 @@ Route::middleware('install.check')->group(function () {
     Route::middleware(['module:subscription', 'auth'])->group(function () {
         Route::get('/subscription/pay/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'pay'])->name('subscriptions.pay');
         Route::post('/subscription/confirm/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'confirm'])->name('subscriptions.confirm');
+        Route::get('/subscription/callback/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'callback'])->name('subscriptions.callback');
     });
     Route::middleware('module:subscription')->group(function () {
         Route::get('/plans', [\App\Http\Controllers\Front\PricingController::class, 'index'])->name('pricing.index');

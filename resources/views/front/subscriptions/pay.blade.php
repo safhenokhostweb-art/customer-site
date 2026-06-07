@@ -56,16 +56,34 @@
         </div>
 
         {{-- ── راهنما --}}
+        @php $gatewayConfigured = \App\Services\Payment\PaymentGatewayFactory::isConfigured(); @endphp
+        @if($gatewayConfigured)
+        <div class="subpay-card__notice" style="background:#f0f9ff;border-bottom-color:#bae6fd">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17" style="-ms-flex-negative:0;flex-shrink:0;color:#0284c7;margin-top:1px">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            <p style="color:#075985">برای پرداخت آنلاین به درگاه بانکی امن منتقل می‌شوید. پس از پرداخت موفق، اشتراک شما بلافاصله فعال می‌شود.</p>
+        </div>
+        @else
         <div class="subpay-card__notice">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17" style="-ms-flex-negative:0;flex-shrink:0;color:#d97706;margin-top:1px">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <p>پس از ثبت درخواست پرداخت، اشتراک شما در اسرع وقت توسط مدیریت فعال خواهد شد و از طریق پیامک اطلاع‌رسانی می‌شود.</p>
         </div>
+        @endif
 
-        {{-- ── دکمه تأیید --}}
+        {{-- ── دکمه --}}
         <div class="subpay-card__footer">
+            @if($gatewayConfigured)
+            {{-- ریدایرکت مستقیم به درگاه --}}
+            <a href="{{ route('subscriptions.pay', $invoice->invoice_number) }}" class="subpay-card__btn" style="text-decoration:none">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+                پرداخت آنلاین از طریق درگاه بانکی
+            </a>
+            @else
             <form method="POST" action="{{ route('subscriptions.confirm', $invoice->invoice_number) }}">
                 @csrf
                 <button type="submit" class="subpay-card__btn">
@@ -75,6 +93,7 @@
                     تأیید و ثبت درخواست پرداخت
                 </button>
             </form>
+            @endif
             <a href="{{ route('account.subscriptions.plans') }}" class="subpay-card__cancel">
                 انصراف و بازگشت به پلن‌ها
             </a>

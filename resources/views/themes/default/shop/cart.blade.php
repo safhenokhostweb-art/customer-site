@@ -180,7 +180,7 @@
     $couponEnabled = \App\Helpers\SiteHelper::moduleEnabled('coupon');
     $membershipEnabled = \App\Helpers\SiteHelper::moduleEnabled('subscription');
     $totalSavings = $membership->discountAmount;
-    $cartTotal    = $subtotal - $membership->discountAmount;
+    $cartTotal    = $subtotal + $shippingCost - $membership->discountAmount;
     $bannerClass  = 'membership-banner';
 @endphp
 
@@ -224,6 +224,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                         </svg>
                         پشتیبانی VIP
+                    </span>
+                    @endif
+                    @if($membership->earlyAccess)
+                    <span class="membership-badge" style="background:#fef3c7;color:#b45309">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                        دسترسی زودهنگام
                     </span>
                     @endif
                 </div>
@@ -341,7 +349,9 @@
 
                 {{-- Savings notice --}}
                 @php
-                    $totalSavingsDisplay = $membership->discountAmount;
+                    $baseShippingConfig = (int) config('site.shop_shipping_cost', 0);
+                    $shippingSaved = $membership->freeShipping ? $baseShippingConfig : 0;
+                    $totalSavingsDisplay = $membership->discountAmount + $shippingSaved;
                 @endphp
                 @if($totalSavingsDisplay > 0)
                 <div class="savings-notice">
@@ -441,8 +451,10 @@
                     <span class="price-row__value">
                         @if($membership->freeShipping)
                             <span class="price-shipping-free">رایگان با اشتراک</span>
+                        @elseif($shippingCost > 0)
+                            {!! \App\Helpers\CurrencyHelper::formatPrice($shippingCost) !!} {{ \App\Helpers\CurrencyHelper::unitLabel() }}
                         @else
-                            <span style="color:#64748b;font-size:.8rem">محاسبه در تکمیل</span>
+                            <span class="price-shipping-free">رایگان</span>
                         @endif
                     </span>
                 </div>

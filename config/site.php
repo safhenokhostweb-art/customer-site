@@ -46,4 +46,11 @@ return [
     | پیش‌فرض ۳۰۰ = ۵ دقیقه (اعلان‌ها بدون بازخوانی دستی به‌روز می‌شوند).
     */
     'platform_config_cache_ttl' => (int) env('PLATFORM_CONFIG_CACHE_TTL', 300),
+
+    /*
+    | هزینه ارسال پیش‌فرض فروشگاه (تومان).
+    | اعضا با پلن دارای free_shipping از این هزینه معاف می‌شوند.
+    | مقدار 0 = ارسال برای همه رایگان (پیش‌فرض).
+    */
+    'shop_shipping_cost' => (int) env('SHOP_SHIPPING_COST', 0),
 ];

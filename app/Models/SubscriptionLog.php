@@ -14,9 +14,11 @@ class SubscriptionLog extends Model
     public const ACTION_TRIAL         = 'trial_started';
     public const ACTION_REACTIVATED   = 'reactivated';
     public const ACTION_PLAN_CHANGED  = 'plan_changed';
-    public const ACTION_REMINDER_7D   = 'reminder_7d_sent';
-    public const ACTION_REMINDER_1D   = 'reminder_1d_sent';
-    public const ACTION_RENEWAL_COUPON= 'renewal_coupon_generated';
+    public const ACTION_REMINDER_7D    = 'reminder_7d_sent';
+    public const ACTION_REMINDER_1D    = 'reminder_1d_sent';
+    public const ACTION_RENEWAL_COUPON = 'renewal_coupon_generated';
+    public const ACTION_AUTO_RENEWED   = 'auto_renewed';
+    public const ACTION_AUTO_RENEW_INVOICE = 'auto_renew_invoice_created';
 
     protected $fillable = [
         'subscription_id', 'user_id', 'action', 'details', 'performed_by',

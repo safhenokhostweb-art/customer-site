@@ -55,6 +55,22 @@ class InstallController extends Controller
             'db_password' => 'nullable|string',
         ]);
 
+        // Test connection FIRST using runtime config — do NOT touch .env yet.
+        // This prevents bad credentials from being persisted when the connection fails.
+        Config::set('database.default', 'mysql');
+        config()->set('database.connections.mysql.host', $request->db_host);
+        config()->set('database.connections.mysql.database', $request->db_name);
+        config()->set('database.connections.mysql.username', $request->db_user);
+        config()->set('database.connections.mysql.password', $request->db_password ?? '');
+        DB::purge();
+
+        try {
+            DB::connection('mysql')->getPdo();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['db' => 'اتصال به دیتابیس برقرار نشد: ' . $e->getMessage()]);
+        }
+
+        // Connection verified — now safe to persist credentials to .env.
         $envPath = base_path('.env');
         $env = file_exists($envPath) ? file_get_contents($envPath) : file_get_contents(base_path('.env.example'));
 
@@ -69,19 +85,6 @@ class InstallController extends Controller
 
         if (! file_put_contents($envPath, $env)) {
             return back()->withErrors(['db' => 'امکان نوشتن فایل .env نیست.']);
-        }
-
-        Config::set('database.default', 'mysql');
-        config()->set('database.connections.mysql.host', $request->db_host);
-        config()->set('database.connections.mysql.database', $request->db_name);
-        config()->set('database.connections.mysql.username', $request->db_user);
-        config()->set('database.connections.mysql.password', $request->db_password ?? '');
-        DB::purge();
-
-        try {
-            DB::connection('mysql')->getPdo();
-        } catch (\Throwable $e) {
-            return back()->withErrors(['db' => 'اتصال به دیتابیس برقرار نشد: ' . $e->getMessage()]);
         }
 
         try {

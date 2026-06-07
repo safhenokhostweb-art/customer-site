@@ -48,40 +48,41 @@ class SubscriberController extends Controller
         return view('admin.subscriptions.subscribers', compact('subscriptions', 'plans', 'stats'));
     }
 
-    public function show(Subscription $subscription)
+    public function show(Subscription $subscriber)
     {
-        $subscription->load(['user', 'plan', 'logs.user', 'invoice']);
+        $subscriber->load(['user', 'plan', 'logs.user', 'invoice']);
+        $subscription = $subscriber;
         return view('admin.subscriptions.subscriber-show', compact('subscription'));
     }
 
-    public function cancel(Request $request, Subscription $subscription)
+    public function cancel(Request $request, Subscription $subscriber)
     {
         $request->validate(['reason' => 'nullable|string|max:500']);
 
-        if (! $subscription->isActive() && ! $subscription->isInTrial()) {
+        if (! $subscriber->isActive() && ! $subscriber->isInTrial()) {
             return back()->with('error', 'این اشتراک قابل لغو نیست.');
         }
 
-        $this->service->cancel($subscription, $request->reason, 'admin');
+        $this->service->cancel($subscriber, $request->reason, 'admin');
 
         return back()->with('success', 'اشتراک با موفقیت لغو شد.');
     }
 
-    public function reactivate(Subscription $subscription)
+    public function reactivate(Subscription $subscriber)
     {
-        if (! $subscription->isCancelled()) {
+        if (! $subscriber->isCancelled()) {
             return back()->with('error', 'فقط اشتراک‌های لغو شده قابل فعال‌سازی مجدد هستند.');
         }
 
-        $plan = $subscription->plan;
-        $subscription->update([
+        $plan = $subscriber->plan;
+        $subscriber->update([
             'status'       => Subscription::STATUS_ACTIVE,
             'ends_at'      => now()->addDays($plan->getDurationInDays()),
             'cancelled_at' => null,
         ]);
 
         \App\Models\SubscriptionLog::create([
-            'subscription_id' => $subscription->id,
+            'subscription_id' => $subscriber->id,
             'user_id'         => auth()->id(),
             'action'          => \App\Models\SubscriptionLog::ACTION_REACTIVATED,
             'performed_by'    => 'admin',

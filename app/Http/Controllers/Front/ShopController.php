@@ -343,6 +343,9 @@ class ShopController extends Controller
         $membership = app(MembershipBenefitService::class)
             ->calculate($user, $cart, $subtotal);
 
+        $baseShipping = (int) config('site.shop_shipping_cost', 0);
+        $shippingCost = $membership->freeShipping ? 0 : $baseShipping;
+
         $pointsBalance  = 0;
         $maxSpendPoints = 0;
         if ($user) {
@@ -352,7 +355,7 @@ class ShopController extends Controller
         }
 
         return view(SiteHelper::view('shop.cart'), compact(
-            'cart', 'pages', 'membership', 'subtotal',
+            'cart', 'pages', 'membership', 'subtotal', 'shippingCost',
             'pointsBalance', 'maxSpendPoints'
         ));
     }
@@ -545,10 +548,13 @@ class ShopController extends Controller
 
                 $user = auth()->user();
 
-                // ── 1. Membership discount ────────────────────────────────────
+                // ── 1. Membership discount + shipping ────────────────────────
                 $membership = app(MembershipBenefitService::class)
                     ->calculate($user, $cart, (int) $subtotal);
                 $membershipDiscount = $membership->discountAmount;
+                $shippingCost = $membership->freeShipping
+                    ? 0
+                    : (int) config('site.shop_shipping_cost', 0);
 
                 // ── 2. Coupon discount (applied after membership) ─────────────
                 $coupon = null;
@@ -580,7 +586,7 @@ class ShopController extends Controller
                     $pointsDiscount = $pointsService->pointsToToman($pointsToSpend);
                 }
 
-                $orderTotal = max(0, $subtotal - $membershipDiscount - $discountAmount - $pointsDiscount);
+                $orderTotal = max(0, $subtotal + $shippingCost - $membershipDiscount - $discountAmount - $pointsDiscount);
 
                 // ── 4. Calculate points to earn from this purchase ────────────
                 $pointsToEarn = $user ? $pointsService->calculatePurchasePoints($user, (int) $subtotal) : 0;
@@ -594,6 +600,7 @@ class ShopController extends Controller
                     'customer_address'          => $request->customer_address,
                     'note'                      => $request->note,
                     'subtotal'                  => $subtotal,
+                    'shipping_cost'             => $shippingCost,
                     'total'                     => $orderTotal,
                     'discount_amount'           => $discountAmount,
                     'membership_discount_amount'=> $membershipDiscount,

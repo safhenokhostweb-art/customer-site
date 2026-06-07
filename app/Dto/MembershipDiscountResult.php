@@ -11,6 +11,7 @@ final class MembershipDiscountResult
         public readonly float          $discountPercent,
         public readonly bool           $freeShipping,
         public readonly bool           $vipSupport,
+        public readonly bool           $earlyAccess,
         public readonly bool           $appliedToAll,
         public readonly array          $appliedProductIds,
         public readonly string         $planName,
@@ -24,6 +25,7 @@ final class MembershipDiscountResult
             discountPercent:   0.0,
             freeShipping:      false,
             vipSupport:        false,
+            earlyAccess:       false,
             appliedToAll:      false,
             appliedProductIds: [],
             planName:          '',
@@ -40,6 +42,7 @@ final class MembershipDiscountResult
     {
         return $this->discountAmount > 0
             || $this->freeShipping
-            || $this->vipSupport;
+            || $this->vipSupport
+            || $this->earlyAccess;
     }
 }

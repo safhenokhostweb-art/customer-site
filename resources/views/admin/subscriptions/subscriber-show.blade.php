@@ -172,7 +172,7 @@
         @if($subscription->isActive() || $subscription->isInTrial())
         <div class="subshow__action-card subshow__action-card--danger">
             <p class="subshow__action-card__title">لغو اشتراک</p>
-            <form method="POST" action="{{ route('admin.subscribers.cancel', $subscription) }}"
+            <form method="POST" action="{{ route('admin.subscribers.cancel', ['subscriber' => $subscription->id]) }}"
                   onsubmit="return confirm('اشتراک لغو شود؟');">
                 @csrf
                 <textarea name="reason" rows="2" placeholder="دلیل لغو (اختیاری)..."
@@ -187,7 +187,7 @@
         <div class="subshow__action-card subshow__action-card--success">
             <p class="subshow__action-card__title">فعال‌سازی مجدد</p>
             <p class="subshow__action-card__desc">اشتراک با مدت کامل دوباره فعال می‌شود.</p>
-            <form method="POST" action="{{ route('admin.subscribers.reactivate', $subscription) }}"
+            <form method="POST" action="{{ route('admin.subscribers.reactivate', ['subscriber' => $subscription->id]) }}"
                   onsubmit="return confirm('اشتراک مجدداً فعال شود؟');">
                 @csrf
                 <button type="submit" class="subshow__btn-success">فعال‌سازی مجدد</button>
@@ -200,7 +200,7 @@
         <div class="subshow__action-card subshow__action-card--success">
             <p class="subshow__action-card__title">فعال‌سازی رایگان</p>
             <p class="subshow__action-card__desc">بدون نیاز به پرداخت، اشتراک همین لحظه فعال می‌شود و تیکت اطلاع‌رسانی ارسال خواهد شد.</p>
-            <form method="POST" action="{{ route('admin.subscribers.activate-free', $subscription) }}"
+            <form method="POST" action="{{ route('admin.subscribers.activate-free', ['subscriber' => $subscription->id]) }}"
                   onsubmit="return confirm('اشتراک رایگان فعال شود؟');">
                 @csrf
                 <button type="submit" class="subshow__btn-success">فعال‌سازی رایگان</button>
@@ -217,7 +217,7 @@
             @else
             <p class="subshow__action-card__desc">این اشتراک پرداخت ندارد و قابل حذف است.</p>
             @endif
-            <form method="POST" action="{{ route('admin.subscribers.delete', $subscription) }}"
+            <form method="POST" action="{{ route('admin.subscribers.delete', ['subscriber' => $subscription->id]) }}"
                   onsubmit="return confirm('اشتراک کاملاً حذف شود؟ این عمل برگشت‌ناپذیر است.');">
                 @csrf @method('DELETE')
                 <button type="submit" class="subshow__btn-danger">حذف اشتراک</button>

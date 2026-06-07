@@ -50,5 +50,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('subscriptions:send-reminders')->dailyAt('10:00');
         // هدیه امتیاز تولد
         $schedule->command('membership:birthday-gifts')->dailyAt('09:00');
+
+        // Auto-renew Engine (P2) ───────────────────────────────────────────
+        // تمدید خودکار: رایگان→مستقیم | پولی→فاکتور+SMS | ساعت ۸ صبح
+        $schedule->command('subscriptions:process-renewals')->dailyAt('08:00');
     })
     ->create();

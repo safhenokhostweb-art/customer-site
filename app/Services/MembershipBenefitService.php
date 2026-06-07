@@ -75,6 +75,7 @@ class MembershipBenefitService
             discountPercent:   (float) $plan->product_discount_percent,
             freeShipping:      (bool) $plan->free_shipping,
             vipSupport:        (bool) $plan->vip_support,
+            earlyAccess:       (bool) $plan->early_access,
             appliedToAll:      (bool) $plan->apply_to_all_products,
             appliedProductIds: array_values(array_unique($appliedProductIds)),
             planName:          $plan->name,

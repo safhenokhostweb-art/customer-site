@@ -8,20 +8,23 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\SubscriptionLog;
 use App\Models\SubscriptionPlan;
+use App\Services\Payment\GatewayException;
+use App\Services\Payment\PaymentGatewayFactory;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionPaymentController extends Controller
 {
     public function __construct(private SubscriptionService $service) {}
 
     /**
-     * صفحه پرداخت فاکتور اشتراک.
+     * صفحه پرداخت — اگر درگاه پیکربندی شده، مستقیم ریدایرکت می‌کند.
      */
     public function pay(string $invoiceNumber)
     {
-        if (! SiteHelper::moduleEnabled('subscription')) abort(404);
+        if (! SiteHelper::isOwnerSite() && ! SiteHelper::moduleEnabled('subscription')) abort(404);
 
         $invoice = Invoice::where('invoice_number', $invoiceNumber)
             ->where('user_id', auth()->id())
@@ -32,16 +35,21 @@ class SubscriptionPaymentController extends Controller
                 ->with('success', 'این فاکتور قبلاً پرداخت شده است.');
         }
 
+        // اگر درگاه پیکربندی شده → مستقیم به درگاه ریدایرکت کن
+        if (PaymentGatewayFactory::isConfigured()) {
+            return $this->redirectToGateway($invoice);
+        }
+
+        // درگاه پیکربندی نشده → نمایش صفحه پرداخت دستی
         return view('front.subscriptions.pay', compact('invoice'));
     }
 
     /**
-     * تأیید پرداخت (callback از درگاه یا تأیید دستی).
-     * در این نسخه: تأیید دستی توسط ادمین در نظر گرفته می‌شود.
+     * Callback از درگاه بانکی — تأیید و فعال‌سازی.
      */
-    public function confirm(Request $request, string $invoiceNumber)
+    public function callback(Request $request, string $invoiceNumber)
     {
-        if (! SiteHelper::moduleEnabled('subscription')) abort(404);
+        if (! SiteHelper::isOwnerSite() && ! SiteHelper::moduleEnabled('subscription')) abort(404);
 
         $invoice = Invoice::where('invoice_number', $invoiceNumber)
             ->where('user_id', auth()->id())
@@ -52,7 +60,90 @@ class SubscriptionPaymentController extends Controller
                 ->with('info', 'این فاکتور قبلاً پردازش شده است.');
         }
 
-        // یافتن پلن: اول از pending subscription مرتبط با فاکتور، سپس از session
+        try {
+            $gateway = PaymentGatewayFactory::make();
+            $result  = $gateway->verify($invoice, $request->all());
+        } catch (GatewayException $e) {
+            Log::error('Subscription callback gateway exception', [
+                'invoice' => $invoiceNumber,
+                'error'   => $e->getMessage(),
+            ]);
+            return redirect()->route('account.subscriptions.index')
+                ->with('error', 'خطا در تأیید پرداخت: ' . $e->getMessage());
+        }
+
+        if (! $result->success) {
+            return redirect()->route('account.subscriptions.index')
+                ->with('error', 'پرداخت ناموفق بود: ' . $result->message);
+        }
+
+        return $this->activateSubscription($invoice, $result->refId, $result->cardPan);
+    }
+
+    /**
+     * تأیید دستی — فقط وقتی درگاه پیکربندی نشده (Fallback).
+     */
+    public function confirm(Request $request, string $invoiceNumber)
+    {
+        if (! SiteHelper::isOwnerSite() && ! SiteHelper::moduleEnabled('subscription')) abort(404);
+
+        // اگر درگاه پیکربندی شده، confirm دستی مجاز نیست
+        if (PaymentGatewayFactory::isConfigured()) {
+            return redirect()->route('subscriptions.pay', $invoiceNumber);
+        }
+
+        $invoice = Invoice::where('invoice_number', $invoiceNumber)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        if ($invoice->status === 'paid') {
+            return redirect()->route('account.subscriptions.index')
+                ->with('info', 'این فاکتور قبلاً پردازش شده است.');
+        }
+
+        return $this->activateSubscription($invoice, 'manual', '');
+    }
+
+    /**
+     * فعال‌سازی اشتراک توسط ادمین.
+     */
+    public function activate(Request $request, Invoice $invoice)
+    {
+        abort_if(! auth()->user()?->is_admin, 403);
+
+        $planId = $request->validate(['plan_id' => 'required|exists:subscription_plans,id'])['plan_id'];
+        $plan   = SubscriptionPlan::findOrFail($planId);
+        $user   = $invoice->user;
+
+        $invoice->update(['status' => 'paid', 'paid_at' => now()]);
+        $subscription = $this->service->subscribe($user, $plan, $invoice->id);
+
+        return response()->json(['success' => true, 'subscription_id' => $subscription->id]);
+    }
+
+    // ─── Private ──────────────────────────────────────────────────────────
+
+    private function redirectToGateway(Invoice $invoice)
+    {
+        $callbackUrl = $this->buildCallbackUrl($invoice->invoice_number);
+
+        try {
+            $gateway     = PaymentGatewayFactory::make();
+            $redirectUrl = $gateway->request($invoice, auth()->user(), $callbackUrl);
+        } catch (GatewayException $e) {
+            Log::error('Subscription gateway request failed', [
+                'invoice' => $invoice->invoice_number,
+                'error'   => $e->getMessage(),
+            ]);
+            return redirect()->route('account.subscriptions.index')
+                ->with('error', 'خطا در اتصال به درگاه پرداخت: ' . $e->getMessage());
+        }
+
+        return redirect()->away($redirectUrl);
+    }
+
+    private function activateSubscription(Invoice $invoice, string $refId, string $cardPan): \Illuminate\Http\RedirectResponse
+    {
         $pendingSub = Subscription::where('invoice_id', $invoice->id)
             ->where('user_id', auth()->id())
             ->first();
@@ -73,14 +164,14 @@ class SubscriptionPaymentController extends Controller
 
         session()->forget('pending_subscription_plan');
 
-        // ─── فعال‌سازی فوری — بدون نیاز به تأیید ادمین ───────────────────
-        // NOTE: وقتی ماژول bank_gateway اضافه شود، اینجا به ریدایرکت به درگاه تبدیل می‌شود.
         $user = auth()->user();
 
-        DB::transaction(function () use ($invoice, $pendingSub, $plan, $user) {
+        DB::transaction(function () use ($invoice, $pendingSub, $plan, $user, $refId, $cardPan) {
             $now = now();
-
-            $invoice->update(['status' => 'paid', 'paid_at' => $now]);
+            $invoice->update([
+                'status'  => 'paid',
+                'paid_at' => $now,
+            ]);
 
             if ($pendingSub) {
                 $pendingSub->update([
@@ -93,41 +184,34 @@ class SubscriptionPaymentController extends Controller
                     'user_id'         => $user->id,
                     'action'          => SubscriptionLog::ACTION_SUBSCRIBED,
                     'performed_by'    => 'user',
-                    'details'         => ['plan' => $plan->name, 'auto_activated' => true],
+                    'details'         => [
+                        'plan'      => $plan->name,
+                        'ref_id'    => $refId,
+                        'card_pan'  => $cardPan,
+                        'gateway'   => config('payment.gateway', 'manual'),
+                    ],
                 ]);
                 $this->service->notifyActivation($user, $plan, $pendingSub->fresh());
             } else {
-                $sub = Subscription::create([
-                    'user_id'              => $user->id,
-                    'subscription_plan_id' => $plan->id,
-                    'status'               => Subscription::STATUS_ACTIVE,
-                    'starts_at'            => $now,
-                    'ends_at'              => $now->copy()->addDays($plan->getDurationInDays()),
-                    'invoice_id'           => $invoice->id,
-                ]);
-                $this->service->notifyActivation($user, $plan, $sub);
+                $sub = $this->service->subscribe($user, $plan, $invoice->id);
             }
         });
 
-        return redirect()->route('account.subscriptions.index')
-            ->with('success', "اشتراک «{$plan->name}» با موفقیت فعال شد.");
+        $successMsg = "اشتراک «{$plan->name}» با موفقیت فعال شد.";
+        if ($refId && $refId !== 'manual') {
+            $successMsg .= " شماره پیگیری: {$refId}";
+        }
+
+        return redirect()->route('account.subscriptions.index')->with('success', $successMsg);
     }
 
-    /**
-     * فعال‌سازی اشتراک پس از تأیید پرداخت (توسط ادمین).
-     */
-    public function activate(Request $request, Invoice $invoice)
+    private function buildCallbackUrl(string $invoiceNumber): string
     {
-        abort_if(! auth()->user()?->is_admin, 403);
+        $base = config('payment.callback_url');
+        if (! empty($base)) {
+            return rtrim($base, '/') . '/' . $invoiceNumber;
+        }
 
-        $planId = $request->validate(['plan_id' => 'required|exists:subscription_plans,id'])['plan_id'];
-        $plan   = SubscriptionPlan::findOrFail($planId);
-        $user   = $invoice->user;
-
-        $invoice->update(['status' => 'paid', 'paid_at' => now()]);
-
-        $subscription = $this->service->subscribe($user, $plan, $invoice->id);
-
-        return response()->json(['success' => true, 'subscription_id' => $subscription->id]);
+        return route('subscriptions.callback', $invoiceNumber);
     }
 }
