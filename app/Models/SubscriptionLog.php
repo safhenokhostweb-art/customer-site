@@ -17,8 +17,10 @@ class SubscriptionLog extends Model
     public const ACTION_REMINDER_7D    = 'reminder_7d_sent';
     public const ACTION_REMINDER_1D    = 'reminder_1d_sent';
     public const ACTION_RENEWAL_COUPON = 'renewal_coupon_generated';
-    public const ACTION_AUTO_RENEWED   = 'auto_renewed';
-    public const ACTION_AUTO_RENEW_INVOICE = 'auto_renew_invoice_created';
+    public const ACTION_AUTO_RENEWED        = 'auto_renewed';
+    public const ACTION_AUTO_RENEW_INVOICE  = 'auto_renew_invoice_created';
+    public const ACTION_UPGRADED            = 'upgraded';
+    public const ACTION_DOWNGRADED          = 'downgraded';
 
     protected $fillable = [
         'subscription_id', 'user_id', 'action', 'details', 'performed_by',
@@ -48,6 +50,8 @@ class SubscriptionLog extends Model
             self::ACTION_TRIAL        => 'شروع آزمایشی',
             self::ACTION_REACTIVATED  => 'فعال‌سازی مجدد',
             self::ACTION_PLAN_CHANGED => 'تغییر پلن',
+            self::ACTION_UPGRADED     => 'ارتقاء پلن',
+            self::ACTION_DOWNGRADED   => 'تنزل پلن',
             default                   => $this->action,
         };
     }

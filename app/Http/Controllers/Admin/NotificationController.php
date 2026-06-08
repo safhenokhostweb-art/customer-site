@@ -20,7 +20,7 @@ class NotificationController extends Controller
     public function sendToUsersForm()
     {
         $userCount = User::count();
-        $users = User::orderBy('name')->get(['id', 'name', 'email', 'mobile', 'created_at']);
+        $users = User::orderBy('name')->get(['id', 'name', 'mobile', 'created_at']);
         return view('admin.notifications.send-users', compact('userCount', 'users'));
     }
 
@@ -49,18 +49,21 @@ class NotificationController extends Controller
             return back()->withInput()->with('error', 'هیچ کاربری برای ارسال انتخاب نشده است.');
         }
 
-        if ($request->hasFile('image') && ! $request->file('image')->isValid()) {
-            return back()->withInput()->with('error', 'فایل تصویر معتبر نیست یا حجم آن بیش از حد مجاز است.');
-        }
-
         $imageUrl = null;
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
+        $uploadedFile = $request->file('image');
+        if ($uploadedFile instanceof \Illuminate\Http\UploadedFile && $uploadedFile->isValid()) {
             $dir = 'notifications/' . date('Y/m');
-            // store() با hashName نام امن می‌سازد؛ storeAs(..., clientExtension خالی) می‌تواند به fopen با مسیر خالی منجر شود.
-            $path = $file->store($dir, 'uploads');
-            if (is_string($path) && $path !== '') {
-                $imageUrl = asset('uploads/' . ltrim(str_replace('\\', '/', $path), '/'));
+            $ext = $uploadedFile->guessExtension() ?: 'jpg';
+            $storagePath = $dir . '/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
+            // Use getPathname() instead of store() — on Windows, getRealPath() can return false
+            // for PHP temp files on junction-pointed paths, causing fopen() to throw ValueError.
+            $stream = fopen($uploadedFile->getPathname(), 'r');
+            if ($stream !== false) {
+                $stored = \Illuminate\Support\Facades\Storage::disk('uploads')->put($storagePath, $stream);
+                fclose($stream);
+                if ($stored) {
+                    $imageUrl = asset('uploads/' . $storagePath);
+                }
             }
         }
 

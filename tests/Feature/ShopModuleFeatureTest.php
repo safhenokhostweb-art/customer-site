@@ -86,11 +86,11 @@ class ShopModuleFeatureTest extends TestCase
                 ],
             ],
         ])->post(route('shop.checkout'), [
-            'customer_name' => 'کاربر تست',
-            'customer_email' => 'shop-test@example.com',
-            'customer_phone' => '09120000000',
+            'customer_name'    => 'کاربر تست',
+            'customer_mobile'  => '09120000000',
+            'customer_phone'   => '09120000000',
             'customer_address' => 'آدرس تست',
-            'note' => 'بدون توضیح',
+            'note'             => 'بدون توضیح',
         ])->assertRedirect(route('shop.index'));
 
         $this->assertDatabaseCount('orders', 1);
@@ -129,8 +129,8 @@ class ShopModuleFeatureTest extends TestCase
                 ],
             ],
         ])->post(route('shop.checkout'), [
-            'customer_name' => 'تست',
-            'customer_email' => 'v@test.com',
+            'customer_name'    => 'تست',
+            'customer_mobile'  => '09130000001',
             'customer_address' => 'آدرس',
         ])->assertRedirect(route('shop.index'));
 

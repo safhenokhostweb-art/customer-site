@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Subscription extends Model
 {
@@ -20,6 +21,7 @@ class Subscription extends Model
         'trial_ends_at', 'cancelled_at', 'cancellation_reason',
         'renewed_at', 'auto_renew', 'notes', 'pending_reason',
         'reminder_7d_sent_at', 'reminder_1d_sent_at',
+        'upgrade_from_subscription_id', 'credit_amount',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class Subscription extends Model
         'auto_renew'           => 'boolean',
         'reminder_7d_sent_at'  => 'datetime',
         'reminder_1d_sent_at'  => 'datetime',
+        'credit_amount'        => 'decimal:0',
     ];
 
     public function user(): BelongsTo
@@ -51,6 +54,26 @@ class Subscription extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(SubscriptionLog::class)->latest();
+    }
+
+    public function members(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionMember::class);
+    }
+
+    public function activeMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionMember::class)->where('status', SubscriptionMember::STATUS_ACTIVE);
+    }
+
+    public function upgradedFrom(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'upgrade_from_subscription_id');
+    }
+
+    public function upgradedTo(): HasOne
+    {
+        return $this->hasOne(Subscription::class, 'upgrade_from_subscription_id');
     }
 
     public function isActive(): bool

@@ -263,7 +263,7 @@ class Wave53ShopGuardsTest extends TestCase
         Setting::set('captcha_enabled', '0', 'captcha');
         Setting::set('shop_captcha_enabled', '0', 'captcha');
         $request = \Illuminate\Http\Request::create('/shop/checkout', 'POST');
-        $this->assertTrue(\App\Services\CaptchaService::validateShopCaptcha($request));
+        $this->assertTrue(app(\App\Services\CaptchaService::class)->validateShopCaptcha($request));
     }
 
     public function test_validate_shop_captcha_returns_true_for_authenticated_user_even_when_setting_on(): void
@@ -275,7 +275,7 @@ class Wave53ShopGuardsTest extends TestCase
         $this->actingAs($user);
         $request = \Illuminate\Http\Request::create('/shop/checkout', 'POST');
         // No captcha_answer provided, but user is authenticated → bypass.
-        $this->assertTrue(\App\Services\CaptchaService::validateShopCaptcha($request));
+        $this->assertTrue(app(\App\Services\CaptchaService::class)->validateShopCaptcha($request));
     }
 
     public function test_validate_shop_captcha_rejects_guest_without_answer_when_enabled(): void
@@ -289,7 +289,7 @@ class Wave53ShopGuardsTest extends TestCase
         $request = \Illuminate\Http\Request::create('/shop/checkout', 'POST', []);
         $request->setLaravelSession(app('session.store'));
         // No captcha_answer in request → expected to fail.
-        $this->assertFalse(\App\Services\CaptchaService::validateShopCaptcha($request));
+        $this->assertFalse(app(\App\Services\CaptchaService::class)->validateShopCaptcha($request));
     }
 
     public function test_validate_shop_captcha_accepts_correct_persian_answer(): void
@@ -301,7 +301,7 @@ class Wave53ShopGuardsTest extends TestCase
         Session::put('captcha_persian_answer', '۵۶۷۸');
         $request = \Illuminate\Http\Request::create('/shop/checkout', 'POST', ['captcha_answer' => '5678']);
         $request->setLaravelSession(app('session.store'));
-        $this->assertTrue(\App\Services\CaptchaService::validateShopCaptcha($request));
+        $this->assertTrue(app(\App\Services\CaptchaService::class)->validateShopCaptcha($request));
     }
 
     public function test_get_shop_captcha_config_returns_disabled_for_authenticated_user(): void
@@ -310,7 +310,7 @@ class Wave53ShopGuardsTest extends TestCase
         Setting::set('shop_captcha_enabled', '1', 'captcha');
         Setting::set('captcha_type', 'persian_number', 'captcha');
         $this->actingAs($this->user());
-        $cfg = \App\Services\CaptchaService::getShopCaptchaConfig();
+        $cfg = app(\App\Services\CaptchaService::class)->getShopCaptchaConfig();
         $this->assertFalse($cfg['enabled']);
     }
 
@@ -320,7 +320,7 @@ class Wave53ShopGuardsTest extends TestCase
         Setting::set('shop_captcha_enabled', '1', 'captcha');
         Setting::set('captcha_type', 'persian_number', 'captcha');
         Session::start();
-        $cfg = \App\Services\CaptchaService::getShopCaptchaConfig();
+        $cfg = app(\App\Services\CaptchaService::class)->getShopCaptchaConfig();
         $this->assertTrue($cfg['enabled']);
         $this->assertSame('persian_number', $cfg['type']);
         $this->assertNotEmpty($cfg['persian_code']);
@@ -330,7 +330,7 @@ class Wave53ShopGuardsTest extends TestCase
     {
         Setting::set('captcha_enabled', '1', 'captcha');
         Setting::set('shop_captcha_enabled', '0', 'captcha');
-        $cfg = \App\Services\CaptchaService::getShopCaptchaConfig();
+        $cfg = app(\App\Services\CaptchaService::class)->getShopCaptchaConfig();
         $this->assertFalse($cfg['enabled']);
     }
 
@@ -353,7 +353,7 @@ class Wave53ShopGuardsTest extends TestCase
 
         Cache::forget('settings');
         $this->assertSame('1', (string) Setting::get('shop_captcha_enabled', '0'));
-        $this->assertTrue(\App\Services\CaptchaService::isShopCaptchaEnabled());
+        $this->assertTrue(app(\App\Services\CaptchaService::class)->isShopCaptchaEnabled());
     }
 
     public function test_admin_captcha_update_clears_shop_captcha_when_unchecked(): void
@@ -410,7 +410,7 @@ class Wave53ShopGuardsTest extends TestCase
     {
         // No row inserted yet → defaults to '0'.
         $this->assertSame('0', (string) Setting::get('shop_captcha_enabled', '0'));
-        $this->assertFalse(\App\Services\CaptchaService::isShopCaptchaEnabled());
+        $this->assertFalse(app(\App\Services\CaptchaService::class)->isShopCaptchaEnabled());
     }
 
     public function test_existing_captcha_helpers_unchanged_for_auth_form_path(): void
@@ -419,8 +419,8 @@ class Wave53ShopGuardsTest extends TestCase
         Setting::set('captcha_enabled', '1', 'captcha');
         Setting::set('auth_captcha_enabled', '1', 'captcha');
         Setting::set('captcha_type', 'persian_number', 'captcha');
-        $this->assertTrue(\App\Services\CaptchaService::isAuthCaptchaEnabled());
-        $cfg = \App\Services\CaptchaService::getAuthCaptchaConfig();
+        $this->assertTrue(app(\App\Services\CaptchaService::class)->isAuthCaptchaEnabled());
+        $cfg = app(\App\Services\CaptchaService::class)->getAuthCaptchaConfig();
         $this->assertTrue($cfg['enabled']);
         $this->assertSame('persian_number', $cfg['type']);
     }

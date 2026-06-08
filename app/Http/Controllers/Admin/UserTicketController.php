@@ -69,7 +69,7 @@ class UserTicketController extends Controller
             ->get(['id', 'status', 'priority', 'assigned_to']);
 
         $agentUsers  = User::where('is_admin', true)->get(['id', 'name']);
-        $regularUsers = User::where('is_admin', false)->where('is_site_admin', false)
+        $regularUsers = User::where('is_admin', false)
             ->orderBy('name')->get(['id', 'name', 'mobile']);
 
         $stats = [

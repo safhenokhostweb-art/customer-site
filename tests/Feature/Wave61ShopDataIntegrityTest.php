@@ -140,7 +140,7 @@ class Wave61ShopDataIntegrityTest extends TestCase
             Order::query()->create([
                 'number' => $number,
                 'customer_name' => 'Bench ' . $i,
-                'customer_email' => 'bench' . $i . '@example.com',
+                'customer_mobile' => '091' . str_pad($i, 8, '0', STR_PAD_LEFT),
                 'customer_address' => 'addr',
                 'subtotal' => 1000,
                 'total' => 1000,
@@ -160,12 +160,12 @@ class Wave61ShopDataIntegrityTest extends TestCase
         $today = date('Ymd');
         Order::query()->create([
             'number' => 'ORD-' . $today . '-000001',
-            'customer_name' => 'A', 'customer_email' => 'a@x.com', 'customer_address' => '-',
+            'customer_name' => 'A', 'customer_mobile' => '09100000001', 'customer_address' => '-',
             'subtotal' => 1, 'total' => 1, 'status' => Order::STATUS_PENDING,
         ]);
         Order::query()->create([
             'number' => 'ORD-' . $today . '-000002',
-            'customer_name' => 'B', 'customer_email' => 'b@x.com', 'customer_address' => '-',
+            'customer_name' => 'B', 'customer_mobile' => '09100000002', 'customer_address' => '-',
             'subtotal' => 1, 'total' => 1, 'status' => Order::STATUS_PENDING,
         ]);
 
@@ -204,8 +204,8 @@ class Wave61ShopDataIntegrityTest extends TestCase
                 ],
             ],
         ])->post(route('shop.checkout'), [
-            'customer_name' => 'Bundle Test',
-            'customer_email' => 'bundle@example.com',
+            'customer_name'    => 'Bundle Test',
+            'customer_mobile'  => '09140000001',
             'customer_address' => 'addr',
         ]);
 
@@ -239,8 +239,8 @@ class Wave61ShopDataIntegrityTest extends TestCase
                 ],
             ],
         ])->post(route('shop.checkout'), [
-            'customer_name' => 'Variant Test',
-            'customer_email' => 'v@example.com',
+            'customer_name'    => 'Variant Test',
+            'customer_mobile'  => '09140000002',
             'customer_address' => 'addr',
         ])->assertRedirect(route('shop.index'));
 
@@ -260,16 +260,16 @@ class Wave61ShopDataIntegrityTest extends TestCase
             'number' => 'ORD-' . date('Ymd') . '-OWN001',
             'user_id' => $user->id,
             'customer_name' => 'me',
-            'customer_email' => $user->email,
+            'customer_mobile' => $user->mobile,
             'customer_address' => 'a',
             'subtotal' => 100, 'total' => 100, 'status' => Order::STATUS_PENDING,
         ]);
-        // Guest order with matching email but no user_id (pre-Wave-6.1 IDOR)
+        // Guest order with matching mobile but no user_id (pre-Wave-6.1 IDOR)
         $guestLeak = Order::query()->create([
             'number' => 'ORD-' . date('Ymd') . '-LEAK01',
             'user_id' => null,
             'customer_name' => 'guest',
-            'customer_email' => $user->email,
+            'customer_mobile' => $user->mobile,
             'customer_address' => 'b',
             'subtotal' => 200, 'total' => 200, 'status' => Order::STATUS_PENDING,
         ]);
@@ -291,7 +291,7 @@ class Wave61ShopDataIntegrityTest extends TestCase
             'number' => 'ORD-' . date('Ymd') . '-LEAK02',
             'user_id' => null,
             'customer_name' => 'guest',
-            'customer_email' => $user->email,
+            'customer_mobile' => $user->mobile,
             'customer_address' => 'b',
             'subtotal' => 200, 'total' => 200, 'status' => Order::STATUS_PENDING,
         ]);
@@ -583,7 +583,7 @@ class Wave61ShopDataIntegrityTest extends TestCase
         return Order::query()->create([
             'number' => Order::generateNumber(),
             'customer_name' => 'Test ' . uniqid(),
-            'customer_email' => 'order_' . uniqid() . '@example.com',
+            'customer_mobile' => '09100000099',
             'customer_address' => 'Test Address',
             'subtotal' => 10000,
             'total' => 10000,

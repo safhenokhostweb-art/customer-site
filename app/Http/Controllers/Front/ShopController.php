@@ -123,6 +123,18 @@ class ShopController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
+        if ($product->early_access) {
+            $viewer = auth()->user();
+            if (! app(MembershipBenefitService::class)->hasEarlyAccess($viewer)) {
+                if (! $viewer) {
+                    return redirect()->route('login')
+                        ->with('error', 'برای مشاهده این محصول باید وارد شوید و اشتراک با دسترسی زودهنگام داشته باشید.');
+                }
+                return redirect()->route('account.subscriptions.plans')
+                    ->with('error', 'این محصول فقط برای اعضای دارای دسترسی زودهنگام در دسترس است.');
+            }
+        }
+
         $sessionKey = 'shop_viewed_' . $product->id;
         if (! $request->session()->has($sessionKey)) {
             $product->increment('views_count');
@@ -198,6 +210,11 @@ class ShopController extends Controller
             'quantity' => 'nullable|integer|min:1',
         ]);
         $product = Product::active()->with(['variants', 'bundleLines.child'])->findOrFail($request->product_id);
+
+        if ($product->early_access && ! app(MembershipBenefitService::class)->hasEarlyAccess(auth()->user())) {
+            return back()->with('error', 'این محصول فقط برای اعضای دارای دسترسی زودهنگام قابل خرید است.');
+        }
+
         $variantId = $request->filled('product_variant_id') ? (int) $request->product_variant_id : null;
         $variant = null;
         if ($variantId) {

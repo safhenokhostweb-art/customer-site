@@ -107,6 +107,18 @@ class MembershipBenefitService
         return (bool) ($this->getActivePlan($user)?->vip_support ?? false);
     }
 
+    /**
+     * Quick check: does the user have early access on their active plan?
+     */
+    public function hasEarlyAccess(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return (bool) ($this->getActivePlan($user)?->early_access ?? false);
+    }
+
     // ─── Private ─────────────────────────────────────────────────────────────
 
     /**

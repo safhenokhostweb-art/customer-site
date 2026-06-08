@@ -23,6 +23,7 @@ class MembershipPoint extends Model
     public const SOURCE_REFERRAL       = 'referral';
     public const SOURCE_CHECKOUT_SPEND = 'checkout_spend';
     public const SOURCE_ADMIN          = 'admin';
+    public const SOURCE_PLAN_CHANGE    = 'plan_change';
 
     protected $fillable = [
         'user_id', 'amount', 'balance_after', 'type', 'source',
@@ -81,6 +82,7 @@ class MembershipPoint extends Model
             self::SOURCE_REFERRAL       => 'دعوت دوست',
             self::SOURCE_CHECKOUT_SPEND => 'استفاده در خرید',
             self::SOURCE_ADMIN          => 'تنظیم دستی',
+            self::SOURCE_PLAN_CHANGE    => 'تغییر پلن اشتراک',
             default                     => $this->source,
         };
     }

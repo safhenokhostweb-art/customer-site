@@ -252,7 +252,8 @@ class ProductController extends Controller
             'faq_items.*.a' => 'nullable|string',
             'size_chart_url' => 'nullable|string|max:500',
             'size_chart_html' => 'nullable|string',
-            'is_new' => 'nullable|boolean',
+            'is_new'       => 'nullable|boolean',
+            'early_access' => 'nullable|boolean',
             'sale_ends_at' => 'nullable|date',
             'low_stock_threshold' => 'nullable|integer|min:0',
             'warranty_text' => 'nullable|string',
@@ -277,7 +278,8 @@ class ProductController extends Controller
         } else {
             $data['bundle_fixed_price'] = null;
         }
-        $data['is_new'] = $request->boolean('is_new');
+        $data['is_new']       = $request->boolean('is_new');
+        $data['early_access'] = $request->boolean('early_access');
         $data['allow_backorder'] = $request->boolean('allow_backorder');
         $data['is_bundle'] = $request->boolean('is_bundle');
         $data['min_order_qty'] = max(1, (int) ($data['min_order_qty'] ?? 1));

@@ -122,18 +122,74 @@
 {{-- عملیات --}}
 <div class="subdetail__actions">
     <a href="{{ route('account.subscriptions.index') }}" class="subdetail__btn subdetail__btn--back">← بازگشت</a>
+
     @if($subscription->isPending())
-    <div class="subdetail__info-notice">
+    <div class="subdetail__info-notice" style="width:100%">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>این درخواست اشتراک در انتظار تأیید ادمین است. در صورت نیاز با پشتیبانی تماس بگیرید.</span>
+        <span>این درخواست اشتراک در انتظار تأیید پرداخت است.</span>
     </div>
+
     @elseif($subscription->isActive() || $subscription->isInTrial())
-    <div class="subdetail__info-notice subdetail__info-notice--green">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>اشتراک شما فعال است. برای لغو یا تغییر اشتراک با پشتیبانی تماس بگیرید.</span>
+
+        {{-- تغییر پلن --}}
+        <a href="{{ route('account.subscriptions.upgrade-plans', $subscription) }}"
+           class="subdetail__btn subdetail__btn--upgrade">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+            تغییر / ارتقاء پلن
+        </a>
+
+        {{-- مدیریت اعضای گروه --}}
+        @if(($subscription->plan->max_users ?? 0) > 1)
+        <a href="{{ route('account.subscriptions.members', $subscription) }}"
+           class="subdetail__btn subdetail__btn--members">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            اعضای گروه
+        </a>
+        @endif
+
+        {{-- تمدید خودکار --}}
+        <form method="POST" action="{{ route('account.subscriptions.toggle-auto-renew', $subscription) }}">
+            @csrf
+            <button type="submit"
+                class="subdetail__btn {{ $subscription->auto_renew ? 'subdetail__btn--autorenew-on' : 'subdetail__btn--autorenew-off' }}"
+                title="{{ $subscription->auto_renew ? 'غیرفعال کردن تمدید خودکار' : 'فعال کردن تمدید خودکار' }}">
+                @if($subscription->auto_renew)
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    تمدید خودکار: فعال
+                @else
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    تمدید خودکار: غیرفعال
+                @endif
+            </button>
+        </form>
+
+        {{-- لغو اشتراک --}}
+        <form method="POST" action="{{ route('account.subscriptions.cancel', $subscription) }}"
+              onsubmit="return confirm('آیا مطمئن هستید؟ اشتراک شما لغو خواهد شد.')">
+            @csrf
+            <button type="submit" class="subdetail__btn subdetail__btn--cancel">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                لغو اشتراک
+            </button>
+        </form>
+
+    @elseif($subscription->isExpired())
+    {{-- ─── CTA منقضی شده ─────────────────────────────────────────────── --}}
+    <div class="subdetail__expired-cta">
+        <div class="subdetail__expired-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28" style="color:#f59e0b"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3C6.477 3 2 7.477 2 12s4.477 9 10 9 10-4.477 10-9S17.523 3 12 3z"/></svg>
+        </div>
+        <div class="subdetail__expired-body">
+            <p class="subdetail__expired-title">اشتراک شما منقضی شده است</p>
+            <p class="subdetail__expired-sub">برای ادامه استفاده از امکانات، یک پلن جدید انتخاب کنید.</p>
+        </div>
+        <a href="{{ route('account.subscriptions.plans') }}" class="subdetail__btn subdetail__btn--renew">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="vertical-align:middle;margin-left:.3rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            تمدید / انتخاب پلن جدید
+        </a>
     </div>
-    @endif
-    @if(! $subscription->isActive() && ! $subscription->isInTrial())
+
+    @else
     <a href="{{ route('account.subscriptions.plans') }}" class="subdetail__btn subdetail__btn--plans">مشاهده پلن‌ها</a>
     @endif
 </div>
@@ -210,8 +266,29 @@
 .subdetail__btn--cancel:hover { background: #ffe4e6; }
 .subdetail__btn--plans  { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
 .subdetail__btn--plans:hover { background: #e0e7ff; }
+.subdetail__btn--upgrade { background: #f0fdf4; color: #166534; border-color: #86efac; }
+.subdetail__btn--upgrade:hover { background: #dcfce7; }
+.subdetail__btn--members { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+.subdetail__btn--members:hover { background: #dbeafe; }
 .subdetail__info-notice { display:flex; align-items:center; gap:.5rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:.625rem; padding:.5rem .875rem; font-size:.8rem; color:#1e40af; width:100%; }
 .subdetail__info-notice--green { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+
+/* auto-renew toggle */
+.subdetail__btn--autorenew-on  { background:#f0fdf4; color:#166534; border-color:#86efac; }
+.subdetail__btn--autorenew-on:hover  { background:#dcfce7; }
+.subdetail__btn--autorenew-off { background:#fafafa; color:#64748b; border-color:#e2e8f0; }
+.subdetail__btn--autorenew-off:hover { background:#f1f5f9; }
+
+/* renew CTA */
+.subdetail__btn--renew { background:#f59e0b; color:#fff; border-color:#f59e0b; -ms-flex-negative:0; flex-shrink:0; }
+.subdetail__btn--renew:hover { background:#d97706; border-color:#d97706; }
+
+/* expired CTA block */
+.subdetail__expired-cta { display:-webkit-box; display:-ms-flexbox; display:flex; -webkit-box-align:center; -ms-flex-align:center; align-items:center; gap:1rem; width:100%; background:#fffbeb; border:1px solid #fde68a; border-radius:.875rem; padding:.875rem 1.125rem; -ms-flex-wrap:wrap; flex-wrap:wrap; }
+.subdetail__expired-icon { -ms-flex-negative:0; flex-shrink:0; }
+.subdetail__expired-body { -webkit-box-flex:1; -ms-flex:1; flex:1; min-width:160px; }
+.subdetail__expired-title { font-size:.9rem; font-weight:700; color:#92400e; margin:0 0 .2rem; }
+.subdetail__expired-sub   { font-size:.78rem; color:#b45309; margin:0; }
 </style>
 @endpush
 

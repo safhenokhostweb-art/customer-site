@@ -30,8 +30,8 @@ class ModuleInvoiceTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->post(route('admin.invoices.store'), [
-            'customer_name' => 'علی احمدی',
-            'customer_email' => 'ali@test.com',
+            'customer_name'   => 'علی احمدی',
+            'customer_mobile' => '09120000001',
             'items' => [
                 ['title' => 'محصول ۱', 'price' => 10000, 'quantity' => 2],
             ],

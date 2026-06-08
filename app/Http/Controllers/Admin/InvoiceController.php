@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
@@ -63,6 +64,14 @@ class InvoiceController extends Controller
     {
         $invoice->load('items');
         return view('admin.invoices.show', compact('invoice'));
+    }
+
+    public function download(Invoice $invoice)
+    {
+        $invoice->load('items');
+        $pdf = Pdf::loadView('invoice.pdf', compact('invoice'))
+            ->setPaper('a4', 'portrait');
+        return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
     }
 
     public function destroy(Invoice $invoice)

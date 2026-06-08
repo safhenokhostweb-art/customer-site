@@ -117,6 +117,24 @@ class MembershipPointsService
     }
 
     /**
+     * کسب امتیاز از اعتبار باقیمانده هنگام تغییر به پلن ارزان‌تر.
+     */
+    public function earnFromPlanChange(User $user, Subscription $subscription, int $points): ?MembershipPoint
+    {
+        if ($points <= 0) return null;
+
+        return $this->earn(
+            $user,
+            $points,
+            MembershipPoint::TYPE_EARN,
+            MembershipPoint::SOURCE_PLAN_CHANGE,
+            "اعتبار باقیمانده از تغییر پلن به «{$subscription->plan?->name}»",
+            $subscription->id,
+            Subscription::class
+        );
+    }
+
+    /**
      * کسب امتیاز برای معرفی کاربر جدید (هر دو طرف).
      */
     public function earnFromReferral(User $user, int $points, User $otherUser): ?MembershipPoint

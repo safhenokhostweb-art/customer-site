@@ -62,7 +62,15 @@ class SubscriptionPaymentController extends Controller
 
         try {
             $gateway = PaymentGatewayFactory::make();
-            $result  = $gateway->verify($invoice, $request->all());
+
+            // اعتبارسنجی امضا / فرمت callback — قبل از verify
+            $gateway->validateCallback(
+                $request->all(),
+                array_change_key_case($request->headers->all(), CASE_LOWER),
+                $request->getContent()
+            );
+
+            $result = $gateway->verify($invoice, $request->all());
         } catch (GatewayException $e) {
             Log::error('Subscription callback gateway exception', [
                 'invoice' => $invoiceNumber,
@@ -166,7 +174,10 @@ class SubscriptionPaymentController extends Controller
 
         $user = auth()->user();
 
-        DB::transaction(function () use ($invoice, $pendingSub, $plan, $user, $refId, $cardPan) {
+        $upgradeFromId    = $pendingSub?->upgrade_from_subscription_id;
+        $creditAmount     = (float) ($pendingSub?->credit_amount ?? 0);
+
+        DB::transaction(function () use ($invoice, $pendingSub, $plan, $user, $refId, $cardPan, $upgradeFromId) {
             $now = now();
             $invoice->update([
                 'status'  => 'paid',
@@ -174,6 +185,10 @@ class SubscriptionPaymentController extends Controller
             ]);
 
             if ($pendingSub) {
+                $action = $upgradeFromId
+                    ? SubscriptionLog::ACTION_UPGRADED
+                    : SubscriptionLog::ACTION_SUBSCRIBED;
+
                 $pendingSub->update([
                     'status'    => Subscription::STATUS_ACTIVE,
                     'starts_at' => $now,
@@ -182,20 +197,56 @@ class SubscriptionPaymentController extends Controller
                 SubscriptionLog::create([
                     'subscription_id' => $pendingSub->id,
                     'user_id'         => $user->id,
-                    'action'          => SubscriptionLog::ACTION_SUBSCRIBED,
+                    'action'          => $action,
                     'performed_by'    => 'user',
                     'details'         => [
-                        'plan'      => $plan->name,
-                        'ref_id'    => $refId,
-                        'card_pan'  => $cardPan,
-                        'gateway'   => config('payment.gateway', 'manual'),
+                        'plan'     => $plan->name,
+                        'ref_id'   => $refId,
+                        'card_pan' => $cardPan,
+                        'gateway'  => config('payment.gateway', 'manual'),
                     ],
                 ]);
+
+                // اگر ارتقاء است، اشتراک قدیمی را cancel کن
+                if ($upgradeFromId) {
+                    $oldSub = Subscription::find($upgradeFromId);
+                    if ($oldSub && $oldSub->user_id === $user->id && $oldSub->isActive()) {
+                        $oldSub->update([
+                            'status'              => Subscription::STATUS_CANCELLED,
+                            'cancelled_at'        => $now,
+                            'cancellation_reason' => 'تغییر پلن به «' . $plan->name . '»',
+                        ]);
+                        SubscriptionLog::create([
+                            'subscription_id' => $oldSub->id,
+                            'user_id'         => $user->id,
+                            'action'          => SubscriptionLog::ACTION_CANCELLED,
+                            'performed_by'    => 'system',
+                            'details'         => ['reason' => 'plan_change'],
+                        ]);
+                        // کش benefit اعضای گروه قدیمی را flush کن
+                        $this->service->invalidateGroupMemberCaches($oldSub);
+                    }
+                }
+
                 $this->service->notifyActivation($user, $plan, $pendingSub->fresh());
             } else {
                 $sub = $this->service->subscribe($user, $plan, $invoice->id);
             }
         });
+
+        // اعتبار مازاد → امتیاز (خارج از transaction)
+        if ($upgradeFromId && $creditAmount > 0 && $pendingSub) {
+            $leftover       = max(0.0, $creditAmount - $plan->getEffectivePrice());
+            $leftoverPoints = (int) floor($leftover / \App\Services\MembershipPointsService::EARN_PER_TOMAN);
+            if ($leftoverPoints > 0) {
+                try {
+                    app(\App\Services\MembershipPointsService::class)
+                        ->earnFromPlanChange($user, $pendingSub->fresh(), $leftoverPoints);
+                } catch (\Throwable $e) {
+                    Log::warning('Upgrade payment: leftover credit to points failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         $successMsg = "اشتراک «{$plan->name}» با موفقیت فعال شد.";
         if ($refId && $refId !== 'manual') {

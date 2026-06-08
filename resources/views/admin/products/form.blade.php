@@ -94,6 +94,9 @@
         <label class="admin-form-inline-check"><input type="checkbox" name="is_new" value="1" @checked(old('is_new', $p->is_new ?? false))> برچسب «جدید»</label>
     </div>
     <div class="form-group">
+        <label class="admin-form-inline-check"><input type="checkbox" name="early_access" value="1" @checked(old('early_access', $p->early_access ?? false))> دسترسی زودهنگام — فقط اعضای با پلن early_access می‌توانند ببینند</label>
+    </div>
+    <div class="form-group">
         <label class="form-label" for="product-sale-ends-display">پایان حراج (شمسی، اختیاری)</label>
         <input type="text" id="product-sale-ends-display" class="form-input w-full max-w-md" value="{{ $saleEndsDisplay }}" placeholder="۱۴۰۴/۰۱/۰۱ ۱۴:۳۰" autocomplete="off" dir="ltr">
         <input type="hidden" id="product-sale-ends-hidden" name="sale_ends_at" value="{{ $saleEndsIso }}">

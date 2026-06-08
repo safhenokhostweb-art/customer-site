@@ -128,6 +128,15 @@ Route::middleware('install.check')->group(function () {
         Route::delete('/subscriptions/{subscription}/delete-pending', [AccountSubscriptionController::class, 'deletePending'])->name('subscriptions.delete-pending');
         Route::get('/subscriptions/{subscription}', [AccountSubscriptionController::class, 'show'])->name('subscriptions.show');
         Route::post('/subscriptions/{subscription}/cancel', [AccountSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+        Route::post('/subscriptions/{subscription}/toggle-auto-renew', [AccountSubscriptionController::class, 'toggleAutoRenew'])->name('subscriptions.toggle-auto-renew');
+        Route::get('/subscriptions/{subscription}/upgrade-plans', [AccountSubscriptionController::class, 'upgradePlans'])->name('subscriptions.upgrade-plans');
+        Route::post('/subscriptions/{subscription}/upgrade', [AccountSubscriptionController::class, 'upgrade'])->name('subscriptions.upgrade');
+        // Group Subscription
+        Route::get('/subscriptions/{subscription}/members', [\App\Http\Controllers\Account\GroupSubscriptionController::class, 'index'])->name('subscriptions.members');
+        Route::post('/subscriptions/{subscription}/members/invite', [\App\Http\Controllers\Account\GroupSubscriptionController::class, 'invite'])->name('subscriptions.members.invite');
+        Route::post('/subscriptions/{subscription}/members/{member}/remove', [\App\Http\Controllers\Account\GroupSubscriptionController::class, 'remove'])->name('subscriptions.members.remove');
+        Route::post('/subscriptions/invites/{member}/accept', [\App\Http\Controllers\Account\GroupSubscriptionController::class, 'accept'])->name('subscriptions.invites.accept');
+        Route::post('/subscriptions/invites/{member}/reject', [\App\Http\Controllers\Account\GroupSubscriptionController::class, 'reject'])->name('subscriptions.invites.reject');
         Route::get('/forms', [AccountFormController::class, 'index'])->name('forms.index');
         Route::get('/notifications', [AccountNotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/read', [AccountNotificationController::class, 'markAsRead'])->name('notifications.read');
@@ -189,6 +198,7 @@ Route::middleware('install.check')->group(function () {
     Route::middleware('module:invoice')->group(function () {
         Route::get('/invoice/{invoiceNumber}', [FrontInvoiceController::class, 'show'])->name('invoice.show');
         Route::get('/invoice/{invoiceNumber}/pay', [FrontInvoiceController::class, 'pay'])->name('invoice.pay');
+        Route::get('/invoice/{invoiceNumber}/pdf', [FrontInvoiceController::class, 'download'])->name('invoice.download');
     });
     Route::middleware(['module:subscription', 'auth'])->group(function () {
         Route::get('/subscription/pay/{invoiceNumber}', [\App\Http\Controllers\Front\SubscriptionPaymentController::class, 'pay'])->name('subscriptions.pay');
@@ -338,6 +348,13 @@ Route::middleware('install.check')->group(function () {
             Route::delete('subscribers/{subscriber}/destroy', [\App\Http\Controllers\Admin\SubscriberController::class, 'destroyRequest'])->name('subscribers.destroy');
             Route::delete('subscribers/{subscriber}', [\App\Http\Controllers\Admin\SubscriberController::class, 'destroy'])->name('subscribers.delete');
             Route::post('subscribers/{subscriber}/activate-free', [\App\Http\Controllers\Admin\SubscriberController::class, 'activateFree'])->name('subscribers.activate-free');
+            Route::post('subscribers/{subscriber}/extend', [\App\Http\Controllers\Admin\SubscriberController::class, 'extend'])->name('subscribers.extend');
+            Route::post('subscribers/{subscriber}/change-plan', [\App\Http\Controllers\Admin\SubscriberController::class, 'changePlan'])->name('subscribers.change-plan');
+            Route::delete('subscribers/{subscriber}/members/{member}', [\App\Http\Controllers\Admin\SubscriberController::class, 'removeMember'])->name('subscribers.members.remove');
+        });
+        Route::middleware(['permission:subscription'])->group(function () {
+            Route::resource('webhooks', \App\Http\Controllers\Admin\WebhookController::class)->parameters(['webhooks' => 'webhook']);
+            Route::post('webhooks/{webhook}/rotate-secret', [\App\Http\Controllers\Admin\WebhookController::class, 'rotateSecret'])->name('webhooks.rotate-secret');
         });
         Route::middleware(['module:whatsapp', 'permission:whatsapp'])->group(function () {
             Route::get('whatsapp', [MessagingController::class, 'index'])->name('whatsapp.index');
@@ -356,6 +373,7 @@ Route::middleware('install.check')->group(function () {
         });
         Route::middleware(['module:invoice', 'permission:invoice'])->group(function () {
             Route::resource('invoices', AdminInvoiceController::class)->except('edit', 'update');
+            Route::get('invoices/{invoice}/pdf', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');
         });
         Route::middleware(['module:business_card', 'permission:business_card'])->group(function () {
             Route::resource('business-cards', BusinessCardController::class)->parameters(['business-cards' => 'businessCard']);

@@ -59,6 +59,33 @@ class IdpayGateway implements PaymentGatewayInterface
         return $link;
     }
 
+    /**
+     * اعتبارسنجی امضای HMAC-SHA256 که IDPay در هدر X-IDPAY-SIGNATURE می‌فرستد.
+     *
+     * IDPay بدنه خام درخواست را با API Key رمزنگاری می‌کند:
+     *   signature = HMAC-SHA256(raw_body, api_key)
+     *
+     * در حالت sandbox اعتبارسنجی انجام نمی‌شود — IDPay sandbox امضا نمی‌فرستد.
+     */
+    public function validateCallback(array $params, array $headers, string $rawBody): void
+    {
+        if ($this->sandbox) {
+            return; // sandbox: IDPay signature is not reliable
+        }
+
+        $receivedSig = $this->extractHeader($headers, 'x-idpay-signature');
+
+        if ($receivedSig === null || $receivedSig === '') {
+            throw new GatewayException('هدر X-IDPAY-SIGNATURE در callback آیدی‌پی وجود ندارد.');
+        }
+
+        $expected = hash_hmac('sha256', $rawBody, $this->apiKey);
+
+        if (! hash_equals($expected, strtolower($receivedSig))) {
+            throw new GatewayException('امضای callback آیدی‌پی نامعتبر است.');
+        }
+    }
+
     public function verify(Invoice $invoice, array $params): PaymentResult
     {
         $status = (int) ($params['status'] ?? 0);
@@ -95,6 +122,22 @@ class IdpayGateway implements PaymentGatewayInterface
         }
 
         return PaymentResult::fail($this->translateStatus($verifyStatus));
+    }
+
+    /**
+     * هدر را از آرایه headers استخراج می‌کند.
+     * Laravel هر هدر را به‌صورت array برمی‌گرداند — اولین مقدار را می‌گیریم.
+     */
+    private function extractHeader(array $headers, string $name): ?string
+    {
+        $lowered = array_change_key_case($headers, CASE_LOWER);
+        $value   = $lowered[$name] ?? null;
+
+        if ($value === null) {
+            return null;
+        }
+
+        return is_array($value) ? (string) ($value[0] ?? '') : (string) $value;
     }
 
     private function headers(): array

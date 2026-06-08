@@ -100,7 +100,15 @@
                         <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 3rem;">📦</div>
                     @endif
                 </div>
-                <h2 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 0.5rem;">{{ $product->title }}</h2>
+                <h2 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 0.35rem;">{{ $product->title }}</h2>
+                @if($product->early_access)
+                <div style="margin-bottom:0.4rem">
+                    <span style="display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:9999px;background:#fef3c7;color:#b45309;white-space:nowrap">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                        دسترسی زودهنگام
+                    </span>
+                </div>
+                @endif
                 @if($product->tags->isNotEmpty())
                     <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.35rem;">{{ $product->tags->pluck('name')->implode('، ') }}</p>
                 @endif

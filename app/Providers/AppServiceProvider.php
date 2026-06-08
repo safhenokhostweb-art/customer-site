@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         // Membership Benefits Engine
         $this->app->singleton(\App\Services\MembershipBenefitService::class);
         $this->app->singleton(\App\Services\MembershipPointsService::class);
+        $this->app->singleton(\App\Services\GroupSubscriptionService::class);
 
         // PHASE M3.2 — DOMAIN A: Tenant Support Runtime
         $this->app->singleton(\App\Services\TenantSupportRuntime\TenantChannelRegistry::class);

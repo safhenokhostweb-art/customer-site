@@ -316,7 +316,8 @@ class SubscriptionPaymentGatewayTest extends TestCase
 
         [$user, $invoice, $plan] = $this->makeUserAndInvoice(true);
 
-        $callbackUrl = route('subscriptions.callback', $invoice->invoice_number) . '?Status=OK&Authority=AXXX';
+        $callbackUrl = route('subscriptions.callback', $invoice->invoice_number)
+            . '?Status=OK&Authority=A' . str_repeat('0', 35); // valid Zarinpal Authority format
         $response = $this->actingAs($user)->get($callbackUrl);
 
         $response->assertRedirect(route('account.subscriptions.index'));
@@ -337,7 +338,8 @@ class SubscriptionPaymentGatewayTest extends TestCase
 
         [$user, $invoice] = $this->makeUserAndInvoice();
 
-        $callbackUrl = route('subscriptions.callback', $invoice->invoice_number) . '?Status=NOK&Authority=AXXX';
+        $callbackUrl = route('subscriptions.callback', $invoice->invoice_number)
+            . '?Status=NOK&Authority=A' . str_repeat('0', 35); // valid format, but Status=NOK → verify returns fail
         $response = $this->actingAs($user)->get($callbackUrl);
 
         $response->assertRedirect(route('account.subscriptions.index'));

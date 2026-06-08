@@ -10,10 +10,26 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use SaaSPlatform\Modules\Tickets\Models\Ticket;
+use App\Services\WebhookDispatchService;
 
 class SubscriptionService
 {
-    public function __construct(private SmsService $sms) {}
+    // Maps SubscriptionLog actions to webhook event types
+    private const WEBHOOK_EVENT_MAP = [
+        SubscriptionLog::ACTION_SUBSCRIBED  => 'subscription.created',
+        SubscriptionLog::ACTION_TRIAL       => 'subscription.created',
+        SubscriptionLog::ACTION_RENEWED     => 'subscription.renewed',
+        SubscriptionLog::ACTION_AUTO_RENEWED => 'subscription.renewed',
+        SubscriptionLog::ACTION_UPGRADED    => 'subscription.upgraded',
+        SubscriptionLog::ACTION_DOWNGRADED  => 'subscription.downgraded',
+        SubscriptionLog::ACTION_CANCELLED   => 'subscription.cancelled',
+        SubscriptionLog::ACTION_EXPIRED     => 'subscription.expired',
+    ];
+
+    public function __construct(
+        private SmsService $sms,
+        private WebhookDispatchService $webhooks,
+    ) {}
 
     /**
      * Subscribe a user to a plan (free plans activate immediately).
@@ -125,6 +141,7 @@ class SubscriptionService
         ]);
 
         $this->notifyCancelled($subscription->user, $subscription->plan);
+        $this->invalidateGroupMemberCaches($subscription);
 
         return true;
     }
@@ -182,6 +199,7 @@ class SubscriptionService
         $this->log($subscription, SubscriptionLog::ACTION_EXPIRED, null, 'system');
 
         $this->notifyExpired($subscription->user, $subscription->plan);
+        $this->invalidateGroupMemberCaches($subscription);
 
         return true;
     }
@@ -221,11 +239,22 @@ class SubscriptionService
     }
 
     /**
-     * Get user's active plan (shortcut).
+     * Get user's active plan — checks own subscription first, then group membership.
      */
     public function getActivePlan(User $user): ?SubscriptionPlan
     {
-        return $this->getActive($user)?->plan;
+        $ownPlan = $this->getActive($user)?->plan;
+        if ($ownPlan) return $ownPlan;
+
+        // group membership fallback
+        try {
+            $groupSub = app(\App\Services\GroupSubscriptionService::class)
+                ->getActiveMemberSubscription($user);
+            return $groupSub?->plan;
+        } catch (\Throwable $e) {
+            Log::warning('SubscriptionService: group plan lookup failed', ['error' => $e->getMessage()]);
+            return null;
+        }
     }
 
     /**
@@ -238,6 +267,163 @@ class SubscriptionService
             ->whereIn('status', [Subscription::STATUS_ACTIVE, Subscription::STATUS_TRIAL])
             ->where('ends_at', '>', now())
             ->exists();
+    }
+
+    /**
+     * محاسبه اعتبار باقیمانده اشتراک بر اساس روزهای مانده (prorated).
+     * اشتراک‌های رایگان یا Trial کردیتی ندارند.
+     */
+    public function calculateCredit(Subscription $subscription): float
+    {
+        if ($subscription->status !== Subscription::STATUS_ACTIVE) {
+            return 0.0;
+        }
+
+        $plan = $subscription->plan;
+        if (! $plan || $plan->isFree()) {
+            return 0.0;
+        }
+
+        $daysRemaining = max(0, (int) now()->diffInDays($subscription->ends_at, false));
+        $totalDays     = $plan->getDurationInDays();
+
+        if ($totalDays <= 0 || $daysRemaining <= 0) {
+            return 0.0;
+        }
+
+        return round(($daysRemaining / $totalDays) * $plan->getEffectivePrice());
+    }
+
+    /**
+     * پیش‌نمایش هزینه ارتقاء/تنزل پلن — بدون هیچ تغییر DB.
+     */
+    public function upgradePreview(Subscription $current, SubscriptionPlan $newPlan): array
+    {
+        $credit   = $this->calculateCredit($current);
+        $newPrice = $newPlan->getEffectivePrice();
+        $toPay    = max(0.0, $newPrice - $credit);
+        $leftover = max(0.0, $credit - $newPrice);
+
+        $currentPrice = $current->plan?->getEffectivePrice() ?? 0.0;
+
+        return [
+            'credit'          => $credit,
+            'new_price'       => $newPrice,
+            'amount_to_pay'   => $toPay,
+            'leftover_credit' => $leftover,
+            'leftover_points' => (int) floor($leftover / \App\Services\MembershipPointsService::EARN_PER_TOMAN),
+            'is_free'         => $newPlan->isFree(),
+            'is_direct'       => ($toPay == 0.0),
+            'is_same'         => ($current->subscription_plan_id === $newPlan->id),
+            'direction'       => $newPrice >= $currentPrice ? 'upgrade' : 'downgrade',
+        ];
+    }
+
+    /**
+     * ارتقاء/تنزل پلن — فرض: پرداخت قبلاً انجام شده یا amount_to_pay = 0.
+     * اشتراک قدیمی cancel + اشتراک جدید active می‌شود.
+     */
+    public function upgrade(
+        User $user,
+        Subscription $current,
+        SubscriptionPlan $newPlan,
+        ?int $invoiceId = null,
+        float $creditUsed = 0.0
+    ): Subscription {
+        $subscription = DB::transaction(function () use ($user, $current, $newPlan, $invoiceId, $creditUsed) {
+            $current->update([
+                'status'              => Subscription::STATUS_CANCELLED,
+                'cancelled_at'        => now(),
+                'cancellation_reason' => 'تغییر پلن به «' . $newPlan->name . '»',
+            ]);
+            $this->log($current, SubscriptionLog::ACTION_CANCELLED, $user->id, 'system', [
+                'reason' => 'plan_change',
+            ]);
+
+            $now = now();
+            $sub = Subscription::create([
+                'user_id'                      => $user->id,
+                'subscription_plan_id'         => $newPlan->id,
+                'status'                       => Subscription::STATUS_ACTIVE,
+                'starts_at'                    => $now,
+                'ends_at'                      => $now->copy()->addDays($newPlan->getDurationInDays()),
+                'invoice_id'                   => $invoiceId,
+                'upgrade_from_subscription_id' => $current->id,
+                'credit_amount'                => (int) round($creditUsed),
+            ]);
+
+            $currentPrice = $current->plan?->getEffectivePrice() ?? 0.0;
+            $action = $newPlan->getEffectivePrice() >= $currentPrice
+                ? SubscriptionLog::ACTION_UPGRADED
+                : SubscriptionLog::ACTION_DOWNGRADED;
+
+            $this->log($sub, $action, $user->id, 'user', [
+                'from_plan'   => $current->plan?->name,
+                'to_plan'     => $newPlan->name,
+                'credit_used' => (int) round($creditUsed),
+            ]);
+
+            return $sub;
+        });
+
+        $this->notifyPlanChanged($user, $current->plan, $newPlan, $subscription);
+        $this->invalidateGroupMemberCaches($current);
+
+        // اعتبار مازاد (وقتی به پلن ارزان‌تر تغییر داده) → امتیاز وفاداری
+        $leftover       = max(0.0, $creditUsed - $newPlan->getEffectivePrice());
+        $leftoverPoints = (int) floor($leftover / \App\Services\MembershipPointsService::EARN_PER_TOMAN);
+        if ($leftoverPoints > 0) {
+            try {
+                app(\App\Services\MembershipPointsService::class)
+                    ->earnFromPlanChange($user, $subscription, $leftoverPoints);
+            } catch (\Throwable $e) {
+                Log::warning('SubscriptionService: credit-to-points failed on plan change', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return $subscription;
+    }
+
+    /**
+     * ساخت فاکتور ارتقاء با اعتبار اعمال‌شده به عنوان تخفیف.
+     */
+    public function createUpgradeInvoice(
+        User $user,
+        SubscriptionPlan $newPlan,
+        Subscription $current,
+        int $creditAmount
+    ): \App\Models\Invoice {
+        $number = 'SUB-' . now()->format('Ymd') . '-' . str_pad(
+            \App\Models\Invoice::whereDate('created_at', today())->count() + 1,
+            4, '0', STR_PAD_LEFT
+        );
+
+        $basePrice  = (int) $newPlan->getEffectivePrice();
+        $discount   = min($creditAmount, $basePrice);
+        $finalTotal = max(0, $basePrice - $discount);
+
+        $fromName = $current->plan?->name ?? '—';
+        $invoice  = \App\Models\Invoice::create([
+            'invoice_number'  => $number,
+            'user_id'         => $user->id,
+            'customer_name'   => $user->name ?? $user->mobile,
+            'customer_mobile' => $user->mobile,
+            'subtotal'        => $basePrice,
+            'discount'        => $discount,
+            'total'           => $finalTotal,
+            'status'          => 'pending',
+            'notes'           => "تغییر پلن از «{$fromName}» به «{$newPlan->name}» | اعتبار: {$discount} تومان",
+        ]);
+
+        \App\Models\InvoiceItem::create([
+            'invoice_id' => $invoice->id,
+            'title'      => "تغییر پلن از «{$fromName}» به «{$newPlan->name}» ({$newPlan->getDurationLabel()})",
+            'price'      => $basePrice,
+            'quantity'   => 1,
+            'total'      => $finalTotal,
+        ]);
+
+        return $invoice;
     }
 
     /**
@@ -317,6 +503,27 @@ class SubscriptionService
         } catch (\Throwable $e) {
             Log::error('SubscriptionLog write failed', ['error' => $e->getMessage()]);
         }
+
+        $webhookEvent = self::WEBHOOK_EVENT_MAP[$action] ?? null;
+        if ($webhookEvent) {
+            try {
+                $subscription->loadMissing(['plan', 'user']);
+                $this->webhooks->dispatch($webhookEvent, [
+                    'subscription_id' => $subscription->id,
+                    'user_id'         => $userId,
+                    'user_name'       => $subscription->user?->name,
+                    'plan'            => $subscription->plan?->name,
+                    'plan_slug'       => $subscription->plan?->slug,
+                    'status'          => $subscription->status,
+                    'starts_at'       => $subscription->starts_at?->toIso8601String(),
+                    'ends_at'         => $subscription->ends_at?->toIso8601String(),
+                    'action'          => $action,
+                    'details'         => $details,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning("Webhook dispatch skipped for action '{$action}': {$e->getMessage()}");
+            }
+        }
     }
 
     private function notifySubscribed(User $user, SubscriptionPlan $plan, Subscription $sub): void
@@ -365,6 +572,38 @@ class SubscriptionService
         $this->sms->send(
             $user->mobile,
             "اشتراک {$plan->name} شما تمدید شد.\nتاریخ انقضای جدید: {$ends}"
+        );
+    }
+
+    /**
+     * وقتی اشتراکی expire یا cancel می‌شود، کش benefit کلیه اعضای گروه را flush کن.
+     * بدون این، اعضا تا TTL کش (۵ دقیقه) همچنان مزایا می‌گیرند.
+     */
+    public function invalidateGroupMemberCaches(Subscription $subscription): void
+    {
+        try {
+            $benefitSvc = app(\App\Services\MembershipBenefitService::class);
+
+            \App\Models\SubscriptionMember::where('subscription_id', $subscription->id)
+                ->where('status', \App\Models\SubscriptionMember::STATUS_ACTIVE)
+                ->with('user')
+                ->get()
+                ->each(fn ($m) => $benefitSvc->invalidateCache($m->user));
+        } catch (\Throwable $e) {
+            Log::warning('SubscriptionService: group member cache flush failed', [
+                'subscription_id' => $subscription->id,
+                'error'           => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function notifyPlanChanged(User $user, ?SubscriptionPlan $from, SubscriptionPlan $to, Subscription $sub): void
+    {
+        if (! $user->mobile) return;
+        $ends = \App\Helpers\Jalali::formatFa($sub->ends_at, 'Y/m/d');
+        $this->sms->send(
+            $user->mobile,
+            "سلام {$user->name}\nپلن اشتراک شما به «{$to->name}» تغییر یافت.\nتاریخ انقضا: {$ends}"
         );
     }
 

@@ -28,6 +28,7 @@ class Product extends Model
         'is_new', 'sale_ends_at', 'low_stock_threshold', 'warranty_text', 'guarantee_text',
         'allow_backorder', 'min_order_qty', 'max_order_qty', 'views_count',
         'is_bundle', 'bundle_pricing', 'bundle_fixed_price', 'bundle_discount_percent',
+        'early_access',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Product extends Model
             'is_new' => 'boolean',
             'sale_ends_at' => 'datetime',
             'allow_backorder' => 'boolean',
+            'early_access'   => 'boolean',
             'is_bundle' => 'boolean',
             'bundle_fixed_price' => 'decimal:2',
             'bundle_discount_percent' => 'decimal:2',

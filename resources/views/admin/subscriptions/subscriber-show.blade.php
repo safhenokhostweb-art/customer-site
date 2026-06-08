@@ -99,6 +99,41 @@
             </div>
         </div>
 
+        {{-- اعضای گروهی --}}
+        @if($subscription->members->isNotEmpty())
+        <div class="subshow__card">
+            <div class="subshow__card-head" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.5rem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                اعضای گروهی
+                <span style="margin-right:auto;background:#ede9fe;color:#7c3aed;font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:9999px">{{ \App\Helpers\NumberHelper::formatFa($subscription->members->count()) }} عضو</span>
+            </div>
+            <div class="subshow__card-body" style="padding:0">
+                @foreach($subscription->members as $member)
+                <div style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid #f1f5f9">
+                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:.75rem;font-weight:700;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-ms-flex-negative:0;flex-shrink:0">
+                        {{ mb_substr(optional($member->user)->name ?? optional($member->user)->mobile ?? '?', 0, 1) }}
+                    </div>
+                    <div style="-webkit-box-flex:1;-ms-flex:1;flex:1;min-width:0">
+                        <div style="font-weight:600;color:#1e293b;font-size:.8625rem">{{ optional($member->user)->name ?? '—' }}</div>
+                        <div style="font-size:.75rem;color:#94a3b8" dir="ltr">{{ optional($member->user)->mobile ?? '' }}</div>
+                    </div>
+                    <span class="sub-badge sub-badge--{{ $member->status }}" style="font-size:.7rem">{{ $member->getStatusLabel() }}</span>
+                    @if($member->joined_at)
+                    <span style="font-size:.72rem;color:#94a3b8;white-space:nowrap">{{ \App\Helpers\Jalali::formatFa($member->joined_at, 'Y/m/d') }}</span>
+                    @endif
+                    @if($member->isActive())
+                    <form method="POST" action="{{ route('admin.subscribers.members.remove', [$subscription, $member]) }}"
+                          onsubmit="return confirm('عضو از گروه خارج شود؟');" style="display:inline">
+                        @csrf @method('DELETE')
+                        <button type="submit" style="padding:.25rem .625rem;background:#fff1f2;color:#be123c;border:1px solid #fecdd3;border-radius:.375rem;font-size:.72rem;font-weight:600;cursor:pointer;font-family:Vazirmatn,Tahoma,sans-serif">خروج</button>
+                    </form>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- لاگ‌ها --}}
         <div class="subshow__card">
             <div class="subshow__card-head">تاریخچه عملیات</div>
@@ -167,6 +202,46 @@
             $hasPaidInvoice = $subscription->invoice && $subscription->invoice->status === 'paid';
             $canDelete      = ! ($isLiveGateway && $hasPaidInvoice);
         @endphp
+
+        {{-- تمدید دستی --}}
+        @if($subscription->isActive() || $subscription->isInTrial())
+        <div class="subshow__action-card" style="border-top:3px solid #6366f1">
+            <p class="subshow__action-card__title" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.4rem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="color:#6366f1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                تمدید دستی
+            </p>
+            <form method="POST" action="{{ route('admin.subscribers.extend', $subscription) }}">
+                @csrf
+                <div style="display:-webkit-box;display:-ms-flexbox;display:flex;gap:.5rem;-webkit-box-align:center;-ms-flex-align:center;align-items:center;margin-bottom:.625rem">
+                    <input type="number" name="days" min="1" max="365" placeholder="تعداد روز" required
+                           style="width:100%;-webkit-box-sizing:border-box;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;font-family:Vazirmatn,Tahoma,sans-serif;text-align:center">
+                </div>
+                <button type="submit" style="width:100%;padding:.625rem;background:#6366f1;color:#fff;font-weight:700;font-size:.875rem;border:none;border-radius:.625rem;cursor:pointer;font-family:Vazirmatn,Tahoma,sans-serif">افزودن روز</button>
+            </form>
+        </div>
+        @endif
+
+        {{-- تغییر پلن --}}
+        <div class="subshow__action-card" style="border-top:3px solid #0ea5e9">
+            <p class="subshow__action-card__title" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.4rem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="color:#0ea5e9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                تغییر پلن
+            </p>
+            <form method="POST" action="{{ route('admin.subscribers.change-plan', $subscription) }}"
+                  onsubmit="return confirm('پلن اشتراک تغییر یابد؟');">
+                @csrf
+                <select name="plan_id" required
+                        style="width:100%;-webkit-box-sizing:border-box;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;font-family:Vazirmatn,Tahoma,sans-serif;margin-bottom:.625rem">
+                    <option value="">انتخاب پلن...</option>
+                    @foreach($plans as $plan)
+                    <option value="{{ $plan->id }}" {{ $subscription->subscription_plan_id === $plan->id ? 'selected' : '' }}>
+                        {{ $plan->name }} — {{ $plan->getFormattedPrice() }}
+                    </option>
+                    @endforeach
+                </select>
+                <button type="submit" style="width:100%;padding:.625rem;background:#0ea5e9;color:#fff;font-weight:700;font-size:.875rem;border:none;border-radius:.625rem;cursor:pointer;font-family:Vazirmatn,Tahoma,sans-serif">اعمال تغییر</button>
+            </form>
+        </div>
 
         {{-- عملیات: لغو --}}
         @if($subscription->isActive() || $subscription->isInTrial())

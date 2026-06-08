@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Helpers\SiteHelper;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
+use App\Services\GroupSubscriptionService;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
-    public function __construct(private SubscriptionService $service) {}
+    public function __construct(
+        private SubscriptionService $service,
+        private GroupSubscriptionService $groupService,
+    ) {}
 
     private function requireModule(): void
     {
@@ -32,9 +36,10 @@ class SubscriptionController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $active = $this->service->getActive($user);
+        $active         = $this->service->getActive($user);
+        $pendingInvites = $this->groupService->pendingInvites($user);
 
-        return view('account.subscriptions.index', compact('subscriptions', 'active'));
+        return view('account.subscriptions.index', compact('subscriptions', 'active', 'pendingInvites'));
     }
 
     public function show(Subscription $subscription)
@@ -148,6 +153,88 @@ class SubscriptionController extends Controller
         return redirect()->route('subscriptions.pay', $invoice->invoice_number);
     }
 
+    public function upgradePlans(Subscription $subscription)
+    {
+        $this->requireModule();
+
+        if ($subscription->user_id !== auth()->id()) abort(404);
+
+        if (! $subscription->isActive()) {
+            return redirect()->route('account.subscriptions.plans')
+                ->with('error', 'فقط اشتراک‌های فعال قابل ارتقاء / تغییر هستند.');
+        }
+
+        $subscription->load('plan');
+
+        $plans = SubscriptionPlan::where('is_active', true)
+            ->where('id', '!=', $subscription->subscription_plan_id)
+            ->orderBy('order')
+            ->get();
+
+        $previews = $plans->map(fn ($plan) => [
+            'plan'    => $plan,
+            'preview' => $this->service->upgradePreview($subscription, $plan),
+        ]);
+
+        return view('account.subscriptions.upgrade-plans', compact('subscription', 'previews'));
+    }
+
+    public function upgrade(Request $request, Subscription $subscription)
+    {
+        $this->requireModule();
+
+        if ($subscription->user_id !== auth()->id()) abort(404);
+
+        if (! $subscription->isActive()) {
+            return back()->with('error', 'فقط اشتراک‌های فعال قابل تغییر هستند.');
+        }
+
+        $request->validate(['plan_id' => 'required|exists:subscription_plans,id']);
+
+        $newPlan = SubscriptionPlan::findOrFail($request->plan_id);
+
+        if (! $newPlan->is_active) {
+            return back()->with('error', 'این پلن در دسترس نیست.');
+        }
+        if ($newPlan->id === $subscription->subscription_plan_id) {
+            return back()->with('error', 'شما در حال حاضر از این پلن استفاده می‌کنید.');
+        }
+
+        $user    = auth()->user();
+        $preview = $this->service->upgradePreview($subscription, $newPlan);
+        $credit  = $preview['credit'];
+
+        // بدون نیاز به پرداخت: پلن رایگان یا اعتبار کافی
+        if ($preview['is_direct'] || $preview['is_free']) {
+            $this->service->upgrade($user, $subscription, $newPlan, null, $credit);
+
+            $msg = "پلن شما با موفقیت به «{$newPlan->name}» تغییر یافت.";
+            if ($preview['leftover_points'] > 0) {
+                $pts = \App\Helpers\NumberHelper::formatFa($preview['leftover_points']);
+                $msg .= " {$pts} امتیاز از اعتبار باقیمانده به حساب شما اضافه شد.";
+            }
+
+            return redirect()->route('account.subscriptions.index')->with('success', $msg);
+        }
+
+        // نیاز به پرداخت: ساخت فاکتور + subscription pending
+        $invoice = $this->service->createUpgradeInvoice($user, $newPlan, $subscription, (int) $credit);
+
+        Subscription::create([
+            'user_id'                      => $user->id,
+            'subscription_plan_id'         => $newPlan->id,
+            'status'                       => Subscription::STATUS_PENDING,
+            'starts_at'                    => now(),
+            'ends_at'                      => now()->addDays($newPlan->getDurationInDays()),
+            'invoice_id'                   => $invoice->id,
+            'upgrade_from_subscription_id' => $subscription->id,
+            'credit_amount'                => (int) $credit,
+            'pending_reason'               => "در انتظار پرداخت — تغییر پلن از «{$subscription->plan->name}»",
+        ]);
+
+        return redirect()->route('subscriptions.pay', $invoice->invoice_number);
+    }
+
     public function cancel(Request $request, Subscription $subscription)
     {
         $this->requireModule();
@@ -189,6 +276,25 @@ class SubscriptionController extends Controller
 
         return redirect()->route('account.subscriptions.index')
             ->with('success', 'درخواست اشتراک حذف شد. اکنون می‌توانید اشتراک جدید ثبت کنید.');
+    }
+
+    public function toggleAutoRenew(Subscription $subscription)
+    {
+        $this->requireModule();
+
+        if ($subscription->user_id !== auth()->id()) abort(404);
+
+        if (! $subscription->isActive() && ! $subscription->isInTrial()) {
+            return back()->with('error', 'فقط اشتراک‌های فعال قابل تنظیم هستند.');
+        }
+
+        $subscription->update(['auto_renew' => ! $subscription->auto_renew]);
+
+        $msg = $subscription->fresh()->auto_renew
+            ? 'تمدید خودکار فعال شد.'
+            : 'تمدید خودکار غیرفعال شد.';
+
+        return back()->with('success', $msg);
     }
 
     /**

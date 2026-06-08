@@ -28,12 +28,12 @@
 
                     <div id="recipient-selected" class="form-group {{ old('recipient_type') === 'selected' ? '' : 'hidden' }}" @if(old('recipient_type') !== 'selected') hidden @endif>
                         <label class="form-label">جستجو و انتخاب کاربران</label>
-                        <input type="text" id="user-search" class="form-control mb-2" placeholder="نام، ایمیل یا موبایل...">
+                        <input type="text" id="user-search" class="form-control mb-2" placeholder="نام یا موبایل...">
                         <div class="border border-slate-200 rounded-lg max-h-48 overflow-y-auto p-2">
                             @foreach($users as $u)
-                            <label class="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 rounded user-row" data-name="{{ str_replace('"', '', $u->name ?? '') }}" data-email="{{ str_replace('"', '', $u->email ?? '') }}" data-mobile="{{ str_replace('"', '', $u->mobile ?? '') }}">
+                            <label class="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 rounded user-row" data-name="{{ str_replace('"', '', $u->name ?? '') }}" data-mobile="{{ str_replace('"', '', $u->mobile ?? '') }}">
                                 <input type="checkbox" name="user_ids[]" value="{{ $u->id }}" {{ in_array($u->id, old('user_ids', [])) ? 'checked' : '' }}>
-                                <span>{{ $u->name }} — {{ $u->email ?? $u->mobile ?? '-' }}</span>
+                                <span>{{ $u->name }} — {{ $u->mobile ?? '-' }}</span>
                             </label>
                             @endforeach
                         </div>
@@ -139,9 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var q = this.value.trim().toLowerCase();
             rows.forEach(function(row) {
                 var name = (row.getAttribute('data-name') || '').toLowerCase();
-                var email = (row.getAttribute('data-email') || '').toLowerCase();
                 var mobile = (row.getAttribute('data-mobile') || '').toLowerCase();
-                var show = !q || name.includes(q) || email.includes(q) || mobile.includes(q);
+                var show = !q || name.includes(q) || mobile.includes(q);
                 row.style.display = show ? '' : 'none';
             });
         });

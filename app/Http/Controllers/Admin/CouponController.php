@@ -17,7 +17,7 @@ class CouponController extends Controller
     public function create()
     {
         $products = \App\Models\Product::orderBy('title')->get(['id', 'title']);
-        $categories = \App\Models\ProductCategory::orderBy('order')->get(['id', 'title']);
+        $categories = \App\Models\ProductCategory::orderBy('order')->get(['id', 'name']);
         return view('admin.coupons.create', compact('products', 'categories'));
     }
 
@@ -32,7 +32,7 @@ class CouponController extends Controller
     public function edit(Coupon $coupon)
     {
         $products = \App\Models\Product::orderBy('title')->get(['id', 'title']);
-        $categories = \App\Models\ProductCategory::orderBy('order')->get(['id', 'title']);
+        $categories = \App\Models\ProductCategory::orderBy('order')->get(['id', 'name']);
         return view('admin.coupons.edit', compact('coupon', 'products', 'categories'));
     }
 

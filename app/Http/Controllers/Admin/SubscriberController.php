@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
+use App\Models\SubscriptionLog;
+use App\Models\SubscriptionMember;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\SubscriptionService;
@@ -50,9 +52,87 @@ class SubscriberController extends Controller
 
     public function show(Subscription $subscriber)
     {
-        $subscriber->load(['user', 'plan', 'logs.user', 'invoice']);
+        $subscriber->load(['user', 'plan', 'logs.user', 'invoice', 'members.user', 'members.inviter']);
         $subscription = $subscriber;
-        return view('admin.subscriptions.subscriber-show', compact('subscription'));
+        $plans        = SubscriptionPlan::where('is_active', true)->orderBy('order')->get();
+        return view('admin.subscriptions.subscriber-show', compact('subscription', 'plans'));
+    }
+
+    public function extend(Request $request, Subscription $subscriber)
+    {
+        $request->validate(['days' => 'required|integer|min:1|max:365']);
+
+        $days = (int) $request->days;
+
+        $base          = $subscriber->ends_at && $subscriber->ends_at->isFuture()
+            ? $subscriber->ends_at
+            : now();
+        $newEndsAt     = $base->copy()->addDays($days);
+
+        $subscriber->update([
+            'ends_at' => $newEndsAt,
+            'status'  => Subscription::STATUS_ACTIVE,
+        ]);
+
+        SubscriptionLog::create([
+            'subscription_id' => $subscriber->id,
+            'user_id'         => $subscriber->user_id,
+            'action'          => SubscriptionLog::ACTION_RENEWED,
+            'performed_by'    => 'admin',
+            'details'         => [
+                'extended_days' => $days,
+                'new_ends_at'   => $newEndsAt->toDateString(),
+                'by'            => auth()->user()->name,
+            ],
+        ]);
+
+        return back()->with('success', "اشتراک {$days} روز تمدید شد.");
+    }
+
+    public function changePlan(Request $request, Subscription $subscriber)
+    {
+        $request->validate(['plan_id' => 'required|exists:subscription_plans,id']);
+
+        $oldPlan = $subscriber->plan;
+        $newPlan = SubscriptionPlan::findOrFail($request->plan_id);
+
+        if ($oldPlan?->id === $newPlan->id) {
+            return back()->with('error', 'پلن انتخاب‌شده همان پلن فعلی است.');
+        }
+
+        $subscriber->update([
+            'subscription_plan_id' => $newPlan->id,
+            'ends_at'              => now()->addDays($newPlan->getDurationInDays()),
+            'status'               => Subscription::STATUS_ACTIVE,
+        ]);
+
+        SubscriptionLog::create([
+            'subscription_id' => $subscriber->id,
+            'user_id'         => $subscriber->user_id,
+            'action'          => SubscriptionLog::ACTION_PLAN_CHANGED,
+            'performed_by'    => 'admin',
+            'details'         => [
+                'from_plan' => $oldPlan?->name,
+                'to_plan'   => $newPlan->name,
+                'by'        => auth()->user()->name,
+            ],
+        ]);
+
+        return back()->with('success', "پلن به «{$newPlan->name}» تغییر یافت.");
+    }
+
+    public function removeMember(Subscription $subscriber, SubscriptionMember $member)
+    {
+        if ($member->subscription_id !== $subscriber->id) {
+            abort(403);
+        }
+
+        $member->update([
+            'status'     => SubscriptionMember::STATUS_REMOVED,
+            'removed_at' => now(),
+        ]);
+
+        return back()->with('success', 'عضو از گروه خارج شد.');
     }
 
     public function cancel(Request $request, Subscription $subscriber)

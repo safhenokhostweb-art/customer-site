@@ -4,6 +4,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -54,5 +55,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Auto-renew Engine (P2) ───────────────────────────────────────────
         // تمدید خودکار: رایگان→مستقیم | پولی→فاکتور+SMS | ساعت ۸ صبح
         $schedule->command('subscriptions:process-renewals')->dailyAt('08:00');
+
+        // DB Backup (8.3b) ────────────────────────────────────────────────
+        // پشتیبان‌گیری روزانه ساعت ۲ بامداد — ۷ نسخه نگه‌داری
+        $schedule->command('db:backup', ['--retention' => env('DB_BACKUP_RETENTION', 7)])
+                 ->dailyAt('02:00')
+                 ->appendOutputTo(storage_path('logs/db-backup.log'))
+                 ->onFailure(function () {
+                     Log::error('db:backup scheduled run failed — check storage/logs/db-backup.log');
+                 });
     })
     ->create();

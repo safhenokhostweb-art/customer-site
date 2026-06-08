@@ -74,6 +74,25 @@ class ZarinpalGateway implements PaymentGatewayInterface
         return $startUrl . $authority;
     }
 
+    /**
+     * اعتبارسنجی فرمت Authority دریافت‌شده در callback.
+     * زرین‌پال HMAC نمی‌فرستد — محافظت اصلی از طریق verify API است.
+     * اینجا فقط جلوی تزریق Authority دستکاری‌شده را می‌گیریم.
+     */
+    public function validateCallback(array $params, array $headers, string $rawBody): void
+    {
+        $authority = $params['Authority'] ?? '';
+
+        if (empty($authority)) {
+            throw new GatewayException('پارامتر Authority در callback زرین‌پال وجود ندارد.');
+        }
+
+        // Authority v4: شروع با A، فقط حروف و اعداد، حداقل ۲۰ کاراکتر
+        if (! preg_match('/^A[a-zA-Z0-9]{19,}$/', $authority)) {
+            throw new GatewayException('فرمت Authority زرین‌پال نامعتبر است.');
+        }
+    }
+
     public function verify(Invoice $invoice, array $params): PaymentResult
     {
         $status    = $params['Status'] ?? '';
