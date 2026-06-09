@@ -53,6 +53,7 @@ class AdminMenu
         'bank_gateway' => 'درگاه بانکی',
         'accounting' => 'حسابداری',
         'education_center' => 'مرکز آموزش',
+        'site_content'    => 'دستیار محتوا',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -135,6 +136,7 @@ class AdminMenu
         'bank_gateway' => 'admin.modules.show',
         'accounting' => 'admin.accounting.index',
         'education_center' => 'admin.education-center.index',
+        'site_content'    => 'admin.site-content.index',
         'seo_advanced' => 'admin.seo-advanced.index',
         'analytics' => 'admin.analytics.index',
         'announcements' => 'admin.announcements.index',
@@ -232,6 +234,7 @@ class AdminMenu
         'bank_gateway' => 'admin.modules.show',
         'accounting' => 'admin.accounting.*',
         'education_center' => 'admin.education-center.*',
+        'site_content'    => 'admin.site-content.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
@@ -300,6 +303,7 @@ class AdminMenu
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
+            'دستیار محتوا' => ['site_content'],
         ];
     }
 

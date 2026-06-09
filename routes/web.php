@@ -666,5 +666,20 @@ Route::middleware('install.check')->group(function () {
             // مشاهده مقاله (باید آخر باشد — slug ممکن است با id تداخل داشته باشد)
             Route::get('/{slug}', [\App\Http\Controllers\Admin\EducationCenterController::class, 'show'])->name('show');
         });
+
+    // ─── Site Content — دستیار محتوا ────────────────────────────────────────
+    Route::middleware(['auth', 'admin'])
+        ->prefix('admin/content')
+        ->name('admin.site-content.')
+        ->group(function () {
+            Route::get('/',                  [\App\Http\Controllers\Admin\SiteContentController::class, 'index'])->name('index');
+            Route::get('/create',            [\App\Http\Controllers\Admin\SiteContentController::class, 'create'])->name('create');
+            Route::post('/',                 [\App\Http\Controllers\Admin\SiteContentController::class, 'store'])->name('store');
+            Route::get('/{siteContent}/edit',[\App\Http\Controllers\Admin\SiteContentController::class, 'edit'])->name('edit');
+            Route::put('/{siteContent}',     [\App\Http\Controllers\Admin\SiteContentController::class, 'update'])->name('update');
+            Route::delete('/{siteContent}',  [\App\Http\Controllers\Admin\SiteContentController::class, 'destroy'])->name('destroy');
+            Route::post('/{siteContent}/publish', [\App\Http\Controllers\Admin\SiteContentController::class, 'publish'])->name('publish');
+            Route::post('/ai-generate',      [\App\Http\Controllers\Admin\SiteContentController::class, 'aiGenerate'])->name('ai-generate');
+        });
 });
 
