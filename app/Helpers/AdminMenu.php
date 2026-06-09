@@ -476,7 +476,8 @@ class AdminMenu
         }
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
-                             'activity_log', 'users_panel', 'education_center'], true)) {
+                             'activity_log', 'users_panel', 'education_center',
+                             'site_content'], true)) {
             return true;
         }
         if ($key === 'module_store') {
