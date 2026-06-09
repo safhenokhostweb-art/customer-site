@@ -630,13 +630,40 @@ Route::middleware('install.check')->group(function () {
             Route::post('/{ticketId}/replies', [AdminSupportController::class, 'reply'])->whereNumber('ticketId')->name('tickets.site.replies.store');
         });
 
-    // ─── Education Center — مرکز آموزش (Phase EDU-12) ──────────────────────
-    // فقط محتوای مرتبط با ویژگی‌های فعال سایت نمایش داده می‌شود (Rule 1)
+    // ─── Education Center — مرکز آموزش ──────────────────────────────────────
     Route::middleware(['auth', 'admin'])
         ->prefix('admin/education-center')
         ->name('admin.education-center.')
         ->group(function () {
+            // مشاهده — read-only (sync از پلتفرم)
             Route::get('/', [\App\Http\Controllers\Admin\EducationCenterController::class, 'index'])->name('index');
+
+            // مدیریت محتوا — CRUD
+            Route::get('/manage', [\App\Http\Controllers\Admin\EducationCenterController::class, 'manage'])->name('manage');
+
+            // مقالات
+            Route::get('/articles/create',     [\App\Http\Controllers\Admin\EducationCenterController::class, 'createArticle'])->name('articles.create');
+            Route::post('/articles',            [\App\Http\Controllers\Admin\EducationCenterController::class, 'storeArticle'])->name('articles.store');
+            Route::get('/articles/{id}/edit',   [\App\Http\Controllers\Admin\EducationCenterController::class, 'editArticle'])->name('articles.edit');
+            Route::put('/articles/{id}',        [\App\Http\Controllers\Admin\EducationCenterController::class, 'updateArticle'])->name('articles.update');
+            Route::delete('/articles/{id}',     [\App\Http\Controllers\Admin\EducationCenterController::class, 'destroyArticle'])->name('articles.destroy');
+            Route::post('/articles/{id}/publish', [\App\Http\Controllers\Admin\EducationCenterController::class, 'publishArticle'])->name('articles.publish');
+
+            // راهنماها (Walkthroughs)
+            Route::get('/walkthroughs/create',      [\App\Http\Controllers\Admin\EducationCenterController::class, 'createWalkthrough'])->name('walkthroughs.create');
+            Route::post('/walkthroughs',             [\App\Http\Controllers\Admin\EducationCenterController::class, 'storeWalkthrough'])->name('walkthroughs.store');
+            Route::get('/walkthroughs/{id}/edit',    [\App\Http\Controllers\Admin\EducationCenterController::class, 'editWalkthrough'])->name('walkthroughs.edit');
+            Route::put('/walkthroughs/{id}',         [\App\Http\Controllers\Admin\EducationCenterController::class, 'updateWalkthrough'])->name('walkthroughs.update');
+            Route::delete('/walkthroughs/{id}',      [\App\Http\Controllers\Admin\EducationCenterController::class, 'destroyWalkthrough'])->name('walkthroughs.destroy');
+
+            // مسیرهای یادگیری
+            Route::get('/learning-paths/create',     [\App\Http\Controllers\Admin\EducationCenterController::class, 'createLearningPath'])->name('learning-paths.create');
+            Route::post('/learning-paths',            [\App\Http\Controllers\Admin\EducationCenterController::class, 'storeLearningPath'])->name('learning-paths.store');
+            Route::get('/learning-paths/{id}/edit',   [\App\Http\Controllers\Admin\EducationCenterController::class, 'editLearningPath'])->name('learning-paths.edit');
+            Route::put('/learning-paths/{id}',        [\App\Http\Controllers\Admin\EducationCenterController::class, 'updateLearningPath'])->name('learning-paths.update');
+            Route::delete('/learning-paths/{id}',     [\App\Http\Controllers\Admin\EducationCenterController::class, 'destroyLearningPath'])->name('learning-paths.destroy');
+
+            // مشاهده مقاله (باید آخر باشد — slug ممکن است با id تداخل داشته باشد)
             Route::get('/{slug}', [\App\Http\Controllers\Admin\EducationCenterController::class, 'show'])->name('show');
         });
 });
