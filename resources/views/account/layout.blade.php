@@ -14,6 +14,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
     @include('partials.platform-styles')
+    {{-- Theme Engine: same colors as admin panel for consistent UX --}}
+    @include('partials.theme-engine-tokens')
     <style>
         body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; font-feature-settings: "ss01" on; }
 
