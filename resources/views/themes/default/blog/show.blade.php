@@ -18,6 +18,39 @@
 @endsection
 
 @section('content')
+@if($isPreview ?? false)
+<div style="position:sticky;top:0;z-index:999;background:#f59e0b;color:#1c1917;
+            padding:0.6rem 1.25rem;display:flex;align-items:center;justify-content:space-between;
+            flex-wrap:wrap;gap:0.5rem;font-size:0.875rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+        <svg style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        حالت پیش‌نمایش — این صفحه برای بازدیدکنندگان نمایش داده نمی‌شود
+        @php $pubStatus = $post->publicationStatus(); @endphp
+        <span style="padding:.15rem .55rem;border-radius:9999px;font-size:.72rem;
+                     background:{{ $pubStatus==='published'?'#16a34a':'#374151' }};color:#fff;">
+            {{ match($pubStatus) {
+                'published'=>'منتشرشده','scheduled'=>'زمان‌بندی‌شده',
+                'pending_review'=>'در انتظار بازبینی','draft'=>'پیش‌نویس',default=>$pubStatus
+            } }}
+        </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="{{ route('admin.posts.edit', $post) }}"
+           style="background:#1c1917;color:#fef3c7;padding:.3rem .85rem;border-radius:.4rem;
+                  text-decoration:none;font-size:.82rem;font-weight:600;">
+            ✏️ ویرایش مطلب
+        </a>
+        <a href="{{ route('admin.posts.index') }}"
+           style="color:#1c1917;text-decoration:none;font-size:.82rem;">
+            ← بازگشت به لیست
+        </a>
+    </div>
+</div>
+@endif
+
 <article style="max-width: 48rem;">
     @if($post->featured_image)
     <div style="aspect-ratio: 16/9; background: #f3f4f6; border-radius: 0.75rem; overflow: hidden; margin-bottom: 1.5rem;">

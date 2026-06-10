@@ -128,8 +128,18 @@
                     @endif
                 </fieldset>
 
+                <input type="hidden" name="preview_after_save" id="preview_after_save_flag" value="0">
                 <div class="admin-form-actions admin-form-actions--sticky">
                     <button type="submit" name="save_action" value="draft" class="btn btn-secondary">ذخیره پیش‌نویس</button>
+                    <button type="submit" name="save_action" value="draft" class="btn btn-secondary"
+                            onclick="document.getElementById('preview_after_save_flag').value='1'"
+                            style="display:inline-flex;align-items:center;gap:0.4rem;">
+                        <svg style="width:.9rem;height:.9rem" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        ذخیره و پیش‌نمایش
+                    </button>
                     <button type="submit" name="save_action" value="review" class="btn btn-secondary">ارسال برای بازبینی</button>
                     @if(auth()->user()->hasPermission('posts_moderate'))
                     <button type="submit" name="save_action" value="publish" class="btn btn-primary">انتشار فوری</button>

@@ -86,6 +86,10 @@ class PostController extends Controller
         $this->syncPostTags($post, $request->input('tags_input'));
         $this->auditBlogPublishOrSchedule($post, (string) ($data['save_action'] ?? 'draft'));
 
+        if ($request->boolean('preview_after_save')) {
+            return redirect()->route('admin.posts.preview', $post);
+        }
+
         return redirect()->route('admin.posts.index')->with('success', $this->storeSuccessMessage($data['save_action'] ?? 'draft'));
     }
 
@@ -119,6 +123,22 @@ class PostController extends Controller
         $this->auditBlogPublishOrSchedule($post->fresh(), (string) ($data['save_action'] ?? 'draft'));
 
         return redirect()->route('admin.posts.index')->with('success', $this->updateSuccessMessage($data['save_action'] ?? 'draft'));
+    }
+
+    public function preview(Post $post)
+    {
+        $seriesSiblings = collect();
+        if ($post->series_id) {
+            $seriesSiblings = Post::where('series_id', $post->series_id)
+                ->orderBy('part_number')->get();
+        }
+        $relatedPosts = Post::where('is_published', true)
+            ->where('id', '!=', $post->id)
+            ->when($post->category_id, fn ($q) => $q->where('category_id', $post->category_id))
+            ->latest('published_at')->limit(3)->get();
+
+        return view('themes.default.blog.show', compact('post', 'seriesSiblings', 'relatedPosts'))
+            ->with('isPreview', true);
     }
 
     public function destroy(Post $post)

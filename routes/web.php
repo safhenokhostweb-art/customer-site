@@ -260,6 +260,7 @@ Route::middleware('install.check')->group(function () {
             });
             Route::middleware('permission:posts')->group(function () {
                 Route::get('posts/{post}/revisions', [AdminPostController::class, 'revisions'])->name('posts.revisions');
+                Route::get('posts/{post}/preview',   [AdminPostController::class, 'preview'])->name('posts.preview');
                 Route::resource('posts', AdminPostController::class)->except(['show']);
                 Route::resource('post-series', AdminPostSeriesController::class)->except(['show']);
             });
