@@ -254,11 +254,20 @@ function contentEditor(type, hasSteps) {
                         clearInterval(this.aiPollTimer);
                         this.aiQueued  = false;
                         this.aiLoading = false;
-                        // data.data = نتیجه از worker
-                        const result = typeof data.data === 'string'
-                            ? { content: data.data }
-                            : data.data;
-                        this.applyResult({ success: true, mode, content: result, data: result, provider: 'deepseek' }, mode);
+                        // data.data ممکن است string یا object باشد
+                        let rawData = data.data;
+                        // اگر string است، parse کن
+                        if (typeof rawData === 'string') {
+                            try { rawData = JSON.parse(rawData); } catch(e) {}
+                        }
+                        // اگر هنوز string است (مقاله ساده)، به عنوان content استفاده کن
+                        const isString = typeof rawData === 'string';
+                        this.applyResult({
+                            success: true, mode,
+                            content: isString ? rawData : rawData,
+                            data: rawData,
+                            provider: 'deepseek'
+                        }, mode);
 
                     } else if (data.status === 'failed') {
                         clearInterval(this.aiPollTimer);
