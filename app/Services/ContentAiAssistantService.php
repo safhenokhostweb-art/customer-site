@@ -81,16 +81,36 @@ class ContentAiAssistantService
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // تلاش مستقیم از سرور با timeout کوتاه
+    // تلاش مستقیم از سرور — DeepSeek اول، Claude جایگزین
     // ──────────────────────────────────────────────────────────────────────────
 
     private function tryServerDirect(string $system, string $user, bool $jsonMode = false): array
     {
-        $key = config('ai_assistant.deepseek.api_key');
-        if (empty($key)) {
-            return ['success' => false, 'error' => 'no_key'];
+        // ── DeepSeek ─────────────────────────────────────────────────────────
+        $dsKey = config('ai_assistant.deepseek.api_key');
+        if (!empty($dsKey)) {
+            $result = $this->callDeepSeek($dsKey, $system, $user, $jsonMode);
+            if ($result['success']) {
+                return $result;
+            }
+            Log::info('DeepSeek failed, trying Claude fallback: ' . ($result['error'] ?? ''));
         }
 
+        // ── Claude fallback ───────────────────────────────────────────────────
+        $claudeKey = config('ai_assistant.claude.api_key');
+        if (!empty($claudeKey)) {
+            $result = $this->callClaude($claudeKey, $system, $user, $jsonMode);
+            if ($result['success']) {
+                return $result;
+            }
+            Log::info('Claude fallback also failed: ' . ($result['error'] ?? ''));
+        }
+
+        return ['success' => false, 'error' => 'no_provider'];
+    }
+
+    private function callDeepSeek(string $key, string $system, string $user, bool $jsonMode): array
+    {
         try {
             $payload = [
                 'model'       => config('ai_assistant.deepseek.model', 'deepseek-chat'),
@@ -106,17 +126,51 @@ class ContentAiAssistantService
             }
 
             $response = Http::withToken($key)
-                ->timeout(5) // فقط ۵ ثانیه — اگر سرور دسترسی ندارد سریع fail می‌کند
+                ->timeout(config('ai_assistant.deepseek.timeout', 60))
                 ->post(config('ai_assistant.deepseek.base_url') . '/chat/completions', $payload);
 
             if ($response->successful()) {
-                $content = $response->json('choices.0.message.content', '');
-                return ['success' => true, 'content' => $content, 'provider' => 'deepseek-server'];
+                return ['success' => true, 'content' => $response->json('choices.0.message.content', ''), 'provider' => 'deepseek'];
             }
 
-            return ['success' => false, 'error' => 'HTTP ' . $response->status()];
+            return ['success' => false, 'error' => 'DeepSeek HTTP ' . $response->status()];
         } catch (\Throwable $e) {
-            Log::info('DeepSeek direct failed (expected if server has no internet): ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function callClaude(string $key, string $system, string $user, bool $jsonMode): array
+    {
+        try {
+            $messages = [['role' => 'user', 'content' => $user]];
+            $payload  = [
+                'model'      => config('ai_assistant.claude.model', 'claude-sonnet-4-6'),
+                'max_tokens' => config('ai_assistant.max_tokens', 4096),
+                'system'     => $system,
+                'messages'   => $messages,
+            ];
+
+            $response = Http::withHeaders([
+                    'x-api-key'         => $key,
+                    'anthropic-version' => '2023-06-01',
+                    'content-type'      => 'application/json',
+                ])
+                ->timeout(config('ai_assistant.claude.timeout', 60))
+                ->post(config('ai_assistant.claude.base_url') . '/messages', $payload);
+
+            if ($response->successful()) {
+                $content = $response->json('content.0.text', '');
+                if ($jsonMode) {
+                    // Claude ممکن است JSON را در ```json ... ``` برگرداند
+                    $content = preg_replace('/^```(?:json)?\s*/m', '', $content);
+                    $content = preg_replace('/\s*```$/m', '', $content);
+                    $content = trim($content);
+                }
+                return ['success' => true, 'content' => $content, 'provider' => 'claude'];
+            }
+
+            return ['success' => false, 'error' => 'Claude HTTP ' . $response->status()];
+        } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

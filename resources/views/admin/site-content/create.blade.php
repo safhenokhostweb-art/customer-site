@@ -282,7 +282,7 @@ function contentEditor(type, hasSteps) {
                             clearInterval(this.aiPollTimer);
                             this.aiQueued  = false;
                             this.aiLoading = false;
-                            this.aiError   = 'زمان انتظار تمام شد. Worker ویندوز را بررسی کنید.';
+                            this.aiError   = 'پاسخ AI دریافت نشد. لطفاً ai-worker.ps1 را روی ویندوز اجرا کنید یا DEEPSEEK_API_KEY را در .env سرور تنظیم کنید.';
                         }
                     }
                 } catch(e) { /* شبکه قطع — دوباره تلاش می‌کند */ }

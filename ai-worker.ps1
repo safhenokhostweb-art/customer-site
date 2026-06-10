@@ -55,33 +55,40 @@ function Get-Jobs {
 function Call-DeepSeek {
     param([string]$Prompt, [string]$Type, [int]$Steps, [bool]$JsonMode)
     $sys = "You are a professional writer. Write ALL content in Persian (Farsi) only."
-    $sysE = $sys -replace '"','\"'
     if ($JsonMode) {
         $usr = "Write a $Type guide with $Steps steps in Persian about: $Prompt. Return JSON: {`"title`":`"..`",`"excerpt`":`"..`",`"steps`":[{`"title`":`"..`",`"body`":`"..`"}]}"
     } else {
-        $usr = "Write a concise professional article in Persian about: $Prompt. Max 3 paragraphs: intro, body, conclusion."
+        $usr = "Write a concise article in Persian about: $Prompt. Max 3 paragraphs."
     }
-    $usrE = $usr -replace '"','\"' -replace "`r`n",'\n' -replace "`n",'\n'
-    $fmt = if ($JsonMode) { ',"response_format":{"type":"json_object"}' } else { "" }
-    $body = '{"model":"deepseek-chat","messages":[{"role":"system","content":"' + $sysE + '"},{"role":"user","content":"' + $usrE + '"}],"max_tokens":800' + $fmt + '}'
-    $r = Http-Post -Uri $DEEPSEEK_URL -Token $DEEPSEEK_KEY -Body $body
-    if (-not $r.ok) { return @{ ok=$false; error=$r.error } }
-    $content = ($r.body | ConvertFrom-Json).choices[0].message.content
-    return @{ ok=$true; content=$content }
+    $messages = @(
+        @{ role="system"; content=$sys },
+        @{ role="user";   content=$usr }
+    )
+    $payload = @{ model="deepseek-chat"; messages=$messages; max_tokens=700 }
+    if ($JsonMode) { $payload.response_format = @{ type="json_object" } }
+
+    try {
+        $resp = Invoke-RestMethod -Uri $DEEPSEEK_URL `
+            -Method POST `
+            -Headers @{ "Authorization"="Bearer $DEEPSEEK_KEY"; "Content-Type"="application/json" } `
+            -Body ($payload | ConvertTo-Json -Depth 5) `
+            -TimeoutSec 90
+        return @{ ok=$true; content=$resp.choices[0].message.content }
+    } catch {
+        return @{ ok=$false; error=$_.Exception.Message }
+    }
 }
 
 function Send-Done {
     param([int]$JobId, [string]$Content)
-    $esc  = $Content -replace '\\','\\' -replace '"','\"' -replace "`r`n",'\n' -replace "`n",'\n'
-    $body = '{"success":true,"result":"' + $esc + '","provider":"deepseek-local"}'
+    $body = @{ success=$true; result=$Content; provider="deepseek-local" } | ConvertTo-Json -Compress -Depth 3
     $r = Http-Post -Uri "$SERVER_URL/api/ai-queue/$JobId/complete" -Token $QUEUE_TOKEN -Body $body
     return $r.ok
 }
 
 function Send-Fail {
     param([int]$JobId, [string]$Err)
-    $esc  = $Err -replace '"','\"' -replace "`r`n",' ' -replace "`n",' '
-    $body = '{"success":false,"error":"' + $esc + '"}'
+    $body = @{ success=$false; error=$Err } | ConvertTo-Json -Compress -Depth 3
     Http-Post -Uri "$SERVER_URL/api/ai-queue/$JobId/complete" -Token $QUEUE_TOKEN -Body $body | Out-Null
 }
 
