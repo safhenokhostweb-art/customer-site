@@ -16,6 +16,19 @@
     <div class="admin-page-head">
         <h1 class="admin-page-title">مطلب جدید</h1>
     </div>
+
+    @include('admin.partials.ai-seo-widget', [
+        'aiWidgetId'     => 'post-create',
+        'aiType'         => 'article',
+        'aiTitleId'      => 'post-title',
+        'aiBodyId'       => 'post-body-editor',
+        'aiExcerptId'    => 'post-excerpt',
+        'aiMetaTitleId'  => 'post-meta-title',
+        'aiMetaDescId'   => 'post-meta-desc',
+        'aiTagsId'       => 'post-tags',
+        'aiUseTinymce'   => true,
+    ])
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('admin.posts.store') }}" method="post" class="admin-form-long">

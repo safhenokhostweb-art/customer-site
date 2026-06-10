@@ -22,6 +22,115 @@ class ContentAiAssistantService
         SiteContent::TYPE_HELP         => 'یک متخصص پشتیبانی فنی هستی که راهنماهای کاربری ساده و قابل فهم می‌نویسی.',
     ];
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // SEO-optimized content generation (returns JSON with title, html_body,
+    // excerpt, meta_description, focus_keyword, tags, image_keywords)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function generateSeoContent(string $type, string $prompt, ?string $extraContext = null): array
+    {
+        $systemPrompt = $this->buildSeoSystemPrompt($type, $extraContext);
+        $userPrompt   = $this->buildSeoUserPrompt($type, $prompt);
+
+        $direct = $this->tryServerDirect($systemPrompt, $userPrompt, true);
+        if ($direct['success']) {
+            return $this->parseSeoResponse($direct['content'], $direct['provider'] ?? 'ai');
+        }
+
+        $job = AiGenerationJob::create([
+            'type'          => $type,
+            'mode'          => 'seo',
+            'prompt'        => $prompt,
+            'extra_context' => $extraContext,
+            'status'        => 'pending',
+        ]);
+
+        return [
+            'success' => false,
+            'queued'  => true,
+            'job_id'  => $job->id,
+            'error'   => 'درخواست در صف قرار گرفت — لطفاً چند لحظه صبر کنید.',
+        ];
+    }
+
+    private function buildSeoSystemPrompt(string $type, ?string $context): string
+    {
+        $roleMap = [
+            SiteContent::TYPE_ARTICLE  => 'متخصص SEO و نویسنده محتوای فارسی',
+            SiteContent::TYPE_PRODUCT  => 'کپی‌رایتر و متخصص SEO برای فروشگاه‌های آنلاین فارسی',
+            'blog'                     => 'متخصص SEO و نویسنده وبلاگ حرفه‌ای فارسی',
+            'product'                  => 'کپی‌رایتر و متخصص SEO برای فروشگاه‌های آنلاین فارسی',
+        ];
+        $role = $roleMap[$type] ?? 'متخصص SEO و نویسنده محتوای حرفه‌ای فارسی';
+
+        $prompt = "تو یک {$role} هستی. همیشه خروجی JSON معتبر با این فیلدها برمی‌گردانی:\n"
+                . "- \"title\": عنوان اصلی (50-60 کاراکتر، SEO-friendly، شامل کلمه کلیدی)\n"
+                . "- \"html_body\": محتوای HTML کامل — تگ‌های h2، h3، p، ul، li، strong — بدون h1 — حداقل ۴ بخش h2 هر کدام با ۲-۳ پاراگراف\n"
+                . "- \"excerpt\": خلاصه ۱-۲ جمله (150-160 کاراکتر)\n"
+                . "- \"meta_description\": توضیحات متا 150-160 کاراکتر برای گوگل (شامل call-to-action)\n"
+                . "- \"focus_keyword\": کلمه کلیدی اصلی (1-3 کلمه فارسی)\n"
+                . "- \"tags\": آرایه JSON از 5-8 برچسب فارسی\n"
+                . "- \"image_keywords\": آرایه JSON از 3 کلمه انگلیسی برای جستجوی تصویر (مثلاً [\"product photography\", \"shopping\"])\n"
+                . "فقط JSON خالص برگردان، بدون توضیح، بدون markdown.";
+
+        if ($context) {
+            $prompt .= "\n\nزمینه کسب‌وکار: {$context}";
+        }
+        return $prompt;
+    }
+
+    private function buildSeoUserPrompt(string $type, string $prompt): string
+    {
+        $typeLabels = [
+            SiteContent::TYPE_ARTICLE => 'مقاله',
+            SiteContent::TYPE_PRODUCT => 'صفحه محصول',
+            'blog'                    => 'مطلب وبلاگ',
+            'product'                 => 'صفحه محصول',
+        ];
+        $typeName = $typeLabels[$type] ?? 'محتوا';
+
+        return "یک {$typeName} کامل، حرفه‌ای و SEO-optimized درباره موضوع زیر بنویس:\n\n«{$prompt}»\n\n"
+             . "ساختار html_body الزامی:\n"
+             . "- پاراگراف مقدمه جذاب که کلمه کلیدی در آن هست\n"
+             . "- حداقل ۴ بخش با تیتر h2\n"
+             . "- هر بخش ۲-۳ پاراگراف توضیح کامل\n"
+             . "- در جاهای مناسب از h3 و ul/li استفاده کن\n"
+             . "- یک نتیجه‌گیری قوی با call-to-action\n"
+             . "- از h1 استفاده نکن\n"
+             . "خروجی فقط JSON.";
+    }
+
+    private function parseSeoResponse(string $json, string $provider): array
+    {
+        $json = preg_replace('/^```(?:json)?\s*/m', '', $json);
+        $json = preg_replace('/\s*```$/m', '', $json);
+        $data = json_decode(trim($json), true);
+
+        if (!$data || !isset($data['title'])) {
+            return ['success' => false, 'error' => 'خروجی AI قابل پردازش نبود'];
+        }
+
+        return [
+            'success'  => true,
+            'provider' => $provider,
+            'data'     => [
+                'title'            => $data['title'] ?? '',
+                'html_body'        => $data['html_body'] ?? '',
+                'excerpt'          => $data['excerpt'] ?? '',
+                'meta_description' => $data['meta_description'] ?? '',
+                'focus_keyword'    => $data['focus_keyword'] ?? '',
+                'tags'             => is_array($data['tags'])
+                    ? implode('، ', $data['tags'])
+                    : ($data['tags'] ?? ''),
+                'image_keywords'   => is_array($data['image_keywords'])
+                    ? $data['image_keywords']
+                    : [],
+            ],
+        ];
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function generate(string $type, string $prompt, ?string $extraContext = null): array
     {
         $systemPrompt = $this->buildSystemPrompt($type, $extraContext);
@@ -222,8 +331,15 @@ class ContentAiAssistantService
     {
         $typeName = SiteContent::$TYPES[$type] ?? $type;
         return "یک {$typeName} کامل و حرفه‌ای درباره موضوع زیر بنویس:\n\n{$prompt}\n\n"
-             . "محتوا باید شامل مقدمه، بدنه اصلی با جزئیات کافی، و نتیجه‌گیری باشد. "
-             . "از تیترهای واضح و پاراگراف‌بندی مناسب استفاده کن.";
+             . "ساختار HTML الزامی:\n"
+             . "- خروجی باید HTML معتبر باشد\n"
+             . "- با یک پاراگراف مقدمه <p> شروع کن\n"
+             . "- از <h2> برای بخش‌های اصلی و <h3> برای زیربخش‌ها استفاده کن\n"
+             . "- هر بخش حداقل ۲ پاراگراف <p> داشته باشد\n"
+             . "- در جاهای مناسب از <ul><li> استفاده کن\n"
+             . "- از <h1> استفاده نکن\n"
+             . "- با نتیجه‌گیری ختم کن\n"
+             . "فقط HTML خالص بدون توضیح اضافه.";
     }
 
     private function buildStepsPrompt(string $type, string $prompt, int $stepCount): string

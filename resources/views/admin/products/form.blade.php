@@ -108,6 +108,14 @@
     </div>
 </fieldset>
 
+@include('admin.partials.ai-seo-widget', [
+    'aiWidgetId'   => 'product-form',
+    'aiType'       => 'product_content',
+    'aiTitleId'    => 'product-title',
+    'aiBodyId'     => 'product-description',
+    'aiUseTinymce' => true,
+])
+
 <fieldset class="admin-fieldset">
     <legend class="admin-fieldset__legend">توضیحات و سیاست فروش</legend>
     <div class="form-group">

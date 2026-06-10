@@ -152,15 +152,42 @@ class SiteContentController extends Controller
 
     public function aiGenerate(Request $request)
     {
+        $allowedTypes = array_merge(array_keys(SiteContent::$TYPES), ['blog', 'product']);
         $request->validate([
-            'type'   => 'required|in:' . implode(',', array_keys(SiteContent::$TYPES)),
-            'prompt' => 'required|string|min:5|max:500',
-            'mode'   => 'in:full,steps',
+            'type'   => 'required|in:' . implode(',', $allowedTypes),
+            'prompt' => 'required|string|min:5|max:1000',
+            'mode'   => 'in:full,steps,seo',
+            'context'=> 'nullable|string|max:300',
         ]);
 
         $type   = $request->input('type');
         $prompt = $request->input('prompt');
         $mode   = $request->input('mode', 'full');
+        $context = $request->input('context');
+
+        if ($mode === 'seo') {
+            $result = $this->ai->generateSeoContent($type, $prompt, $context);
+
+            if (!$result['success'] && ($result['queued'] ?? false)) {
+                return response()->json([
+                    'success' => false,
+                    'queued'  => true,
+                    'job_id'  => $result['job_id'],
+                    'message' => $result['error'],
+                ]);
+            }
+
+            if (!$result['success']) {
+                return response()->json(['success' => false, 'error' => $result['error']], 422);
+            }
+
+            return response()->json([
+                'success'  => true,
+                'data'     => $result['data'],
+                'provider' => $result['provider'] ?? 'ai',
+                'mode'     => 'seo',
+            ]);
+        }
 
         if ($mode === 'steps') {
             $result = $this->ai->generateWithSteps($type, $prompt);

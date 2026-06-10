@@ -47,6 +47,18 @@
         <form method="post" action="{{ route('admin.posts.reject', $post) }}" class="inline">@csrf<button type="submit" class="btn btn-danger btn-sm">رد</button></form>
     </div>
     @endif
+    @include('admin.partials.ai-seo-widget', [
+        'aiWidgetId'     => 'post-edit',
+        'aiType'         => 'article',
+        'aiTitleId'      => 'post-title',
+        'aiBodyId'       => 'post-body-editor',
+        'aiExcerptId'    => 'post-excerpt',
+        'aiMetaTitleId'  => 'post-meta-title',
+        'aiMetaDescId'   => 'post-meta-desc',
+        'aiTagsId'       => 'post-tags',
+        'aiUseTinymce'   => true,
+    ])
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('admin.posts.update', $post) }}" method="post" class="admin-form-long">

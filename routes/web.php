@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\UnifiedSupportController as AdminUnifiedSupportCo
 use App\Http\Controllers\GuideSearchController;
 use App\Http\Controllers\Front\SitemapController;
 use App\Http\Controllers\Front\PlatformProductsController;
+use App\Http\Controllers\Front\SiteContentController as FrontSiteContentController;
 use App\Http\Controllers\Front\AdvancedSearchController;
 use App\Http\Controllers\Front\PageBuilderController;
 use App\Http\Controllers\Front\InvoiceController as FrontInvoiceController;
@@ -214,6 +215,10 @@ Route::middleware('install.check')->group(function () {
 
     // محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) — فقط برای سایت مالک
     Route::get('/platform-products', [PlatformProductsController::class, 'index'])->name('platform-products.index');
+
+    // ─── دستیار محتوا — نمایش عمومی محتوای منتشرشده ──────────────────────────
+    Route::get('/content',        [FrontSiteContentController::class, 'index'])->name('content.index');
+    Route::get('/content/{slug}', [FrontSiteContentController::class, 'show'])->name('content.show');
 
     Route::middleware('module:blog')->group(function () {
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');

@@ -6,6 +6,14 @@
     <div class="admin-page-head">
         <h1 class="admin-page-title">ویرایش صفحه</h1>
     </div>
+    @include('admin.partials.ai-seo-widget', [
+        'aiWidgetId'   => 'pageEdit',
+        'aiType'       => 'article',
+        'aiTitleId'    => 'page-title-edit',
+        'aiBodyId'     => 'page-body-editor',
+        'aiUseTinymce' => true,
+    ])
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('admin.pages.update', $page) }}" method="post">
@@ -13,7 +21,7 @@
                 @method('PUT')
                 <div class="form-group">
                     <label class="form-label">عنوان</label>
-                    <input type="text" name="title" value="{{ old('title', $page->title) }}" required>
+                    <input type="text" id="page-title-edit" name="title" value="{{ old('title', $page->title) }}" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">نامک</label>

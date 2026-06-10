@@ -33,6 +33,15 @@
     </div>
     @endif
 
+    @include('admin.partials.ai-seo-widget', [
+        'aiWidgetId'   => 'edu-article',
+        'aiType'       => 'article',
+        'aiTitleId'    => 'edu-article-title',
+        'aiBodyId'     => 'edu-article-body',
+        'aiExcerptId'  => 'edu-article-excerpt',
+        'aiUseTinymce' => false,
+    ])
+
     <form method="POST"
           action="{{ isset($article) ? route('admin.education-center.articles.update', $article['id']) : route('admin.education-center.articles.store') }}"
           class="space-y-5">
@@ -46,7 +55,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     عنوان مقاله <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="title" value="{{ old('title', $article['title'] ?? '') }}"
+                <input type="text" name="title" id="edu-article-title" value="{{ old('title', $article['title'] ?? '') }}"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
                        placeholder="عنوان مقاله را وارد کنید..." required>
             </div>
@@ -54,7 +63,7 @@
             {{-- خلاصه --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">خلاصه</label>
-                <textarea name="excerpt" rows="2"
+                <textarea name="excerpt" id="edu-article-excerpt" rows="2"
                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 resize-none"
                           placeholder="خلاصه‌ای کوتاه از محتوا...">{{ old('excerpt', $article['excerpt'] ?? '') }}</textarea>
             </div>
@@ -96,10 +105,10 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     متن مقاله <span class="text-red-500">*</span>
                 </label>
-                <textarea name="body" rows="14"
+                <textarea name="body" id="edu-article-body" rows="14"
                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 resize-y"
                           placeholder="محتوای کامل مقاله را اینجا بنویسید..." required>{{ old('body', $article['body'] ?? '') }}</textarea>
-                <p class="text-xs text-gray-400 mt-1">HTML پشتیبانی می‌شود.</p>
+                <p class="text-xs text-gray-400 mt-1">HTML پشتیبانی می‌شود — دستیار AI محتوا را با ساختار H2/H3 مناسب تولید می‌کند.</p>
             </div>
 
         </div>
