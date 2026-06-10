@@ -164,6 +164,17 @@ class SiteContentController extends Controller
 
         if ($mode === 'steps') {
             $result = $this->ai->generateWithSteps($type, $prompt);
+
+            // در صف قرار گرفت — worker لوکال پردازش می‌کند
+            if (!$result['success'] && ($result['queued'] ?? false)) {
+                return response()->json([
+                    'success' => false,
+                    'queued'  => true,
+                    'job_id'  => $result['job_id'],
+                    'message' => $result['error'],
+                ]);
+            }
+
             if (!$result['success']) {
                 return response()->json(['success' => false, 'error' => $result['error']], 422);
             }
@@ -171,6 +182,17 @@ class SiteContentController extends Controller
         }
 
         $result = $this->ai->generate($type, $prompt);
+
+        // در صف قرار گرفت
+        if (!$result['success'] && ($result['queued'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'queued'  => true,
+                'job_id'  => $result['job_id'],
+                'message' => $result['error'],
+            ]);
+        }
+
         if (!$result['success']) {
             return response()->json(['success' => false, 'error' => $result['error']], 422);
         }

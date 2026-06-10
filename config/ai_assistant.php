@@ -23,6 +23,7 @@ return [
         'timeout'  => 60,
     ],
 
-    'max_tokens'  => 4096,
-    'temperature' => 0.7,
+    'max_tokens'   => 4096,
+    'temperature'  => 0.7,
+    'queue_token'  => env('AI_QUEUE_TOKEN', ''),
 ];

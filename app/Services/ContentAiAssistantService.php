@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\AiGenerationJob;
 use App\Models\SiteContent;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
  * دستیار هوشمند تولید محتوا
- * اول DeepSeek، fallback به Claude
+ * ۱. اول DeepSeek را از سرور امتحان می‌کند (timeout 5s)
+ * ۲. اگر سرور دسترسی ندارد → job در صف ذخیره می‌شود
+ * ۳. worker لوکال job را از صف برمی‌دارد و نتیجه را push می‌کند
  */
 class ContentAiAssistantService
 {
@@ -26,137 +29,101 @@ class ContentAiAssistantService
         $systemPrompt = $this->buildSystemPrompt($type, $extraContext);
         $userPrompt   = $this->buildUserPrompt($type, $prompt);
 
-        $provider = config('ai_assistant.primary', 'deepseek');
-
-        try {
-            $result = $this->callProvider($provider, $systemPrompt, $userPrompt);
-            if ($result['success']) {
-                return $result;
-            }
-            throw new \RuntimeException($result['error'] ?? 'provider failed');
-        } catch (\Throwable $e) {
-            Log::warning("AI primary provider ({$provider}) failed: " . $e->getMessage());
+        // ── ۱. امتحان مستقیم از سرور ─────────────────────────────────────────
+        $direct = $this->tryServerDirect($systemPrompt, $userPrompt);
+        if ($direct['success']) {
+            return $direct;
         }
 
-        $fallback = config('ai_assistant.fallback', 'claude');
-        if ($fallback && $fallback !== $provider) {
-            try {
-                return $this->callProvider($fallback, $systemPrompt, $userPrompt);
-            } catch (\Throwable $e) {
-                Log::error("AI fallback provider ({$fallback}) failed: " . $e->getMessage());
-            }
-        }
+        // ── ۲. ذخیره در صف برای worker لوکال ────────────────────────────────
+        $job = AiGenerationJob::create([
+            'type'          => $type,
+            'mode'          => 'full',
+            'prompt'        => $prompt,
+            'extra_context' => $extraContext,
+            'status'        => 'pending',
+        ]);
 
-        return ['success' => false, 'error' => 'هیچ سرویس هوش مصنوعی‌ای در دسترس نیست.', 'content' => null];
+        return [
+            'success' => false,
+            'queued'  => true,
+            'job_id'  => $job->id,
+            'error'   => 'سرور دسترسی مستقیم ندارد. درخواست در صف قرار گرفت — لطفاً چند لحظه صبر کنید.',
+        ];
     }
 
     public function generateWithSteps(string $type, string $prompt, int $stepCount = 5): array
     {
         $systemPrompt = self::$SYSTEM_PROMPT_MAP[$type] ?? self::$SYSTEM_PROMPT_MAP[SiteContent::TYPE_TRAINING];
-        $userPrompt   = "موضوع: {$prompt}\n\n"
-            . "لطفاً یک {$this->typeName($type)} کامل با {$stepCount} مرحله بنویس.\n"
-            . "خروجی را به صورت JSON با این ساختار برگردان:\n"
-            . "{\n"
-            . "  \"title\": \"عنوان اصلی\",\n"
-            . "  \"excerpt\": \"خلاصه یک پاراگراف\",\n"
-            . "  \"steps\": [\n"
-            . "    {\"title\": \"عنوان مرحله\", \"body\": \"توضیح کامل مرحله\"}\n"
-            . "  ]\n"
-            . "}";
+        $userPrompt   = $this->buildStepsPrompt($type, $prompt, $stepCount);
 
-        $provider = config('ai_assistant.primary', 'deepseek');
-        try {
-            $result = $this->callProvider($provider, $systemPrompt, $userPrompt, true);
-            if ($result['success']) {
-                return $this->parseStepResponse($result['content']);
-            }
-        } catch (\Throwable $e) {
-            Log::warning("AI steps generation failed: " . $e->getMessage());
+        // ── ۱. امتحان مستقیم ─────────────────────────────────────────────────
+        $direct = $this->tryServerDirect($systemPrompt, $userPrompt, true);
+        if ($direct['success']) {
+            return $this->parseStepResponse($direct['content']);
         }
 
-        $fallback = config('ai_assistant.fallback', 'claude');
-        if ($fallback && $fallback !== $provider) {
-            try {
-                $result = $this->callProvider($fallback, $systemPrompt, $userPrompt, true);
-                if ($result['success']) {
-                    return $this->parseStepResponse($result['content']);
-                }
-            } catch (\Throwable $e) {
-                Log::error("AI fallback steps failed: " . $e->getMessage());
-            }
-        }
+        // ── ۲. صف ────────────────────────────────────────────────────────────
+        $job = AiGenerationJob::create([
+            'type'       => $type,
+            'mode'       => 'steps',
+            'prompt'     => $prompt,
+            'step_count' => $stepCount,
+            'status'     => 'pending',
+        ]);
 
-        return ['success' => false, 'error' => 'هیچ سرویس هوش مصنوعی‌ای در دسترس نیست.'];
+        return [
+            'success' => false,
+            'queued'  => true,
+            'job_id'  => $job->id,
+            'error'   => 'درخواست در صف قرار گرفت — لطفاً چند لحظه صبر کنید.',
+        ];
     }
 
-    private function callProvider(string $provider, string $system, string $user, bool $jsonMode = false): array
-    {
-        return match ($provider) {
-            'deepseek' => $this->callDeepSeek($system, $user, $jsonMode),
-            'claude'   => $this->callClaude($system, $user),
-            default    => ['success' => false, 'error' => "Unknown provider: {$provider}"],
-        };
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // تلاش مستقیم از سرور با timeout کوتاه
+    // ──────────────────────────────────────────────────────────────────────────
 
-    private function callDeepSeek(string $system, string $user, bool $jsonMode = false): array
+    private function tryServerDirect(string $system, string $user, bool $jsonMode = false): array
     {
         $key = config('ai_assistant.deepseek.api_key');
         if (empty($key)) {
-            return ['success' => false, 'error' => 'DEEPSEEK_API_KEY تنظیم نشده'];
+            return ['success' => false, 'error' => 'no_key'];
         }
 
-        $payload = [
-            'model'    => config('ai_assistant.deepseek.model', 'deepseek-chat'),
-            'messages' => [
-                ['role' => 'system', 'content' => $system],
-                ['role' => 'user',   'content' => $user],
-            ],
-            'max_tokens'  => config('ai_assistant.max_tokens', 4096),
-            'temperature' => config('ai_assistant.temperature', 0.7),
-        ];
-        if ($jsonMode) {
-            $payload['response_format'] = ['type' => 'json_object'];
+        try {
+            $payload = [
+                'model'       => config('ai_assistant.deepseek.model', 'deepseek-chat'),
+                'messages'    => [
+                    ['role' => 'system', 'content' => $system],
+                    ['role' => 'user',   'content' => $user],
+                ],
+                'max_tokens'  => config('ai_assistant.max_tokens', 4096),
+                'temperature' => config('ai_assistant.temperature', 0.7),
+            ];
+            if ($jsonMode) {
+                $payload['response_format'] = ['type' => 'json_object'];
+            }
+
+            $response = Http::withToken($key)
+                ->timeout(5) // فقط ۵ ثانیه — اگر سرور دسترسی ندارد سریع fail می‌کند
+                ->post(config('ai_assistant.deepseek.base_url') . '/chat/completions', $payload);
+
+            if ($response->successful()) {
+                $content = $response->json('choices.0.message.content', '');
+                return ['success' => true, 'content' => $content, 'provider' => 'deepseek-server'];
+            }
+
+            return ['success' => false, 'error' => 'HTTP ' . $response->status()];
+        } catch (\Throwable $e) {
+            Log::info('DeepSeek direct failed (expected if server has no internet): ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
-
-        $response = Http::withToken($key)
-            ->timeout(config('ai_assistant.deepseek.timeout', 60))
-            ->post(config('ai_assistant.deepseek.base_url') . '/chat/completions', $payload);
-
-        if (!$response->successful()) {
-            return ['success' => false, 'error' => 'DeepSeek HTTP ' . $response->status()];
-        }
-
-        $content = $response->json('choices.0.message.content', '');
-        return ['success' => true, 'content' => $content, 'provider' => 'deepseek'];
     }
 
-    private function callClaude(string $system, string $user): array
-    {
-        $key = config('ai_assistant.claude.api_key');
-        if (empty($key)) {
-            return ['success' => false, 'error' => 'CLAUDE_API_KEY تنظیم نشده'];
-        }
-
-        $response = Http::withHeaders([
-            'x-api-key'         => $key,
-            'anthropic-version' => '2023-06-01',
-            'content-type'      => 'application/json',
-        ])
-        ->timeout(config('ai_assistant.claude.timeout', 60))
-        ->post(config('ai_assistant.claude.base_url') . '/messages', [
-            'model'      => config('ai_assistant.claude.model', 'claude-sonnet-4-6'),
-            'max_tokens' => config('ai_assistant.max_tokens', 4096),
-            'system'     => $system,
-            'messages'   => [['role' => 'user', 'content' => $user]],
-        ]);
-
-        if (!$response->successful()) {
-            return ['success' => false, 'error' => 'Claude HTTP ' . $response->status()];
-        }
-
-        $content = $response->json('content.0.text', '');
-        return ['success' => true, 'content' => $content, 'provider' => 'claude'];
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────────────────────────────────────
 
     private function buildSystemPrompt(string $type, ?string $context): string
     {
@@ -170,10 +137,25 @@ class ContentAiAssistantService
 
     private function buildUserPrompt(string $type, string $prompt): string
     {
-        $typeName = $this->typeName($type);
+        $typeName = SiteContent::$TYPES[$type] ?? $type;
         return "یک {$typeName} کامل و حرفه‌ای درباره موضوع زیر بنویس:\n\n{$prompt}\n\n"
              . "محتوا باید شامل مقدمه، بدنه اصلی با جزئیات کافی، و نتیجه‌گیری باشد. "
              . "از تیترهای واضح و پاراگراف‌بندی مناسب استفاده کن.";
+    }
+
+    private function buildStepsPrompt(string $type, string $prompt, int $stepCount): string
+    {
+        $systemPrompt = self::$SYSTEM_PROMPT_MAP[$type] ?? self::$SYSTEM_PROMPT_MAP[SiteContent::TYPE_TRAINING];
+        return "موضوع: {$prompt}\n\n"
+            . "لطفاً یک " . (SiteContent::$TYPES[$type] ?? $type) . " کامل با {$stepCount} مرحله بنویس.\n"
+            . "خروجی را به صورت JSON با این ساختار برگردان:\n"
+            . "{\n"
+            . "  \"title\": \"عنوان اصلی\",\n"
+            . "  \"excerpt\": \"خلاصه یک پاراگراف\",\n"
+            . "  \"steps\": [\n"
+            . "    {\"title\": \"عنوان مرحله\", \"body\": \"توضیح کامل مرحله\"}\n"
+            . "  ]\n"
+            . "}";
     }
 
     private function parseStepResponse(string $json): array
@@ -183,10 +165,5 @@ class ContentAiAssistantService
             return ['success' => false, 'error' => 'خروجی AI قابل پردازش نبود.'];
         }
         return ['success' => true, 'data' => $data];
-    }
-
-    private function typeName(string $type): string
-    {
-        return SiteContent::$TYPES[$type] ?? $type;
     }
 }

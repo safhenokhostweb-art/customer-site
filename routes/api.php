@@ -22,7 +22,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+use App\Http\Controllers\Api\AiQueueController;
 use App\Http\Controllers\Api\PushSubscriptionController;
+
+// ─── AI Queue API — worker لوکال و frontend polling ───────────────────────────
+Route::prefix('ai-queue')->group(function () {
+    Route::get('/pending',           [AiQueueController::class, 'pending']);
+    Route::post('/{id}/complete',    [AiQueueController::class, 'complete']);
+    Route::get('/{id}/status',       [AiQueueController::class, 'status']);
+});
 
 // ─── Web Push Subscription API ────────────────────────────────────────────────
 Route::prefix('push')->group(function () {
