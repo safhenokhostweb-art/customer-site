@@ -35,9 +35,30 @@
         {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->setContext(['menu_html' => ''])->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []) !!}
     </article>
 @else
-<article class="max-w-3xl">
-    <h1 class="text-2xl md:text-3xl font-bold mb-6">{{ $page->title }}</h1>
-    <div class="prose prose-lg max-w-none">{!! nl2br(e($page->body)) !!}</div>
+<article style="max-width:48rem;">
+    <h1 style="font-size:1.75rem;font-weight:800;color:#111827;line-height:1.4;margin-bottom:1.5rem;">
+        {{ $page->title }}
+    </h1>
+    <div class="content-body" style="line-height:1.85;color:#1f2937;font-size:1rem;">
+        @php
+            $bodyContent = $page->body ?? '';
+            $isHtml = preg_match('/<(p|h[1-6]|ul|ol|div|strong|em|br)\b/i', $bodyContent);
+        @endphp
+        @if($isHtml)
+            {!! \App\Helpers\PostHtml::safe($bodyContent) !!}
+        @else
+            {!! nl2br(e($bodyContent)) !!}
+        @endif
+    </div>
 </article>
+<style>
+.content-body h2{font-size:1.3rem;font-weight:700;color:#111827;margin:1.75rem 0 0.6rem;}
+.content-body h3{font-size:1.1rem;font-weight:600;color:#1f2937;margin:1.25rem 0 0.4rem;}
+.content-body p{margin-bottom:1rem;}
+.content-body ul,.content-body ol{padding-right:1.5rem;margin-bottom:1rem;}
+.content-body li{margin-bottom:0.35rem;line-height:1.7;}
+.content-body strong{color:#111827;font-weight:600;}
+.content-body a{color:#4f46e5;text-decoration:underline;}
+</style>
 @endif
 @endsection
