@@ -59,11 +59,11 @@ function Call-DeepSeek {
     if ($JsonMode) {
         $usr = "Write a $Type guide with $Steps steps in Persian about: $Prompt. Return JSON: {`"title`":`"..`",`"excerpt`":`"..`",`"steps`":[{`"title`":`"..`",`"body`":`"..`"}]}"
     } else {
-        $usr = "Write a complete professional article in Persian about: $Prompt. Include intro, body, conclusion."
+        $usr = "Write a concise professional article in Persian about: $Prompt. Max 3 paragraphs: intro, body, conclusion."
     }
     $usrE = $usr -replace '"','\"' -replace "`r`n",'\n' -replace "`n",'\n'
     $fmt = if ($JsonMode) { ',"response_format":{"type":"json_object"}' } else { "" }
-    $body = '{"model":"deepseek-chat","messages":[{"role":"system","content":"' + $sysE + '"},{"role":"user","content":"' + $usrE + '"}],"max_tokens":2000' + $fmt + '}'
+    $body = '{"model":"deepseek-chat","messages":[{"role":"system","content":"' + $sysE + '"},{"role":"user","content":"' + $usrE + '"}],"max_tokens":800' + $fmt + '}'
     $r = Http-Post -Uri $DEEPSEEK_URL -Token $DEEPSEEK_KEY -Body $body
     if (-not $r.ok) { return @{ ok=$false; error=$r.error } }
     $content = ($r.body | ConvertFrom-Json).choices[0].message.content

@@ -240,7 +240,7 @@ function contentEditor(type, hasSteps) {
 
         pollJobStatus(jobId, mode) {
             let attempts = 0;
-            const maxAttempts = 40; // حداکثر ۲ دقیقه
+            const maxAttempts = 80; // حداکثر ۴ دقیقه
 
             this.aiPollTimer = setInterval(async () => {
                 attempts++;
