@@ -1,151 +1,114 @@
-# AI Queue Worker - SaaS Platform
-# Usage: .\ai-worker.ps1
-
+﻿# AI Queue Worker - SaaS Platform
+param()
 $SERVER_URL    = "http://safhenokhost.ir"
 $QUEUE_TOKEN   = "ai-queue-secret-2026-XK9"
 $DEEPSEEK_KEY  = "sk-22cbabc9aa284678b5755e004aa150fa"
 $DEEPSEEK_URL  = "https://api.deepseek.com/v1/chat/completions"
 $POLL_INTERVAL = 15
 
-$SYSTEM_PROMPTS = @{
-    "article"         = "You are a professional Persian writer. Write engaging and useful content in fluent Persian."
-    "training"        = "You are a professional trainer. Write clear, step-by-step Persian tutorials."
-    "workflow"        = "You are a process management expert. Document workflows clearly in Persian."
-    "procedure"       = "You are a documentation expert. Write detailed step-by-step procedures in Persian."
-    "product_content" = "You are a professional copywriter. Write compelling Persian product descriptions."
-    "help"            = "You are a technical support expert. Write simple Persian user guides."
-}
-
-$TYPE_NAMES = @{
-    "article"         = "article"
-    "training"        = "training"
-    "workflow"        = "workflow"
-    "procedure"       = "procedure"
-    "product_content" = "product content"
-    "help"            = "help guide"
-}
-
-function Call-DeepSeek {
-    param($SystemPrompt, $UserPrompt, $JsonMode = $false)
-
-    $payload = @{
-        model       = "deepseek-chat"
-        messages    = @(
-            @{ role = "system"; content = $SystemPrompt },
-            @{ role = "user";   content = $UserPrompt }
-        )
-        max_tokens  = 4096
-        temperature = 0.7
-    }
-    if ($JsonMode) {
-        $payload.response_format = @{ type = "json_object" }
-    }
-
-    $headers = @{
-        "Authorization" = "Bearer $DEEPSEEK_KEY"
-        "Content-Type"  = "application/json"
-    }
-
+function Invoke-JsonApi {
+    param([string]$Uri, [string]$Method = "GET", [string]$Token = "", [string]$Body = "")
     try {
-        $body     = $payload | ConvertTo-Json -Depth 5
-        $response = Invoke-RestMethod -Uri $DEEPSEEK_URL `
-            -Method POST -Headers $headers -Body $body -TimeoutSec 60
-        return @{ success = $true; content = $response.choices[0].message.content }
+        $req         = [System.Net.HttpWebRequest]::Create($Uri)
+        $req.Method  = $Method
+        $req.Accept  = "application/json"
+        $req.Timeout = 30000
+        if ($Token -ne "") { $req.Headers["Authorization"] = "Bearer $Token" }
+        if ($Body -ne "") {
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($Body)
+            $req.ContentType   = "application/json; charset=utf-8"
+            $req.ContentLength = $bytes.Length
+            $s = $req.GetRequestStream()
+            $s.Write($bytes, 0, $bytes.Length)
+            $s.Close()
+        }
+        $resp   = $req.GetResponse()
+        $reader = [System.IO.StreamReader]::new($resp.GetResponseStream(), [System.Text.Encoding]::UTF8)
+        $text   = $reader.ReadToEnd()
+        $reader.Close()
+        return @{ ok = $true; body = $text }
     } catch {
-        return @{ success = $false; error = $_.Exception.Message }
-    }
-}
-
-function Process-Job {
-    param($Job)
-
-    $type      = $Job.type
-    $mode      = $Job.mode
-    $prompt    = $Job.prompt
-    $stepCount = if ($Job.step_count) { $Job.step_count } else { 5 }
-    $typeName  = if ($TYPE_NAMES[$type]) { $TYPE_NAMES[$type] } else { $type }
-    $sysPr     = if ($SYSTEM_PROMPTS[$type]) { $SYSTEM_PROMPTS[$type] } else { "You are a professional Persian writer." }
-    $sysPr    += " Always write content in fluent, professional Persian (Farsi)."
-
-    if ($mode -eq "steps") {
-        $userPr = "Topic: $prompt`n`nWrite a complete $typeName with $stepCount steps in Persian.`nReturn JSON with this structure:`n{`n  `"title`": `"main title in Persian`",`n  `"excerpt`": `"one paragraph summary in Persian`",`n  `"steps`": [`n    {`"title`": `"step title in Persian`", `"body`": `"full step description in Persian`"}`n  ]`n}`nMake sure ALL text is in Persian language."
-        $result = Call-DeepSeek -SystemPrompt $sysPr -UserPrompt $userPr -JsonMode $true
-    } else {
-        $userPr = "Write a complete, professional $typeName in Persian about:`n`n$prompt`n`nInclude an introduction, detailed main body, and conclusion. Use clear headings and proper paragraphs. ALL content must be in Persian."
-        $result = Call-DeepSeek -SystemPrompt $sysPr -UserPrompt $userPr
-    }
-
-    return $result
-}
-
-function Send-Result {
-    param($JobId, $Result)
-
-    $headers = @{
-        "Authorization" = "Bearer $QUEUE_TOKEN"
-        "Content-Type"  = "application/json"
-        "Accept"        = "application/json"
-    }
-
-    $payload = if ($Result.success) {
-        @{ success = $true; result = $Result.content; provider = "deepseek-local" }
-    } else {
-        @{ success = $false; error = $Result.error }
-    }
-
-    try {
-        $body = $payload | ConvertTo-Json
-        Invoke-RestMethod -Uri "$SERVER_URL/api/ai-queue/$JobId/complete" `
-            -Method POST -Headers $headers -Body $body -TimeoutSec 15 | Out-Null
-        return $true
-    } catch {
-        Write-Host "  [ERROR] Send result failed: $($_.Exception.Message)" -ForegroundColor Red
-        return $false
+        $errMsg = $_.Exception.Message
+        try {
+            $errResp = $_.Exception.Response
+            if ($errResp) {
+                $r2 = [System.IO.StreamReader]::new($errResp.GetResponseStream())
+                $errMsg = $errMsg + " | " + $r2.ReadToEnd()
+            }
+        } catch {}
+        return @{ ok = $false; error = $errMsg }
     }
 }
 
 function Get-PendingJobs {
-    $headers = @{
-        "Authorization" = "Bearer $QUEUE_TOKEN"
-        "Accept"        = "application/json"
-    }
-    try {
-        $response = Invoke-RestMethod -Uri "$SERVER_URL/api/ai-queue/pending" `
-            -Method GET -Headers $headers -TimeoutSec 10
-        return $response.jobs
-    } catch {
-        Write-Host "  [WARN] Poll failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    $r = Invoke-JsonApi -Uri "$SERVER_URL/api/ai-queue/pending" -Token $QUEUE_TOKEN
+    if (-not $r.ok) {
+        Write-Host "  WARN poll: $($r.error)"
         return @()
+    }
+    $d = $r.body | ConvertFrom-Json
+    return $d.jobs
+}
+
+function Send-Result {
+    param([int]$JobId, [bool]$Success, [string]$Content, [string]$ErrMsg)
+    if ($Success) {
+        $esc  = $Content -replace '\\', '\\' -replace '"', '\"' -replace "`r`n", '\n' -replace "`n", '\n'
+        $body = '{"success":true,"result":"' + $esc + '","provider":"deepseek-local"}'
+    } else {
+        $esc  = $ErrMsg -replace '"', '\"'
+        $body = '{"success":false,"error":"' + $esc + '"}'
+    }
+    $r = Invoke-JsonApi -Uri "$SERVER_URL/api/ai-queue/$JobId/complete" -Method "POST" -Token $QUEUE_TOKEN -Body $body
+    if (-not $r.ok) { Write-Host "  ERROR send: $($r.error)" }
+    return $r.ok
+}
+
+function Call-DeepSeek {
+    param([string]$UserPrompt, [bool]$JsonMode)
+    $sys  = "You are a professional writer. Write ALL content in Persian (Farsi) language only."
+    $sysE = $sys -replace '"', '\"'
+    $usrE = $UserPrompt -replace '"', '\"' -replace "`r`n", '\n' -replace "`n", '\n'
+    $fmt  = if ($JsonMode) { ',"response_format":{"type":"json_object"}' } else { "" }
+    $body = '{"model":"deepseek-chat","messages":[{"role":"system","content":"' + $sysE + '"},{"role":"user","content":"' + $usrE + '"}],"max_tokens":2000' + $fmt + '}'
+    $r    = Invoke-JsonApi -Uri $DEEPSEEK_URL -Method "POST" -Token $DEEPSEEK_KEY -Body $body
+    if (-not $r.ok) { return @{ ok=$false; error=$r.error } }
+    $d = $r.body | ConvertFrom-Json
+    return @{ ok=$true; content=$d.choices[0].message.content }
+}
+
+function Process-Job {
+    param($Job)
+    $pr    = $Job.prompt
+    $steps = if ($Job.step_count -gt 0) { [int]$Job.step_count } else { 5 }
+    if ($Job.mode -eq "steps") {
+        $u = "Write a $($Job.type) guide with $steps steps in Persian about: $pr. Return JSON only: {`"title`":`"title here`",`"excerpt`":`"summary`",`"steps`":[{`"title`":`"step title`",`"body`":`"step detail`"}]}"
+        return Call-DeepSeek -UserPrompt $u -JsonMode $true
+    } else {
+        $u = "Write a complete professional article in Persian about: $pr. Include introduction, body with headings, and conclusion."
+        return Call-DeepSeek -UserPrompt $u -JsonMode $false
     }
 }
 
-# ── Main Loop ─────────────────────────────────────────────────────────────────
-
-Write-Host "AI Queue Worker - Running (Ctrl+C to stop)" -ForegroundColor Cyan
-Write-Host "Server : $SERVER_URL" -ForegroundColor Gray
-Write-Host "Poll   : every $POLL_INTERVAL seconds" -ForegroundColor Gray
-Write-Host ""
-
+Write-Host "AI Worker started. Poll interval: ${POLL_INTERVAL}s"
 while ($true) {
     $ts   = Get-Date -Format "HH:mm:ss"
     $jobs = Get-PendingJobs
-
     if ($jobs -and $jobs.Count -gt 0) {
-        Write-Host "[$ts] $($jobs.Count) job(s)" -ForegroundColor Green
+        Write-Host "[$ts] $($jobs.Count) jobs found"
         foreach ($job in $jobs) {
-            $preview = $job.prompt.Substring(0, [Math]::Min(40, $job.prompt.Length))
-            Write-Host "  -> Job #$($job.id) [$($job.type)]: $preview..." -ForegroundColor White
-            $result = Process-Job -Job $job
-            $sent   = Send-Result -JobId $job.id -Result $result
-            if ($result.success -and $sent) {
-                Write-Host "     Done" -ForegroundColor Green
+            Write-Host "  #$($job.id) $($job.type)/$($job.mode): $($job.prompt)"
+            $res = Process-Job -Job $job
+            if ($res.ok) {
+                $ok = Send-Result -JobId ([int]$job.id) -Success $true -Content $res.content -ErrMsg ""
+                Write-Host "  result sent: $ok"
             } else {
-                Write-Host "     Failed: $($result.error)" -ForegroundColor Red
+                Send-Result -JobId ([int]$job.id) -Success $false -Content "" -ErrMsg $res.error | Out-Null
+                Write-Host "  failed: $($res.error)"
             }
         }
     } else {
-        Write-Host "[$ts] no jobs" -ForegroundColor DarkGray
+        Write-Host "[$ts] idle"
     }
-
     Start-Sleep -Seconds $POLL_INTERVAL
 }
