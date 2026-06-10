@@ -39,6 +39,16 @@ $hasSteps = in_array($type, ['training','workflow','procedure']);
             </button>
         </div>
         <div x-show="aiError" x-text="aiError" class="mt-2 text-sm text-red-600"></div>
+
+        {{-- نمایش وضعیت صف --}}
+        <div x-show="aiQueued" class="mt-2 flex items-center gap-2 text-sm text-amber-600">
+            <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span x-text="aiQueueMsg"></span>
+        </div>
+
         <div x-show="aiProvider" class="mt-2 text-xs text-indigo-400">تولیدشده با: <span x-text="aiProvider"></span></div>
     </div>
 
@@ -175,6 +185,9 @@ function contentEditor(type, hasSteps) {
         aiError: '',
         aiProvider: '',
         aiUsed: false,
+        aiQueued: false,
+        aiQueueMsg: '',
+        aiPollTimer: null,
 
         addStep() {
             this.steps.push({ title: '', body: '' });
@@ -183,7 +196,9 @@ function contentEditor(type, hasSteps) {
         async generateAi() {
             if (!this.aiPrompt.trim()) return;
             this.aiLoading = true;
-            this.aiError = '';
+            this.aiError   = '';
+            this.aiQueued  = false;
+            this.aiQueueMsg = '';
             this.aiProvider = '';
 
             try {
@@ -199,26 +214,91 @@ function contentEditor(type, hasSteps) {
                 });
 
                 const data = await resp.json();
+
+                // در صف قرار گرفت — worker لوکال پردازش می‌کند
+                if (!data.success && data.queued) {
+                    this.aiQueued   = true;
+                    this.aiQueueMsg = 'در حال پردازش... لطفاً صبر کنید';
+                    this.aiLoading  = false;
+                    this.pollJobStatus(data.job_id, mode);
+                    return;
+                }
+
                 if (!data.success) {
                     this.aiError = data.error || 'خطایی رخ داد';
                     return;
                 }
 
-                this.aiUsed = true;
-                this.aiProvider = data.provider || '';
-
-                if (data.mode === 'steps' && data.data) {
-                    this.title = data.data.title || this.title;
-                    this.excerpt = data.data.excerpt || '';
-                    this.steps = data.data.steps || [];
-                } else {
-                    this.body = data.content || '';
-                }
+                this.applyResult(data, mode);
 
             } catch (e) {
                 this.aiError = 'خطا در اتصال به سرویس AI';
             } finally {
-                this.aiLoading = false;
+                if (!this.aiQueued) this.aiLoading = false;
+            }
+        },
+
+        pollJobStatus(jobId, mode) {
+            let attempts = 0;
+            const maxAttempts = 40; // حداکثر ۲ دقیقه
+
+            this.aiPollTimer = setInterval(async () => {
+                attempts++;
+                try {
+                    const resp = await fetch(`/api/ai-queue/${jobId}/status`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await resp.json();
+
+                    if (data.status === 'done') {
+                        clearInterval(this.aiPollTimer);
+                        this.aiQueued  = false;
+                        this.aiLoading = false;
+                        // data.data = نتیجه از worker
+                        const result = typeof data.data === 'string'
+                            ? { content: data.data }
+                            : data.data;
+                        this.applyResult({ success: true, mode, content: result, data: result, provider: 'deepseek' }, mode);
+
+                    } else if (data.status === 'failed') {
+                        clearInterval(this.aiPollTimer);
+                        this.aiQueued  = false;
+                        this.aiLoading = false;
+                        this.aiError   = data.error || 'پردازش AI ناموفق بود';
+
+                    } else {
+                        const dots = '.'.repeat((attempts % 3) + 1);
+                        this.aiQueueMsg = `در حال پردازش${dots} (${attempts * 3}s)`;
+                        if (attempts >= maxAttempts) {
+                            clearInterval(this.aiPollTimer);
+                            this.aiQueued  = false;
+                            this.aiLoading = false;
+                            this.aiError   = 'زمان انتظار تمام شد. Worker ویندوز را بررسی کنید.';
+                        }
+                    }
+                } catch(e) { /* شبکه قطع — دوباره تلاش می‌کند */ }
+
+            }, 3000); // هر ۳ ثانیه چک کن
+        },
+
+        applyResult(data, mode) {
+            this.aiUsed     = true;
+            this.aiQueued   = false;
+            this.aiProvider = data.provider || 'ai';
+
+            if (mode === 'steps') {
+                const d = data.data || data.content || {};
+                // اگر رشته JSON است parse کن
+                let parsed = d;
+                if (typeof d === 'string') {
+                    try { parsed = JSON.parse(d); } catch(e) { parsed = { title: '', steps: [] }; }
+                }
+                this.title   = parsed.title   || this.title;
+                this.excerpt = parsed.excerpt  || '';
+                this.steps   = parsed.steps    || [];
+            } else {
+                const content = data.content || '';
+                this.body = typeof content === 'string' ? content : JSON.stringify(content);
             }
         }
     }
