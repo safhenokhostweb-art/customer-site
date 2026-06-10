@@ -29,6 +29,11 @@ class AiQueueController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // jobs گیرکرده (processing > 5 دقیقه) را برگردان به pending
+        AiGenerationJob::where('status', 'processing')
+            ->where('picked_at', '<', now()->subMinutes(5))
+            ->update(['status' => 'pending', 'picked_at' => null]);
+
         $jobs = AiGenerationJob::where('status', 'pending')
             ->orderBy('created_at')
             ->limit(5)
