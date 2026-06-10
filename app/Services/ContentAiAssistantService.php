@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * دستیار هوشمند تولید محتوا
- * ۱. اول DeepSeek را از سرور امتحان می‌کند (timeout 5s)
- * ۲. اگر سرور دسترسی ندارد → job در صف ذخیره می‌شود
- * ۳. worker لوکال job را از صف برمی‌دارد و نتیجه را push می‌کند
+ * اولویت: GapGPT (ایران، مستقیم) → DeepSeek (اینترنت بین‌الملل) → Claude → Windows Worker queue
  */
 class ContentAiAssistantService
 {
@@ -29,13 +27,11 @@ class ContentAiAssistantService
         $systemPrompt = $this->buildSystemPrompt($type, $extraContext);
         $userPrompt   = $this->buildUserPrompt($type, $prompt);
 
-        // ── ۱. امتحان مستقیم از سرور ─────────────────────────────────────────
         $direct = $this->tryServerDirect($systemPrompt, $userPrompt);
         if ($direct['success']) {
             return $direct;
         }
 
-        // ── ۲. ذخیره در صف برای worker لوکال ────────────────────────────────
         $job = AiGenerationJob::create([
             'type'          => $type,
             'mode'          => 'full',
@@ -48,7 +44,7 @@ class ContentAiAssistantService
             'success' => false,
             'queued'  => true,
             'job_id'  => $job->id,
-            'error'   => 'سرور دسترسی مستقیم ندارد. درخواست در صف قرار گرفت — لطفاً چند لحظه صبر کنید.',
+            'error'   => 'درخواست در صف قرار گرفت — لطفاً چند لحظه صبر کنید.',
         ];
     }
 
@@ -57,13 +53,11 @@ class ContentAiAssistantService
         $systemPrompt = self::$SYSTEM_PROMPT_MAP[$type] ?? self::$SYSTEM_PROMPT_MAP[SiteContent::TYPE_TRAINING];
         $userPrompt   = $this->buildStepsPrompt($type, $prompt, $stepCount);
 
-        // ── ۱. امتحان مستقیم ─────────────────────────────────────────────────
         $direct = $this->tryServerDirect($systemPrompt, $userPrompt, true);
         if ($direct['success']) {
             return $this->parseStepResponse($direct['content']);
         }
 
-        // ── ۲. صف ────────────────────────────────────────────────────────────
         $job = AiGenerationJob::create([
             'type'       => $type,
             'mode'       => 'steps',
@@ -81,39 +75,72 @@ class ContentAiAssistantService
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // تلاش مستقیم از سرور — DeepSeek اول، Claude جایگزین
+    // اولویت: GapGPT → DeepSeek → Claude
     // ──────────────────────────────────────────────────────────────────────────
 
     private function tryServerDirect(string $system, string $user, bool $jsonMode = false): array
     {
-        // ── DeepSeek ─────────────────────────────────────────────────────────
-        $dsKey = config('ai_assistant.deepseek.api_key');
-        if (!empty($dsKey)) {
-            $result = $this->callDeepSeek($dsKey, $system, $user, $jsonMode);
+        // ── ۱. GapGPT — مستقیم از VPS ایران ─────────────────────────────────
+        $gapKey = config('ai_assistant.gapgpt.api_key');
+        if (!empty($gapKey)) {
+            $result = $this->callOpenAiCompatible(
+                $gapKey,
+                config('ai_assistant.gapgpt.base_url', 'https://api.gapgpt.app/v1'),
+                config('ai_assistant.gapgpt.model', 'gpt-4o-mini'),
+                config('ai_assistant.gapgpt.timeout', 60),
+                $system, $user, $jsonMode,
+                'gapgpt'
+            );
             if ($result['success']) {
                 return $result;
             }
-            Log::info('DeepSeek failed, trying Claude fallback: ' . ($result['error'] ?? ''));
+            Log::info('GapGPT failed: ' . ($result['error'] ?? ''));
         }
 
-        // ── Claude fallback ───────────────────────────────────────────────────
+        // ── ۲. DeepSeek — اگر اینترنت بین‌الملل وصل باشد ────────────────────
+        $dsKey = config('ai_assistant.deepseek.api_key');
+        if (!empty($dsKey)) {
+            $result = $this->callOpenAiCompatible(
+                $dsKey,
+                config('ai_assistant.deepseek.base_url', 'https://api.deepseek.com/v1'),
+                config('ai_assistant.deepseek.model', 'deepseek-chat'),
+                config('ai_assistant.deepseek.timeout', 60),
+                $system, $user, $jsonMode,
+                'deepseek'
+            );
+            if ($result['success']) {
+                return $result;
+            }
+            Log::info('DeepSeek failed: ' . ($result['error'] ?? ''));
+        }
+
+        // ── ۳. Claude fallback ────────────────────────────────────────────────
         $claudeKey = config('ai_assistant.claude.api_key');
         if (!empty($claudeKey)) {
             $result = $this->callClaude($claudeKey, $system, $user, $jsonMode);
             if ($result['success']) {
                 return $result;
             }
-            Log::info('Claude fallback also failed: ' . ($result['error'] ?? ''));
+            Log::info('Claude failed: ' . ($result['error'] ?? ''));
         }
 
         return ['success' => false, 'error' => 'no_provider'];
     }
 
-    private function callDeepSeek(string $key, string $system, string $user, bool $jsonMode): array
-    {
+    // OpenAI-compatible (GapGPT, DeepSeek, هر سرویس سازگار)
+    private function callOpenAiCompatible(
+        string $key,
+        string $baseUrl,
+        string $model,
+        int    $timeout,
+        string $system,
+        string $user,
+        bool   $jsonMode,
+        string $providerName
+    ): array {
         try {
             $payload = [
-                'model'       => config('ai_assistant.deepseek.model', 'deepseek-chat'),
+                'model'       => $model,
                 'messages'    => [
                     ['role' => 'system', 'content' => $system],
                     ['role' => 'user',   'content' => $user],
@@ -126,14 +153,18 @@ class ContentAiAssistantService
             }
 
             $response = Http::withToken($key)
-                ->timeout(config('ai_assistant.deepseek.timeout', 60))
-                ->post(config('ai_assistant.deepseek.base_url') . '/chat/completions', $payload);
+                ->timeout($timeout)
+                ->post(rtrim($baseUrl, '/') . '/chat/completions', $payload);
 
             if ($response->successful()) {
-                return ['success' => true, 'content' => $response->json('choices.0.message.content', ''), 'provider' => 'deepseek'];
+                return [
+                    'success'  => true,
+                    'content'  => $response->json('choices.0.message.content', ''),
+                    'provider' => $providerName,
+                ];
             }
 
-            return ['success' => false, 'error' => 'DeepSeek HTTP ' . $response->status()];
+            return ['success' => false, 'error' => $providerName . ' HTTP ' . $response->status()];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
@@ -142,12 +173,11 @@ class ContentAiAssistantService
     private function callClaude(string $key, string $system, string $user, bool $jsonMode): array
     {
         try {
-            $messages = [['role' => 'user', 'content' => $user]];
-            $payload  = [
+            $payload = [
                 'model'      => config('ai_assistant.claude.model', 'claude-sonnet-4-6'),
                 'max_tokens' => config('ai_assistant.max_tokens', 4096),
                 'system'     => $system,
-                'messages'   => $messages,
+                'messages'   => [['role' => 'user', 'content' => $user]],
             ];
 
             $response = Http::withHeaders([
@@ -161,7 +191,6 @@ class ContentAiAssistantService
             if ($response->successful()) {
                 $content = $response->json('content.0.text', '');
                 if ($jsonMode) {
-                    // Claude ممکن است JSON را در ```json ... ``` برگرداند
                     $content = preg_replace('/^```(?:json)?\s*/m', '', $content);
                     $content = preg_replace('/\s*```$/m', '', $content);
                     $content = trim($content);
@@ -199,7 +228,6 @@ class ContentAiAssistantService
 
     private function buildStepsPrompt(string $type, string $prompt, int $stepCount): string
     {
-        $systemPrompt = self::$SYSTEM_PROMPT_MAP[$type] ?? self::$SYSTEM_PROMPT_MAP[SiteContent::TYPE_TRAINING];
         return "موضوع: {$prompt}\n\n"
             . "لطفاً یک " . (SiteContent::$TYPES[$type] ?? $type) . " کامل با {$stepCount} مرحله بنویس.\n"
             . "خروجی را به صورت JSON با این ساختار برگردان:\n"
@@ -214,7 +242,10 @@ class ContentAiAssistantService
 
     private function parseStepResponse(string $json): array
     {
-        $data = json_decode($json, true);
+        // حذف ```json ... ``` اگر مدل آن را برگرداند
+        $json = preg_replace('/^```(?:json)?\s*/m', '', $json);
+        $json = preg_replace('/\s*```$/m', '', $json);
+        $data = json_decode(trim($json), true);
         if (!$data || !isset($data['title'])) {
             return ['success' => false, 'error' => 'خروجی AI قابل پردازش نبود.'];
         }

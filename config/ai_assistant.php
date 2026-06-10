@@ -3,11 +3,16 @@
 return [
     /*
     | دستیار هوشمند محتوا
-    | اول DeepSeek، اگر در دسترس نبود Claude جایگزین می‌شود.
+    | اولویت: GapGPT (ایران) → DeepSeek (اینترنت بین‌الملل) → Claude → Windows Worker queue
     */
 
-    'primary'   => env('AI_ASSISTANT_PROVIDER', 'deepseek'),
-    'fallback'  => env('AI_ASSISTANT_FALLBACK', 'claude'),
+    // GapGPT — OpenAI-compatible، در دسترس از VPS ایران
+    'gapgpt' => [
+        'api_key'  => env('GAPGPT_API_KEY', ''),
+        'base_url' => env('GAPGPT_BASE_URL', 'https://api.gapgpt.app/v1'),
+        'model'    => env('GAPGPT_MODEL', 'gpt-4o-mini'),
+        'timeout'  => 60,
+    ],
 
     'deepseek' => [
         'api_key'  => env('DEEPSEEK_API_KEY', ''),

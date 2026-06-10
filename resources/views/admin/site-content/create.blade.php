@@ -21,7 +21,7 @@ $hasSteps = in_array($type, ['training','workflow','procedure']);
         <div class="flex items-center gap-2 mb-3">
             <span class="text-xl">✨</span>
             <span class="font-semibold text-indigo-800">دستیار هوشمند AI</span>
-            <span class="text-xs text-indigo-500">(DeepSeek + Claude)</span>
+            <span class="text-xs text-indigo-500">(GapGPT + DeepSeek)</span>
         </div>
         <div class="flex gap-3">
             <input x-model="aiPrompt" type="text"
