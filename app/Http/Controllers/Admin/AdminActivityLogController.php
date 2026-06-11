@@ -53,7 +53,7 @@ class AdminActivityLogController extends Controller
 
         $admins = User::where('is_admin', true)
             ->orderBy('id')
-            ->get(['id', 'mobile', 'email', 'name']);
+            ->get(['id', 'mobile', 'name']);
 
         return view('admin.activity-log.index', [
             'logs' => $logs,

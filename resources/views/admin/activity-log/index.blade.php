@@ -25,7 +25,7 @@
                         <option value="">همه</option>
                         @foreach($admins as $a)
                             <option value="{{ $a->id }}" {{ (string) request('admin_user_id') === (string) $a->id ? 'selected' : '' }}>
-                                {{ $a->name ?: ($a->email ?: $a->mobile ?: ('#' . $a->id)) }}
+                                {{ $a->name ?: ($a->mobile ?: ('#' . $a->id)) }}
                             </option>
                         @endforeach
                     </select>
@@ -73,7 +73,7 @@
                             <td class="whitespace-nowrap">{{ \App\Helpers\Jalali::formatFa($log->created_at, 'Y/m/d H:i') }}</td>
                             <td>
                                 @if($log->adminUser)
-                                    {{ $log->adminUser->name ?: ($log->adminUser->email ?: ($log->adminUser->mobile ?: ('#' . $log->adminUser->id))) }}
+                                    {{ $log->adminUser->name ?: ($log->adminUser->mobile ?: ('#' . $log->adminUser->id)) }}
                                 @else
                                     <span class="text-slate-400">—</span>
                                 @endif
