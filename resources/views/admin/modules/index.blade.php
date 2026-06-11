@@ -327,7 +327,7 @@
         <div class="card-header">وضعیت پشتیبانی</div>
         <div class="card-body">
             @php
-                $daysUntil = $license->support_expires_at->isPast() ? 0 : $license->support_expires_at->diffInDays(now(), false);
+                $daysUntil = $license->support_expires_at->isPast() ? 0 : now()->diffInDays($license->support_expires_at);
                 $supportStatus = $license->support_expires_at->isPast() ? 'expired' : ($daysUntil <= 30 ? 'expiring_soon' : 'active');
             @endphp
             <div class="flex items-center justify-between">

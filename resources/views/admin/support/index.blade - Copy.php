@@ -46,7 +46,7 @@
 @if($license && $license->license_key)
     @php
         $supportExpires = $license->support_expires_at;
-        $supportStatus = !$supportExpires ? 'no_date' : ($supportExpires->isPast() ? 'expired' : ($supportExpires->diffInDays(now(), false) <= 30 ? 'expiring_soon' : 'active'));
+        $supportStatus = !$supportExpires ? 'no_date' : ($supportExpires->isPast() ? 'expired' : (now()->diffInDays($supportExpires) <= 30 ? 'expiring_soon' : 'active'));
     @endphp
     <div class="glass-card-strong mb-6 p-4 flex items-center gap-3" style="{{ $supportStatus === 'expired' ? 'border-color:#fecaca;background:rgba(254,242,242,0.8)' : ($supportStatus === 'expiring_soon' ? 'border-color:#fde68a;background:rgba(255,251,235,0.8)' : 'border-color:#a7f3d0;background:rgba(236,253,245,0.8)') }}">
         <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md text-lg">🛡️</span>
