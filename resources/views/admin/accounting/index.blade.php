@@ -1,116 +1,125 @@
 @extends('admin.layout')
-@section('title', 'ماژول حسابداری')
-@section('header', 'حسابداری (Accounting)')
+@section('title', 'حسابداری')
+@section('header', 'حسابداری')
+@push('head')
+<style>
+.acc-kpi{padding:1.125rem 1.375rem;border-radius:1rem;background:#fff;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(15,23,42,.06)}
+.acc-kpi--revenue{background:linear-gradient(135deg,#6366f1,#1e1b4b);border:none;color:#fff}
+.acc-kpi--revenue .acc-kpi__label,.acc-kpi--revenue .acc-kpi__value,.acc-kpi--revenue .acc-kpi__sub{color:#fff}
+.acc-kpi--revenue .acc-kpi__label{opacity:.8}
+.acc-kpi__label{font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem}
+.acc-kpi__value{font-size:1.75rem;font-weight:800;color:#1e293b;line-height:1.1}
+.acc-kpi__sub{font-size:.72rem;color:#94a3b8;margin-top:.3rem}
 
+.bar-chart-wrap{display:flex;align-items:flex-end;gap:.5rem;height:120px;padding:0 .25rem}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1}
+.bar-col__label{font-size:.62rem;color:#94a3b8;text-align:center;white-space:nowrap}
+.bar-col__bar-wrap{flex:1;display:flex;flex-direction:column;justify-content:flex-end;width:100%}
+.bar-col__bar{width:100%;border-radius:.25rem .25rem 0 0;background:linear-gradient(180deg,#6366f1,#4f46e5);min-height:4px;transition:height .5s}
+.bar-col__val{font-size:.58rem;color:#475569;font-weight:600;text-align:center}
+</style>
+@endpush
 @section('content')
 
-<div class="card mb-6">
-    <div class="card-header">راهنمای ماژول حسابداری</div>
-    <div class="card-body space-y-3 text-sm leading-relaxed">
-        <p>
-            ماژول <strong>حسابداری</strong> برای جمع‌بندی مالی سایت شما طراحی شده است و بر پایهٔ سفارش‌ها و فاکتورهای ثبت‌شده کار می‌کند.
-            این صفحه فقط زمانی در دسترس است که ماژول حسابداری برای این سایت از طرف پلتفرم فعال شده باشد (از طریق لایسنس یا خرید ماژول).
-        </p>
-        <ul class="list-disc pr-5 space-y-1">
-            <li>
-                <strong>فعال‌سازی از سمت پلتفرم:</strong>
-                در پنل مدیر اصلی (saas-platform) وارد بخش <em>سایت‌ها → ویرایش سایت → ماژول‌ها</em> شوید و ماژول
-                <code>accounting</code> را برای این سایت فعال کنید. در صورت پولی بودن ماژول، ابتدا باید برای این سایت خرید یا لایسنس ماژول ثبت شود.
-            </li>
-            <li>
-                <strong>به‌روزرسانی ماژول‌ها در سایت مشتری:</strong>
-                بعد از تغییرات در پلتفرم، در همین سایت به بخش <em>ادمین → لایسنس</em> بروید و «بروزرسانی لیست ماژول‌ها از پلتفرم» را بزنید
-                تا وضعیت جدید ماژول حسابداری دریافت شود.
-            </li>
-            <li>
-                <strong>دسترسی کامل مدیر سایت:</strong>
-                وقتی این ماژول فعال باشد، مدیر سایت از طریق این صفحه به نمای کلی مالی (تعداد سفارش‌ها، فاکتورهای پرداخت‌شده و جمع مبالغ) دسترسی دارد.
-                این ماژول هیچ محدودیتی روی خود داده‌ها اعمال نمی‌کند و فقط گزارش‌گیری و مشاهده است.
-            </li>
-            <li>
-                <strong>ایمنی داده:</strong>
-                اگر ماژول از سمت پلتفرم غیرفعال یا نوع آن به حالت داخلی (internal) تغییر کند، فقط این صفحه و لینک منو مخفی می‌شود؛
-                هیچ‌یک از سفارش‌ها، فاکتورها یا داده‌های مالی شما حذف نخواهد شد و در صورت فعال‌سازی مجدد، آمارها دوباره در همین صفحه نمایش داده می‌شوند.
-            </li>
-            <li>
-                <strong>گسترش در آینده:</strong>
-                در نسخه‌های بعدی می‌توانید بر اساس همین صفحه، گزارش‌های جزئی‌تر (فروش روزانه/ماهانه، بدهکاران، خروجی اکسل و …) اضافه کنید
-                بدون اینکه لازم باشد چیزی در پلتفرم تغییر کند؛ منبع اصلی داده، سفارش‌ها و فاکتورهای همین سایت است.
-            </li>
-        </ul>
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'حسابداری', 'url' => null],
+]])
 
-        <p class="text-xs text-slate-500">
-            نکته: اگر این صفحه را می‌بینید ولی در سایدبار لینک «حسابداری» نمایش داده نمی‌شود، از منوی سمت راست خارج و دوباره وارد شوید تا کش منو به‌روز شود.
-        </p>
-    </div>
-</div>
+<div class="admin-page">
 
-<div class="card mb-6">
-    <div class="card-header">وضعیت ماژول</div>
-    <div class="card-body text-sm">
-        @if($enabled)
-            <p class="text-green-700">
-                این ماژول برای این سایت <strong>فعال</strong> است و از طرف پلتفرم اجازهٔ استفاده دارد.
-            </p>
-        @else
-            <p class="text-amber-700">
-                در حال حاضر ماژول حسابداری برای این سایت فعال نیست. برای فعال‌سازی:
-                در پلتفرم، ماژول <code>accounting</code> را برای این سایت روشن کنید و سپس در این سایت از بخش «لایسنس»
-                ماژول‌ها را بروزرسانی کنید.
-            </p>
-        @endif
-        @if($license && $license->license_key)
-            <p class="mt-2 text-slate-600">
-                وضعیت لایسنس: {{ $license->statusLabel() }} – دامنه: {{ $license->domain ?: request()->getHost() }}
-            </p>
-        @else
-            <p class="mt-2 text-slate-600">
-                هیچ لایسنس فعالی برای این نصب ثبت نشده است.
-            </p>
-        @endif
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">نمای کلی مالی</div>
-    <div class="card-body">
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 text-sm">
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">تعداد کل سفارش‌ها</div>
-                <div class="text-2xl font-semibold text-slate-800">{{ number_format($ordersCount) }}</div>
-            </div>
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">سفارش‌های پرداخت‌شده</div>
-                <div class="text-2xl font-semibold text-emerald-700">{{ number_format($paidOrdersCount) }}</div>
-            </div>
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">جمع مبلغ سفارش‌های پرداخت‌شده</div>
-                <div class="text-2xl font-semibold text-slate-800">
-                    {{ number_format($totalRevenue) }}
-                    <span class="text-xs text-slate-500">ریال</span>
-                </div>
-            </div>
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">تعداد کل فاکتورها</div>
-                <div class="text-2xl font-semibold text-slate-800">{{ number_format($invoicesCount) }}</div>
-            </div>
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">فاکتورهای پرداخت‌شده</div>
-                <div class="text-2xl font-semibold text-emerald-700">{{ number_format($paidInvoicesCount) }}</div>
-            </div>
-            <div class="p-4 rounded-lg border bg-slate-50 border-slate-200">
-                <div class="text-xs text-slate-500 mb-1">جمع مبلغ فاکتورهای پرداخت‌شده</div>
-                <div class="text-2xl font-semibold text-slate-800">
-                    {{ number_format($invoiceTotal) }}
-                    <span class="text-xs text-slate-500">ریال</span>
-                </div>
-            </div>
+    {{-- Module Status --}}
+    @if(!$enabled)
+        <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:.875rem;padding:1rem 1.25rem;margin-bottom:1.5rem;color:#92400e;font-size:.875rem">
+            <strong>ماژول حسابداری برای این سایت فعال نیست.</strong>
+            در پنل پلتفرم، ماژول <code>accounting</code> را برای این سایت فعال کنید.
         </div>
-        <p class="mt-4 text-xs text-slate-500">
-            تمام اعداد بالا فقط جهت گزارش‌گیری هستند و تغییری در سفارش‌ها یا فاکتورهای شما ایجاد نمی‌کنند.
-        </p>
+    @endif
+
+    {{-- Main KPIs --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem">
+        <div class="acc-kpi acc-kpi--revenue">
+            <div class="acc-kpi__label">درآمد کل</div>
+            <div class="acc-kpi__value">{{ \App\Helpers\NumberHelper::formatFa((int)$totalRevenue) }}</div>
+            <div class="acc-kpi__sub">تومان — سفارش‌های تکمیل‌شده</div>
+        </div>
+        <div class="acc-kpi">
+            <div class="acc-kpi__label">کل سفارش‌ها</div>
+            <div class="acc-kpi__value">{{ \App\Helpers\NumberHelper::formatFa($ordersCount) }}</div>
+            <div class="acc-kpi__sub">{{ \App\Helpers\NumberHelper::formatFa($paidOrdersCount) }} پرداخت شده</div>
+        </div>
+        <div class="acc-kpi">
+            <div class="acc-kpi__label">در انتظار پرداخت</div>
+            <div class="acc-kpi__value" style="color:#d97706">{{ \App\Helpers\NumberHelper::formatFa($pendingCount) }}</div>
+            <div class="acc-kpi__sub">نیاز به پیگیری</div>
+        </div>
+        <div class="acc-kpi">
+            <div class="acc-kpi__label">لغو شده</div>
+            <div class="acc-kpi__value" style="color:#dc2626">{{ \App\Helpers\NumberHelper::formatFa($cancelledCount) }}</div>
+            <div class="acc-kpi__sub">از کل سفارش‌ها</div>
+        </div>
+        <div class="acc-kpi">
+            <div class="acc-kpi__label">فاکتورها</div>
+            <div class="acc-kpi__value">{{ \App\Helpers\NumberHelper::formatFa($invoicesCount) }}</div>
+            <div class="acc-kpi__sub">{{ \App\Helpers\NumberHelper::formatFa($paidInvoicesCount) }} پرداخت شده</div>
+        </div>
+        <div class="acc-kpi">
+            <div class="acc-kpi__label">درآمد فاکتور</div>
+            <div class="acc-kpi__value" style="color:#059669">{{ \App\Helpers\NumberHelper::formatFa((int)$invoiceTotal) }}</div>
+            <div class="acc-kpi__sub">تومان</div>
+        </div>
     </div>
+
+    {{-- Monthly Revenue Chart --}}
+    @if($monthlyRevenue->count() > 1)
+    <div class="card" style="padding:1.25rem;margin-bottom:1.5rem">
+        <div style="font-size:.95rem;font-weight:700;color:#1e293b;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            درآمد ماهانه (۶ ماه اخیر)
+        </div>
+        @php $maxRev = $monthlyRevenue->max('revenue') ?: 1; @endphp
+        <div class="bar-chart-wrap">
+            @foreach($monthlyRevenue as $m)
+                @php
+                    $pct = round($m->revenue / $maxRev * 100);
+                    $monthLabel = \Carbon\Carbon::createFromFormat('Y-m', $m->month)->format('M');
+                @endphp
+                <div class="bar-col">
+                    <div class="bar-col__val">{{ \App\Helpers\NumberHelper::formatFa((int)($m->revenue / 1000)) }}ک</div>
+                    <div class="bar-col__bar-wrap">
+                        <div class="bar-col__bar" style="height:{{ $pct }}%"></div>
+                    </div>
+                    <div class="bar-col__label">{{ $m->month }}</div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Quick Links --}}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <a href="{{ route('admin.orders.index') }}" class="card" style="padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;text-decoration:none;color:#1e293b;transition:all .2s">
+            <div style="width:2.5rem;height:2.5rem;border-radius:.625rem;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <div>
+                <div style="font-size:.88rem;font-weight:700">مدیریت سفارشات</div>
+                <div style="font-size:.75rem;color:#64748b">مشاهده و تغییر وضعیت سفارش‌ها</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.invoices.index') }}" class="card" style="padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;text-decoration:none;color:#1e293b;transition:all .2s">
+            <div style="width:2.5rem;height:2.5rem;border-radius:.625rem;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:.88rem;font-weight:700">فاکتورها</div>
+                <div style="font-size:.75rem;color:#64748b">مشاهده و دانلود فاکتور PDF</div>
+            </div>
+        </a>
+    </div>
+
+    <p class="text-xs text-slate-400 mt-4">
+        داده‌های این صفحه بر اساس سفارش‌ها و فاکتورهای ثبت‌شده محاسبه می‌شوند و تغییری در آنها ایجاد نمی‌کنند.
+    </p>
 </div>
-
 @endsection
-

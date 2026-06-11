@@ -11,7 +11,15 @@ class CouponController extends Controller
     public function index()
     {
         $coupons = Coupon::orderBy('created_at', 'desc')->paginate(15);
-        return view('admin.coupons.index', compact('coupons'));
+
+        $stats = [
+            'total'   => Coupon::count(),
+            'active'  => Coupon::where('is_active', true)->count(),
+            'expired' => Coupon::where('is_active', true)->where('expires_at', '<', now())->count(),
+            'usages'  => Coupon::sum('used_count'),
+        ];
+
+        return view('admin.coupons.index', compact('coupons', 'stats'));
     }
 
     public function create()

@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::orderBy('order')->get();
+        $categories = Category::withCount('posts')->orderBy('order')->get();
         return view('admin.categories.index', compact('categories'));
     }
 

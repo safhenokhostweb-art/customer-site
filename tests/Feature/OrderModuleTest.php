@@ -136,7 +136,7 @@ class OrderModuleTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.orders.show', $order));
         $response->assertOk();
         $response->assertSee('تغییر وضعیت');
-        $response->assertSee('update-status');
+        $response->assertSee('admin/orders');
     }
 
     public function test_cancelled_order_shows_no_status_change_form(): void

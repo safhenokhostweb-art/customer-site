@@ -1,10 +1,42 @@
 @extends('admin.layout')
 @section('title', 'دوره‌ها و کلاس‌ها')
 @section('header', 'دوره‌ها و کلاس‌ها')
+@push('head')
+<style>
+.course-card{border-radius:1rem;background:#fff;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(15,23,42,.05);margin-bottom:1rem;overflow:hidden;transition:all .2s}
+.course-card:hover{box-shadow:0 6px 24px rgba(99,102,241,.1);border-color:#c7d2fe;transform:translateY(-1px)}
+.course-card-head{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.25rem}
+.course-thumb{width:4rem;height:4rem;border-radius:.75rem;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.course-thumb img{width:100%;height:100%;object-fit:cover}
+.course-title{font-size:.95rem;font-weight:700;color:#1e293b}
+.course-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+.course-chip{display:inline-flex;align-items:center;gap:.2rem;padding:.18rem .55rem;border-radius:9999px;font-size:.68rem;font-weight:600}
+.course-chip--green{background:#dcfce7;color:#166534}
+.course-chip--slate{background:#f1f5f9;color:#475569}
+.course-chip--amber{background:#fef9c3;color:#92400e}
+.course-chip--violet{background:#ede9fe;color:#6d28d9}
+.course-chip--sky{background:#e0f2fe;color:#075985}
+.course-price{font-size:1.1rem;font-weight:800;color:#6366f1;white-space:nowrap}
+.course-free{font-size:.85rem;font-weight:700;color:#16a34a}
+</style>
+@endpush
 @section('content')
+
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
+    ['label' => 'دوره‌ها', 'url' => null],
+]])
+
+@if(session('success'))
+    <div class="alert alert-success mb-4">{{ session('success') }}</div>
+@endif
+
 <div class="admin-page">
     <div class="admin-page-head">
-        <p class="text-slate-600 text-sm">مدیریت دوره‌ها و کلاس‌های آموزشی با امکان ثبت‌نام.</p>
+        <div>
+            <h1 class="admin-page-title">دوره‌ها و کلاس‌ها</h1>
+            <p class="admin-section-lead" style="margin-top:.3rem">مدیریت دوره‌های آموزشی، کلاس‌ها و ثبت‌نام‌های کاربران.</p>
+        </div>
         <div class="admin-page-tools">
             <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -13,49 +45,92 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="table-responsive">
-            <table>
-            <thead>
-                <tr>
-                    <th>عنوان</th>
-                    <th>قیمت</th>
-                    <th>وضعیت</th>
-                    <th style="width:180px">عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($courses as $c)
-                    <tr>
-                        <td class="font-medium">{{ $c->title }}</td>
-                        <td>{{ number_format($c->price) }} تومان</td>
-                        <td>
-                            @if($c->is_active)
-                                <span class="badge badge-success">فعال</span>
-                            @else
-                                <span class="badge badge-danger">غیرفعال</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('admin.courses.edit', $c) }}" class="btn btn-primary btn-sm">ویرایش</a>
-                                <form method="post" action="{{ route('admin.courses.destroy', $c) }}" class="inline" onsubmit="return confirm('حذف این دوره؟');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="admin-empty">هنوز دوره‌ای ثبت نشده است. <a href="{{ route('admin.courses.create') }}" class="text-indigo-600 hover:underline">اولین دوره را ایجاد کنید</a></td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    {{-- KPIs --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem">
+        <div class="card" style="padding:.875rem 1.25rem">
+            <div style="font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:.25rem">کل دوره‌ها</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#1e293b">{{ \App\Helpers\NumberHelper::formatFa($stats['total']) }}</div>
+        </div>
+        <div class="card" style="padding:.875rem 1.25rem">
+            <div style="font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:.25rem">دوره فعال</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#16a34a">{{ \App\Helpers\NumberHelper::formatFa($stats['active']) }}</div>
+        </div>
+        <div class="card" style="padding:.875rem 1.25rem">
+            <div style="font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:.25rem">دوره رایگان</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#0284c7">{{ \App\Helpers\NumberHelper::formatFa($stats['free']) }}</div>
+        </div>
+        <div class="card" style="padding:.875rem 1.25rem">
+            <div style="font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:.25rem">ثبت‌نام‌ها</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#7c3aed">{{ \App\Helpers\NumberHelper::formatFa($stats['enrollments']) }}</div>
         </div>
     </div>
+
+    {{-- Courses --}}
+    @forelse($courses as $course)
+        <div class="course-card">
+            <div class="course-card-head">
+                <div class="course-thumb">
+                    @if($course->image)
+                        <img src="{{ $course->image }}" alt="{{ $course->title }}" loading="lazy">
+                    @else
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    @endif
+                </div>
+                <div style="flex:1;min-width:0">
+                    <div class="course-title">{{ $course->title }}</div>
+                    @if($course->description)
+                        <div style="font-size:.78rem;color:#64748b;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                            {{ Str::limit(strip_tags($course->description), 80) }}
+                        </div>
+                    @endif
+                    <div class="course-meta">
+                        @if($course->is_active)
+                            <span class="course-chip course-chip--green">✓ فعال</span>
+                        @else
+                            <span class="course-chip course-chip--slate">غیرفعال</span>
+                        @endif
+                        <span class="course-chip course-chip--sky">
+                            {{ \App\Helpers\NumberHelper::formatFa($course->classes_count) }} کلاس
+                        </span>
+                        <span class="course-chip course-chip--violet">
+                            {{ \App\Helpers\NumberHelper::formatFa($course->enrollments_count) }} ثبت‌نام
+                        </span>
+                        @if($course->isFree())
+                            <span class="course-chip course-chip--green">رایگان</span>
+                        @else
+                            <span class="course-chip course-chip--amber">پولی</span>
+                        @endif
+                    </div>
+                </div>
+                <div style="text-align:left;flex-shrink:0">
+                    @if($course->isFree())
+                        <div class="course-free">رایگان</div>
+                    @else
+                        <div class="course-price">{{ \App\Helpers\NumberHelper::formatFa((int)$course->price) }}</div>
+                        <div style="font-size:.68rem;color:#94a3b8">تومان</div>
+                    @endif
+                </div>
+            </div>
+            <div style="padding:.625rem 1.25rem;border-top:1px solid #f1f5f9;display:flex;gap:.5rem;background:#fafafa">
+                <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-primary btn-sm">ویرایش</a>
+                <form method="post" action="{{ route('admin.courses.destroy', $course) }}" style="display:inline"
+                      onsubmit="return confirm('دوره «{{ $course->title }}» حذف شود؟');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
+                </form>
+            </div>
+        </div>
+    @empty
+        <div class="admin-empty-state">
+            <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <p class="admin-empty-state__title">دوره‌ای ثبت نشده</p>
+            <p class="admin-empty-state__text">با دکمهٔ «دوره جدید» اولین دوره آموزشی خود را بسازید.</p>
+            <a href="{{ route('admin.courses.create') }}" class="btn btn-primary mt-3">ساخت اولین دوره</a>
+        </div>
+    @endforelse
+
     @if($courses->hasPages())
         <div class="admin-pagination">{{ $courses->links() }}</div>
     @endif
