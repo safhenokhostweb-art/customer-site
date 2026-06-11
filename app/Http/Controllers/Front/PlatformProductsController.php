@@ -15,7 +15,12 @@ class PlatformProductsController extends Controller
     public function index()
     {
         if (! SiteHelper::isOwnerSite()) {
-            abort(404);
+            if (auth()->check() && auth()->user()->isTenantAdmin()) {
+                return redirect()->route('admin.modules.index')
+                    ->with('info', 'برای دریافت بروزرسانی ماژول‌ها از دکمه «بروزرسانی لیست ماژول‌ها از پلتفرم» در همین صفحه استفاده کنید.');
+            }
+            return redirect()->route('home')
+                ->with('info', 'این بخش در دسترس نیست.');
         }
 
         $platformUrl = rtrim(config('site.platform_url', ''), '/');

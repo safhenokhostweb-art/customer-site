@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivityLog;
 use App\Models\User;
 use App\Models\UserActivityLog;
 use App\Rules\IranianMobile;
@@ -10,6 +11,7 @@ use App\Services\CaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class LoginController extends Controller
 {
@@ -79,6 +81,11 @@ class LoginController extends Controller
             Auth::login($user, (bool) $request->remember);
             $request->session()->regenerate();
             UserActivityLog::log('login', 'ورود به حساب', null, null, $user->id);
+
+            if ($user->is_platform_agent) {
+                $this->logPlatformAgentLogin($user, $request);
+            }
+
             $defaultRoute = $user->isTenantAdmin() ? route('admin.dashboard') : route('account.dashboard');
 
             return redirect()->intended($defaultRoute);
@@ -94,6 +101,24 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function logPlatformAgentLogin(User $user, Request $request): void
+    {
+        if (! Schema::hasTable('admin_activity_log')) {
+            return;
+        }
+        try {
+            AdminActivityLog::create([
+                'admin_user_id' => $user->id,
+                'action'        => 'platform_agent.login',
+                'description'   => 'ورود ادمین پلتفرم به پنل مدیریت سایت',
+                'properties'    => ['source' => 'platform_agent', 'mobile' => $user->mobile],
+                'ip_address'    => $request->ip(),
+                'user_agent'    => $request->userAgent(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**

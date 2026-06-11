@@ -97,6 +97,7 @@ $this->app->bind(
         $this->configureFormsWriteRateLimiters();
 
         Product::observe(ProductObserver::class);
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
 
         View::composer('themes.default.layout', function ($view) {
             $data = $view->getData();

@@ -57,8 +57,13 @@ class AdminActivityLog extends Model
             'license.refreshed_modules' => 'بروزرسانی فهرست ماژول‌ها',
             'setting.updated' => 'ویرایش تنظیمات',
             'order.status_changed' => 'تغییر وضعیت سفارش',
-            'blog.post_published' => 'انتشار مطلب وبلاگ',
-            'blog.post_scheduled' => 'زمان‌بندی انتشار مطلب وبلاگ',
+            'blog.post_published'           => 'انتشار مطلب وبلاگ',
+            'blog.post_scheduled'           => 'زمان‌بندی انتشار مطلب وبلاگ',
+            'platform_agent.login'          => 'ورود ادمین پلتفرم',
+            'platform_agent.provisioned'    => 'ثبت ادمین پلتفرم',
+            'platform_agent.reprovisioned'  => 'بازنشانی رمز ادمین پلتفرم',
+            'platform_agent.revoked'        => 'لغو دسترسی ادمین پلتفرم',
+            'platform_agent.access_recorded'=> 'ثبت دسترسی ادمین پلتفرم',
         ];
 
         return $labels[$action] ?? $action;

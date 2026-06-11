@@ -29,6 +29,7 @@ class User extends Authenticatable
         'privacy_settings',
         'password',
         'is_admin',
+        'is_platform_agent',
         'api_token',
     ];
 
@@ -44,6 +45,7 @@ class User extends Authenticatable
             'password'                  => 'hashed',
             'is_admin'                  => 'boolean',
             'is_site_admin'             => 'boolean',
+            'is_platform_agent'         => 'boolean',
             'notification_preferences'  => 'array',
             'privacy_settings'          => 'array',
         ];

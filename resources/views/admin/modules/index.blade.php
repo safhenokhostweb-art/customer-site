@@ -36,7 +36,10 @@
                     <li>{{ $u['title'] ?? $u['slug'] ?? '—' }} ({{ $u['installed_version'] ?? '—' }} → {{ $u['available_version'] ?? '—' }})</li>
                 @endforeach
             </ul>
-            <a href="{{ route('platform-products.index') }}" class="btn btn-outline-primary btn-sm" style="margin-top:0.35rem">دریافت بروزرسانی از پلتفرم</a>
+            <form action="{{ route('admin.license.refresh-modules') }}" method="post" style="display:inline;margin-top:0.35rem">
+                @csrf
+                <button type="submit" class="btn btn-outline-primary btn-sm">دریافت بروزرسانی از پلتفرم</button>
+            </form>
         </div>
     </div>
 @endif
