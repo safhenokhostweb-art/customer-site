@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\BuilderLayoutService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SettingController extends Controller
 {
@@ -84,5 +86,35 @@ class SettingController extends Controller
             Setting::set($k, $request->input($k));
         }
         return back()->with('success', 'تنظیمات ذخیره شد.');
+    }
+
+    public function uploadFavicon(Request $request)
+    {
+        $request->validate([
+            'favicon' => [
+                'required',
+                'file',
+                'max:512',
+                'mimes:ico,png,jpg,jpeg,gif,webp,svg+xml,svg',
+            ],
+        ], [
+            'favicon.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
+            'favicon.max'      => 'حجم فایل نباید بیشتر از ۵۱۲ کیلوبایت باشد.',
+            'favicon.mimes'    => 'فرمت قابل‌قبول: ico, png, jpg, gif, webp, svg',
+        ]);
+
+        $file = $request->file('favicon');
+        $ext  = strtolower($file->getClientOriginalExtension()) ?: 'ico';
+
+        // Delete old favicon if it exists
+        $old = Setting::get('site_favicon', '');
+        if ($old && Storage::disk('public')->exists($old)) {
+            Storage::disk('public')->delete($old);
+        }
+
+        $path = $file->storeAs('favicon', 'favicon.' . $ext, 'public');
+        Setting::set('site_favicon', $path);
+
+        return back()->with('success', 'آیکن سایت با موفقیت آپلود شد.');
     }
 }

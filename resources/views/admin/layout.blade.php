@@ -19,6 +19,22 @@
         .badge-blink{animation:badge-blink 1.5s infinite}
     </style>
     @stack('head')
+    @php
+        $siteFavicon = \App\Models\Setting::get('site_favicon', '');
+        if ($siteFavicon && \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon)) {
+            $faviconUrl  = \Illuminate\Support\Facades\Storage::url($siteFavicon);
+            $faviconMime = match(strtolower(pathinfo($faviconUrl, PATHINFO_EXTENSION))) {
+                'ico'  => 'image/x-icon',
+                'svg'  => 'image/svg+xml',
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/jpeg',
+            };
+            echo '<link rel="icon" type="' . $faviconMime . '" href="' . $faviconUrl . '">';
+            echo '<link rel="shortcut icon" href="' . $faviconUrl . '">';
+        }
+    @endphp
 </head>
 <body class="admin-body">
 

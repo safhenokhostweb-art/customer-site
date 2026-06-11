@@ -37,6 +37,25 @@
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
     <style>@include('partials.vazirmatn-font-faces-inline')</style>
     <link rel="manifest" href="{{ asset('manifest.json') }}">
+    @php
+        $siteFavicon = \App\Models\Setting::get('site_favicon', '');
+        $faviconUrl  = ($siteFavicon && \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon))
+            ? \Illuminate\Support\Facades\Storage::url($siteFavicon)
+            : null;
+        $faviconExt  = $faviconUrl ? strtolower(pathinfo($faviconUrl, PATHINFO_EXTENSION)) : '';
+        $faviconMime = match($faviconExt) {
+            'ico'  => 'image/x-icon',
+            'svg'  => 'image/svg+xml',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'image/jpeg',
+        };
+    @endphp
+    @if($faviconUrl)
+    <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    @endif
     @include('partials.platform-styles')
     @php
         $themeBuilder = \App\Helpers\PlatformUx::themeBuilder();

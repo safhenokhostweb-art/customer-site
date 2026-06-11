@@ -33,6 +33,7 @@ use App\Http\Controllers\Front\AdvancedSearchController;
 use App\Http\Controllers\Front\PageBuilderController;
 use App\Http\Controllers\Front\InvoiceController as FrontInvoiceController;
 use App\Http\Controllers\Front\BusinessCardController as FrontBusinessCardController;
+use App\Http\Controllers\Front\CourseController as FrontCourseController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ReviewController;
@@ -228,6 +229,17 @@ Route::middleware('install.check')->group(function () {
         Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
     });
 
+    Route::middleware('module:courses')->group(function () {
+        Route::get('/courses', [FrontCourseController::class, 'index'])->name('courses.index');
+        Route::get('/courses/{slug}', [FrontCourseController::class, 'show'])->name('courses.show');
+        Route::middleware('auth')->group(function () {
+            Route::post('/courses/{slug}/enroll', [FrontCourseController::class, 'enroll'])->name('courses.enroll');
+            Route::get('/my-learning', [FrontCourseController::class, 'myLearning'])->name('courses.my-learning');
+            Route::get('/courses/{slug}/learn/{classOrder?}', [FrontCourseController::class, 'learn'])->name('courses.learn');
+            Route::post('/courses/{slug}/learn/{classId}/complete', [FrontCourseController::class, 'markComplete'])->name('courses.class.complete');
+        });
+    });
+
     Route::middleware('module:shop')->group(function () {
         Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
         Route::get('/shop/compare', [ShopController::class, 'compare'])->name('shop.compare');
@@ -293,6 +305,7 @@ Route::middleware('install.check')->group(function () {
         Route::middleware('permission:settings')->group(function () {
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+            Route::post('settings/favicon', [AdminSettingController::class, 'uploadFavicon'])->name('settings.favicon');
             Route::get('menus/{menu}/preview', [AdminMenuController::class, 'preview'])->name('menus.preview');
             Route::post('menus/{menu}/publish', [AdminMenuController::class, 'publish'])->name('menus.publish');
             Route::post('menus/{menu}/preview-token', [AdminMenuController::class, 'regeneratePreviewLink'])->name('menus.preview-token');

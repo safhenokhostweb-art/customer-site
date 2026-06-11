@@ -13,4 +13,9 @@ class CourseClass extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+    public function completions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CourseClassCompletion::class);
+    }
 }

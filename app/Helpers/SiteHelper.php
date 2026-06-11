@@ -42,6 +42,11 @@ class SiteHelper
         return self::moduleEnabled('blog');
     }
 
+    public static function coursesEnabled(): bool
+    {
+        return self::moduleEnabled('courses');
+    }
+
     /**
      * فعال بودن ماژول با کلید مشخص: اول از لایسنس/پلتفرم، در غیر صورت از config و .env.
      */
