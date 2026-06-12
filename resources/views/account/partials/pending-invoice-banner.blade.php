@@ -1,15 +1,15 @@
-@php
+﻿@php
 /**
- * بنر فاکتور پرداخت‌نشده برای ماژول اشتراک.
- * تا زمانی که ماژول حسابداری توسعه نیافته، مستقیماً از جدول invoices بررسی می‌شود.
- * هنگامی که ماژول accounting توسعه یابد، این بخش می‌تواند از AccountingService استفاده کند.
+ * ط¨ظ†ط± ظپط§ع©طھظˆط± ظ¾ط±ط¯ط§ط®طھâ€Œظ†ط´ط¯ظ‡ ط¨ط±ط§غŒ ظ…ط§عکظˆظ„ ط§ط´طھط±ط§ع©.
+ * طھط§ ط²ظ…ط§ظ†غŒ ع©ظ‡ ظ…ط§عکظˆظ„ ط­ط³ط§ط¨ط¯ط§ط±غŒ طھظˆط³ط¹ظ‡ ظ†غŒط§ظپطھظ‡طŒ ظ…ط³طھظ‚غŒظ…ط§ظ‹ ط§ط² ط¬ط¯ظˆظ„ invoices ط¨ط±ط±ط³غŒ ظ…غŒâ€Œط´ظˆط¯.
+ * ظ‡ظ†ع¯ط§ظ…غŒ ع©ظ‡ ظ…ط§عکظˆظ„ accounting طھظˆط³ط¹ظ‡ غŒط§ط¨ط¯طŒ ط§غŒظ† ط¨ط®ط´ ظ…غŒâ€Œطھظˆط§ظ†ط¯ ط§ط² AccountingService ط§ط³طھظپط§ط¯ظ‡ ع©ظ†ط¯.
  */
 $__pendingInvoice = null;
 if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
     $__pendingInvoice = \App\Models\Invoice::where('user_id', auth()->id())
         ->whereIn('status', ['pending', 'pending_confirmation'])
         ->whereHas('items', function ($q) {
-            $q->where('title', 'like', '%اشتراک%');
+            $q->where('title', 'like', '%ط§ط´طھط±ط§ع©%');
         })
         ->with('items')
         ->latest()
@@ -20,35 +20,32 @@ if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
 @if($__pendingInvoice)
 <div class="pib-banner" role="alert" style="font-family:Vazirmatn,Tahoma,'Segoe UI',Arial,sans-serif">
     <div class="pib-banner__icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
+        <x-core-ui::icon name="alert-triangle" style="width:20px;height:20px" />
     </div>
     <div class="pib-banner__body">
         <p class="pib-banner__title">
-            یک فاکتور پرداخت‌نشده دارید
+            غŒع© ظپط§ع©طھظˆط± ظ¾ط±ط¯ط§ط®طھâ€Œظ†ط´ط¯ظ‡ ط¯ط§ط±غŒط¯
         </p>
         <p class="pib-banner__desc">
-            بابت «{{ $__pendingInvoice->items->first()?->title ?? 'اشتراک' }}» به مبلغ
-            <strong>{{ \App\Helpers\NumberHelper::formatFa($__pendingInvoice->total) }} تومان</strong>
-            (شماره: {{ $__pendingInvoice->invoice_number }})
-            — تا پرداخت یا لغو این درخواست، اشتراک فعال نمی‌شود.
+            ط¨ط§ط¨طھ آ«{{ $__pendingInvoice->items->first()?->title ?? 'ط§ط´طھط±ط§ع©' }}آ» ط¨ظ‡ ظ…ط¨ظ„ط؛
+            <strong>{{ \App\Helpers\NumberHelper::formatFa($__pendingInvoice->total) }} طھظˆظ…ط§ظ†</strong>
+            (ط´ظ…ط§ط±ظ‡: {{ $__pendingInvoice->invoice_number }})
+            â€” طھط§ ظ¾ط±ط¯ط§ط®طھ غŒط§ ظ„ط؛ظˆ ط§غŒظ† ط¯ط±ط®ظˆط§ط³طھطŒ ط§ط´طھط±ط§ع© ظپط¹ط§ظ„ ظ†ظ…غŒâ€Œط´ظˆط¯.
         </p>
     </div>
     <div class="pib-banner__actions">
         <a href="{{ route('subscriptions.pay', $__pendingInvoice->invoice_number) }}"
            class="pib-banner__btn pib-banner__btn--pay">
-            پرداخت الان
+            ظ¾ط±ط¯ط§ط®طھ ط§ظ„ط§ظ†
         </a>
         <form method="POST"
               action="{{ route('account.subscriptions.cancel-pending') }}"
-              onsubmit="return confirm('درخواست اشتراک لغو شود؟');"
+              onsubmit="return confirm('ط¯ط±ط®ظˆط§ط³طھ ط§ط´طھط±ط§ع© ظ„ط؛ظˆ ط´ظˆط¯طں');"
               style="display:inline">
             @csrf
             <input type="hidden" name="invoice_id" value="{{ $__pendingInvoice->id }}">
             <button type="submit" class="pib-banner__btn pib-banner__btn--cancel">
-                لغو درخواست
+                ظ„ط؛ظˆ ط¯ط±ط®ظˆط§ط³طھ
             </button>
         </form>
     </div>
@@ -68,3 +65,5 @@ if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
 .pib-banner__btn--cancel:hover { background:#fef3c7; }
 </style>
 @endif
+
+

@@ -8,6 +8,43 @@
     <div class="alert alert-success mb-4">{{ session('success') }}</div>
     @endif
 
+    {{-- ═══ Canvas Theme Status Banner ═══ --}}
+    @if($canvasActive)
+    <div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:1rem;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;color:#fff;">
+        <div style="display:flex;align-items:center;gap:0.875rem;">
+            <div style="width:2.75rem;height:2.75rem;background:rgba(255,255,255,0.15);border-radius:0.875rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <x-core-ui::icon name="layout" class="w-6 h-6" style="color:#fff;" />
+            </div>
+            <div>
+                <p style="font-weight:700;font-size:1rem;margin:0 0 0.15rem;">قالب Canvas فعال است</p>
+                <p style="font-size:0.8rem;opacity:0.85;margin:0;">{{ $canvasName ?: 'قالب سفارشی' }} — صفحات عمومی سایت با این قالب نمایش داده می‌شوند</p>
+            </div>
+        </div>
+        <a href="{{ route('admin.theme-design.canvas') }}"
+           style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.15);hover:background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border-radius:0.75rem;text-decoration:none;transition:background .15s;">
+            <x-core-ui::icon name="eye" class="w-4 h-4" />
+            مدیریت قالب Canvas
+        </a>
+    </div>
+    @else
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:1rem;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:2.5rem;height:2.5rem;background:#e0f2fe;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <x-core-ui::icon name="layout" class="w-5 h-5 text-sky-500" />
+            </div>
+            <div>
+                <p style="font-weight:600;font-size:0.9rem;color:#0c4a6e;margin:0 0 0.15rem;">قالب Canvas نصب نشده</p>
+                <p style="font-size:0.78rem;color:#0369a1;margin:0;">قالب‌های حرفه‌ای را از مارکت‌پلیس خریداری و نصب کنید</p>
+            </div>
+        </div>
+        <a href="{{ route('admin.theme-marketplace.index') }}"
+           style="display:inline-flex;align-items:center;gap:0.5rem;background:#0284c7;color:#fff;font-size:0.82rem;font-weight:600;padding:0.45rem 1rem;border-radius:0.65rem;text-decoration:none;">
+            <x-core-ui::icon name="store" class="w-4 h-4" />
+            مارکت‌پلیس
+        </a>
+    </div>
+    @endif
+
     {{-- ═══ Enterprise Theme Presets ═══ --}}
     <div class="card mb-6" style="margin-bottom:1.5rem;">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">

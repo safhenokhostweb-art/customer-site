@@ -167,7 +167,7 @@
                         <tr>
                             <td colspan="6" class="p-0">
                                 <div class="admin-empty-state">
-                                    <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    <x-core-ui::icon name="message-circle" class="admin-empty-state__icon" />
                                     <p class="admin-empty-state__title">ظ†ط¸ط±غŒ غŒط§ظپطھ ظ†ط´ط¯</p>
                                     <p class="admin-empty-state__text">ظپغŒظ„طھط±ظ‡ط§ ط±ط§ طھط؛غŒغŒط± ط¯ظ‡غŒط¯ غŒط§ ظ…ظ†طھط¸ط± ط«ط¨طھ ظ†ط¸ط± ط¬ط¯غŒط¯ ط¨ط§ط´غŒط¯.</p>
                                 </div>
@@ -184,4 +184,5 @@
     @endif
 </div>
 @endsection
+
 

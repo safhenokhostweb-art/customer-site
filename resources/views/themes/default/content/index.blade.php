@@ -1,24 +1,24 @@
-@extends('themes.default.layout')
+﻿@extends('themes.default.layout')
 
-@section('title', 'مرکز محتوا')
-@section('meta_description', 'مقالات، آموزش‌ها و محتوای تخصصی')
+@section('title', 'ظ…ط±ع©ط² ظ…ط­طھظˆط§')
+@section('meta_description', 'ظ…ظ‚ط§ظ„ط§طھطŒ ط¢ظ…ظˆط²ط´â€Œظ‡ط§ ظˆ ظ…ط­طھظˆط§غŒ طھط®طµطµغŒ')
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">خانه</a>
+    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
     <span style="margin: 0 0.5rem;">/</span>
-    <span>مرکز محتوا</span>
+    <span>ظ…ط±ع©ط² ظ…ط­طھظˆط§</span>
 @endsection
 
 @section('content')
 <div style="max-width: 72rem; margin: 0 auto;">
 
-    {{-- هدر --}}
+    {{-- ظ‡ط¯ط± --}}
     <div style="margin-bottom: 2rem;">
-        <h1 style="font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem;">مرکز محتوا</h1>
-        <p style="color: #6b7280; font-size: 1rem;">مقالات، آموزش‌ها و راهنماهای تخصصی</p>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem;">ظ…ط±ع©ط² ظ…ط­طھظˆط§</h1>
+        <p style="color: #6b7280; font-size: 1rem;">ظ…ظ‚ط§ظ„ط§طھطŒ ط¢ظ…ظˆط²ط´â€Œظ‡ط§ ظˆ ط±ط§ظ‡ظ†ظ…ط§ظ‡ط§غŒ طھط®طµطµغŒ</p>
     </div>
 
-    {{-- فیلتر نوع --}}
+    {{-- ظپغŒظ„طھط± ظ†ظˆط¹ --}}
     @php
         $typeLabels = \App\Models\SiteContent::$TYPES;
         unset($typeLabels[\App\Models\SiteContent::TYPE_HELP]);
@@ -27,7 +27,7 @@
         <a href="{{ route('content.index') }}"
            style="padding:0.35rem 0.85rem; border-radius:9999px; font-size:0.82rem; font-weight:600; text-decoration:none;
                   {{ !$type ? 'background:#4f46e5; color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
-            همه
+            ظ‡ظ…ظ‡
         </a>
         @foreach($typeLabels as $key => $label)
             @if(($typeCounts[$key] ?? 0) > 0)
@@ -40,29 +40,26 @@
             @endif
         @endforeach
 
-        {{-- جستجو --}}
+        {{-- ط¬ط³طھط¬ظˆ --}}
         <form action="{{ route('content.index') }}" method="GET" style="margin-right:auto; display:flex; gap:0.4rem;">
             @if($type)<input type="hidden" name="type" value="{{ $type }}">@endif
             <input type="text" name="q" value="{{ request('q') }}"
-                   placeholder="جستجو در محتوا..."
+                   placeholder="ط¬ط³طھط¬ظˆ ط¯ط± ظ…ط­طھظˆط§..."
                    style="border:1px solid #e5e7eb; border-radius:0.5rem; padding:0.35rem 0.7rem;
                           font-size:0.82rem; outline:none; font-family:inherit; width:180px;">
             <button type="submit"
                     style="padding:0.35rem 0.7rem; background:#f3f4f6; border:1px solid #e5e7eb;
                            border-radius:0.5rem; font-size:0.82rem; cursor:pointer; font-family:inherit;">
-                🔍
+                ًں”چ
             </button>
         </form>
     </div>
 
-    {{-- کارت‌های محتوا --}}
+    {{-- ع©ط§ط±طھâ€Œظ‡ط§غŒ ظ…ط­طھظˆط§ --}}
     @if($contents->isEmpty())
         <div style="text-align:center; padding:4rem 1rem; color:#9ca3af;">
-            <svg style="width:3rem;height:3rem;margin:0 auto 1rem;opacity:.4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p>محتوایی برای نمایش وجود ندارد.</p>
+            <x-core-ui::icon name="file-text" style="width:3rem;height:3rem;margin:0 auto 1rem;opacity:.4" />
+            <p>ظ…ط­طھظˆط§غŒغŒ ط¨ط±ط§غŒ ظ†ظ…ط§غŒط´ ظˆط¬ظˆط¯ ظ†ط¯ط§ط±ط¯.</p>
         </div>
     @else
         <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem; margin-bottom:2rem;">
@@ -74,7 +71,7 @@
                onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,.08)';this.style.transform='translateY(-2px)'"
                onmouseout="this.style.boxShadow='none';this.style.transform='none'">
 
-                {{-- نوع محتوا --}}
+                {{-- ظ†ظˆط¹ ظ…ط­طھظˆط§ --}}
                 <div style="margin-bottom:0.75rem;">
                     @php
                         $typeColors = [
@@ -91,17 +88,17 @@
                         {{ $item->typeName() }}
                     </span>
                     @if($item->ai_generated)
-                    <span style="font-size:0.68rem; color:#818cf8; margin-right:0.3rem;">✨ AI</span>
+                    <span style="font-size:0.68rem; color:#818cf8; margin-right:0.3rem;">âœ¨ AI</span>
                     @endif
                 </div>
 
-                {{-- عنوان --}}
+                {{-- ط¹ظ†ظˆط§ظ† --}}
                 <h2 style="font-size:1rem; font-weight:700; color:#111827; margin-bottom:0.5rem; line-height:1.5;
                            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
                     {{ $item->title }}
                 </h2>
 
-                {{-- خلاصه --}}
+                {{-- ط®ظ„ط§طµظ‡ --}}
                 @if($item->excerpt)
                 <p style="font-size:0.825rem; color:#6b7280; line-height:1.6; margin-bottom:0.75rem; flex:1;
                           display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
@@ -115,13 +112,13 @@
                     <span style="font-size:0.75rem; color:#9ca3af;">
                         {{ $item->published_at ? \App\Helpers\Jalali::formatFa($item->published_at, 'Y/m/d') : '' }}
                     </span>
-                    <span style="font-size:0.78rem; color:#4f46e5; font-weight:600;">مطالعه ←</span>
+                    <span style="font-size:0.78rem; color:#4f46e5; font-weight:600;">ظ…ط·ط§ظ„ط¹ظ‡ â†گ</span>
                 </div>
             </a>
             @endforeach
         </div>
 
-        {{-- صفحه‌بندی --}}
+        {{-- طµظپط­ظ‡â€Œط¨ظ†ط¯غŒ --}}
         @if($contents->hasPages())
         <div style="display:flex; justify-content:center; gap:0.4rem; flex-wrap:wrap;">
             @foreach($contents->links()->elements as $element)
@@ -146,3 +143,5 @@
 
 </div>
 @endsection
+
+

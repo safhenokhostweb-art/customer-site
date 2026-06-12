@@ -13,7 +13,7 @@
     </div>
     <a href="{{ route('admin.theme-marketplace.index') }}"
        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      <x-core-ui::icon name="store" class="w-4 h-4" />
       فروشگاه قالب‌ها
     </a>
   </div>
@@ -22,7 +22,7 @@
   @if(session('success') || (!empty($purchased) && !session()->has('success')))
     <div class="bg-green-50 border border-green-200 rounded-xl p-5 flex items-start gap-4">
       <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600" />
       </div>
       <div>
         <p class="font-semibold text-green-800 text-sm">خرید موفق!</p>
@@ -42,7 +42,7 @@
   @if(empty($licenses))
     <div class="bg-white rounded-xl border border-gray-100 py-16 text-center">
       <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <x-core-ui::icon name="shield-check" class="w-8 h-8 text-indigo-300" />
       </div>
       <p class="text-gray-500 font-medium mb-1">هنوز قالبی خریداری نکرده‌اید</p>
       <p class="text-gray-400 text-sm mb-4">از فروشگاه قالب‌های حرفه‌ای را مرور کنید</p>
@@ -83,7 +83,7 @@
               @csrf
               <button type="submit"
                 class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 rounded-lg transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <x-core-ui::icon name="download" class="w-4 h-4" />
                 نصب و فعال‌سازی قالب
               </button>
             </form>

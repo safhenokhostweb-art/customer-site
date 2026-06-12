@@ -185,7 +185,7 @@
 
     {{-- First-visit hint (shown by JS for 4s) --}}
     <div class="bell-first-hint" id="bell-first-hint" style="display:none">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 9l4 4 4-4"/><path d="M9 13V3"/><path d="M19 15l-4-4-4 4"/><path d="M15 11v10"/></svg>
+        <x-core-ui::icon name="bell" />
         ظ‚ط§ط¨ظ„ ط¬ط§ط¨ط¬ط§غŒغŒ
     </div>
 
@@ -391,4 +391,5 @@
 })();
 </script>
 @endif
+
 

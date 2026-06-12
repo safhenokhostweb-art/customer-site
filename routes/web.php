@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\PageController as FrontPageController;
+use App\Http\Controllers\Front\ThemeCanvasPageController;
 use App\Http\Controllers\Front\BlogController;
 use App\Http\Controllers\Front\ShopController;
 use App\Http\Controllers\Front\ContactController;
@@ -175,9 +176,10 @@ Route::middleware('install.check')->group(function () {
         });
     });
 
-    // Front: corporate + blog + optional shop
-    Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/page/{slug}', [FrontPageController::class, 'show'])->name('page.show');
+    // Front: home + pages — ThemeCanvasPageController delegates to HomeController/FrontPageController
+    // when no active canvas theme is installed (active_canvas_theme_data setting is empty).
+    Route::get('/', [ThemeCanvasPageController::class, 'index'])->name('home');
+    Route::get('/page/{slug}', [ThemeCanvasPageController::class, 'show'])->name('page.show');
     Route::middleware(['auth', 'admin'])->prefix('builder')->name('builder.')->group(function () {
         Route::get('/test', [PageBuilderController::class, 'test'])->name('test');
         Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit')->whereNumber('page');
@@ -322,6 +324,8 @@ Route::middleware('install.check')->group(function () {
             Route::put('theme-design',               [ThemeDesignController::class, 'update'])->name('theme-design.update');
             Route::post('theme-design/preset',       [ThemeDesignController::class, 'activatePreset'])->name('theme-design.preset');
             Route::post('theme-design/reset-preset', [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
+            Route::get('theme-design/canvas',              [ThemeDesignController::class, 'canvasTheme'])->name('theme-design.canvas');
+            Route::post('theme-design/canvas/deactivate',  [ThemeDesignController::class, 'canvasDeactivate'])->name('theme-design.canvas-deactivate');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {

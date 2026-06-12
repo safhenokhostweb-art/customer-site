@@ -1,4 +1,4 @@
-@php
+﻿@php
 use SaaSPlatform\Modules\Tickets\Models\Ticket as _ATTicket;
 use SaaSPlatform\Modules\Tickets\Models\TicketReply as _ATReply;
 
@@ -16,17 +16,15 @@ $_atLastReplyId = $_atIds->isNotEmpty()
 <div id="atn-banner"
      style="display:none;position:fixed;top:0;right:0;left:0;z-index:9100;padding:0.7rem 1.25rem;background:linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%);color:#fff;box-shadow:0 4px 24px rgba(99,102,241,0.4);animation:atnSlide .35s ease">
     <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;gap:0.875rem">
-        <svg style="width:1.125rem;height:1.125rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
+        <x-core-ui::icon name="message-circle" style="width:1.125rem;height:1.125rem;flex-shrink:0" style="width:2px;height:px" />
         <span id="atn-text" style="flex:1;font-size:0.85rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <a id="atn-link" href="#"
            style="padding:0.25rem 0.85rem;background:rgba(255,255,255,0.9);color:#4f46e5;border-radius:0.4rem;font-size:0.75rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
-            مشاهده پاسخ
+            ظ…ط´ط§ظ‡ط¯ظ‡ ظ¾ط§ط³ط®
         </a>
         <button onclick="document.getElementById('atn-banner').style.display='none'"
                 style="display:flex;align-items:center;justify-content:center;width:1.625rem;height:1.625rem;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:50%;color:#fff;font-size:1rem;cursor:pointer;padding:0;flex-shrink:0"
-                aria-label="بستن">×</button>
+                aria-label="ط¨ط³طھظ†">أ—</button>
     </div>
 </div>
 <style>
@@ -66,8 +64,8 @@ $_atLastReplyId = $_atIds->isNotEmpty()
             lastId = data.last_id;
             if (window.CS) window.CS.play('notify');
             var first = data.replies[0];
-            var text = 'پاسخ جدید دریافت شد: ' + (first.subject || 'تیکت شما');
-            if (data.new_count > 1) text += ' (+' + (data.new_count - 1) + ' مورد دیگر)';
+            var text = 'ظ¾ط§ط³ط® ط¬ط¯غŒط¯ ط¯ط±غŒط§ظپطھ ط´ط¯: ' + (first.subject || 'طھغŒع©طھ ط´ظ…ط§');
+            if (data.new_count > 1) text += ' (+' + (data.new_count - 1) + ' ظ…ظˆط±ط¯ ط¯غŒع¯ط±)';
             showBanner(text, first.url);
         })
         .catch(function(){});
@@ -78,3 +76,5 @@ $_atLastReplyId = $_atIds->isNotEmpty()
 })();
 </script>
 @endif
+
+

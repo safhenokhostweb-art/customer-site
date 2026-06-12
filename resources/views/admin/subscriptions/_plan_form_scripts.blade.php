@@ -1,4 +1,4 @@
-<script>
+﻿<script>
 function toggleDiscount(productId, checked) {
     var item = document.getElementById('prod-item-' + productId);
     var disc = document.getElementById('disc-' + productId);
@@ -30,7 +30,7 @@ function toggleDiscount(productId, checked) {
     var prevName  = document.getElementById('prev-name');
     if (nameInput) {
         nameInput.addEventListener('input', function () {
-            if (prevName) prevName.textContent = this.value || 'نام پلن';
+            if (prevName) prevName.textContent = this.value || 'ظ†ط§ظ… ظ¾ظ„ظ†';
         });
     }
     if (slugInput) {
@@ -41,7 +41,7 @@ function toggleDiscount(productId, checked) {
     if (priceMain && prevPrice) {
         priceMain.addEventListener('input', function () {
             var v = parseInt(this.value) || 0;
-            prevPrice.textContent = v === 0 ? 'رایگان' : v.toLocaleString('fa-IR') + ' تومان';
+            prevPrice.textContent = v === 0 ? 'ط±ط§غŒع¯ط§ظ†' : v.toLocaleString('fa-IR') + ' طھظˆظ…ط§ظ†';
         });
     }
 
@@ -55,7 +55,7 @@ function toggleDiscount(productId, checked) {
             if (inp.value.trim()) {
                 var d = document.createElement('div');
                 d.style.cssText = 'display:flex;align-items:center;gap:.375rem';
-                d.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>' + inp.value;
+                d.innerHTML = '<x-core-ui::icon name="check" style="width:12px;height:12px" />' + inp.value;
                 prevFeats.appendChild(d);
             }
         });
@@ -67,9 +67,9 @@ function toggleDiscount(productId, checked) {
         addBtn.addEventListener('click', function () {
             var div = document.createElement('div');
             div.className = 'plnfrm__feat-row';
-            div.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="plnfrm__feat-icon" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>'
-                + '<input type="text" name="features[]" placeholder="امکان جدید..." class="plnfrm__feat-input">'
-                + '<button type="button" onclick="this.closest(\'.plnfrm__feat-row\').remove()" class="plnfrm__feat-del">×</button>';
+            div.innerHTML = '<x-core-ui::icon name="check" class="plnfrm__feat-icon" style="color:#4f46e5" />'
+                + '<input type="text" name="features[]" placeholder="ط§ظ…ع©ط§ظ† ط¬ط¯غŒط¯..." class="plnfrm__feat-input">'
+                + '<button type="button" onclick="this.closest(\'.plnfrm__feat-row\').remove()" class="plnfrm__feat-del">أ—</button>';
             featsContainer.appendChild(div);
             div.querySelector('input').focus();
             div.querySelector('input').addEventListener('input', updateFeats);
@@ -91,3 +91,4 @@ function toggleDiscount(productId, checked) {
     }
 })();
 </script>
+

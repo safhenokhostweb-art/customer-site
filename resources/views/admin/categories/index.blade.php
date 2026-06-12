@@ -1,6 +1,6 @@
-@extends('admin.layout')
-@section('title', 'دسته‌بندی‌های وبلاگ')
-@section('header', 'دسته‌بندی‌های وبلاگ')
+﻿@extends('admin.layout')
+@section('title', 'ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒâ€Œظ‡ط§غŒ ظˆط¨ظ„ط§ع¯')
+@section('header', 'ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒâ€Œظ‡ط§غŒ ظˆط¨ظ„ط§ع¯')
 @push('head')
 <style>
 .cat-card{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:.875rem;background:#fff;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(15,23,42,.05);transition:all .2s;margin-bottom:.625rem}
@@ -15,8 +15,8 @@
 @section('content')
 
 @include('admin.partials.breadcrumb', ['crumbs' => [
-    ['label' => 'داشبورد', 'url' => route('admin.dashboard')],
-    ['label' => 'دسته‌بندی‌های وبلاگ', 'url' => null],
+    ['label' => 'ط¯ط§ط´ط¨ظˆط±ط¯', 'url' => route('admin.dashboard')],
+    ['label' => 'ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒâ€Œظ‡ط§غŒ ظˆط¨ظ„ط§ع¯', 'url' => null],
 ]])
 
 @if(session('success'))
@@ -26,13 +26,13 @@
 <div class="admin-page">
     <div class="admin-page-head">
         <div>
-            <h1 class="admin-page-title">دسته‌بندی‌های وبلاگ</h1>
-            <p class="admin-section-lead" style="margin-top:.3rem">مدیریت دسته‌بندی مطالب و تعداد پست‌های هر دسته.</p>
+            <h1 class="admin-page-title">ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒâ€Œظ‡ط§غŒ ظˆط¨ظ„ط§ع¯</h1>
+            <p class="admin-section-lead" style="margin-top:.3rem">ظ…ط¯غŒط±غŒطھ ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒ ظ…ط·ط§ظ„ط¨ ظˆ طھط¹ط¯ط§ط¯ ظ¾ط³طھâ€Œظ‡ط§غŒ ظ‡ط± ط¯ط³طھظ‡.</p>
         </div>
         <div class="admin-page-tools">
             <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
                 <x-core-ui::icon name="plus" class="w-4 h-4" />
-                دسته جدید
+                ط¯ط³طھظ‡ ط¬ط¯غŒط¯
             </a>
         </div>
     </div>
@@ -44,7 +44,7 @@
                 <x-core-ui::icon name="folder" class="w-5 h-5 text-violet-600" />
             </div>
             <div>
-                <div style="font-size:.72rem;color:#64748b;font-weight:600">تعداد دسته‌ها</div>
+                <div style="font-size:.72rem;color:#64748b;font-weight:600">طھط¹ط¯ط§ط¯ ط¯ط³طھظ‡â€Œظ‡ط§</div>
                 <div style="font-size:1.4rem;font-weight:800;color:#1e293b">{{ \App\Helpers\NumberHelper::formatFa($categories->count()) }}</div>
             </div>
         </div>
@@ -53,7 +53,7 @@
                 <x-core-ui::icon name="file-text" class="w-5 h-5 text-blue-600" />
             </div>
             <div>
-                <div style="font-size:.72rem;color:#64748b;font-weight:600">مجموع مطالب</div>
+                <div style="font-size:.72rem;color:#64748b;font-weight:600">ظ…ط¬ظ…ظˆط¹ ظ…ط·ط§ظ„ط¨</div>
                 <div style="font-size:1.4rem;font-weight:800;color:#1e293b">{{ \App\Helpers\NumberHelper::formatFa($categories->sum('posts_count')) }}</div>
             </div>
         </div>
@@ -70,27 +70,26 @@
                 <div class="cat-slug">/{{ $cat->slug }}</div>
             </div>
             <span class="cat-count">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                {{ \App\Helpers\NumberHelper::formatFa($cat->posts_count) }} مطلب
+                <x-core-ui::icon name="folder" class="w-3 h-3" />
+                {{ \App\Helpers\NumberHelper::formatFa($cat->posts_count) }} ظ…ط·ظ„ط¨
             </span>
             <div class="cat-actions">
-                <a href="{{ route('admin.categories.edit', $cat) }}" class="btn btn-primary btn-sm">ویرایش</a>
+                <a href="{{ route('admin.categories.edit', $cat) }}" class="btn btn-primary btn-sm">ظˆغŒط±ط§غŒط´</a>
                 <form method="post" action="{{ route('admin.categories.destroy', $cat) }}" style="display:inline;"
-                      onsubmit="return confirm('دسته‌بندی «{{ $cat->name }}» حذف شود؟ مطالب آن بدون دسته می‌مانند.');">
+                      onsubmit="return confirm('ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒ آ«{{ $cat->name }}آ» ط­ط°ظپ ط´ظˆط¯طں ظ…ط·ط§ظ„ط¨ ط¢ظ† ط¨ط¯ظˆظ† ط¯ط³طھظ‡ ظ…غŒâ€Œظ…ط§ظ†ظ†ط¯.');">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
+                    <button type="submit" class="btn btn-danger btn-sm">ط­ط°ظپ</button>
                 </form>
             </div>
         </div>
     @empty
         <div class="admin-empty-state" style="margin-top:2rem">
-            <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            <p class="admin-empty-state__title">هنوز دسته‌بندی ثبت نشده</p>
-            <p class="admin-empty-state__text">با دکمهٔ «دسته جدید» اولین دسته‌بندی وبلاگ خود را بسازید.</p>
-            <a href="{{ route('admin.categories.create') }}" class="btn btn-primary mt-3">ساخت اولین دسته</a>
+            <x-core-ui::icon name="folder" class="admin-empty-state__icon" />
+            <p class="admin-empty-state__title">ظ‡ظ†ظˆط² ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒ ط«ط¨طھ ظ†ط´ط¯ظ‡</p>
+            <p class="admin-empty-state__text">ط¨ط§ ط¯ع©ظ…ظ‡ظ” آ«ط¯ط³طھظ‡ ط¬ط¯غŒط¯آ» ط§ظˆظ„غŒظ† ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒ ظˆط¨ظ„ط§ع¯ ط®ظˆط¯ ط±ط§ ط¨ط³ط§ط²غŒط¯.</p>
+            <a href="{{ route('admin.categories.create') }}" class="btn btn-primary mt-3">ط³ط§ط®طھ ط§ظˆظ„غŒظ† ط¯ط³طھظ‡</a>
         </div>
     @endforelse
 </div>
 @endsection
+

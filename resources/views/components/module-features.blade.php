@@ -96,9 +96,7 @@
     @if(!empty($featuresData['upcoming_features']))
     <div class="mx-2 pb-2">
         <h4 class="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <svg class="w-2 h-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <x-core-ui::icon name="clock" class="w-2 h-2 shrink-0" />
             در دست توسعه
         </h4>
         <div class="flex flex-wrap gap-1">

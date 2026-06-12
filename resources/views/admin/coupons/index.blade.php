@@ -156,7 +156,7 @@
                         <tr>
                             <td colspan="6" class="p-0">
                                 <div class="admin-empty-state">
-                                    <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                    <x-core-ui::icon name="price-tag" class="admin-empty-state__icon" />
                                     <p class="admin-empty-state__title">ع©ظˆظ¾ظ†غŒ ط«ط¨طھ ظ†ط´ط¯ظ‡</p>
                                     <p class="admin-empty-state__text">ط¨ط§ ط¯ع©ظ…ظ‡ظ” آ«ع©ظˆظ¾ظ† ط¬ط¯غŒط¯آ» ط§ظˆظ„غŒظ† ع©ظˆظ¾ظ† طھط®ظپغŒظپ ط®ظˆط¯ ط±ط§ ط¨ط³ط§ط²غŒط¯.</p>
                                 </div>
@@ -173,4 +173,6 @@
     @endif
 </div>
 @endsection
+
+
 

@@ -433,7 +433,7 @@
                     {{ \App\Helpers\SiteHelper::siteName() }}
                 </a>
                 <button type="button" id="mobile-menu-btn" class="menu-btn" aria-label="منو">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <x-core-ui::icon name="menu" style="width:24px;height:24px" />
                 </button>
                 <nav id="main-nav">
                     @if(\App\Helpers\SiteHelper::moduleEnabled('menu') && !empty(\App\Helpers\PlatformUx::menus()['header']['items']))
@@ -639,3 +639,4 @@
     @stack('scripts')
 </body>
 </html>
+

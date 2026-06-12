@@ -13,7 +13,7 @@
     </div>
     <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <x-core-ui::icon name="shield-check" class="w-4 h-4" />
       قالب‌های من
     </a>
   </div>
@@ -21,7 +21,7 @@
   {{-- Flash --}}
   @if(session('success'))
     <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-      <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-500 shrink-0" />
       {{ session('success') }}
     </div>
   @endif
@@ -49,7 +49,7 @@
               <img src="{{ $theme['thumbnail'] }}" class="w-full h-28 object-cover rounded-lg" alt="{{ $theme['name'] }}">
             @else
               <div class="w-full h-28 bg-white/20 rounded-lg flex items-center justify-center">
-                <svg class="w-10 h-10 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01"/></svg>
+                <x-core-ui::icon name="image" class="w-10 h-10 opacity-40" />
               </div>
             @endif
             <div class="flex items-center justify-between">
@@ -80,7 +80,7 @@
   {{-- All Themes Grid --}}
   @if(empty($themes))
     <div class="bg-white rounded-xl border border-gray-100 py-16 text-center">
-      <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+      <x-core-ui::icon name="puzzle" class="w-12 h-12 text-gray-200 mx-auto mb-3" />
       <p class="text-gray-400 text-sm">هنوز قالبی در فروشگاه موجود نیست.</p>
     </div>
   @else
@@ -96,7 +96,7 @@
                    alt="{{ $theme['name'] }}">
             @else
               <div class="w-full h-full flex items-center justify-center">
-                <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01"/></svg>
+                <x-core-ui::icon name="image" class="w-12 h-12 text-gray-200" />
               </div>
             @endif
             {{-- Badges --}}
@@ -144,7 +144,7 @@
               @if($theme['has_license'] ?? false)
                 <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
                    class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 hover:bg-green-200 text-xs font-semibold px-4 py-2 rounded-lg transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <x-core-ui::icon name="check-circle" class="w-4 h-4" />
                   مدیریت
                 </a>
               @else
@@ -152,7 +152,7 @@
                   @csrf
                   <button type="submit"
                     class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <x-core-ui::icon name="cart" class="w-4 h-4" />
                     {{ ($theme['is_free'] ?? false) ? 'دریافت' : 'خرید' }}
                   </button>
                 </form>

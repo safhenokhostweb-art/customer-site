@@ -1,4 +1,4 @@
-@extends('themes.default.layout')
+﻿@extends('themes.default.layout')
 
 @section('title', \App\Helpers\Seo::title($page))
 @section('meta_description', \App\Helpers\Seo::description($page))
@@ -11,7 +11,7 @@
 @endpush
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">خانه</a>
+    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
     <span class="mx-2">/</span>
     <span>{{ $page->title }}</span>
 @endsection
@@ -21,10 +21,8 @@
     @if(auth()->user()->isTenantAdmin())
         <div class="mb-4 flex justify-end">
             <a href="{{ route('builder.edit', $page) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                ویرایش صفحه
+                <x-core-ui::icon name="edit" style="width:20px;height:20px" />
+                ظˆغŒط±ط§غŒط´ طµظپط­ظ‡
             </a>
         </div>
     @endif
@@ -62,3 +60,5 @@
 </style>
 @endif
 @endsection
+
+

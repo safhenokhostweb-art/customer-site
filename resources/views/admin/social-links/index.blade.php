@@ -1,14 +1,14 @@
-@extends('admin.layout')
-@section('title', 'شبکه‌های اجتماعی')
-@section('header', 'لینک‌های شبکه‌های اجتماعی')
+﻿@extends('admin.layout')
+@section('title', 'ط´ط¨ع©ظ‡â€Œظ‡ط§غŒ ط§ط¬طھظ…ط§ط¹غŒ')
+@section('header', 'ظ„غŒظ†ع©â€Œظ‡ط§غŒ ط´ط¨ع©ظ‡â€Œظ‡ط§غŒ ط§ط¬طھظ…ط§ط¹غŒ')
 @section('content')
 <div class="admin-page">
     <div class="admin-page-head">
-        <p class="text-slate-600 text-sm">مدیریت لینک‌های شبکه‌های اجتماعی (خارجی و ایرانی) برای نمایش در سایت.</p>
+        <p class="text-slate-600 text-sm">ظ…ط¯غŒط±غŒطھ ظ„غŒظ†ع©â€Œظ‡ط§غŒ ط´ط¨ع©ظ‡â€Œظ‡ط§غŒ ط§ط¬طھظ…ط§ط¹غŒ (ط®ط§ط±ط¬غŒ ظˆ ط§غŒط±ط§ظ†غŒ) ط¨ط±ط§غŒ ظ†ظ…ط§غŒط´ ط¯ط± ط³ط§غŒطھ.</p>
         <div class="admin-page-tools">
             <a href="{{ route('admin.social-links.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                لینک جدید
+                <x-core-ui::icon name="share" class="w- />
+                ظ„غŒظ†ع© ط¬ط¯غŒط¯
             </a>
         </div>
     </div>
@@ -18,10 +18,10 @@
             <table>
             <thead>
                 <tr>
-                    <th>پلتفرم</th>
-                    <th>آدرس</th>
-                    <th>وضعیت</th>
-                    <th style="width:180px">عملیات</th>
+                    <th>ظ¾ظ„طھظپط±ظ…</th>
+                    <th>ط¢ط¯ط±ط³</th>
+                    <th>ظˆط¶ط¹غŒطھ</th>
+                    <th style="width:180px">ط¹ظ…ظ„غŒط§طھ</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,25 +35,25 @@
                         </td>
                         <td>
                             @if($l->is_active)
-                                <span class="badge badge-success">فعال</span>
+                                <span class="badge badge-success">ظپط¹ط§ظ„</span>
                             @else
-                                <span class="badge badge-danger">غیرفعال</span>
+                                <span class="badge badge-danger">ط؛غŒط±ظپط¹ط§ظ„</span>
                             @endif
                         </td>
                         <td>
                             <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('admin.social-links.edit', $l) }}" class="btn btn-primary btn-sm">ویرایش</a>
-                                <form method="post" action="{{ route('admin.social-links.destroy', $l) }}" class="inline" onsubmit="return confirm('حذف این لینک؟');">
+                                <a href="{{ route('admin.social-links.edit', $l) }}" class="btn btn-primary btn-sm">ظˆغŒط±ط§غŒط´</a>
+                                <form method="post" action="{{ route('admin.social-links.destroy', $l) }}" class="inline" onsubmit="return confirm('ط­ط°ظپ ط§غŒظ† ظ„غŒظ†ع©طں');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">ط­ط°ظپ</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="admin-empty">هنوز لینکی ثبت نشده است. <a href="{{ route('admin.social-links.create') }}" class="text-indigo-600 hover:underline">اولین لینک را اضافه کنید</a></td>
+                        <td colspan="4" class="admin-empty">ظ‡ظ†ظˆط² ظ„غŒظ†ع©غŒ ط«ط¨طھ ظ†ط´ط¯ظ‡ ط§ط³طھ. <a href="{{ route('admin.social-links.create') }}" class="text-indigo-600 hover:underline">ط§ظˆظ„غŒظ† ظ„غŒظ†ع© ط±ط§ ط§ط¶ط§ظپظ‡ ع©ظ†غŒط¯</a></td>
                     </tr>
                 @endforelse
             </tbody>
@@ -65,3 +65,4 @@
     @endif
 </div>
 @endsection
+

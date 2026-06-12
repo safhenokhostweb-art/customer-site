@@ -1,5 +1,5 @@
-@extends('admin.layout')
-@section('title', 'مدیریت محتوا')
+﻿@extends('admin.layout')
+@section('title', 'ظ…ط¯غŒط±غŒطھ ظ…ط­طھظˆط§')
 
 @section('content')
 <div class="p-6 space-y-6" dir="rtl">
@@ -7,16 +7,16 @@
     {{-- Header --}}
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">مدیریت محتوا</h1>
-            <p class="text-sm text-gray-500 mt-1">مقاله، آموزش، فرآیند کاری، محتوای محصول و راهنما</p>
+            <h1 class="text-2xl font-bold text-gray-900">ظ…ط¯غŒط±غŒطھ ظ…ط­طھظˆط§</h1>
+            <p class="text-sm text-gray-500 mt-1">ظ…ظ‚ط§ظ„ظ‡طŒ ط¢ظ…ظˆط²ط´طŒ ظپط±ط¢غŒظ†ط¯ ع©ط§ط±غŒطŒ ظ…ط­طھظˆط§غŒ ظ…ط­طµظˆظ„ ظˆ ط±ط§ظ‡ظ†ظ…ط§</p>
         </div>
         <div class="flex gap-2">
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    محتوای جدید
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <x-core-ui::icon name="file-text" class="w-4 h-4" />
+                    ظ…ط­طھظˆط§غŒ ط¬ط¯غŒط¯
+                    <x-core-ui::icon name="file-text" class="w-4 h-4" />
                 </button>
                 <div x-show="open" @click.outside="open=false" x-cloak
                     class="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-30 py-2">
@@ -24,11 +24,11 @@
                         @if($key !== 'help')
                         <a href="{{ route('admin.site-content.create', ['type' => $key]) }}"
                             class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700">
-                            @if($key === 'article') 📄
-                            @elseif($key === 'training') 🎓
-                            @elseif($key === 'workflow') 🔄
-                            @elseif($key === 'procedure') 📋
-                            @elseif($key === 'product_content') 🛍️
+                            @if($key === 'article') ًں“„
+                            @elseif($key === 'training') ًںژ“
+                            @elseif($key === 'workflow') ًں”„
+                            @elseif($key === 'procedure') ًں“‹
+                            @elseif($key === 'product_content') ًں›چï¸ڈ
                             @endif
                             {{ $label }}
                         </a>
@@ -43,33 +43,33 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-xl border border-gray-100 p-4">
             <div class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</div>
-            <div class="text-sm text-gray-500">کل محتوا</div>
+            <div class="text-sm text-gray-500">ع©ظ„ ظ…ط­طھظˆط§</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-100 p-4">
             <div class="text-2xl font-bold text-green-600">{{ $stats['published'] }}</div>
-            <div class="text-sm text-gray-500">منتشرشده</div>
+            <div class="text-sm text-gray-500">ظ…ظ†طھط´ط±ط´ط¯ظ‡</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-100 p-4">
             <div class="text-2xl font-bold text-yellow-500">{{ $stats['draft'] }}</div>
-            <div class="text-sm text-gray-500">پیش‌نویس</div>
+            <div class="text-sm text-gray-500">ظ¾غŒط´â€Œظ†ظˆغŒط³</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-100 p-4">
             <div class="text-2xl font-bold text-purple-600">{{ $stats['ai'] }}</div>
-            <div class="text-sm text-gray-500">تولیدشده با AI</div>
+            <div class="text-sm text-gray-500">طھظˆظ„غŒط¯ط´ط¯ظ‡ ط¨ط§ AI</div>
         </div>
     </div>
 
     {{-- Filters --}}
     <form method="GET" class="bg-white rounded-xl border border-gray-100 p-4 flex flex-wrap gap-3 items-end">
         <div class="flex-1 min-w-40">
-            <label class="block text-xs text-gray-500 mb-1">جستجو</label>
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="عنوان محتوا..."
+            <label class="block text-xs text-gray-500 mb-1">ط¬ط³طھط¬ظˆ</label>
+            <input type="text" name="q" value="{{ request('q') }}" placeholder="ط¹ظ†ظˆط§ظ† ظ…ط­طھظˆط§..."
                 class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
         </div>
         <div>
-            <label class="block text-xs text-gray-500 mb-1">نوع</label>
+            <label class="block text-xs text-gray-500 mb-1">ظ†ظˆط¹</label>
             <select name="type" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
-                <option value="">همه</option>
+                <option value="">ظ‡ظ…ظ‡</option>
                 @foreach(\App\Models\SiteContent::$TYPES as $key => $label)
                     @if($key !== 'help')
                     <option value="{{ $key }}" @selected(request('type') === $key)>{{ $label }}</option>
@@ -78,17 +78,17 @@
             </select>
         </div>
         <div>
-            <label class="block text-xs text-gray-500 mb-1">وضعیت</label>
+            <label class="block text-xs text-gray-500 mb-1">ظˆط¶ط¹غŒطھ</label>
             <select name="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
-                <option value="">همه</option>
-                <option value="draft" @selected(request('status') === 'draft')>پیش‌نویس</option>
-                <option value="published" @selected(request('status') === 'published')>منتشرشده</option>
-                <option value="archived" @selected(request('status') === 'archived')>آرشیو</option>
+                <option value="">ظ‡ظ…ظ‡</option>
+                <option value="draft" @selected(request('status') === 'draft')>ظ¾غŒط´â€Œظ†ظˆغŒط³</option>
+                <option value="published" @selected(request('status') === 'published')>ظ…ظ†طھط´ط±ط´ط¯ظ‡</option>
+                <option value="archived" @selected(request('status') === 'archived')>ط¢ط±ط´غŒظˆ</option>
             </select>
         </div>
-        <button type="submit" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">اعمال فیلتر</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">ط§ط¹ظ…ط§ظ„ ظپغŒظ„طھط±</button>
         @if(request()->hasAny(['q','type','status']))
-        <a href="{{ route('admin.site-content.index') }}" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">پاک کردن</a>
+        <a href="{{ route('admin.site-content.index') }}" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ظ¾ط§ع© ع©ط±ط¯ظ†</a>
         @endif
     </form>
 
@@ -96,19 +96,19 @@
     <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
         @if($query->isEmpty())
         <div class="py-20 text-center">
-            <div class="text-5xl mb-4">📝</div>
-            <div class="text-gray-500">هنوز محتوایی ایجاد نشده</div>
+            <div class="text-5xl mb-4">ًں“‌</div>
+            <div class="text-gray-500">ظ‡ظ†ظˆط² ظ…ط­طھظˆط§غŒغŒ ط§غŒط¬ط§ط¯ ظ†ط´ط¯ظ‡</div>
             <a href="{{ route('admin.site-content.create') }}"
-                class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">اولین محتوا را بساز</a>
+                class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">ط§ظˆظ„غŒظ† ظ…ط­طھظˆط§ ط±ط§ ط¨ط³ط§ط²</a>
         </div>
         @else
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-100">
                 <tr>
-                    <th class="text-right px-4 py-3 font-medium text-gray-600">عنوان</th>
-                    <th class="text-right px-4 py-3 font-medium text-gray-600">نوع</th>
-                    <th class="text-right px-4 py-3 font-medium text-gray-600">وضعیت</th>
-                    <th class="text-right px-4 py-3 font-medium text-gray-600">تاریخ</th>
+                    <th class="text-right px-4 py-3 font-medium text-gray-600">ط¹ظ†ظˆط§ظ†</th>
+                    <th class="text-right px-4 py-3 font-medium text-gray-600">ظ†ظˆط¹</th>
+                    <th class="text-right px-4 py-3 font-medium text-gray-600">ظˆط¶ط¹غŒطھ</th>
+                    <th class="text-right px-4 py-3 font-medium text-gray-600">طھط§ط±غŒط®</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
@@ -118,7 +118,7 @@
                     <td class="px-4 py-3">
                         <div class="font-medium text-gray-900">{{ $item->title }}</div>
                         @if($item->ai_generated)
-                        <span class="inline-flex items-center gap-1 text-xs text-purple-600 mt-0.5">✨ AI</span>
+                        <span class="inline-flex items-center gap-1 text-xs text-purple-600 mt-0.5">âœ¨ AI</span>
                         @endif
                     </td>
                     <td class="px-4 py-3">
@@ -128,11 +128,11 @@
                     </td>
                     <td class="px-4 py-3">
                         @if($item->status === 'published')
-                        <span class="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700">منتشرشده</span>
+                        <span class="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700">ظ…ظ†طھط´ط±ط´ط¯ظ‡</span>
                         @elseif($item->status === 'draft')
-                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-50 text-yellow-700">پیش‌نویس</span>
+                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-50 text-yellow-700">ظ¾غŒط´â€Œظ†ظˆغŒط³</span>
                         @else
-                        <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">آرشیو</span>
+                        <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">ط¢ط±ط´غŒظˆ</span>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-gray-500 text-xs">{{ $item->created_at->format('Y/m/d') }}</td>
@@ -141,14 +141,14 @@
                             @if($item->status !== 'published')
                             <form method="POST" action="{{ route('admin.site-content.publish', $item) }}">
                                 @csrf
-                                <button class="text-xs text-green-600 hover:text-green-800">انتشار</button>
+                                <button class="text-xs text-green-600 hover:text-green-800">ط§ظ†طھط´ط§ط±</button>
                             </form>
                             @endif
-                            <a href="{{ route('admin.site-content.edit', $item) }}" class="text-xs text-indigo-600 hover:text-indigo-800">ویرایش</a>
+                            <a href="{{ route('admin.site-content.edit', $item) }}" class="text-xs text-indigo-600 hover:text-indigo-800">ظˆغŒط±ط§غŒط´</a>
                             <form method="POST" action="{{ route('admin.site-content.destroy', $item) }}"
-                                onsubmit="return confirm('حذف شود؟')">
+                                onsubmit="return confirm('ط­ط°ظپ ط´ظˆط¯طں')">
                                 @csrf @method('DELETE')
-                                <button class="text-xs text-red-500 hover:text-red-700">حذف</button>
+                                <button class="text-xs text-red-500 hover:text-red-700">ط­ط°ظپ</button>
                             </form>
                         </div>
                     </td>
@@ -161,3 +161,4 @@
     </div>
 </div>
 @endsection
+

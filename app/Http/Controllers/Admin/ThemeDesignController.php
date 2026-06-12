@@ -8,6 +8,7 @@ use App\Models\ThemeSetting;
 use App\Services\ThemeEngine\TenantThemeResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class ThemeDesignController extends Controller
@@ -20,8 +21,45 @@ class ThemeDesignController extends Controller
         $buttonStyles = ThemeSetting::buttonStyles();
         $activePreset = Setting::get('theme_preset_slug', '');
         $presets      = $this->presetList();
+        $canvasActive = !empty(Setting::get('active_canvas_theme_data'));
+        $canvasName   = Setting::get('active_canvas_theme_name', '');
 
-        return view('admin.theme-design.index', compact('settings', 'buttonStyles', 'activePreset', 'presets'));
+        return view('admin.theme-design.index', compact('settings', 'buttonStyles', 'activePreset', 'presets', 'canvasActive', 'canvasName'));
+    }
+
+    // ── Canvas Theme Management ───────────────────────────────────────────────
+
+    public function canvasTheme(): View
+    {
+        $themeData = null;
+        $raw = Setting::get('active_canvas_theme_data');
+        if ($raw) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $themeData = $decoded;
+            }
+        }
+
+        return view('admin.theme-design.canvas', [
+            'themeData' => $themeData,
+            'themeName' => Setting::get('active_canvas_theme_name', ''),
+            'themeSlug' => Setting::get('active_canvas_theme_slug', ''),
+            'themeId'   => Setting::get('active_canvas_theme_id', ''),
+        ]);
+    }
+
+    public function canvasDeactivate(): RedirectResponse
+    {
+        Setting::set('active_canvas_theme_data',  '', 'theme');
+        Setting::set('active_canvas_theme_name',  '', 'theme');
+        Setting::set('active_canvas_theme_slug',  '', 'theme');
+        Setting::set('active_canvas_theme_id',    '', 'theme');
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return redirect()->route('admin.theme-design.canvas')
+            ->with('success', 'قالب Canvas غیرفعال شد. سایت به حالت پیش‌فرض بازگشت.');
     }
 
     /** ذخیره تنظیمات سفارشی رنگ / فونت */

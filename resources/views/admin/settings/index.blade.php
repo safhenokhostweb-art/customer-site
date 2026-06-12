@@ -139,7 +139,7 @@
             </div>
             @else
             <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding:.75rem 1rem;background:#fafafa;border:1px dashed #d1d5db;border-radius:.625rem;color:#94a3b8;font-size:.875rem">
-                <svg style="width:1.5rem;height:1.5rem;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <x-core-ui::icon name="settings" style="width:1.5rem;height:1.5rem;flex-shrink:0" />
                 ظ‡ظ†ظˆط² ط¢غŒع©ظ†غŒ ط¢ظ¾ظ„ظˆط¯ ظ†ط´ط¯ظ‡ ط§ط³طھ.
             </div>
             @endif
@@ -176,7 +176,7 @@
 
                 <div>
                     <button type="submit" class="btn btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <x-core-ui::icon name="download" class="w-4 h-4" />
                         ط¢ظ¾ظ„ظˆط¯ ط¢غŒع©ظ†
                     </button>
                 </div>
@@ -250,4 +250,6 @@
 </div>
 @include('admin.partials.tinymce-field-init', ['selector' => '#settings-about-us-editor', 'uploadContext' => 'featured', 'height' => 360])
 @endsection
+
+
 
