@@ -53,9 +53,7 @@
     <div class="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
         <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
              style="background:linear-gradient(135deg,#7c3aed,#2563eb)">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
+            <x-core-ui::icon name="user" class="w-7 h-7 text-white" />
         </div>
         <div class="flex-1">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -76,7 +74,7 @@
      style="background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-color:#c7d2fe;">
     <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
          style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <x-core-ui::icon name="message" class="w-5 h-5 text-white" />
     </div>
     <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-indigo-800">مکالمه فعال: {{ $openTicket->subject }}</p>
@@ -85,14 +83,14 @@
     <a href="{{ route('account.tickets.show', $openTicket->id) }}"
        style="color:#fff;flex-shrink:0;display:inline-flex;align-items:center;gap:0.375rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:0.45rem 1rem;border-radius:0.5rem;font-size:0.75rem;font-weight:700;text-decoration:none;box-shadow:0 2px 8px rgba(79,70,229,0.35);transition:box-shadow .2s"
        onmouseover="this.style.boxShadow='0 4px 16px rgba(79,70,229,0.5)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(79,70,229,0.35)'">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <x-core-ui::icon name="message" class="w-3.5 h-3.5" />
         ادامه چت
     </a>
 </div>
 @else
 <div class="mb-6 flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white">
     <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100">
-        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <x-core-ui::icon name="message" class="w-5 h-5 text-slate-400" />
     </div>
     <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-slate-700">سوال یا مشکلی دارید؟</p>
@@ -109,13 +107,13 @@
 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     @if(\App\Helpers\SiteHelper::shopEnabled())
         <a href="{{ route('account.orders.index') }}" class="ua-tile ua-tile--indigo">
-            <span class="ua-tile__icon">🛒</span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="cart" class="w-7 h-7" /></span>
             <span class="ua-tile__label">سفارشات</span>
             <span class="ua-tile__value">{{ number_format($ordersCount) }}</span>
             <span class="ua-tile__hint">مشاهده همه ←</span>
         </a>
         <div class="ua-tile ua-tile--teal" style="cursor:default">
-            <span class="ua-tile__icon">💰</span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="receipt" class="w-7 h-7" /></span>
             <span class="ua-tile__label">مجموع خریدها</span>
             <span class="ua-tile__value" style="font-size:1.3rem">{{ number_format($ordersTotal) }}</span>
             <span class="ua-tile__hint">تومان</span>
@@ -123,7 +121,7 @@
     @endif
     @if(\App\Helpers\SiteHelper::moduleEnabled('subscription'))
         <a href="{{ route('account.subscriptions.index') }}" class="ua-tile ua-tile--orange">
-            <span class="ua-tile__icon">⭐</span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="subscription" class="w-7 h-7" /></span>
             <span class="ua-tile__label">اشتراک‌های فعال</span>
             <span class="ua-tile__value">{{ number_format($activeSubscriptionsCount) }}</span>
             <span class="ua-tile__hint">مدیریت اشتراک ←</span>
@@ -131,21 +129,21 @@
     @endif
     @if(config('account.wallet_enabled', false))
         <div class="ua-tile ua-tile--pink" style="cursor:default">
-            <span class="ua-tile__icon">👛</span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="wallet" class="w-7 h-7" /></span>
             <span class="ua-tile__label">موجودی کیف پول</span>
             <span class="ua-tile__value" style="font-size:1.3rem">{{ number_format($walletBalance) }}</span>
             <span class="ua-tile__hint">تومان</span>
         </div>
     @endif
     <a href="{{ route('account.notifications.index') }}" class="ua-tile ua-tile--blue">
-        <span class="ua-tile__icon">🔔</span>
+        <span class="ua-tile__icon"><x-core-ui::icon name="bell" class="w-7 h-7" /></span>
         <span class="ua-tile__label">اعلان‌ها</span>
         <span class="ua-tile__value">{{ number_format($unreadNotificationsCount) }}</span>
         <span class="ua-tile__hint">خوانده‌نشده ←</span>
     </a>
     @if(isset($pointsBalance))
     <a href="{{ route('account.points.index') }}" class="ua-tile ua-tile--violet">
-        <span class="ua-tile__icon">✨</span>
+        <span class="ua-tile__icon"><x-core-ui::icon name="spark" class="w-7 h-7" /></span>
         <span class="ua-tile__label">امتیاز من</span>
         <span class="ua-tile__value">{{ \App\Helpers\NumberHelper::formatFa($pointsBalance) }}</span>
         <span class="ua-tile__hint">تاریخچه و مصرف ←</span>
@@ -156,39 +154,39 @@
 {{-- ═══ دسترسی سریع ═══ --}}
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
     <a href="{{ route('account.profile.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-indigo-50 text-indigo-600">👤</span>
+        <span class="ua-action__icon bg-indigo-50 text-indigo-600"><x-core-ui::icon name="user" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">پروفایل من</span>
     </a>
     <a href="{{ route('account.tickets.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-violet-50 text-violet-600">💬</span>
+        <span class="ua-action__icon bg-violet-50 text-violet-600"><x-core-ui::icon name="message" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">تیکت‌های پشتیبانی</span>
     </a>
     <a href="{{ route('account.notifications.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-blue-50 text-blue-600">🔔</span>
+        <span class="ua-action__icon bg-blue-50 text-blue-600"><x-core-ui::icon name="bell" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">صندوق اعلان‌ها</span>
     </a>
     <a href="{{ route('account.security.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-slate-50 text-slate-600">🔒</span>
+        <span class="ua-action__icon bg-slate-50 text-slate-600"><x-core-ui::icon name="lock" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">امنیت حساب</span>
     </a>
     @if(\App\Helpers\SiteHelper::shopEnabled())
     <a href="{{ route('account.orders.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-amber-50 text-amber-600">🛒</span>
+        <span class="ua-action__icon bg-amber-50 text-amber-600"><x-core-ui::icon name="cart" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">سفارشات من</span>
     </a>
     @endif
     @if(\App\Helpers\SiteHelper::moduleEnabled('subscription'))
     <a href="{{ route('account.subscriptions.index') }}" class="ua-action">
-        <span class="ua-action__icon bg-orange-50 text-orange-600">⭐</span>
+        <span class="ua-action__icon bg-orange-50 text-orange-600"><x-core-ui::icon name="subscription" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">اشتراک‌ها</span>
     </a>
     @endif
     <a href="{{ route('account.tickets.create') }}" class="ua-action">
-        <span class="ua-action__icon bg-emerald-50 text-emerald-600">✉️</span>
+        <span class="ua-action__icon bg-emerald-50 text-emerald-600"><x-core-ui::icon name="message-circle" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">تیکت جدید</span>
     </a>
     <a href="{{ url('/') }}" class="ua-action">
-        <span class="ua-action__icon bg-teal-50 text-teal-600">🌐</span>
+        <span class="ua-action__icon bg-teal-50 text-teal-600"><x-core-ui::icon name="globe" class="w-5 h-5" /></span>
         <span class="text-sm font-600 text-slate-700">مشاهده سایت</span>
     </a>
 </div>
@@ -198,7 +196,7 @@
     @if(\App\Helpers\SiteHelper::shopEnabled() && $recentOrders->isNotEmpty())
         <div class="ug-card">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                <span class="text-amber-500">🛒</span>
+                <x-core-ui::icon name="cart" class="w-5 h-5 text-amber-500" />
                 <span class="font-semibold text-slate-800">آخرین سفارشات</span>
             </div>
             <div class="p-5">
@@ -222,7 +220,7 @@
     @if(\App\Helpers\SiteHelper::moduleEnabled('invoice') && $recentInvoices->isNotEmpty())
         <div class="ug-card">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                <span class="text-teal-500">📋</span>
+                <x-core-ui::icon name="invoice" class="w-5 h-5 text-teal-500" />
                 <span class="font-semibold text-slate-800">آخرین فاکتورها</span>
             </div>
             <div class="p-5">
@@ -245,7 +243,7 @@
     @if($recentNotifications->isNotEmpty())
         <div class="ug-card lg:col-span-2">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                <span class="text-blue-500">🔔</span>
+                <x-core-ui::icon name="bell" class="w-5 h-5 text-blue-500" />
                 <span class="font-semibold text-slate-800">آخرین اعلان‌ها</span>
                 <a href="{{ route('account.notifications.index') }}" class="mr-auto text-sm text-indigo-600 hover:underline">همه اعلان‌ها ←</a>
             </div>

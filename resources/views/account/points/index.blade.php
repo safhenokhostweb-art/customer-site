@@ -60,10 +60,7 @@
 {{-- ── Hero Balance ── --}}
 <div class="pts-hero">
     <div class="pts-hero__icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="30" height="30">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-        </svg>
+        <x-core-ui::icon name="spark" class="w-7 h-7 text-white" />
     </div>
     <div class="pts-hero__body">
         <p class="pts-hero__label">موجودی امتیاز شما</p>
@@ -81,9 +78,7 @@
 <div class="pts-rules">
     <div class="pts-rule">
         <div class="pts-rule__icon" style="background:#f0fdf4;color:#16a34a">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+            <x-core-ui::icon name="cart" class="w-4.5 h-4.5" />
         </div>
         <div>
             <p class="pts-rule__title">خرید محصول</p>
@@ -92,9 +87,7 @@
     </div>
     <div class="pts-rule">
         <div class="pts-rule__icon" style="background:#eff6ff;color:#2563eb">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
+            <x-core-ui::icon name="subscription" class="w-4 h-4" />
         </div>
         <div>
             <p class="pts-rule__title">فعال‌سازی اشتراک</p>
@@ -103,9 +96,7 @@
     </div>
     <div class="pts-rule">
         <div class="pts-rule__icon" style="background:#fef3c7;color:#d97706">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
+            <x-core-ui::icon name="refresh" class="w-4 h-4" />
         </div>
         <div>
             <p class="pts-rule__title">تمدید اشتراک</p>
@@ -114,9 +105,7 @@
     </div>
     <div class="pts-rule">
         <div class="pts-rule__icon" style="background:#fdf2f8;color:#db2777">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <x-core-ui::icon name="clock" class="w-4 h-4" />
         </div>
         <div>
             <p class="pts-rule__title">انقضای امتیاز</p>
@@ -144,13 +133,9 @@
     <div class="pts-row">
         <div class="pts-row__icon {{ $iconCls }}">
             @if($isEarn)
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-            </svg>
+            <x-core-ui::icon name="arrow-up" class="w-4 h-4" />
             @else
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-            </svg>
+            <x-core-ui::icon name="arrow-down" class="w-4 h-4" />
             @endif
         </div>
         <div class="pts-row__body">
@@ -171,10 +156,7 @@
     </div>
     @empty
     <div class="pts-empty">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48" style="color:#e2e8f0">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-        </svg>
+        <x-core-ui::icon name="spark" class="w-12 h-12 text-slate-200 mx-auto" />
         <p style="font-size:.9375rem;font-weight:600;color:#475569;margin:0 0 .375rem">هنوز امتیازی کسب نکرده‌اید</p>
         <p style="font-size:.8125rem;margin:0">با خرید محصول یا فعال‌سازی اشتراک امتیاز کسب کنید.</p>
     </div>

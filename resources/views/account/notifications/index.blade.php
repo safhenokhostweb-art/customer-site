@@ -16,8 +16,8 @@
     @if($notifications->isEmpty())
         <div class="account-card">
             <div class="account-card-body text-center py-16">
-                <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-4">
+                    <x-core-ui::icon name="bell" class="w-10 h-10" />
                 </div>
                 <p class="text-slate-500 text-lg font-medium">اعلانی وجود ندارد</p>
                 <p class="text-slate-400 text-sm mt-1">وقتی اعلان جدیدی برای شما ارسال شود، اینجا نمایش داده می‌شود.</p>

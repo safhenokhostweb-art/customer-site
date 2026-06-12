@@ -20,6 +20,40 @@ class PlatformApiService
         $this->token   = config('platform.admin_token', env('PLATFORM_ADMIN_TOKEN', ''));
     }
 
+    // ── Theme Marketplace (TB-2) ────────────────────────────────────────────
+
+    public function marketplaceThemes(): array
+    {
+        $resp = $this->tenantGet('/api/theme-marketplace');
+        return $resp->ok() ? ($resp->json('themes') ?? []) : [];
+    }
+
+    public function marketplaceTheme(int $themeId): ?array
+    {
+        $resp = $this->tenantGet("/api/theme-marketplace/{$themeId}");
+        return $resp->ok() ? $resp->json('theme') : null;
+    }
+
+    public function marketplaceMyLicenses(): array
+    {
+        $resp = $this->tenantGet('/api/theme-marketplace/my-licenses');
+        return $resp->ok() ? ($resp->json('licenses') ?? []) : [];
+    }
+
+    public function marketplaceInitiatePurchase(int $themeId, string $redirectBackUrl): array
+    {
+        $resp = $this->tenantPost("/api/theme-marketplace/{$themeId}/initiate-purchase", [
+            'redirect_back_url' => $redirectBackUrl,
+        ]);
+        return $resp->json() ?? ['success' => false, 'error' => 'no_response'];
+    }
+
+    public function marketplaceDownloadTheme(int $themeId): ?array
+    {
+        $resp = $this->tenantGet("/api/theme-marketplace/{$themeId}/download");
+        return $resp->ok() ? $resp->json() : null;
+    }
+
     // ── مجوز ادغام مکالمات ─────────────────────────────────────────────────
 
     public function listMergePermissions(): array
@@ -67,6 +101,31 @@ class PlatformApiService
         return Http::withToken($this->token)
             ->acceptJson()
             ->delete($this->baseUrl . $path);
+    }
+
+    /** Calls platform API with license_key+domain (tenant.api middleware) */
+    private function tenantGet(string $path, array $query = []): Response
+    {
+        [$licenseKey, $domain] = $this->resolveTenantCredentials();
+        return Http::withToken($licenseKey)
+            ->acceptJson()
+            ->get($this->baseUrl . $path, array_merge(['domain' => $domain], $query));
+    }
+
+    private function tenantPost(string $path, array $data = []): Response
+    {
+        [$licenseKey, $domain] = $this->resolveTenantCredentials();
+        return Http::withToken($licenseKey)
+            ->acceptJson()
+            ->post($this->baseUrl . $path . '?domain=' . urlencode($domain), $data);
+    }
+
+    private function resolveTenantCredentials(): array
+    {
+        $license = \App\Models\License::current();
+        $licenseKey = $license?->license_key ?? '';
+        $domain     = $license?->domain ?? request()->getHost();
+        return [$licenseKey, $domain];
     }
 
     public function isConfigured(): bool

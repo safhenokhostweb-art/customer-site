@@ -453,9 +453,8 @@ class AdminMenu
     public static function getGroups(): array
     {
         $groups = self::getStaticGroups();
-        $dynamicKeys = self::getDynamicPlatformMenuKeys();
-        if (count($dynamicKeys) > 0) {
-            $groups['ماژول‌های از پلتفرم'] = $dynamicKeys;
+        foreach (self::getDynamicPlatformMenuKeys() as $key) {
+            $groups[self::getTitle($key)] = [$key];
         }
         return $groups;
     }

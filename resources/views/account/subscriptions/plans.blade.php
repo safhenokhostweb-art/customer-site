@@ -9,7 +9,7 @@
 @if($active)
 <div class="plans-pg__active-bar">
     <div class="plans-pg__active-bar__icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="check-circle" style="width:18px;height:18px" />
     </div>
     <div class="plans-pg__active-bar__info">
         <strong>اشتراک فعال: {{ $active->plan->name }}</strong>
@@ -23,9 +23,7 @@
 @if($blocked && !$active)
 <div class="plans-pg__blocked-bar">
     <div class="plans-pg__blocked-bar__icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
+        <x-core-ui::icon name="alert-triangle" style="width:18px;height:18px" />
     </div>
     <div class="plans-pg__blocked-bar__info">
         <strong>یک درخواست اشتراک در انتظار تأیید دارید</strong>
@@ -50,7 +48,7 @@
 
 @if($plans->isEmpty())
 <div class="plans-pg__empty">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48" style="color:#c7d2fe;margin:0 auto 1rem;display:block"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <x-core-ui::icon name="plan" style="width:48px;height:48px;color:#c7d2fe;margin:0 auto 1rem;display:block" />
     <p>در حال حاضر پلنی برای عضویت وجود ندارد.</p>
 </div>
 @else
@@ -117,7 +115,7 @@
             {{-- دوره آزمایشی --}}
             @if($plan->hasTrial())
             <div class="plan-card__trial">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="clock" style="width:13px;height:13px" />
                 {{ \App\Helpers\NumberHelper::formatFa($plan->trial_days) }} روز آزمایشی رایگان
             </div>
             @endif

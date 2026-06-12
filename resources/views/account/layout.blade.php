@@ -136,11 +136,11 @@
 
     {{-- ════════════════ SIDEBAR ════════════════ --}}
     @php
-    $acctGroupIcons = [
-        'اصلی'           => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
-        'خرید و اشتراک' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>',
-        'تعامل'          => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>',
-        'حساب کاربری'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+    $acctGroupIconNames = [
+        'اصلی'           => 'home',
+        'خرید و اشتراک' => 'shopping-bag',
+        'تعامل'          => 'message',
+        'حساب کاربری'   => 'shield-check',
     ];
     $acctGrpIdx = 0;
     @endphp
@@ -149,9 +149,7 @@
 
         {{-- Brand --}}
         <div class="account-sidebar-brand flex items-center px-4 py-5 border-b border-slate-700/40">
-            <svg class="w-7 h-7 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
+            <x-core-ui::icon name="user" class="w-7 h-7 text-sky-400 shrink-0" />
             <span class="acct-brand-name mr-3 text-lg font-bold text-slate-100 truncate">{{ \App\Helpers\SiteHelper::siteName() }}</span>
         </div>
 
@@ -163,7 +161,7 @@
                     $visibleKeys = array_filter($keys, fn($k) => \App\Helpers\AccountMenu::isVisible($k));
                     $firstKey    = array_values($visibleKeys)[0] ?? null;
                     $firstUrl    = $firstKey ? route(\App\Helpers\AccountMenu::getRoute($firstKey)) : '#';
-                    $grpIconPath = $acctGroupIcons[$groupLabel] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+                    $grpIconName = $acctGroupIconNames[$groupLabel] ?? 'menu';
                 @endphp
                 @if(count($visibleKeys) > 0)
                 <div class="mb-4">
@@ -174,11 +172,9 @@
                             data-url="{{ $firstUrl }}"
                             data-title="{{ $groupLabel }}"
                             onclick="acctGrpToggle({{ $acctGrpIdx }})">
-                        <svg class="acct-grp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">{!! $grpIconPath !!}</svg>
+                        <x-core-ui::icon :name="$grpIconName" class="acct-grp-icon" />
                         <span class="acct-grp-label">{{ $groupLabel }}</span>
-                        <svg class="acct-grp-caret" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
+                        <x-core-ui::icon name="chevron-down" class="acct-grp-caret" />
                     </button>
 
                     {{-- Group items (accordion body) --}}
@@ -204,18 +200,14 @@
                 <a href="{{ url('/') }}"
                    class="account-sidebar-link"
                    data-title="مشاهده سایت">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
+                    <x-core-ui::icon name="globe" class="w-5 h-5 shrink-0" />
                     <span>مشاهده سایت</span>
                 </a>
                 @if(auth()->user()->isTenantAdmin())
                 <a href="{{ route('admin.dashboard') }}"
                    class="account-sidebar-link"
                    data-title="پنل مدیریت">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
+                    <x-core-ui::icon name="dashboard" class="w-5 h-5 shrink-0" />
                     <span>پنل مدیریت</span>
                 </a>
                 @endif
@@ -224,9 +216,7 @@
                     <button type="submit"
                             class="acct-bottom-btn account-sidebar-link w-full text-right text-red-400 hover:bg-red-900/20 hover:text-red-300 border-0 bg-transparent cursor-pointer"
                             data-title="خروج">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
+                        <x-core-ui::icon name="logout" class="w-5 h-5 shrink-0" />
                         <span>خروج</span>
                     </button>
                 </form>
@@ -242,17 +232,13 @@
                 <div class="flex items-center gap-3">
                     {{-- Desktop sidebar toggle --}}
                     <button class="sidebar-toggle-btn" id="account-sidebar-toggle" title="جمع/باز کردن منو" aria-label="جمع/باز کردن منو">
-                        <svg id="sidebar-toggle-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        <svg id="sidebar-toggle-icon-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
-                        </svg>
+                        <x-core-ui::icon id="sidebar-toggle-icon-open" name="menu" class="w-5 h-5" />
+                        <x-core-ui::icon id="sidebar-toggle-icon-closed" name="arrow-right" class="w-5 h-5 hidden" />
                     </button>
                     {{-- Mobile dropdown nav --}}
                     <details id="account-mobile-nav" class="relative">
                         <summary class="list-none p-2 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            <x-core-ui::icon name="menu" class="w-6 h-6" />
                         </summary>
                         <div class="absolute right-0 top-full mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
                             @foreach(\App\Helpers\AccountMenu::getGroups() as $groupLabel => $keys)
@@ -292,9 +278,7 @@
                                 <p class="text-xs font-semibold text-slate-700 leading-none">{{ $__acctName }}</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5 leading-none">{{ $__acctUser->mobile ?? '' }}</p>
                             </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                            <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" ::class="open && 'rotate-180'" />
                         </button>
 
                         <div x-show="open"
@@ -325,18 +309,18 @@
                             <div class="py-1">
                                 <a href="{{ route('account.profile.index') }}"
                                    class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                    <x-core-ui::icon name="user" class="w-4 h-4" />
                                     پروفایل من
                                 </a>
                                 <a href="{{ route('account.security.index') }}"
                                    class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                    <x-core-ui::icon name="lock" class="w-4 h-4" />
                                     امنیت حساب
                                 </a>
                                 @if($__acctUser->isTenantAdmin())
                                 <a href="{{ route('admin.dashboard') }}"
                                    class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+                                    <x-core-ui::icon name="dashboard" class="w-4 h-4" />
                                     پنل مدیریت
                                 </a>
                                 @endif
@@ -346,7 +330,7 @@
                                     @csrf
                                     <button type="submit"
                                             class="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                                        <x-core-ui::icon name="logout" class="w-4 h-4" />
                                         خروج از حساب
                                     </button>
                                 </form>
@@ -361,25 +345,25 @@
             @include('account.partials.pending-invoice-banner')
             @if(session('success'))
                 <div class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0 text-emerald-600" />
                     {{ session('success') }}
                 </div>
             @endif
             @if(session('error'))
                 <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    <x-core-ui::icon name="x-circle" class="w-5 h-5 shrink-0 text-red-600" />
                     {{ session('error') }}
                 </div>
             @endif
             @if(session('info'))
                 <div class="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    <x-core-ui::icon name="info-circle" class="w-5 h-5 shrink-0 text-blue-600" />
                     {{ session('info') }}
                 </div>
             @endif
             @if(session('warning'))
                 <div class="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    <x-core-ui::icon name="alert-triangle" class="w-5 h-5 shrink-0 text-amber-600" />
                     {{ session('warning') }}
                 </div>
             @endif

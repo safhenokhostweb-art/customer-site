@@ -43,9 +43,7 @@
             <div class="admin-sidebar-inner">
                 <div class="admin-sidebar-scroll">
                     <div class="admin-sidebar-brand">
-                        <svg class="admin-sidebar-brand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
+                        <x-core-ui::icon name="store" class="admin-sidebar-brand-icon" aria-hidden="true" />
                         <span class="sidebar-text admin-sidebar-brand-text">{{ \App\Helpers\SiteHelper::siteName() }}</span>
                     </div>
 
@@ -63,9 +61,7 @@
                                         aria-expanded="false"
                                     >
                                         <span class="sidebar-group-label sidebar-text">{{ $groupLabel }}</span>
-                                        <svg class="sidebar-group-caret" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                            <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
+                                        <x-core-ui::icon name="chevron-down" class="sidebar-group-caret" aria-hidden="true" />
                                     </button>
                                     <div class="admin-sidebar-item-list sidebar-group-items is-collapsed" data-group-items="{{ $loop->index }}">
                                         @foreach($visibleKeys as $key)
@@ -85,13 +81,13 @@
 
                         <div class="admin-sidebar-footer">
                             <a href="{{ url('/') }}" target="_blank" rel="noopener noreferrer" class="sidebar-link">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                <x-core-ui::icon name="external-link" aria-hidden="true" />
                                 <span class="sidebar-text">مشاهده سایت</span>
                             </a>
                             <form method="POST" action="{{ route('logout') }}" class="admin-sidebar-logout-form">
                                 @csrf
                                 <button type="submit" class="sidebar-link sidebar-link--danger">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    <x-core-ui::icon name="logout" aria-hidden="true" />
                                     <span class="sidebar-text">خروج</span>
                                 </button>
                             </form>
@@ -105,12 +101,12 @@
             <header class="admin-header">
                 <div class="admin-header-left">
                     <button type="button" id="admin-sidebar-toggle" class="admin-sidebar-toggle" aria-label="جمع کردن منو">
-                        <svg id="admin-sidebar-toggle-icon-expand" class="admin-icon-hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/></svg>
-                        <svg id="admin-sidebar-toggle-icon-collapse" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                        <x-core-ui::icon name="chevron-left" id="admin-sidebar-toggle-icon-expand" class="admin-icon-hidden" aria-hidden="true" />
+                        <x-core-ui::icon name="chevron-right" id="admin-sidebar-toggle-icon-collapse" aria-hidden="true" />
                     </button>
                     <details class="admin-mobile-nav">
                         <summary>
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            <x-core-ui::icon name="menu" aria-hidden="true" />
                         </summary>
                         <div class="admin-mobile-nav-panel">
                             @foreach(\App\Helpers\AdminMenu::getGroups() as $groupLabel => $keys)
@@ -148,7 +144,7 @@
                             <p class="text-xs font-semibold text-gray-700 leading-none">{{ $adminUser->name ?? 'ادمین' }}</p>
                             <p class="text-[10px] text-gray-400 mt-0.5 leading-none">{{ $adminUser->mobile }}</p>
                         </div>
-                        <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open && 'rotate-180'" />
                     </button>
 
                     {{-- Dropdown --}}
@@ -179,12 +175,12 @@
                         <div class="py-1">
                             <a href="{{ route('admin.profile.index') }}"
                                class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                <x-core-ui::icon name="user" class="w-4 h-4" />
                                 ویرایش پروفایل
                             </a>
                             <a href="{{ route('admin.dashboard') }}"
                                class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+                                <x-core-ui::icon name="dashboard" class="w-4 h-4" />
                                 داشبورد
                             </a>
                         </div>
@@ -193,7 +189,7 @@
                                 @csrf
                                 <button type="submit"
                                         class="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                                    <x-core-ui::icon name="logout" class="w-4 h-4" />
                                     خروج از حساب
                                 </button>
                             </form>
@@ -207,25 +203,25 @@
                 @include('admin.partials.license-transient-banner')
                 @if(session('success'))
                     <div class="admin-flash admin-flash--success" role="status">
-                        <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        <x-core-ui::icon name="check-circle" aria-hidden="true" />
                         <span>{{ session('success') }}</span>
                     </div>
                 @endif
                 @if(session('warning'))
                     <div class="admin-flash admin-flash--warning" role="alert">
-                        <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <x-core-ui::icon name="alert-triangle" aria-hidden="true" />
                         <span>{{ session('warning') }}</span>
                     </div>
                 @endif
                 @if(session('error'))
                     <div class="admin-flash admin-flash--error" role="alert">
-                        <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        <x-core-ui::icon name="x-circle" aria-hidden="true" />
                         <span>{{ session('error') }}</span>
                     </div>
                 @endif
                 @if(session('info'))
                     <div class="admin-flash admin-flash--info" role="status">
-                        <svg fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                        <x-core-ui::icon name="info-circle" aria-hidden="true" />
                         <span>{{ session('info') }}</span>
                     </div>
                 @endif
