@@ -1,4 +1,4 @@
-﻿@php
+@php
     $localNotifs = \App\Helpers\SiteHelper::moduleEnabled('notifications')
         ? \App\Models\SiteNotification::active()->orderBy('order')->get()
         : collect();
@@ -41,15 +41,15 @@
 @endphp
 @if($showWidget)
 <div id="notifications-widget" class="pub-notif-widget">
-    <button type="button" id="notifications-bell-btn" class="pub-notif-widget__bell" onclick="window.toggleNotificationsPanel(event)" aria-label="ط§ط¹ظ„ط§ظ†â€Œظ‡ط§">
+    <button type="button" id="notifications-bell-btn" class="pub-notif-widget__bell" onclick="window.toggleNotificationsPanel(event)" aria-label="اعلان‌ها">
         <x-core-ui::icon name="bell" class="pub-notif-widget__bell-icon" />
         <span id="notifications-badge" class="pub-notif-widget__badge"></span>
     </button>
     <div id="notifications-panel" class="pub-notif-widget__panel">
-        <div class="pub-notif-widget__head">ط§ط¹ظ„ط§ظ†â€Œظ‡ط§</div>
+        <div class="pub-notif-widget__head">اعلان‌ها</div>
         <div id="notifications-list">
             @if($allNotifs->isEmpty())
-            <div class="pub-notif-widget__empty">ط§ط¹ظ„ط§ظ† ط¬ط¯غŒط¯غŒ ظˆط¬ظˆط¯ ظ†ط¯ط§ط±ط¯.</div>
+            <div class="pub-notif-widget__empty">اعلان جدیدی وجود ندارد.</div>
             @else
             @foreach($allNotifs as $n)
             @php
@@ -63,20 +63,20 @@
                 <div class="pub-notif-item__body">
                     <div class="pub-notif-item__title-row">
                         @if($isFresh)
-                            <span class="pub-notif-item__new">ط¬ط¯غŒط¯</span>
+                            <span class="pub-notif-item__new">جدید</span>
                         @endif
                         @if(($n['priority'] ?? 'normal') === 'urgent')
-                            <span class="pub-notif-item__pill pub-notif-item__pill--urgent">ظپظˆط±غŒ</span>
+                            <span class="pub-notif-item__pill pub-notif-item__pill--urgent">فوری</span>
                         @elseif(($n['priority'] ?? 'normal') === 'high')
-                            <span class="pub-notif-item__pill pub-notif-item__pill--high">ظ…ظ‡ظ…</span>
+                            <span class="pub-notif-item__pill pub-notif-item__pill--high">مهم</span>
                         @endif
-                        <span class="pub-notif-item__title">{{ $n['title'] ?: 'ط§ط¹ظ„ط§ظ†' }}</span>
+                        <span class="pub-notif-item__title">{{ $n['title'] ?: 'اعلان' }}</span>
                     </div>
                     @if($n['body'])
                     <div class="pub-notif-item__text">{{ Str::limit(strip_tags($n['body']), 100) }}</div>
                     @endif
                     @if($n['link'])
-                    <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="pub-notif-item__link">{{ $n['link_text'] ?: 'ظ…ط´ط§ظ‡ط¯ظ‡' }}</a>
+                    <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="pub-notif-item__link">{{ $n['link_text'] ?: 'مشاهده' }}</a>
                     @endif
                 </div>
                 @if($n['image_url'] && in_array($n['image_position'] ?? 'right', ['right']))

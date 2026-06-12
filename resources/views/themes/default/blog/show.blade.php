@@ -1,4 +1,4 @@
-﻿@extends('themes.default.layout')
+@extends('themes.default.layout')
 
 @section('title', \App\Helpers\Seo::title($post))
 @section('meta_description', $post->seoDescription())
@@ -10,9 +10,9 @@
 @endpush
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
+    <a href="{{ route('home') }}">خانه</a>
     <span style="margin: 0 0.5rem;">/</span>
-    <a href="{{ route('blog.index') }}">ظˆط¨ظ„ط§ع¯</a>
+    <a href="{{ route('blog.index') }}">وبلاگ</a>
     <span style="margin: 0 0.5rem;">/</span>
     <span>{{ \Illuminate\Support\Str::limit($post->title, 30) }}</span>
 @endsection
@@ -24,13 +24,13 @@
             flex-wrap:wrap;gap:0.5rem;font-size:0.875rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15);">
     <div style="display:flex;align-items:center;gap:0.5rem;">
         <x-core-ui::icon name="eye" style="width:1.1rem;height:1.1rem;flex-shrink:0" style="width:2.5px;height:px" />
-        ط­ط§ظ„طھ ظ¾غŒط´â€Œظ†ظ…ط§غŒط´ â€” ط§غŒظ† طµظپط­ظ‡ ط¨ط±ط§غŒ ط¨ط§ط²ط¯غŒط¯ع©ظ†ظ†ط¯ع¯ط§ظ† ظ†ظ…ط§غŒط´ ط¯ط§ط¯ظ‡ ظ†ظ…غŒâ€Œط´ظˆط¯
+        حالت پیش‌نمایش — این صفحه برای بازدیدکنندگان نمایش داده نمی‌شود
         @php $pubStatus = $post->publicationStatus(); @endphp
         <span style="padding:.15rem .55rem;border-radius:9999px;font-size:.72rem;
                      background:{{ $pubStatus==='published'?'#16a34a':'#374151' }};color:#fff;">
             {{ match($pubStatus) {
-                'published'=>'ظ…ظ†طھط´ط±ط´ط¯ظ‡','scheduled'=>'ط²ظ…ط§ظ†â€Œط¨ظ†ط¯غŒâ€Œط´ط¯ظ‡',
-                'pending_review'=>'ط¯ط± ط§ظ†طھط¸ط§ط± ط¨ط§ط²ط¨غŒظ†غŒ','draft'=>'ظ¾غŒط´â€Œظ†ظˆغŒط³',default=>$pubStatus
+                'published'=>'منتشرشده','scheduled'=>'زمان‌بندی‌شده',
+                'pending_review'=>'در انتظار بازبینی','draft'=>'پیش‌نویس',default=>$pubStatus
             } }}
         </span>
     </div>
@@ -38,11 +38,11 @@
         <a href="{{ route('admin.posts.edit', $post) }}"
            style="background:#1c1917;color:#fef3c7;padding:.3rem .85rem;border-radius:.4rem;
                   text-decoration:none;font-size:.82rem;font-weight:600;">
-            âœڈï¸ڈ ظˆغŒط±ط§غŒط´ ظ…ط·ظ„ط¨
+            ✏️ ویرایش مطلب
         </a>
         <a href="{{ route('admin.posts.index') }}"
            style="color:#1c1917;text-decoration:none;font-size:.82rem;">
-            â†گ ط¨ط§ط²ع¯ط´طھ ط¨ظ‡ ظ„غŒط³طھ
+            ← بازگشت به لیست
         </a>
     </div>
 </div>
@@ -61,10 +61,10 @@
     <p style="color: #6b7280; margin-bottom: 1rem;">
         {{ $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'Y/m/d') : '' }}
         @if($post->category)
-            <span>â€¢ {{ $post->category->name }}</span>
+            <span>• {{ $post->category->name }}</span>
         @endif
-        <span>â€¢ ط­ط¯ظˆط¯ {{ $post->estimatedReadingMinutes() }} ط¯ظ‚غŒظ‚ظ‡ ظ…ط·ط§ظ„ط¹ظ‡</span>
-        <span>â€¢ {{ number_format($post->view_count) }} ط¨ط§ط²ط¯غŒط¯</span>
+        <span>• حدود {{ $post->estimatedReadingMinutes() }} دقیقه مطالعه</span>
+        <span>• {{ number_format($post->view_count) }} بازدید</span>
     </p>
     @if($post->tags->isNotEmpty())
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
@@ -75,22 +75,22 @@
     @endif
     @if($post->series)
         <p style="font-size:0.9rem; margin-bottom:1rem;">
-            <a href="{{ route('blog.series', $post->series->slug) }}" style="color: var(--platform-link-color, #4f46e5); font-weight:600;">ظ…ط¬ظ…ظˆط¹ظ‡: {{ $post->series->title }}</a>
+            <a href="{{ route('blog.series', $post->series->slug) }}" style="color: var(--platform-link-color, #4f46e5); font-weight:600;">مجموعه: {{ $post->series->title }}</a>
             @if($post->part_number)
-                <span style="color:#6b7280;"> â€” ظ‚ط³ظ…طھ {{ $post->part_number }}</span>
+                <span style="color:#6b7280;"> — قسمت {{ $post->part_number }}</span>
             @endif
         </p>
     @endif
     @if(isset($seriesSiblings) && $seriesSiblings->count() > 1)
         <nav style="margin-bottom:1.25rem; padding:0.75rem; border:1px solid #e5e7eb; border-radius:0.5rem; font-size:0.85rem;">
-            <div style="font-weight:600; margin-bottom:0.35rem;">ط³ط§غŒط± ظ‚ط³ظ…طھâ€Œظ‡ط§</div>
+            <div style="font-weight:600; margin-bottom:0.35rem;">سایر قسمت‌ها</div>
             <ul style="margin:0; padding-inline-start:1.1rem;">
                 @foreach($seriesSiblings as $sib)
                     <li style="margin:0.2rem 0;">
                         @if($sib->id === $post->id)
-                            <span style="font-weight:600;">ظ‚ط³ظ…طھ {{ $sib->part_number ?? 'طں' }}: {{ \Illuminate\Support\Str::limit($sib->title, 48) }}</span>
+                            <span style="font-weight:600;">قسمت {{ $sib->part_number ?? '؟' }}: {{ \Illuminate\Support\Str::limit($sib->title, 48) }}</span>
                         @else
-                            <a href="{{ route('blog.show', $sib->slug) }}">ظ‚ط³ظ…طھ {{ $sib->part_number ?? 'طں' }}: {{ \Illuminate\Support\Str::limit($sib->title, 48) }}</a>
+                            <a href="{{ route('blog.show', $sib->slug) }}">قسمت {{ $sib->part_number ?? '؟' }}: {{ \Illuminate\Support\Str::limit($sib->title, 48) }}</a>
                         @endif
                     </li>
                 @endforeach
@@ -110,13 +110,13 @@
     @endif
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
         <button type="button" id="blog-like-btn" data-url="{{ route('blog.like', $post->slug) }}" style="padding:0.4rem 0.85rem; border-radius:0.5rem; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-size:0.85rem;">
-            ظ¾ط³ظ†ط¯غŒط¯ظ… (<span id="blog-like-count">{{ number_format($post->likes_count) }}</span>)
+            پسندیدم (<span id="blog-like-count">{{ number_format($post->likes_count) }}</span>)
         </button>
     </div>
 </article>
 @if(isset($relatedPosts) && $relatedPosts->isNotEmpty())
     <section style="margin-top: 2rem; max-width: 48rem;">
-        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem;">ظ…ط·ط§ظ„ط¨ ظ…ط±طھط¨ط·</h2>
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem;">مطالب مرتبط</h2>
         <div style="display:grid; gap: 0.5rem;">
             @foreach($relatedPosts as $relatedPost)
                 <a href="{{ route('blog.show', $relatedPost->slug) }}" style="display:block; border:1px solid #e5e7eb; border-radius:0.5rem; padding:0.65rem; text-decoration:none; color:inherit;">
@@ -130,7 +130,7 @@
     </section>
 @endif
 <p class="mt-8">
-    <a href="{{ route('blog.index') }}" class="font-semibold" style="color: var(--platform-link-color, #4f46e5);">â†گ ط¨ط§ط²ع¯ط´طھ ط¨ظ‡ ظˆط¨ظ„ط§ع¯</a>
+    <a href="{{ route('blog.index') }}" class="font-semibold" style="color: var(--platform-link-color, #4f46e5);">← بازگشت به وبلاگ</a>
 </p>
 @push('scripts')
 <script>

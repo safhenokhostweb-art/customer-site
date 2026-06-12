@@ -1,15 +1,15 @@
-﻿@php
+@php
 /**
- * ط¨ظ†ط± ظپط§ع©طھظˆط± ظ¾ط±ط¯ط§ط®طھâ€Œظ†ط´ط¯ظ‡ ط¨ط±ط§غŒ ظ…ط§عکظˆظ„ ط§ط´طھط±ط§ع©.
- * طھط§ ط²ظ…ط§ظ†غŒ ع©ظ‡ ظ…ط§عکظˆظ„ ط­ط³ط§ط¨ط¯ط§ط±غŒ طھظˆط³ط¹ظ‡ ظ†غŒط§ظپطھظ‡طŒ ظ…ط³طھظ‚غŒظ…ط§ظ‹ ط§ط² ط¬ط¯ظˆظ„ invoices ط¨ط±ط±ط³غŒ ظ…غŒâ€Œط´ظˆط¯.
- * ظ‡ظ†ع¯ط§ظ…غŒ ع©ظ‡ ظ…ط§عکظˆظ„ accounting طھظˆط³ط¹ظ‡ غŒط§ط¨ط¯طŒ ط§غŒظ† ط¨ط®ط´ ظ…غŒâ€Œطھظˆط§ظ†ط¯ ط§ط² AccountingService ط§ط³طھظپط§ط¯ظ‡ ع©ظ†ط¯.
+ * بنر فاکتور پرداخت‌نشده برای ماژول اشتراک.
+ * تا زمانی که ماژول حسابداری توسعه نیافته، مستقیماً از جدول invoices بررسی می‌شود.
+ * هنگامی که ماژول accounting توسعه یابد، این بخش می‌تواند از AccountingService استفاده کند.
  */
 $__pendingInvoice = null;
 if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
     $__pendingInvoice = \App\Models\Invoice::where('user_id', auth()->id())
         ->whereIn('status', ['pending', 'pending_confirmation'])
         ->whereHas('items', function ($q) {
-            $q->where('title', 'like', '%ط§ط´طھط±ط§ع©%');
+            $q->where('title', 'like', '%اشتراک%');
         })
         ->with('items')
         ->latest()
@@ -24,28 +24,28 @@ if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
     </div>
     <div class="pib-banner__body">
         <p class="pib-banner__title">
-            غŒع© ظپط§ع©طھظˆط± ظ¾ط±ط¯ط§ط®طھâ€Œظ†ط´ط¯ظ‡ ط¯ط§ط±غŒط¯
+            یک فاکتور پرداخت‌نشده دارید
         </p>
         <p class="pib-banner__desc">
-            ط¨ط§ط¨طھ آ«{{ $__pendingInvoice->items->first()?->title ?? 'ط§ط´طھط±ط§ع©' }}آ» ط¨ظ‡ ظ…ط¨ظ„ط؛
-            <strong>{{ \App\Helpers\NumberHelper::formatFa($__pendingInvoice->total) }} طھظˆظ…ط§ظ†</strong>
-            (ط´ظ…ط§ط±ظ‡: {{ $__pendingInvoice->invoice_number }})
-            â€” طھط§ ظ¾ط±ط¯ط§ط®طھ غŒط§ ظ„ط؛ظˆ ط§غŒظ† ط¯ط±ط®ظˆط§ط³طھطŒ ط§ط´طھط±ط§ع© ظپط¹ط§ظ„ ظ†ظ…غŒâ€Œط´ظˆط¯.
+            بابت «{{ $__pendingInvoice->items->first()?->title ?? 'اشتراک' }}» به مبلغ
+            <strong>{{ \App\Helpers\NumberHelper::formatFa($__pendingInvoice->total) }} تومان</strong>
+            (شماره: {{ $__pendingInvoice->invoice_number }})
+            — تا پرداخت یا لغو این درخواست، اشتراک فعال نمی‌شود.
         </p>
     </div>
     <div class="pib-banner__actions">
         <a href="{{ route('subscriptions.pay', $__pendingInvoice->invoice_number) }}"
            class="pib-banner__btn pib-banner__btn--pay">
-            ظ¾ط±ط¯ط§ط®طھ ط§ظ„ط§ظ†
+            پرداخت الان
         </a>
         <form method="POST"
               action="{{ route('account.subscriptions.cancel-pending') }}"
-              onsubmit="return confirm('ط¯ط±ط®ظˆط§ط³طھ ط§ط´طھط±ط§ع© ظ„ط؛ظˆ ط´ظˆط¯طں');"
+              onsubmit="return confirm('درخواست اشتراک لغو شود؟');"
               style="display:inline">
             @csrf
             <input type="hidden" name="invoice_id" value="{{ $__pendingInvoice->id }}">
             <button type="submit" class="pib-banner__btn pib-banner__btn--cancel">
-                ظ„ط؛ظˆ ط¯ط±ط®ظˆط§ط³طھ
+                لغو درخواست
             </button>
         </form>
     </div>

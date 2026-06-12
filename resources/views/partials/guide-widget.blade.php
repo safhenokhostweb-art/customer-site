@@ -1,4 +1,4 @@
-﻿{{-- ظˆغŒط¬طھ ط±ط§ظ‡ظ†ظ…ط§: ط¯ط± ط§ط¯ظ…غŒظ† ظ‡ظ…غŒط´ظ‡ ظ†ظ…ط§غŒط´ (ط§غŒظ† ظ¾ط§ط±ط´غŒط§ظ„ ظپظ‚ط· ط§ط² admin/layout ظپط±ط§ط®ظˆط§ظ†غŒ ظ…غŒâ€Œط´ظˆط¯). ظˆط§ط¨ط³طھظ‡ ط¨ظ‡ Vite ظ†غŒط³طھ. --}}
+{{-- ویجت راهنما: در ادمین همیشه نمایش (این پارشیال فقط از admin/layout فراخوانی می‌شود). وابسته به Vite نیست. --}}
 @php
     $guideContext = isset($guideContext) ? $guideContext : null;
     $gw = ['guide_widget_btn_bg' => '#2563eb', 'guide_widget_btn_text' => '#ffffff', 'guide_widget_panel_bg' => '#ffffff', 'guide_widget_panel_header_bg' => '#f9fafb', 'guide_widget_panel_text' => '#111827'];
@@ -7,7 +7,7 @@
         $gw = \App\Helpers\PlatformUx::guideWidget();
         $posClasses = \App\Helpers\PlatformUx::guideWidgetPositionClasses();
     } catch (\Throwable $e) {
-        // ط§ط² ظ…ظ‚ط§ط¯غŒط± ظ¾غŒط´â€Œظپط±ط¶ ط¨ط§ظ„ط§ ط§ط³طھظپط§ط¯ظ‡ ظ…غŒâ€Œط´ظˆط¯
+        // از مقادیر پیش‌فرض بالا استفاده می‌شود
     }
 @endphp
 <style>
@@ -36,20 +36,20 @@
 #guide-widget-results .guide-error { color: #dc2626; }
 </style>
 <div id="guide-widget" class="fixed {{ $posClasses }}" style="font-family: inherit; z-index: 9997;">
-    <button type="button" id="guide-widget-toggle" aria-label="ط±ط§ظ‡ظ†ظ…ط§" class="flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition hover:scale-105" style="background: {{ $gw['guide_widget_btn_bg'] ?? '#2563eb' }}; color: {{ $gw['guide_widget_btn_text'] ?? '#ffffff' }};">
+    <button type="button" id="guide-widget-toggle" aria-label="راهنما" class="flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition hover:scale-105" style="background: {{ $gw['guide_widget_btn_bg'] ?? '#2563eb' }}; color: {{ $gw['guide_widget_btn_text'] ?? '#ffffff' }};">
         <x-core-ui::icon name="help" class="h-6 w-6" />
     </button>
     <div id="guide-widget-backdrop" class="hidden fixed inset-0" style="z-index: 9998; background: rgba(0,0,0,0.4);" aria-hidden="true"></div>
     <div id="guide-widget-panel" class="hidden fixed top-0 right-0 h-full w-full sm:w-96 border-l border-gray-200 shadow-2xl flex flex-col" style="z-index: 9999; background: {{ $gw['guide_widget_panel_bg'] ?? '#ffffff' }};">
         <div class="flex items-center justify-between p-4 border-b border-gray-200 shrink-0" style="background: {{ $gw['guide_widget_panel_header_bg'] ?? '#f9fafb' }}; color: {{ $gw['guide_widget_panel_text'] ?? '#111827' }};">
-            <h2 class="text-lg font-bold">ط±ط§ظ‡ظ†ظ…ط§غŒ ط§ط³طھظپط§ط¯ظ‡</h2>
-            <button type="button" id="guide-widget-close" aria-label="ط¨ط³طھظ†" class="p-2 rounded hover:opacity-80" style="color: inherit;">âœ•</button>
+            <h2 class="text-lg font-bold">راهنمای استفاده</h2>
+            <button type="button" id="guide-widget-close" aria-label="بستن" class="p-2 rounded hover:opacity-80" style="color: inherit;">✕</button>
         </div>
         <div class="p-4 border-b border-gray-100 shrink-0">
-            <input type="text" id="guide-widget-search" placeholder="ط¬ط³طھط¬ظˆ ط¯ط± ط±ط§ظ‡ظ†ظ…ط§..." dir="rtl" autocomplete="off">
+            <input type="text" id="guide-widget-search" placeholder="جستجو در راهنما..." dir="rtl" autocomplete="off">
         </div>
         <div id="guide-widget-results" class="flex-1 min-h-0 overflow-y-auto p-4" style="color: {{ $gw['guide_widget_panel_text'] ?? '#111827' }}; background: {{ $gw['guide_widget_panel_bg'] ?? '#ffffff' }};">
-            <p class="guide-empty">ط¹ط¨ط§ط±طھغŒ طھط§غŒظ¾ ع©ظ†غŒط¯ غŒط§ ظ„غŒط³طھ ط²غŒط± ط±ط§ ط¨ط¨غŒظ†غŒط¯.</p>
+            <p class="guide-empty">عبارتی تایپ کنید یا لیست زیر را ببینید.</p>
         </div>
     </div>
 </div>
@@ -80,7 +80,7 @@
 
     function render(pages) {
         if (!pages || pages.length === 0) {
-            resultsEl.innerHTML = '<p class="guide-empty">ظ†طھغŒط¬ظ‡â€Œط§غŒ غŒط§ظپطھ ظ†ط´ط¯.</p>';
+            resultsEl.innerHTML = '<p class="guide-empty">نتیجه‌ای یافت نشد.</p>';
             return;
         }
         resultsEl.innerHTML = '<ul>' + pages.map(function(p) {
@@ -90,7 +90,7 @@
 
     function setLoading(loading) {
         if (loading) {
-            resultsEl.innerHTML = '<p class="guide-loading">ط¯ط± ط­ط§ظ„ ط¬ط³طھط¬ظˆ...</p>';
+            resultsEl.innerHTML = '<p class="guide-loading">در حال جستجو...</p>';
         }
     }
 
@@ -101,7 +101,7 @@
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) { return r.json(); })
             .then(function(data) { render(data.pages || []); })
-            .catch(function() { resultsEl.innerHTML = '<p class="guide-error">ط®ط·ط§ ط¯ط± ط¨ط§ط±ع¯ط°ط§ط±غŒ. ط¯ظˆط¨ط§ط±ظ‡ طھظ„ط§ط´ ع©ظ†غŒط¯.</p>'; });
+            .catch(function() { resultsEl.innerHTML = '<p class="guide-error">خطا در بارگذاری. دوباره تلاش کنید.</p>'; });
     }
 
     toggle.addEventListener('click', openPanel);

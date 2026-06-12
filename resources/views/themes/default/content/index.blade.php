@@ -1,24 +1,24 @@
-﻿@extends('themes.default.layout')
+@extends('themes.default.layout')
 
-@section('title', 'ظ…ط±ع©ط² ظ…ط­طھظˆط§')
-@section('meta_description', 'ظ…ظ‚ط§ظ„ط§طھطŒ ط¢ظ…ظˆط²ط´â€Œظ‡ط§ ظˆ ظ…ط­طھظˆط§غŒ طھط®طµطµغŒ')
+@section('title', 'مرکز محتوا')
+@section('meta_description', 'مقالات، آموزش‌ها و محتوای تخصصی')
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
+    <a href="{{ route('home') }}">خانه</a>
     <span style="margin: 0 0.5rem;">/</span>
-    <span>ظ…ط±ع©ط² ظ…ط­طھظˆط§</span>
+    <span>مرکز محتوا</span>
 @endsection
 
 @section('content')
 <div style="max-width: 72rem; margin: 0 auto;">
 
-    {{-- ظ‡ط¯ط± --}}
+    {{-- هدر --}}
     <div style="margin-bottom: 2rem;">
-        <h1 style="font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem;">ظ…ط±ع©ط² ظ…ط­طھظˆط§</h1>
-        <p style="color: #6b7280; font-size: 1rem;">ظ…ظ‚ط§ظ„ط§طھطŒ ط¢ظ…ظˆط²ط´â€Œظ‡ط§ ظˆ ط±ط§ظ‡ظ†ظ…ط§ظ‡ط§غŒ طھط®طµطµغŒ</p>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem;">مرکز محتوا</h1>
+        <p style="color: #6b7280; font-size: 1rem;">مقالات، آموزش‌ها و راهنماهای تخصصی</p>
     </div>
 
-    {{-- ظپغŒظ„طھط± ظ†ظˆط¹ --}}
+    {{-- فیلتر نوع --}}
     @php
         $typeLabels = \App\Models\SiteContent::$TYPES;
         unset($typeLabels[\App\Models\SiteContent::TYPE_HELP]);
@@ -27,7 +27,7 @@
         <a href="{{ route('content.index') }}"
            style="padding:0.35rem 0.85rem; border-radius:9999px; font-size:0.82rem; font-weight:600; text-decoration:none;
                   {{ !$type ? 'background:#4f46e5; color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
-            ظ‡ظ…ظ‡
+            همه
         </a>
         @foreach($typeLabels as $key => $label)
             @if(($typeCounts[$key] ?? 0) > 0)
@@ -40,26 +40,26 @@
             @endif
         @endforeach
 
-        {{-- ط¬ط³طھط¬ظˆ --}}
+        {{-- جستجو --}}
         <form action="{{ route('content.index') }}" method="GET" style="margin-right:auto; display:flex; gap:0.4rem;">
             @if($type)<input type="hidden" name="type" value="{{ $type }}">@endif
             <input type="text" name="q" value="{{ request('q') }}"
-                   placeholder="ط¬ط³طھط¬ظˆ ط¯ط± ظ…ط­طھظˆط§..."
+                   placeholder="جستجو در محتوا..."
                    style="border:1px solid #e5e7eb; border-radius:0.5rem; padding:0.35rem 0.7rem;
                           font-size:0.82rem; outline:none; font-family:inherit; width:180px;">
             <button type="submit"
                     style="padding:0.35rem 0.7rem; background:#f3f4f6; border:1px solid #e5e7eb;
                            border-radius:0.5rem; font-size:0.82rem; cursor:pointer; font-family:inherit;">
-                ًں”چ
+                🔍
             </button>
         </form>
     </div>
 
-    {{-- ع©ط§ط±طھâ€Œظ‡ط§غŒ ظ…ط­طھظˆط§ --}}
+    {{-- کارت‌های محتوا --}}
     @if($contents->isEmpty())
         <div style="text-align:center; padding:4rem 1rem; color:#9ca3af;">
             <x-core-ui::icon name="file-text" style="width:3rem;height:3rem;margin:0 auto 1rem;opacity:.4" />
-            <p>ظ…ط­طھظˆط§غŒغŒ ط¨ط±ط§غŒ ظ†ظ…ط§غŒط´ ظˆط¬ظˆط¯ ظ†ط¯ط§ط±ط¯.</p>
+            <p>محتوایی برای نمایش وجود ندارد.</p>
         </div>
     @else
         <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem; margin-bottom:2rem;">
@@ -71,7 +71,7 @@
                onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,.08)';this.style.transform='translateY(-2px)'"
                onmouseout="this.style.boxShadow='none';this.style.transform='none'">
 
-                {{-- ظ†ظˆط¹ ظ…ط­طھظˆط§ --}}
+                {{-- نوع محتوا --}}
                 <div style="margin-bottom:0.75rem;">
                     @php
                         $typeColors = [
@@ -88,17 +88,17 @@
                         {{ $item->typeName() }}
                     </span>
                     @if($item->ai_generated)
-                    <span style="font-size:0.68rem; color:#818cf8; margin-right:0.3rem;">âœ¨ AI</span>
+                    <span style="font-size:0.68rem; color:#818cf8; margin-right:0.3rem;">✨ AI</span>
                     @endif
                 </div>
 
-                {{-- ط¹ظ†ظˆط§ظ† --}}
+                {{-- عنوان --}}
                 <h2 style="font-size:1rem; font-weight:700; color:#111827; margin-bottom:0.5rem; line-height:1.5;
                            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
                     {{ $item->title }}
                 </h2>
 
-                {{-- ط®ظ„ط§طµظ‡ --}}
+                {{-- خلاصه --}}
                 @if($item->excerpt)
                 <p style="font-size:0.825rem; color:#6b7280; line-height:1.6; margin-bottom:0.75rem; flex:1;
                           display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
@@ -112,13 +112,13 @@
                     <span style="font-size:0.75rem; color:#9ca3af;">
                         {{ $item->published_at ? \App\Helpers\Jalali::formatFa($item->published_at, 'Y/m/d') : '' }}
                     </span>
-                    <span style="font-size:0.78rem; color:#4f46e5; font-weight:600;">ظ…ط·ط§ظ„ط¹ظ‡ â†گ</span>
+                    <span style="font-size:0.78rem; color:#4f46e5; font-weight:600;">مطالعه ←</span>
                 </div>
             </a>
             @endforeach
         </div>
 
-        {{-- طµظپط­ظ‡â€Œط¨ظ†ط¯غŒ --}}
+        {{-- صفحه‌بندی --}}
         @if($contents->hasPages())
         <div style="display:flex; justify-content:center; gap:0.4rem; flex-wrap:wrap;">
             @foreach($contents->links()->elements as $element)

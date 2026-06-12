@@ -1,4 +1,4 @@
-﻿@php
+@php
     $platformNotifs = collect();
     if (\App\Helpers\SiteHelper::moduleEnabled('notifications') && class_exists(\App\Services\PlatformUxService::class)) {
         $platformNotifs = collect(app(\App\Services\PlatformUxService::class)->getPlatformNotifications())
@@ -116,20 +116,20 @@
     data-panel-vertical="{{ $isTop ? 'below' : 'above' }}"
     data-panel-horizontal="{{ $isLeft ? 'left' : 'right' }}"
 >
-    <button type="button" onclick="window.toggleAdminNotificationsPanel && window.toggleAdminNotificationsPanel(event)" class="admin-notif-bell {{ $allNotifs->isNotEmpty() ? 'has-unread' : '' }}" title="ط§ط¹ظ„ط§ظ†â€Œظ‡ط§غŒ ط§ط¯ظ…غŒظ† ط§ط² ظ¾ظ„طھظپط±ظ…">
+    <button type="button" onclick="window.toggleAdminNotificationsPanel && window.toggleAdminNotificationsPanel(event)" class="admin-notif-bell {{ $allNotifs->isNotEmpty() ? 'has-unread' : '' }}" title="اعلان‌های ادمین از پلتفرم">
         <x-core-ui::icon name="bell" style="width:20px;height:20px" />
         @if($allNotifs->isNotEmpty())
         <span class="admin-notif-badge">{{ $allNotifs->count() }}</span>
         @endif
     </button>
-    <div class="admin-notif-drag-hint">ط¨ط±ط§غŒ ط¬ط§ط¨ظ‡â€Œط¬ط§غŒغŒ ط¨ع©ط´غŒط¯</div>
+    <div class="admin-notif-drag-hint">برای جابه‌جایی بکشید</div>
     <div id="admin-notifications-panel" class="admin-notif-panel">
-        <div class="admin-notif-panel__head">ط§ط¹ظ„ط§ظ†â€Œظ‡ط§غŒ ظ¾ظ„طھظپط±ظ…</div>
+        <div class="admin-notif-panel__head">اعلان‌های پلتفرم</div>
         @if($allNotifs->isEmpty())
         <div class="admin-notif-panel__empty">
-            ط§ط¹ظ„ط§ظ†غŒ ظˆط¬ظˆط¯ ظ†ط¯ط§ط±ط¯.<br>
-            <a href="{{ route('admin.license.refresh-config.get') }}" class="text-indigo-600 hover:underline mt-2 inline-block font-medium">ط¨ط§ط²ط®ظˆط§ظ†غŒ طھظ†ط¸غŒظ…ط§طھ ظˆ ط§ط¹ظ„ط§ظ†â€Œظ‡ط§</a><br>
-            <span class="admin-notif-panel__hint">ظ„ط§غŒط³ظ†ط³ ط§غŒظ† ط³ط§غŒطھ ط¯ط± ظ¾ظ„طھظپط±ظ… ط¨ط§غŒط¯ ط¨ظ‡ ظ‡ظ…ط§ظ† ط³ط§غŒطھغŒ ظ…طھطµظ„ ط¨ط§ط´ط¯ ع©ظ‡ ط§ط¹ظ„ط§ظ† ط¨ط±ط§غŒط´ ط«ط¨طھ ط´ط¯ظ‡ ط§ط³طھ.</span>
+            اعلانی وجود ندارد.<br>
+            <a href="{{ route('admin.license.refresh-config.get') }}" class="text-indigo-600 hover:underline mt-2 inline-block font-medium">بازخوانی تنظیمات و اعلان‌ها</a><br>
+            <span class="admin-notif-panel__hint">لایسنس این سایت در پلتفرم باید به همان سایتی متصل باشد که اعلان برایش ثبت شده است.</span>
         </div>
         @else
         @foreach($allNotifs as $n)
@@ -142,16 +142,16 @@
             <div class="admin-notif-card__imgwrap"><img src="{{ $n['image_url'] }}" alt="" class="admin-notif-card__img"></div>
             @endif
             <div class="admin-notif-card__row">
-                @if($fresh)<span class="admin-notif-card__new">ط¬ط¯غŒط¯</span>@endif
+                @if($fresh)<span class="admin-notif-card__new">جدید</span>@endif
                 @if(($n['priority'] ?? 'normal') === 'urgent')
-                    <span class="admin-notif-card__pill admin-notif-card__pill--urgent">ظپظˆط±غŒ</span>
+                    <span class="admin-notif-card__pill admin-notif-card__pill--urgent">فوری</span>
                 @elseif(($n['priority'] ?? 'normal') === 'high')
-                    <span class="admin-notif-card__pill admin-notif-card__pill--high">ظ…ظ‡ظ…</span>
+                    <span class="admin-notif-card__pill admin-notif-card__pill--high">مهم</span>
                 @endif
             </div>
-            <div class="admin-notif-card__title">{{ $n['title'] ?: 'ط§ط¹ظ„ط§ظ†' }}</div>
+            <div class="admin-notif-card__title">{{ $n['title'] ?: 'اعلان' }}</div>
             @if($n['body'])<div class="admin-notif-card__body">{{ Str::limit(strip_tags($n['body']), 100) }}</div>@endif
-            @if($n['link'])<a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="admin-notif-card__link">{{ $n['link_text'] ?: 'ظ…ط´ط§ظ‡ط¯ظ‡' }}</a>@endif
+            @if($n['link'])<a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="admin-notif-card__link">{{ $n['link_text'] ?: 'مشاهده' }}</a>@endif
         </div>
         @endforeach
         @endif

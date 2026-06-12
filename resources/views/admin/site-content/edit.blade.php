@@ -1,5 +1,5 @@
-﻿@extends('admin.layout')
-@section('title', 'ظˆغŒط±ط§غŒط´: ' . $siteContent->title)
+@extends('admin.layout')
+@section('title', 'ویرایش: ' . $siteContent->title)
 
 @section('content')
 @php
@@ -14,27 +14,27 @@ $hasSteps = $siteContent->hasSteps();
         <a href="{{ route('admin.site-content.index') }}" class="text-gray-400 hover:text-gray-600">
             <x-core-ui::icon name="edit" class="w-5 h-5" />
         </a>
-        <h1 class="text-xl font-bold text-gray-900">ظˆغŒط±ط§غŒط´ â€” <span class="text-indigo-600">{{ $types[$type] ?? $type }}</span></h1>
+        <h1 class="text-xl font-bold text-gray-900">ویرایش — <span class="text-indigo-600">{{ $types[$type] ?? $type }}</span></h1>
         @if($siteContent->ai_generated)
-        <span class="px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-full">âœ¨ طھظˆظ„غŒط¯ط´ط¯ظ‡ ط¨ط§ AI</span>
+        <span class="px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-full">✨ تولیدشده با AI</span>
         @endif
     </div>
 
     {{-- AI Assistant --}}
     <div class="bg-gradient-to-l from-purple-50 to-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6">
         <div class="flex items-center gap-2 mb-3">
-            <span class="text-xl">âœ¨</span>
-            <span class="font-semibold text-indigo-800">ط¨ط§ط²ظ†ظˆغŒط³غŒ ط¨ط§ AI</span>
+            <span class="text-xl">✨</span>
+            <span class="font-semibold text-indigo-800">بازنویسی با AI</span>
         </div>
         <div class="flex gap-3">
             <input x-model="aiPrompt" type="text"
-                placeholder="ط¯ط±ط®ظˆط§ط³طھ ط¬ط¯غŒط¯ ط¨ط±ط§غŒ ط¨ط§ط²ظ†ظˆغŒط³غŒ غŒط§ طھع©ظ…غŒظ„ ظ…ط­طھظˆط§..."
+                placeholder="درخواست جدید برای بازنویسی یا تکمیل محتوا..."
                 class="flex-1 border border-indigo-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 bg-white"
                 @keydown.enter.prevent="generateAi()">
             <button @click="generateAi()" :disabled="aiLoading"
                 class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition">
-                <span x-show="!aiLoading">ط¨ط§ط²ظ†ظˆغŒط³غŒ</span>
-                <span x-show="aiLoading">ط¯ط± ط­ط§ظ„ طھظˆظ„غŒط¯...</span>
+                <span x-show="!aiLoading">بازنویسی</span>
+                <span x-show="aiLoading">در حال تولید...</span>
             </button>
         </div>
         <div x-show="aiError" x-text="aiError" class="mt-2 text-sm text-red-600"></div>
@@ -51,18 +51,18 @@ $hasSteps = $siteContent->hasSteps();
             <div class="lg:col-span-2 space-y-5">
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ط¹ظ†ظˆط§ظ†</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">عنوان</label>
                         <input type="text" name="title" x-model="title" required
                             class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ط®ظ„ط§طµظ‡</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">خلاصه</label>
                         <textarea name="excerpt" x-model="excerpt" rows="2"
                             class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 resize-none"></textarea>
                     </div>
                     @if(!$hasSteps)
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ظ…طھظ† ط§طµظ„غŒ</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">متن اصلی</label>
                         <textarea name="body" x-model="body" rows="15"
                             class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 font-mono"></textarea>
                     </div>
@@ -72,8 +72,8 @@ $hasSteps = $siteContent->hasSteps();
                 @if($hasSteps)
                 <div class="bg-white rounded-2xl border border-gray-100 p-5">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-gray-800">ظ…ط±ط§ط­ظ„</h3>
-                        <button type="button" @click="addStep()" class="text-sm text-indigo-600 hover:text-indigo-800">+ ط§ظپط²ظˆط¯ظ† ظ…ط±ط­ظ„ظ‡</button>
+                        <h3 class="font-semibold text-gray-800">مراحل</h3>
+                        <button type="button" @click="addStep()" class="text-sm text-indigo-600 hover:text-indigo-800">+ افزودن مرحله</button>
                     </div>
                     <div class="space-y-3">
                         <template x-for="(step, i) in steps" :key="i">
@@ -82,7 +82,7 @@ $hasSteps = $siteContent->hasSteps();
                                     <span class="w-6 h-6 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center font-bold" x-text="i+1"></span>
                                     <input type="text" x-bind:name="'steps['+i+'][title]'" x-model="step.title"
                                         class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400">
-                                    <button type="button" @click="steps.splice(i,1)" class="text-red-400 hover:text-red-600">âœ•</button>
+                                    <button type="button" @click="steps.splice(i,1)" class="text-red-400 hover:text-red-600">✕</button>
                                 </div>
                                 <textarea x-bind:name="'steps['+i+'][body]'" x-model="step.body" rows="2"
                                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 resize-none"></textarea>
@@ -95,30 +95,30 @@ $hasSteps = $siteContent->hasSteps();
 
             <div class="space-y-4">
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-                    <h3 class="font-semibold text-gray-800">ط§ظ†طھط´ط§ط±</h3>
+                    <h3 class="font-semibold text-gray-800">انتشار</h3>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">ظˆط¶ط¹غŒطھ</label>
+                        <label class="block text-xs text-gray-500 mb-1">وضعیت</label>
                         <select name="status" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
-                            <option value="draft" @selected($siteContent->status === 'draft')>ظ¾غŒط´â€Œظ†ظˆغŒط³</option>
-                            <option value="published" @selected($siteContent->status === 'published')>ظ…ظ†طھط´ط±ط´ط¯ظ‡</option>
-                            <option value="archived" @selected($siteContent->status === 'archived')>ط¢ط±ط´غŒظˆ</option>
+                            <option value="draft" @selected($siteContent->status === 'draft')>پیش‌نویس</option>
+                            <option value="published" @selected($siteContent->status === 'published')>منتشرشده</option>
+                            <option value="archived" @selected($siteContent->status === 'archived')>آرشیو</option>
                         </select>
                     </div>
-                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">ط°ط®غŒط±ظ‡ طھط؛غŒغŒط±ط§طھ</button>
+                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">ذخیره تغییرات</button>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">ط¯ط³طھظ‡â€Œط¨ظ†ط¯غŒ</label>
+                        <label class="block text-xs text-gray-500 mb-1">دسته‌بندی</label>
                         <select name="category_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
-                            <option value="">ط¨ط¯ظˆظ† ط¯ط³طھظ‡</option>
+                            <option value="">بدون دسته</option>
                             @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" @selected($siteContent->category_id == $cat->id)>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">ط¨ط±ع†ط³ط¨â€Œظ‡ط§</label>
+                        <label class="block text-xs text-gray-500 mb-1">برچسب‌ها</label>
                         <input type="text" name="tags" value="{{ is_array($siteContent->tags) ? implode(', ', $siteContent->tags) : '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400">
                     </div>
@@ -163,7 +163,7 @@ function contentEditor(type, hasSteps, content, initialSteps) {
                 } else {
                     this.body = data.content || '';
                 }
-            } catch(e) { this.aiError = 'ط®ط·ط§ ط¯ط± ط§طھطµط§ظ„'; } finally { this.aiLoading = false; }
+            } catch(e) { this.aiError = 'خطا در اتصال'; } finally { this.aiLoading = false; }
         }
     }
 }

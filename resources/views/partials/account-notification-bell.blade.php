@@ -1,4 +1,4 @@
-﻿@php
+@php
     $position = \App\Models\Setting::get('notification_bell_position', 'bottom-right');
     $unreadCount = auth()->user()->notifications()->unread()->count();
     $inboxRecent = \App\Models\UserNotification::where('user_id', auth()->id())->latest()->limit(5)->get();
@@ -31,14 +31,14 @@
 @endphp
 @if(\App\Helpers\SiteHelper::moduleEnabled('notifications'))
 <style>
-/* â”€â”€ Bell shake â”€â”€ */
+/* ── Bell shake ── */
 @keyframes account-bell-shake {
     0%,100%{transform:rotate(0)}
     10%,30%{transform:rotate(-12deg)}
     20%,40%{transform:rotate(12deg)}
     50%{transform:rotate(0)}
 }
-/* â”€â”€ Glow pulse rings â”€â”€ */
+/* ── Glow pulse rings ── */
 @keyframes bell-ring-pulse {
     0%   { transform:scale(1);   opacity:0.55; }
     100% { transform:scale(2.8); opacity:0; }
@@ -51,7 +51,7 @@
 .bell-glow-ring:nth-child(2){ animation-delay:0.85s; }
 .bell-glow-ring:nth-child(3){ animation-delay:1.7s; }
 
-/* â”€â”€ Drag hint tooltip (hover) â”€â”€ */
+/* ── Drag hint tooltip (hover) ── */
 .bell-drag-tooltip {
     position:absolute;
     bottom:calc(100% + 0.6rem);
@@ -72,7 +72,7 @@
     opacity:1;transform:translateX(50%) translateY(0);
 }
 
-/* â”€â”€ First-visit hint label â”€â”€ */
+/* ── First-visit hint label ── */
 .bell-first-hint {
     position:absolute;
     right:calc(100% + 0.6rem);top:50%;transform:translateY(-50%);
@@ -94,7 +94,7 @@
     to  {opacity:1;transform:translateY(-50%) translateX(0)}
 }
 
-/* â”€â”€ Bell states â”€â”€ */
+/* ── Bell states ── */
 .account-notification-bell-link.has-unread { animation: account-bell-shake 2s ease-in-out infinite; }
 .account-notification-bell-link.has-unread:hover,
 .account-notification-bell-link.has-unread.dragging { animation: none; }
@@ -102,7 +102,7 @@
 #account-notification-bell.dragging { cursor:grabbing; }
 #account-notification-bell.dragging .bell-glow-ring { animation:none; opacity:0; }
 
-/* â”€â”€ Notification panel â”€â”€ */
+/* ── Notification panel ── */
 #acct-bell-panel {
     position:absolute;
     width:min(22rem, calc(100vw - 2rem));
@@ -181,26 +181,26 @@
     </div>
 
     {{-- Hover tooltip --}}
-    <div class="bell-drag-tooltip">ًں–±ï¸ڈ ط¨ع©ط´غŒط¯ طھط§ ط¬ط§ط¨ط¬ط§ ع©ظ†غŒط¯</div>
+    <div class="bell-drag-tooltip">🖱️ بکشید تا جابجا کنید</div>
 
     {{-- First-visit hint (shown by JS for 4s) --}}
     <div class="bell-first-hint" id="bell-first-hint" style="display:none">
         <x-core-ui::icon name="bell" />
-        ظ‚ط§ط¨ظ„ ط¬ط§ط¨ط¬ط§غŒغŒ
+        قابل جابجایی
     </div>
 
     {{-- Inline notification panel --}}
     <div id="acct-bell-panel" hidden>
         <div class="acct-bp__head">
-            <span>ط§ط¹ظ„ط§ظ†â€Œظ‡ط§</span>
-            <a href="{{ route('account.notifications.index') }}" class="acct-bp__link-all">ظ‡ظ…ظ‡ ظ¾غŒط§ظ…â€Œظ‡ط§</a>
+            <span>اعلان‌ها</span>
+            <a href="{{ route('account.notifications.index') }}" class="acct-bp__link-all">همه پیام‌ها</a>
         </div>
 
         @if($inboxRecent->isEmpty() && count($platformItems) === 0)
-            <div class="acct-bp__empty">ظ…ظˆط±ط¯غŒ ط¨ط±ط§غŒ ظ†ظ…ط§غŒط´ ظ†غŒط³طھ.</div>
+            <div class="acct-bp__empty">موردی برای نمایش نیست.</div>
         @else
             @if($inboxRecent->isNotEmpty())
-                <div class="acct-bp__section-title">طµظ†ط¯ظˆظ‚ ظˆط±ظˆط¯غŒ</div>
+                <div class="acct-bp__section-title">صندوق ورودی</div>
                 <ul class="acct-bp__list">
                     @foreach($inboxRecent as $n)
                     <li>
@@ -219,7 +219,7 @@
             @endif
 
             @if(count($platformItems) > 0)
-                <div class="acct-bp__section-title">ط§ط¹ظ„ط§ظ† ط³ط§غŒطھ</div>
+                <div class="acct-bp__section-title">اعلان سایت</div>
                 <ul class="acct-bp__list">
                     @foreach($platformItems as $n)
                         @php $fresh = \App\Helpers\NotificationUi::isFresh($n['created_at'] ?? null); @endphp
@@ -227,7 +227,7 @@
                             <div class="acct-bp__row {{ $fresh ? 'is-new' : '' }}"
                                  style="border-inline-start:3px solid {{ $typeAccent[$n['type']] ?? $typeAccent['info'] }};">
                                 @if($fresh)
-                                    <span class="acct-bp__new-pill">ط¬ط¯غŒط¯</span>
+                                    <span class="acct-bp__new-pill">جدید</span>
                                 @endif
                                 <span class="acct-bp__row-text">
                                     <span class="acct-bp__title">{{ \Illuminate\Support\Str::limit($n['title'], 52) }}</span>
@@ -235,7 +235,7 @@
                                         <span class="acct-bp__meta">{{ \Illuminate\Support\Str::limit(strip_tags($n['body']), 64) }}</span>
                                     @endif
                                     @if(!empty($n['link']))
-                                        <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="acct-bp__cta">{{ $n['link_text'] ?: 'ظ…ط´ط§ظ‡ط¯ظ‡' }}</a>
+                                        <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="acct-bp__cta">{{ $n['link_text'] ?: 'مشاهده' }}</a>
                                     @endif
                                 </span>
                             </div>

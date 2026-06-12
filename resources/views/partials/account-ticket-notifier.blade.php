@@ -1,4 +1,4 @@
-﻿@php
+@php
 use SaaSPlatform\Modules\Tickets\Models\Ticket as _ATTicket;
 use SaaSPlatform\Modules\Tickets\Models\TicketReply as _ATReply;
 
@@ -20,11 +20,11 @@ $_atLastReplyId = $_atIds->isNotEmpty()
         <span id="atn-text" style="flex:1;font-size:0.85rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <a id="atn-link" href="#"
            style="padding:0.25rem 0.85rem;background:rgba(255,255,255,0.9);color:#4f46e5;border-radius:0.4rem;font-size:0.75rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
-            ظ…ط´ط§ظ‡ط¯ظ‡ ظ¾ط§ط³ط®
+            مشاهده پاسخ
         </a>
         <button onclick="document.getElementById('atn-banner').style.display='none'"
                 style="display:flex;align-items:center;justify-content:center;width:1.625rem;height:1.625rem;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:50%;color:#fff;font-size:1rem;cursor:pointer;padding:0;flex-shrink:0"
-                aria-label="ط¨ط³طھظ†">أ—</button>
+                aria-label="بستن">×</button>
     </div>
 </div>
 <style>
@@ -64,8 +64,8 @@ $_atLastReplyId = $_atIds->isNotEmpty()
             lastId = data.last_id;
             if (window.CS) window.CS.play('notify');
             var first = data.replies[0];
-            var text = 'ظ¾ط§ط³ط® ط¬ط¯غŒط¯ ط¯ط±غŒط§ظپطھ ط´ط¯: ' + (first.subject || 'طھغŒع©طھ ط´ظ…ط§');
-            if (data.new_count > 1) text += ' (+' + (data.new_count - 1) + ' ظ…ظˆط±ط¯ ط¯غŒع¯ط±)';
+            var text = 'پاسخ جدید دریافت شد: ' + (first.subject || 'تیکت شما');
+            if (data.new_count > 1) text += ' (+' + (data.new_count - 1) + ' مورد دیگر)';
             showBanner(text, first.url);
         })
         .catch(function(){});

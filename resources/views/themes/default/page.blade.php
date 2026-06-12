@@ -1,4 +1,4 @@
-﻿@extends('themes.default.layout')
+@extends('themes.default.layout')
 
 @section('title', \App\Helpers\Seo::title($page))
 @section('meta_description', \App\Helpers\Seo::description($page))
@@ -11,7 +11,7 @@
 @endpush
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
+    <a href="{{ route('home') }}">خانه</a>
     <span class="mx-2">/</span>
     <span>{{ $page->title }}</span>
 @endsection
@@ -22,7 +22,7 @@
         <div class="mb-4 flex justify-end">
             <a href="{{ route('builder.edit', $page) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm">
                 <x-core-ui::icon name="edit" style="width:20px;height:20px" />
-                ظˆغŒط±ط§غŒط´ طµظپط­ظ‡
+                ویرایش صفحه
             </a>
         </div>
     @endif

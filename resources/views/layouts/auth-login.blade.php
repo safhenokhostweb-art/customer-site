@@ -1,11 +1,11 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ظˆط±ظˆط¯') â€” {{ \App\Helpers\PlatformUx::platformName() }}</title>
+    <title>@yield('title', 'ورود') — {{ \App\Helpers\PlatformUx::platformName() }}</title>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
     <style>@include('partials.vazirmatn-font-faces-inline')</style>
@@ -241,8 +241,8 @@
             <span class="auth-login-hero-blob"></span>
             <div class="auth-login-hero-inner">
                 <x-core-ui::icon name="shield" />
-                <h2>ظˆط±ظˆط¯ ط§ظ…ظ† ط¨ظ‡ ظ¾ظ†ظ„</h2>
-                <p>ط§ط·ظ„ط§ط¹ط§طھ ط´ظ…ط§ ط¨ط§ ط±ظ…ط²ظ†ع¯ط§ط±غŒ ط§ط³طھط§ظ†ط¯ط§ط±ط¯ ظ…ط­ط§ظپط¸طھ ظ…غŒâ€Œط´ظˆط¯. ط§ط² ظ…ظˆط¨ط§غŒظ„ ظˆ ط±ظ…ط² ط¹ط¨ظˆط± ظ…ط¹طھط¨ط± ط®ظˆط¯ ط§ط³طھظپط§ط¯ظ‡ ع©ظ†غŒط¯.</p>
+                <h2>ورود امن به پنل</h2>
+                <p>اطلاعات شما با رمزنگاری استاندارد محافظت می‌شود. از موبایل و رمز عبور معتبر خود استفاده کنید.</p>
             </div>
         </div>
     </div>

@@ -1,12 +1,12 @@
-﻿@extends('account.layout')
-@section('title', 'ظپط¹ط§ظ„غŒطھâ€Œظ‡ط§غŒ ط§ط®غŒط±')
-@section('header', 'ظپط¹ط§ظ„غŒطھâ€Œظ‡ط§غŒ ط§ط®غŒط±')
+@extends('account.layout')
+@section('title', 'فعالیت‌های اخیر')
+@section('header', 'فعالیت‌های اخیر')
 @section('content')
 <div class="space-y-6 max-w-3xl">
     <div class="account-card">
         <div class="account-card-body">
             @if($activities->isEmpty())
-                <p class="text-slate-500 py-8 text-center">ظپط¹ظ„ط§ظ‹ ظپط¹ط§ظ„غŒطھغŒ ط«ط¨طھ ظ†ط´ط¯ظ‡ ط§ط³طھ.</p>
+                <p class="text-slate-500 py-8 text-center">فعلاً فعالیتی ثبت نشده است.</p>
             @else
                 <div class="space-y-3">
                     @foreach($activities as $a)
@@ -25,7 +25,7 @@
             @endif
         </div>
     </div>
-    <a href="{{ route('account.profile.index') }}" class="btn btn-secondary">ط¨ط§ط²ع¯ط´طھ ط¨ظ‡ ظ¾ط±ظˆظپط§غŒظ„</a>
+    <a href="{{ route('account.profile.index') }}" class="btn btn-secondary">بازگشت به پروفایل</a>
 </div>
 @endsection
 

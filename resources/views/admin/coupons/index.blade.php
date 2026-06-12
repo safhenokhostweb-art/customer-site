@@ -1,5 +1,5 @@
-﻿@extends('admin.layout')
-@section('title', 'ع©ظˆظ¾ظ†â€Œظ‡ط§')
+@extends('admin.layout')
+@section('title', 'کوپن‌ها')
 @push('head')
 <style>
 .cpn-stat{padding:.875rem 1.25rem;border-radius:.875rem;background:#fff;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(15,23,42,.05)}
@@ -31,13 +31,13 @@
 <div class="admin-page">
     <div class="admin-page-head">
         <div>
-            <h1 class="admin-page-title">ع©ظˆظ¾ظ†â€Œظ‡ط§غŒ طھط®ظپغŒظپ</h1>
-            <p class="admin-section-lead" style="margin-top:.3rem">ظ…ط¯غŒط±غŒطھ ع©ط¯ظ‡ط§غŒ طھط®ظپغŒظپطŒ ط³ظ‚ظپ ط§ط³طھظپط§ط¯ظ‡ ظˆ طھط§ط±غŒط® ط§ظ†ظ‚ط¶ط§.</p>
+            <h1 class="admin-page-title">کوپن‌های تخفیف</h1>
+            <p class="admin-section-lead" style="margin-top:.3rem">مدیریت کدهای تخفیف، سقف استفاده و تاریخ انقضا.</p>
         </div>
         <div class="admin-page-tools">
             <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
                 <x-core-ui::icon name="plus" class="w-4 h-4" />
-                ع©ظˆظ¾ظ† ط¬ط¯غŒط¯
+                کوپن جدید
             </a>
         </div>
     </div>
@@ -45,19 +45,19 @@
     {{-- KPIs --}}
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem">
         <div class="cpn-stat">
-            <div class="cpn-stat__label">ع©ظ„ ع©ظˆظ¾ظ†â€Œظ‡ط§</div>
+            <div class="cpn-stat__label">کل کوپن‌ها</div>
             <div class="cpn-stat__value">{{ \App\Helpers\NumberHelper::formatFa($stats['total']) }}</div>
         </div>
         <div class="cpn-stat">
-            <div class="cpn-stat__label">ظپط¹ط§ظ„</div>
+            <div class="cpn-stat__label">فعال</div>
             <div class="cpn-stat__value" style="color:#16a34a">{{ \App\Helpers\NumberHelper::formatFa($stats['active']) }}</div>
         </div>
         <div class="cpn-stat">
-            <div class="cpn-stat__label">ظ…ظ†ظ‚ط¶غŒ ط´ط¯ظ‡</div>
+            <div class="cpn-stat__label">منقضی شده</div>
             <div class="cpn-stat__value" style="color:#dc2626">{{ \App\Helpers\NumberHelper::formatFa($stats['expired']) }}</div>
         </div>
         <div class="cpn-stat">
-            <div class="cpn-stat__label">ظ…ط¬ظ…ظˆط¹ ط§ط³طھظپط§ط¯ظ‡</div>
+            <div class="cpn-stat__label">مجموع استفاده</div>
             <div class="cpn-stat__value" style="color:#6366f1">{{ \App\Helpers\NumberHelper::formatFa($stats['usages']) }}</div>
         </div>
     </div>
@@ -68,12 +68,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ع©ط¯ ع©ظˆظ¾ظ†</th>
-                        <th>ظ†ظˆط¹ ظˆ ظ…ظ‚ط¯ط§ط±</th>
-                        <th>ط§ط³طھظپط§ط¯ظ‡</th>
-                        <th>ط§ظ†ظ‚ط¶ط§</th>
-                        <th>ظˆط¶ط¹غŒطھ</th>
-                        <th>ط¹ظ…ظ„غŒط§طھ</th>
+                        <th>کد کوپن</th>
+                        <th>نوع و مقدار</th>
+                        <th>استفاده</th>
+                        <th>انقضا</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,19 +88,19 @@
                             <td>
                                 <span class="cpn-code">{{ $coupon->code }}</span>
                                 @if($coupon->first_order_only)
-                                    <div style="margin-top:.3rem"><span class="cpn-badge cpn-badge--fop">ظپظ‚ط· ط®ط±غŒط¯ ط§ظˆظ„</span></div>
+                                    <div style="margin-top:.3rem"><span class="cpn-badge cpn-badge--fop">فقط خرید اول</span></div>
                                 @endif
                             </td>
                             <td>
                                 @if($coupon->discount_type === 'percent')
-                                    <span class="font-semibold text-indigo-700">{{ \App\Helpers\NumberHelper::formatFa($coupon->discount_percent) }}ظھ</span>
-                                    <span class="text-xs text-slate-500">طھط®ظپغŒظپ</span>
+                                    <span class="font-semibold text-indigo-700">{{ \App\Helpers\NumberHelper::formatFa($coupon->discount_percent) }}٪</span>
+                                    <span class="text-xs text-slate-500">تخفیف</span>
                                 @else
                                     <span class="font-semibold text-emerald-700">{{ \App\Helpers\NumberHelper::formatFa($coupon->discount_amount) }}</span>
-                                    <span class="text-xs text-slate-500">طھظˆظ…ط§ظ†</span>
+                                    <span class="text-xs text-slate-500">تومان</span>
                                 @endif
                                 @if($coupon->min_order_amount)
-                                    <div class="text-xs text-slate-500">ط­ط¯ط§ظ‚ظ„: {{ \App\Helpers\NumberHelper::formatFa($coupon->min_order_amount) }} طھ</div>
+                                    <div class="text-xs text-slate-500">حداقل: {{ \App\Helpers\NumberHelper::formatFa($coupon->min_order_amount) }} ت</div>
                                 @endif
                             </td>
                             <td>
@@ -122,32 +122,32 @@
                                         {{ \App\Helpers\Jalali::formatFa($coupon->expires_at, 'Y/m/d') }}
                                     </span>
                                     @if($isExpired)
-                                        <div class="text-xs" style="color:#dc2626">ظ…ظ†ظ‚ط¶غŒ ط´ط¯ظ‡</div>
+                                        <div class="text-xs" style="color:#dc2626">منقضی شده</div>
                                     @elseif($coupon->expires_at->diffInDays(now()) <= 7)
-                                        <div class="text-xs" style="color:#d97706">ط¯ط± ط­ط§ظ„ ط§ظ†ظ‚ط¶ط§</div>
+                                        <div class="text-xs" style="color:#d97706">در حال انقضا</div>
                                     @endif
                                 @else
-                                    <span class="text-slate-400">ط¨ط¯ظˆظ† ط§ظ†ظ‚ط¶ط§</span>
+                                    <span class="text-slate-400">بدون انقضا</span>
                                 @endif
                             </td>
                             <td>
                                 @if(!$coupon->is_active)
-                                    <span class="cpn-badge cpn-badge--inactive">ط؛غŒط±ظپط¹ط§ظ„</span>
+                                    <span class="cpn-badge cpn-badge--inactive">غیرفعال</span>
                                 @elseif($isExpired)
-                                    <span class="cpn-badge cpn-badge--expired">ظ…ظ†ظ‚ط¶غŒ</span>
+                                    <span class="cpn-badge cpn-badge--expired">منقضی</span>
                                 @elseif($isScheduled)
-                                    <span class="cpn-badge cpn-badge--scheduled">ط²ظ…ط§ظ†â€Œط¨ظ†ط¯غŒ ط´ط¯ظ‡</span>
+                                    <span class="cpn-badge cpn-badge--scheduled">زمان‌بندی شده</span>
                                 @else
-                                    <span class="cpn-badge cpn-badge--active">ظپط¹ط§ظ„</span>
+                                    <span class="cpn-badge cpn-badge--active">فعال</span>
                                 @endif
                             </td>
                             <td>
                                 <div class="admin-table-actions">
-                                    <a href="{{ route('admin.coupons.edit', $coupon) }}" class="btn btn-primary btn-sm">ظˆغŒط±ط§غŒط´</a>
+                                    <a href="{{ route('admin.coupons.edit', $coupon) }}" class="btn btn-primary btn-sm">ویرایش</a>
                                     <form method="POST" action="{{ route('admin.coupons.destroy', $coupon) }}"
-                                          onsubmit="return confirm('ع©ظˆظ¾ظ† آ«{{ $coupon->code }}آ» ط­ط°ظپ ط´ظˆط¯طں');" style="display:inline">
+                                          onsubmit="return confirm('کوپن «{{ $coupon->code }}» حذف شود؟');" style="display:inline">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">ط­ط°ظپ</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">حذف</button>
                                     </form>
                                 </div>
                             </td>
@@ -157,8 +157,8 @@
                             <td colspan="6" class="p-0">
                                 <div class="admin-empty-state">
                                     <x-core-ui::icon name="price-tag" class="admin-empty-state__icon" />
-                                    <p class="admin-empty-state__title">ع©ظˆظ¾ظ†غŒ ط«ط¨طھ ظ†ط´ط¯ظ‡</p>
-                                    <p class="admin-empty-state__text">ط¨ط§ ط¯ع©ظ…ظ‡ظ” آ«ع©ظˆظ¾ظ† ط¬ط¯غŒط¯آ» ط§ظˆظ„غŒظ† ع©ظˆظ¾ظ† طھط®ظپغŒظپ ط®ظˆط¯ ط±ط§ ط¨ط³ط§ط²غŒط¯.</p>
+                                    <p class="admin-empty-state__title">کوپنی ثبت نشده</p>
+                                    <p class="admin-empty-state__text">با دکمهٔ «کوپن جدید» اولین کوپن تخفیف خود را بسازید.</p>
                                 </div>
                             </td>
                         </tr>

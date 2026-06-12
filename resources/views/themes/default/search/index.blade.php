@@ -1,11 +1,11 @@
-﻿@extends('themes.default.layout')
+@extends('themes.default.layout')
 
-@section('title', $q ? 'ط¬ط³طھط¬ظˆ: ' . e($q) : 'ط¬ط³طھط¬ظˆغŒ ظ¾غŒط´ط±ظپطھظ‡')
+@section('title', $q ? 'جستجو: ' . e($q) : 'جستجوی پیشرفته')
 
 @section('breadcrumb')
-    <a href="{{ route('home') }}">ط®ط§ظ†ظ‡</a>
+    <a href="{{ route('home') }}">خانه</a>
     <span class="mx-2">/</span>
-    <span>ط¬ط³طھط¬ظˆ</span>
+    <span>جستجو</span>
     @if($q)
         <span class="mx-2">/</span>
         <span>{{ e($q) }}</span>
@@ -14,9 +14,9 @@
 
 @section('content')
 <div class="search-page" style="max-width: 72rem; margin: 0 auto;">
-    {{-- ط¬ط³طھط¬ظˆغŒ ط§طµظ„غŒ â€” ظ…ط´ط§ط¨ظ‡ ط¯غŒط¬غŒâ€Œع©ط§ظ„ط§ --}}
+    {{-- جستجوی اصلی — مشابه دیجی‌کالا --}}
     <div class="search-hero" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, #6366f1 100%); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; color: white;">
-        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">ط¬ط³طھط¬ظˆغŒ ظ¾غŒط´ط±ظپطھظ‡</h1>
+        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">جستجوی پیشرفته</h1>
         <div class="search-box-wrap" style="position: relative; max-width: 36rem; margin: 0 auto;">
             <form method="get" action="{{ route('search.index') }}" id="search-form" role="search">
                 <input type="hidden" name="type" value="{{ $type }}">
@@ -25,7 +25,7 @@
                 <input type="hidden" name="max_price" value="{{ $maxPrice ?? '' }}">
                 <input type="hidden" name="sort" value="{{ $sort }}">
                 <div style="display: flex; gap: 0.5rem; background: white; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
-                    <input type="search" name="q" id="search-input" value="{{ e($q) }}" placeholder="ظ†ط§ظ… ظ…ط­طµظˆظ„طŒ ظ…ط·ظ„ط¨ غŒط§ ع©ط¯ ط±ط§ ط¬ط³طھط¬ظˆ ع©ظ†غŒط¯..."
+                    <input type="search" name="q" id="search-input" value="{{ e($q) }}" placeholder="نام محصول، مطلب یا کد را جستجو کنید..."
                         autocomplete="off"
                         style="flex: 1; padding: 1rem 1.25rem; border: none; font-size: 1rem; color: #1f2937;">
                     <button type="submit" style="padding: 1rem 1.5rem; background: var(--platform-primary, #4f46e5); color: white; border: none; cursor: pointer; font-weight: 600;">
@@ -37,27 +37,27 @@
         </div>
     </div>
 
-    {{-- ظپغŒظ„طھط±ظ‡ط§ ظˆ ظ…ط±طھط¨â€Œط³ط§ط²غŒ --}}
+    {{-- فیلترها و مرتب‌سازی --}}
     <form method="get" action="{{ route('search.index') }}" id="filter-form" style="margin-bottom: 1.5rem;">
         <input type="hidden" name="q" value="{{ e($q) }}">
         <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; background: white; padding: 1rem; border-radius: 0.75rem; border: 1px solid #e5e7eb;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <label style="font-weight: 600; color: #374151;">ظ†ظˆط¹:</label>
+                <label style="font-weight: 600; color: #374151;">نوع:</label>
                 <select name="type" class="form-select" style="width: auto; padding: 0.5rem 2rem 0.5rem 0.75rem;" onchange="this.form.submit()">
-                    <option value="all" {{ $type === 'all' ? 'selected' : '' }}>ظ‡ظ…ظ‡</option>
+                    <option value="all" {{ $type === 'all' ? 'selected' : '' }}>همه</option>
                     @if(\App\Helpers\SiteHelper::shopEnabled())
-                        <option value="products" {{ $type === 'products' ? 'selected' : '' }}>ظ…ط­طµظˆظ„ط§طھ</option>
+                        <option value="products" {{ $type === 'products' ? 'selected' : '' }}>محصولات</option>
                     @endif
                     @if(\App\Helpers\SiteHelper::blogEnabled())
-                        <option value="posts" {{ $type === 'posts' ? 'selected' : '' }}>ظ…ط·ط§ظ„ط¨</option>
+                        <option value="posts" {{ $type === 'posts' ? 'selected' : '' }}>مطالب</option>
                     @endif
                 </select>
             </div>
             @if(isset($categories['product']) && $categories['product']->isNotEmpty() && in_array($type, ['all', 'products']))
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-weight: 600; color: #374151;">ط¯ط³طھظ‡ ظ…ط­طµظˆظ„:</label>
+                    <label style="font-weight: 600; color: #374151;">دسته محصول:</label>
                     <select name="category" class="form-select" style="width: auto; min-width: 10rem;" onchange="this.form.submit()">
-                        <option value="">ظ‡ظ…ظ‡</option>
+                        <option value="">همه</option>
                         @foreach($categories['product'] as $c)
                             <option value="{{ $c->slug }}" {{ ($category ?? '') === $c->slug ? 'selected' : '' }}>{{ $c->name }}</option>
                         @endforeach
@@ -66,9 +66,9 @@
             @endif
             @if(isset($categories['post']) && $categories['post']->isNotEmpty() && $type === 'posts')
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-weight: 600; color: #374151;">ط¯ط³طھظ‡ ظ…ط·ظ„ط¨:</label>
+                    <label style="font-weight: 600; color: #374151;">دسته مطلب:</label>
                     <select name="category" class="form-select" style="width: auto; min-width: 10rem;" onchange="this.form.submit()">
-                        <option value="">ظ‡ظ…ظ‡</option>
+                        <option value="">همه</option>
                         @foreach($categories['post'] as $c)
                             <option value="{{ $c->slug }}" {{ ($category ?? '') === $c->slug ? 'selected' : '' }}>{{ $c->name }}</option>
                         @endforeach
@@ -77,32 +77,32 @@
             @endif
             @if(\App\Helpers\SiteHelper::shopEnabled() && in_array($type, ['all', 'products']))
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-weight: 600; color: #374151;">ظ‚غŒظ…طھ:</label>
-                    <input type="number" name="min_price" value="{{ $minPrice ?? '' }}" placeholder="ط§ط²" class="form-input" style="width: 7rem;" onchange="this.form.submit()">
-                    <span>طھط§</span>
-                    <input type="number" name="max_price" value="{{ $maxPrice ?? '' }}" placeholder="طھط§" class="form-input" style="width: 7rem;" onchange="this.form.submit()">
-                    <span style="font-size: 0.875rem; color: #6b7280;">طھظˆظ…ط§ظ†</span>
+                    <label style="font-weight: 600; color: #374151;">قیمت:</label>
+                    <input type="number" name="min_price" value="{{ $minPrice ?? '' }}" placeholder="از" class="form-input" style="width: 7rem;" onchange="this.form.submit()">
+                    <span>تا</span>
+                    <input type="number" name="max_price" value="{{ $maxPrice ?? '' }}" placeholder="تا" class="form-input" style="width: 7rem;" onchange="this.form.submit()">
+                    <span style="font-size: 0.875rem; color: #6b7280;">تومان</span>
                 </div>
             @endif
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: auto;">
-                <label style="font-weight: 600; color: #374151;">ظ…ط±طھط¨â€Œط³ط§ط²غŒ:</label>
+                <label style="font-weight: 600; color: #374151;">مرتب‌سازی:</label>
                 <select name="sort" class="form-select" style="width: auto; min-width: 10rem;" onchange="this.form.submit()">
-                    <option value="relevance" {{ $sort === 'relevance' ? 'selected' : '' }}>ظ…ط±طھط¨ط·â€Œطھط±غŒظ†</option>
+                    <option value="relevance" {{ $sort === 'relevance' ? 'selected' : '' }}>مرتبط‌ترین</option>
                     @if(\App\Helpers\SiteHelper::shopEnabled())
-                        <option value="price_asc" {{ $sort === 'price_asc' ? 'selected' : '' }}>ط§ط±ط²ط§ظ†â€Œطھط±غŒظ†</option>
-                        <option value="price_desc" {{ $sort === 'price_desc' ? 'selected' : '' }}>ع¯ط±ط§ظ†â€Œطھط±غŒظ†</option>
+                        <option value="price_asc" {{ $sort === 'price_asc' ? 'selected' : '' }}>ارزان‌ترین</option>
+                        <option value="price_desc" {{ $sort === 'price_desc' ? 'selected' : '' }}>گران‌ترین</option>
                     @endif
-                    <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>ط¬ط¯غŒط¯طھط±غŒظ†</option>
+                    <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>جدیدترین</option>
                 </select>
             </div>
         </div>
     </form>
 
-    {{-- ط¨ط±ع†ط³ط¨ ظپغŒظ„طھط±ظ‡ط§غŒ ظپط¹ط§ظ„ --}}
+    {{-- برچسب فیلترهای فعال --}}
     @if($q || $category || $minPrice || $maxPrice)
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             @if($q)
-                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #e0e7ff; color: #3730a3; border-radius: 9999px; font-size: 0.875rem;">ط¬ط³طھط¬ظˆ: {{ e($q) }}</span>
+                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #e0e7ff; color: #3730a3; border-radius: 9999px; font-size: 0.875rem;">جستجو: {{ e($q) }}</span>
             @endif
             @if($category)
                 @php
@@ -110,18 +110,18 @@
                     if (isset($categories['product'])) { $c = $categories['product']->firstWhere('slug', $category); if ($c) $catName = $c->name; }
                     if (isset($categories['post'])) { $c = $categories['post']->firstWhere('slug', $category); if ($c) $catName = $c->name; }
                 @endphp
-                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 0.875rem;">ط¯ط³طھظ‡: {{ $catName }}</span>
+                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 0.875rem;">دسته: {{ $catName }}</span>
             @endif
             @if($minPrice || $maxPrice)
                 <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 0.875rem;">
-                    ظ‚غŒظ…طھ: {{ $minPrice ? number_format($minPrice) : 'غ°' }} â€“ {{ $maxPrice ? number_format($maxPrice) : 'âˆ‍' }} طھظˆظ…ط§ظ†
+                    قیمت: {{ $minPrice ? number_format($minPrice) : '۰' }} – {{ $maxPrice ? number_format($maxPrice) : '∞' }} تومان
                 </span>
             @endif
-            <a href="{{ route('search.index') }}" style="font-size: 0.875rem; color: #6b7280; text-decoration: none;">ظ¾ط§ع© ع©ط±ط¯ظ† ظ‡ظ…ظ‡</a>
+            <a href="{{ route('search.index') }}" style="font-size: 0.875rem; color: #6b7280; text-decoration: none;">پاک کردن همه</a>
         </div>
     @endif
 
-    {{-- ظ†طھط§غŒط¬ --}}
+    {{-- نتایج --}}
     <div id="search-results">
         @php
             $products = $results['products'] ?? collect();
@@ -130,11 +130,11 @@
         @endphp
         <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
             @if($total > 0)
-                ط­ط¯ظˆط¯ {{ $total }} ظ†طھغŒط¬ظ‡
+                حدود {{ $total }} نتیجه
             @elseif($q || $category || $minPrice || $maxPrice)
-                ظ†طھغŒط¬ظ‡â€Œط§غŒ غŒط§ظپطھ ظ†ط´ط¯. ظپغŒظ„طھط±ظ‡ط§ ط±ط§ طھط؛غŒغŒط± ط¯ظ‡غŒط¯.
+                نتیجه‌ای یافت نشد. فیلترها را تغییر دهید.
             @else
-                ط¹ط¨ط§ط±طھ ط¬ط³طھط¬ظˆ ط±ط§ ظˆط§ط±ط¯ ع©ظ†غŒط¯ غŒط§ ظپغŒظ„طھط±ظ‡ط§ ط±ط§ طھظ†ط¸غŒظ… ع©ظ†غŒط¯.
+                عبارت جستجو را وارد کنید یا فیلترها را تنظیم کنید.
             @endif
         </p>
 
@@ -146,7 +146,7 @@
                             @if($product->image)
                                 <img src="{{ \App\Helpers\ImageHelper::url($product->image) }}" alt="{{ $product->title }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
-                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 3rem;">ًں“¦</div>
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 3rem;">📦</div>
                             @endif
                         </div>
                         <h2 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 0.5rem;">{{ $product->title }}</h2>
@@ -155,7 +155,7 @@
                     <form method="post" action="{{ route('shop.cart.add') }}" style="margin-top: auto;">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <button type="submit" style="width: 100%; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; color: white; border: none; cursor: pointer; background: var(--platform-button-primary-bg, #4f46e5);">ط§ظپط²ظˆط¯ظ† ط¨ظ‡ ط³ط¨ط¯</button>
+                        <button type="submit" style="width: 100%; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; color: white; border: none; cursor: pointer; background: var(--platform-button-primary-bg, #4f46e5);">افزودن به سبد</button>
                     </form>
                 </article>
             @endforeach
@@ -166,25 +166,25 @@
                             @if($post->featured_image)
                                 <img src="{{ \App\Helpers\ImageHelper::url($post->featured_image) }}" alt="{{ $post->title }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
-                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2rem;">ًں“‌</div>
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2rem;">📝</div>
                             @endif
                         </div>
-                        <span style="font-size: 0.75rem; color: #6b7280;">ظ…ط·ظ„ط¨</span>
+                        <span style="font-size: 0.75rem; color: #6b7280;">مطلب</span>
                         <h2 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 0.5rem;">{{ $post->title }}</h2>
                         @if($post->excerpt)
                             <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">{{ Str::limit(strip_tags($post->excerpt), 80) }}</p>
                         @endif
                     </a>
-                    <a href="{{ route('blog.show', $post->slug) }}" style="margin-top: auto; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; text-align: center; color: white; text-decoration: none; background: var(--platform-primary, #4f46e5);">ظ…ط´ط§ظ‡ط¯ظ‡</a>
+                    <a href="{{ route('blog.show', $post->slug) }}" style="margin-top: auto; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; text-align: center; color: white; text-decoration: none; background: var(--platform-primary, #4f46e5);">مشاهده</a>
                 </article>
             @endforeach
         </div>
 
         @if($products->isEmpty() && $posts->isEmpty() && ($q || $category || $minPrice || $maxPrice))
             <div class="card" style="text-align: center; padding: 3rem;">
-                <p style="font-size: 3rem; margin-bottom: 1rem;">ًں”چ</p>
-                <p style="color: #6b7280; margin-bottom: 1rem;">ظ†طھغŒط¬ظ‡â€Œط§غŒ غŒط§ظپطھ ظ†ط´ط¯.</p>
-                <a href="{{ route('search.index') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5);">ط¬ط³طھط¬ظˆغŒ ط¬ط¯غŒط¯</a>
+                <p style="font-size: 3rem; margin-bottom: 1rem;">🔍</p>
+                <p style="color: #6b7280; margin-bottom: 1rem;">نتیجه‌ای یافت نشد.</p>
+                <a href="{{ route('search.index') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5);">جستجوی جدید</a>
             </div>
         @endif
     </div>
@@ -215,7 +215,7 @@
                 }
                 suggest.innerHTML = items.map(function(it) {
                     var img = it.image ? '<img src="' + it.image + '" alt="" style="width: 3rem; height: 3rem; object-fit: cover; border-radius: 0.375rem;">' : '<div style="width: 3rem; height: 3rem; background: #e5e7eb; border-radius: 0.375rem;"></div>';
-                    var price = it.price ? '<span style="font-weight: 600; color: #4f46e5;">' + new Intl.NumberFormat('fa-IR').format(it.price) + ' طھظˆظ…ط§ظ†</span>' : '';
+                    var price = it.price ? '<span style="font-weight: 600; color: #4f46e5;">' + new Intl.NumberFormat('fa-IR').format(it.price) + ' تومان</span>' : '';
                     return '<a href="' + it.url + '" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: #1f2937; border-bottom: 1px solid #f3f4f6;">' + img + '<div style="flex: 1;"><div style="font-weight: 500;">' + it.title + '</div>' + price + '</div></a>';
                 }).join('');
                 suggest.style.display = 'block';

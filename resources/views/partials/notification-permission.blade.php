@@ -1,5 +1,5 @@
-﻿{{--
- | Notification Permission Banner â€” reusable across all panels.
+{{--
+ | Notification Permission Banner — reusable across all panels.
  | Include with: @include('partials.notification-permission', ['context' => 'customer|admin|platform'])
  | Shows only when permission is 'default' and user hasn't dismissed.
  | Auto-hides permanently once permission is granted or denied.
@@ -11,7 +11,7 @@
             background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);color:#fff;
             border-radius:1.125rem;box-shadow:0 12px 40px rgba(0,0,0,.4);
             padding:1.125rem 1.25rem;animation:npbSlide .35s cubic-bezier(.16,1,.3,1)"
-     role="dialog" aria-label="ظپط¹ط§ظ„â€Œط³ط§ط²غŒ ط§ط¹ظ„ط§ظ†â€Œظ‡ط§غŒ ظ…ط±ظˆط±ع¯ط±">
+     role="dialog" aria-label="فعال‌سازی اعلان‌های مرورگر">
     <style>
     @keyframes npbSlide{from{opacity:0;transform:translateX(-50%) translateY(1.5rem)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     .npb-btn-primary{padding:.45rem 1.1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:.65rem;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;transition:opacity .15s}
@@ -24,29 +24,29 @@
             <x-core-ui::icon name="bell" style="width:1.2rem;height:1.2rem" style="width:2px;height:px" />
         </div>
         <div style="flex:1;min-width:0">
-            <p style="font-weight:700;font-size:.9rem;margin:0 0 .3rem 0">ط§ط¹ظ„ط§ظ†â€Œظ‡ط§غŒ ظ…ط±ظˆط±ع¯ط± ط±ط§ ظپط¹ط§ظ„ ع©ظ†غŒط¯ ًں””</p>
+            <p style="font-weight:700;font-size:.9rem;margin:0 0 .3rem 0">اعلان‌های مرورگر را فعال کنید 🔔</p>
             <p style="font-size:.78rem;opacity:.82;line-height:1.6;margin:0 0 .75rem 0">
-                ط¨ط±ط§غŒ ط¯ط±غŒط§ظپطھ ظپظˆط±غŒ ظ¾ط§ط³ط® ظ¾ط´طھغŒط¨ط§ظ†غŒ ط­طھغŒ ط²ظ…ط§ظ†غŒ ع©ظ‡ ط§غŒظ† طµظپط­ظ‡ ط¯ط± ظ¾غŒط´â€Œط²ظ…غŒظ†ظ‡ ظ†غŒط³طھطŒ ط§ط¹ظ„ط§ظ†â€Œظ‡ط§ ط±ط§ ظپط¹ط§ظ„ ع©ظ†غŒط¯.
+                برای دریافت فوری پاسخ پشتیبانی حتی زمانی که این صفحه در پیش‌زمینه نیست، اعلان‌ها را فعال کنید.
             </p>
             <div id="npb-steps-{{ $ctx }}" style="font-size:.73rem;opacity:.7;line-height:1.7;margin-bottom:.85rem;display:none;background:rgba(255,255,255,.08);padding:.6rem .8rem;border-radius:.6rem">
-                <strong>Chrome / Edge:</strong> ط±ظˆغŒ ط¢غŒع©ظˆظ† ًں”’ (غŒط§ â„¹) ع©ظ†ط§ط± ط¢ط¯ط±ط³ ط³ط§غŒطھ ع©ظ„غŒع© ع©ظ†غŒط¯ â†گ آ«ط§ط¹ظ„ط§ظ†â€Œظ‡ط§آ» â†گ آ«ظ…ط¬ط§ط²آ»<br>
-                <strong>Firefox:</strong> ط±ظˆغŒ ط¢غŒع©ظˆظ† ط³ظ¾ط± ًں›، ط¯ط± ظ†ظˆط§ط± ط¢ط¯ط±ط³ â†گ آ«ظ…ط¬ظˆط²ظ‡ط§غŒ ط³ط§غŒطھآ» â†گ آ«ط§ط¹ظ„ط§ظ†â€Œظ‡ط§ ظ…ط¬ط§ط²آ»
+                <strong>Chrome / Edge:</strong> روی آیکون 🔒 (یا ℹ) کنار آدرس سایت کلیک کنید ← «اعلان‌ها» ← «مجاز»<br>
+                <strong>Firefox:</strong> روی آیکون سپر 🛡 در نوار آدرس ← «مجوزهای سایت» ← «اعلان‌ها مجاز»
             </div>
             <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
                 <button class="npb-btn-primary" onclick="window._npbRequest('{{ $ctx }}')">
-                    ًں”” ظپط¹ط§ظ„â€Œط³ط§ط²غŒ ط§ط¹ظ„ط§ظ†â€Œظ‡ط§
+                    🔔 فعال‌سازی اعلان‌ها
                 </button>
                 <button class="npb-btn-dismiss" onclick="window._npbDismiss('{{ $ctx }}')">
-                    ط¨ط¹ط¯ط§ظ‹
+                    بعداً
                 </button>
                 <button onclick="document.getElementById('npb-steps-{{ $ctx }}').style.display=document.getElementById('npb-steps-{{ $ctx }}').style.display==='none'?'block':'none'"
                         style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.73rem;cursor:pointer;text-decoration:underline;padding:0">
-                    ط±ط§ظ‡ظ†ظ…ط§غŒ ط¯ط³طھغŒ
+                    راهنمای دستی
                 </button>
             </div>
         </div>
         <button onclick="window._npbDismiss('{{ $ctx }}')"
-                style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:1.75rem;height:1.75rem;color:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">أ—</button>
+                style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:1.75rem;height:1.75rem;color:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">×</button>
     </div>
 </div>
 
@@ -64,12 +64,12 @@
             window._npbDismiss(ctx);
             if (p === 'granted') {
                 try {
-                    new Notification('ط§ط¹ظ„ط§ظ†â€Œظ‡ط§ ط¨ط§ ظ…ظˆظپظ‚غŒطھ ظپط¹ط§ظ„ ط´ط¯ظ†ط¯ âœ“', {
-                        body: 'ط§ط² ط§غŒظ† ظ¾ط³ ظ¾ط§ط³ط®â€Œظ‡ط§غŒ ظ¾ط´طھغŒط¨ط§ظ†غŒ ط±ط§ ظپظˆط±غŒ ط¯ط±غŒط§ظپطھ ظ…غŒâ€Œع©ظ†غŒط¯.',
+                    new Notification('اعلان‌ها با موفقیت فعال شدند ✓', {
+                        body: 'از این پس پاسخ‌های پشتیبانی را فوری دریافت می‌کنید.',
                         icon: '/favicon.ico', dir: 'rtl', tag: 'npb-confirm-' + ctx
                     });
                 } catch(e) {}
-                // ط«ط¨طھ Service Worker ظˆ ط§ط´طھط±ط§ع© Push ط¨ط±ط§غŒ ظ†ظˆطھغŒظپغŒع©غŒط´ظ† ط­طھغŒ ط¨ط§ ط¨ط³طھظ‡ ط¨ظˆط¯ظ† ظ…ط±ظˆط±ع¯ط±
+                // ثبت Service Worker و اشتراک Push برای نوتیفیکیشن حتی با بسته بودن مرورگر
                 window._npbSubscribePush();
             }
         });
@@ -78,7 +78,7 @@
     window._npbSubscribePush = function() {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
         navigator.serviceWorker.register('/sw.js').then(function(reg) {
-            // ط¯ط±غŒط§ظپطھ VAPID public key ط§ط² ط³ط±ظˆط±
+            // دریافت VAPID public key از سرور
             fetch('/api/push/vapid-key')
                 .then(function(r){ return r.json(); })
                 .then(function(data) {
@@ -118,7 +118,7 @@
         return arr;
     }
 
-    // ط§ع¯ط± ظ…ط¬ظˆط² ظ‚ط¨ظ„ط§ظ‹ ط¯ط§ط¯ظ‡ ط´ط¯ظ‡طŒ SW ط±ط§ register ظ…غŒâ€Œع©ظ†غŒظ… (ط¨ط¯ظˆظ† ظ†ظ…ط§غŒط´ ط¨ظ†ط±)
+    // اگر مجوز قبلاً داده شده، SW را register می‌کنیم (بدون نمایش بنر)
     if (Notification.permission === 'granted') {
         window._npbSubscribePush();
     }
@@ -145,8 +145,8 @@
 
     if (!shouldShow()) return;
 
-    // ظ†ظ…ط§غŒط´ ط¨ظ†ط± ظ¾ط³ ط§ط² ط§ظˆظ„غŒظ† طھط¹ط§ظ…ظ„ ع©ط§ط±ط¨ط± (ع©ظ„غŒع©طŒ ط§ط³ع©ط±ظˆظ„ غŒط§ طھط§غŒظ¾)
-    // ط§غŒظ† ط±ظˆط´ ط¨ط§ ط³غŒط§ط³طھ ظ…ط±ظˆط±ع¯ط± ط³ط§ط²ع¯ط§ط± ط§ط³طھ
+    // نمایش بنر پس از اولین تعامل کاربر (کلیک، اسکرول یا تایپ)
+    // این روش با سیاست مرورگر سازگار است
     var _shown = false;
     function showBanner() {
         if (_shown) return;
@@ -158,17 +158,17 @@
         var b = getBanner();
         if (b) {
             b.style.display = 'block';
-            // ط³ط¹غŒ ط¨ط±ط§غŒ ط¯ط±ط®ظˆط§ط³طھ ط®ظˆط¯ع©ط§ط± â€” ط¯ط± ط¨ط±ط®غŒ ظ…ط±ظˆط±ع¯ط±ظ‡ط§ ع©ط§ط± ظ…غŒâ€Œع©ظ†ط¯
-            // (ط¯ط± Chrome ط§غŒظ† طھط§ط¨ط¹ ط¯ط± ط¯ط§ط®ظ„ user gesture ط§ط³طھ)
+            // سعی برای درخواست خودکار — در برخی مرورگرها کار می‌کند
+            // (در Chrome این تابع در داخل user gesture است)
             Notification.requestPermission().then(function(p) {
                 if (p !== 'default') {
-                    window._npbDismiss(CTX); // ظ…ط¬ظˆط² ط¯ط§ط¯ظ‡ غŒط§ ط±ط¯ ط´ط¯طŒ ط¨ظ†ط± ط±ط§ ط¨ط¨ظ†ط¯
+                    window._npbDismiss(CTX); // مجوز داده یا رد شد، بنر را ببند
                 }
             }).catch(function(){});
         }
     }
 
-    // ط§ع¯ط± ع©ط§ط±ط¨ط± ط¯ط± ط¹ط±ط¶ غ´ ط«ط§ظ†غŒظ‡ طھط¹ط§ظ…ظ„غŒ ظ†ط¯ط§ط´طھطŒ ط¨ظ†ط± ط±ط§ ظ†ط´ط§ظ† ط¨ط¯ظ‡
+    // اگر کاربر در عرض ۴ ثانیه تعاملی نداشت، بنر را نشان بده
     var autoTimer = setTimeout(function() {
         if (!_shown && shouldShow()) {
             _shown = true;
