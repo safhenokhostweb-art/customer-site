@@ -94,7 +94,7 @@
             </div>
             <div style="display:flex;gap:.5rem">
                 <button type="submit" class="btn btn-primary" style="height:2.25rem;padding:0 1rem;font-size:.85rem">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+                    <x-core-ui::icon name="search" class="w-4 h-4" />
                     جستجو
                 </button>
                 @if(request()->hasAny(['q','status','date_from','date_to']))
@@ -185,9 +185,7 @@
                         <tr>
                             <td colspan="7" class="p-0">
                                 <div class="admin-empty-state">
-                                    <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
+                                    <x-core-ui::icon name="file-text" class="admin-empty-state__icon" />
                                     <p class="admin-empty-state__title">سفارشی یافت نشد</p>
                                     <p class="admin-empty-state__text">فیلترها را تغییر دهید یا منتظر ثبت سفارش جدید باشید.</p>
                                 </div>

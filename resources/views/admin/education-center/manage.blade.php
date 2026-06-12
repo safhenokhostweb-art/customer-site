@@ -25,10 +25,7 @@
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
+                <x-core-ui::icon name="book-open" class="w-6 h-6 text-blue-600" />
                 مدیریت محتوای آموزشی
             </h1>
             <p class="text-sm text-gray-500 mt-1">ایجاد، ویرایش و حذف مقالات، راهنماها و مسیرهای یادگیری</p>
@@ -36,34 +33,25 @@
         <div class="flex gap-2 flex-wrap">
             <a href="{{ route('admin.education-center.index') }}"
                class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
+                <x-core-ui::icon name="eye" class="w-4 h-4" />
                 نمایش عمومی
             </a>
             @if($tab === 'articles' || !$tab)
             <a href="{{ route('admin.education-center.articles.create') }}"
                class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 مقاله جدید
             </a>
             @elseif($tab === 'walkthroughs')
             <a href="{{ route('admin.education-center.walkthroughs.create') }}"
                class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 راهنمای جدید
             </a>
             @elseif($tab === 'learning-paths')
             <a href="{{ route('admin.education-center.learning-paths.create') }}"
                class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 مسیر یادگیری جدید
             </a>
             @endif
@@ -73,9 +61,7 @@
     {{-- Flash --}}
     @if(session('success'))
     <div class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-        <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
+        <x-core-ui::icon name="check" class="w-4 h-4 text-green-500 shrink-0" />
         {{ session('success') }}
     </div>
     @endif
@@ -92,9 +78,7 @@
             <a href="{{ route('admin.education-center.manage', ['tab' => 'articles']) }}"
                class="edu-tab {{ $tab === 'articles' || !$tab ? 'active' : '' }}">
                 <span class="flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
+                    <x-core-ui::icon name="file-text" class="w-4 h-4" />
                     مقالات
                     @if(!empty($articles))
                     <span class="bg-blue-100 text-blue-700 rounded-full text-xs px-1.5">{{ count($articles) }}</span>
@@ -104,9 +88,7 @@
             <a href="{{ route('admin.education-center.manage', ['tab' => 'walkthroughs']) }}"
                class="edu-tab {{ $tab === 'walkthroughs' ? 'active' : '' }}">
                 <span class="flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                    </svg>
+                    <x-core-ui::icon name="walkthrough" class="w-4 h-4" />
                     راهنماها
                     @if(!empty($walkthroughs))
                     <span class="bg-blue-100 text-blue-700 rounded-full text-xs px-1.5">{{ count($walkthroughs) }}</span>
@@ -116,9 +98,7 @@
             <a href="{{ route('admin.education-center.manage', ['tab' => 'learning-paths']) }}"
                class="edu-tab {{ $tab === 'learning-paths' ? 'active' : '' }}">
                 <span class="flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
+                    <x-core-ui::icon name="learning-path" class="w-4 h-4" />
                     مسیرهای یادگیری
                     @if(!empty($learningPaths))
                     <span class="bg-blue-100 text-blue-700 rounded-full text-xs px-1.5">{{ count($learningPaths) }}</span>
@@ -145,9 +125,7 @@
 
             @if(empty($articles))
             <div class="text-center py-12 text-gray-400">
-                <svg class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
+                <x-core-ui::icon name="file-text" class="w-12 h-12 mx-auto mb-3 text-gray-200" />
                 <p>مقاله‌ای وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.articles.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین مقاله</a>
             </div>
@@ -192,25 +170,19 @@
                                     <form method="POST" action="{{ route('admin.education-center.articles.publish', $article['id']) }}" class="inline">
                                         @csrf
                                         <button type="submit" title="انتشار" class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
+                                            <x-core-ui::icon name="check-circle" class="w-4 h-4" />
                                         </button>
                                     </form>
                                     @endif
                                     <a href="{{ route('admin.education-center.articles.edit', $article['id']) }}" title="ویرایش"
                                        class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
+                                        <x-core-ui::icon name="edit" class="w-4 h-4" />
                                     </a>
                                     <form method="POST" action="{{ route('admin.education-center.articles.destroy', $article['id']) }}" class="inline"
                                           onsubmit="return confirm('این مقاله حذف شود؟')">
                                         @csrf @method('DELETE')
                                         <button type="submit" title="حذف" class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
+                                            <x-core-ui::icon name="trash" class="w-4 h-4" />
                                         </button>
                                     </form>
                                 </div>
@@ -229,9 +201,7 @@
         <div class="p-4">
             @if(empty($walkthroughs))
             <div class="text-center py-12 text-gray-400">
-                <svg class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
+                <x-core-ui::icon name="walkthrough" class="w-12 h-12 mx-auto mb-3 text-gray-200" />
                 <p>راهنمایی وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.walkthroughs.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین راهنما</a>
             </div>
@@ -264,17 +234,13 @@
                                 <div class="flex items-center gap-1 justify-end">
                                     <a href="{{ route('admin.education-center.walkthroughs.edit', $wt['id']) }}" title="ویرایش"
                                        class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
+                                        <x-core-ui::icon name="edit" class="w-4 h-4" />
                                     </a>
                                     <form method="POST" action="{{ route('admin.education-center.walkthroughs.destroy', $wt['id']) }}" class="inline"
                                           onsubmit="return confirm('این راهنما حذف شود؟')">
                                         @csrf @method('DELETE')
                                         <button type="submit" title="حذف" class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
+                                            <x-core-ui::icon name="trash" class="w-4 h-4" />
                                         </button>
                                     </form>
                                 </div>
@@ -293,9 +259,7 @@
         <div class="p-4">
             @if(empty($learningPaths))
             <div class="text-center py-12 text-gray-400">
-                <svg class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                </svg>
+                <x-core-ui::icon name="learning-path" class="w-12 h-12 mx-auto mb-3 text-gray-200" />
                 <p>مسیر یادگیری وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.learning-paths.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین مسیر</a>
             </div>
@@ -335,17 +299,13 @@
                                 <div class="flex items-center gap-1 justify-end">
                                     <a href="{{ route('admin.education-center.learning-paths.edit', $path['id']) }}" title="ویرایش"
                                        class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
+                                        <x-core-ui::icon name="edit" class="w-4 h-4" />
                                     </a>
                                     <form method="POST" action="{{ route('admin.education-center.learning-paths.destroy', $path['id']) }}" class="inline"
                                           onsubmit="return confirm('این مسیر یادگیری حذف شود؟')">
                                         @csrf @method('DELETE')
                                         <button type="submit" title="حذف" class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
+                                            <x-core-ui::icon name="trash" class="w-4 h-4" />
                                         </button>
                                     </form>
                                 </div>

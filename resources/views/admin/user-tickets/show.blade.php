@@ -181,10 +181,10 @@
     <div x-show="showToast" x-transition
          class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium"
          style="display:none">
-        <svg class="w-4 h-4 shrink-0 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <x-core-ui::icon name="bell" class="w-4 h-4 shrink-0 animate-bounce" />
         <span x-text="toastText"></span>
         <button @click="showToast=false" class="mr-2 opacity-70 hover:opacity-100">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <x-core-ui::icon name="close" class="w-4 h-4" />
         </button>
     </div>
 
@@ -192,7 +192,7 @@
     <div class="flex items-center gap-4 mb-6 flex-wrap">
         <a href="{{ route('admin.user-tickets.index') }}"
            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 transition-all hover:shadow-sm shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <x-core-ui::icon name="chevron-left" class="w-4 h-4" />
             بازگشت به لیست
         </a>
         <div class="flex-1 min-w-0">
@@ -205,10 +205,10 @@
                 @elseif($ticket->status === 'in_progress')
                     <span class="tkt-badge bg-blue-50 text-blue-700 border-blue-200"><span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>در حال بررسی</span>
                 @else
-                    <span class="tkt-badge bg-green-50 text-green-700 border-green-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>بسته</span>
+                    <span class="tkt-badge bg-green-50 text-green-700 border-green-200"><x-core-ui::icon name="check" class="w-3 h-3" />بسته</span>
                 @endif
                 @if($ticket->priority === 'high')
-                    <span class="tkt-badge bg-red-50 text-red-600 border-red-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>اولویت بالا</span>
+                    <span class="tkt-badge bg-red-50 text-red-600 border-red-200"><x-core-ui::icon name="arrow-up" class="w-3 h-3" />اولویت بالا</span>
                 @elseif($ticket->priority === 'low')
                     <span class="tkt-badge bg-gray-50 text-gray-500 border-gray-200">اولویت کم</span>
                 @else
@@ -223,10 +223,10 @@
     @if(session($flashKey))
     <div class="glass-card mb-4 p-4 border-r-4 border-r-{{ $fc }}-400 flex items-center gap-3"
          x-data="{ show: true }" x-show="show" x-transition>
-        <svg class="w-5 h-5 text-{{ $fc }}-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="check-circle" class="w-5 h-5 text-{{ $fc }}-600 shrink-0" />
         <span class="text-sm text-{{ $fc }}-800 font-medium flex-1">{{ session($flashKey) }}</span>
         <button @click="show=false" class="text-{{ $fc }}-400 hover:text-{{ $fc }}-600 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <x-core-ui::icon name="close" class="w-4 h-4" />
         </button>
     </div>
     @endif
@@ -241,19 +241,19 @@
             {{-- Tabs --}}
             <div class="flex items-end gap-1 border-b border-gray-200 overflow-x-auto pb-0">
                 <button class="tkt-tab" :class="activeTab==='chat' && 'active'" @click="activeTab='chat'">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <x-core-ui::icon name="message" class="w-3.5 h-3.5" />
                     گفتگو
                     <span class="tkt-tab-badge">{{ $ticket->replies->where('is_internal',false)->count() + 1 }}</span>
                 </button>
                 <button class="tkt-tab" :class="activeTab==='notes' && 'active'" @click="activeTab='notes'">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                    <x-core-ui::icon name="edit" class="w-3.5 h-3.5" />
                     یادداشت داخلی
                     @if($ticket->replies->where('is_internal',true)->count())
                     <span class="tkt-tab-badge bg-amber-500">{{ $ticket->replies->where('is_internal',true)->count() }}</span>
                     @endif
                 </button>
                 <button class="tkt-tab" :class="activeTab==='timeline' && 'active'" @click="activeTab='timeline'">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <x-core-ui::icon name="clock" class="w-3.5 h-3.5" />
                     تاریخچه
                 </button>
             </div>
@@ -361,7 +361,7 @@
                                             @else
                                             <a href="{{ $attUrl }}" target="_blank"
                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all">
-                                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                                                <x-core-ui::icon name="paperclip" class="w-3 h-3 shrink-0" />
                                                 <span class="truncate max-w-[120px]">{{ $attName }}</span>
                                             </a>
                                             @endif
@@ -381,7 +381,7 @@
                         <div x-show="showScrollBtn" x-transition class="sticky bottom-2 flex justify-center w-full">
                             <button @click="scrollDown"
                                     class="bg-white text-gray-600 rounded-full px-4 py-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-all text-xs font-medium flex items-center gap-1.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                <x-core-ui::icon name="arrow-down" class="w-4 h-4" />
                                 پیام‌های جدید
                             </button>
                         </div>
@@ -394,13 +394,13 @@
                             <button @click="noteMode=false"
                                     :class="!noteMode ? 'bg-indigo-100 text-indigo-700 border-indigo-300' : 'bg-white text-gray-500 border-gray-200'"
                                     class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                <x-core-ui::icon name="arrow-right" class="w-3.5 h-3.5" />
                                 پاسخ به کاربر
                             </button>
                             <button @click="noteMode=true"
                                     :class="noteMode ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-gray-500 border-gray-200'"
                                     class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                                <x-core-ui::icon name="edit" class="w-3.5 h-3.5" />
                                 یادداشت داخلی
                             </button>
                             <span x-show="noteMode" class="text-[10px] text-amber-600 font-medium">فقط کارشناسان می‌بینند</span>
@@ -434,10 +434,10 @@
                                         class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all shrink-0"
                                         :class="(isSending||(!noteMode&&!message.trim())||(noteMode&&!noteText.trim())) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : (noteMode ? 'bg-amber-400 text-white shadow-md hover:bg-amber-500' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg')">
                                     <template x-if="!isSending">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                        <x-core-ui::icon name="arrow-right" class="w-5 h-5" />
                                     </template>
                                     <template x-if="isSending">
-                                        <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        <x-core-ui::icon name="loader" class="w-5 h-5 animate-spin" />
                                     </template>
                                 </button>
                             </div>
@@ -456,7 +456,7 @@
                 <div class="glass-card p-5 h-full flex flex-col gap-4 mt-2">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                            <x-core-ui::icon name="edit" class="w-4 h-4" />
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-gray-800">یادداشت‌های داخلی</h3>
@@ -466,7 +466,7 @@
                     @php $internalNotes = $ticket->replies->where('is_internal', true); @endphp
                     @if($internalNotes->isEmpty())
                     <div class="flex-1 flex flex-col items-center justify-center text-gray-400 py-8">
-                        <svg class="w-10 h-10 mb-3 opacity-30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                        <x-core-ui::icon name="edit" class="w-10 h-10 mb-3 opacity-30" />
                         <p class="text-sm">هیچ یادداشت داخلی ثبت نشده</p>
                         <button @click="activeTab='chat'; noteMode=true"
                                 class="mt-3 text-xs text-amber-600 hover:text-amber-700 font-medium underline underline-offset-2">
@@ -497,7 +497,7 @@
             <div x-show="activeTab==='timeline'" class="flex-1" style="min-height:520px">
                 <div class="glass-card p-5 h-full mt-2">
                     <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2 mb-5">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <x-core-ui::icon name="clock" class="w-4 h-4 text-indigo-500" />
                         تاریخچه فعالیت
                     </h3>
                     <div class="space-y-2">
@@ -553,7 +553,7 @@
             {{-- Ticket Info --}}
             <div class="glass-card sidebar-section">
                 <h3 class="sidebar-title">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                    <x-core-ui::icon name="info-circle" class="w-4 h-4 text-gray-400" />
                     اطلاعات تیکت
                 </h3>
                 <dl class="space-y-2 text-sm">
@@ -592,7 +592,7 @@
             @if($endUser)
             <div class="glass-card sidebar-section">
                 <h3 class="sidebar-title">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                    <x-core-ui::icon name="user" class="w-4 h-4 text-gray-400" />
                     اطلاعات کاربر
                 </h3>
                 <div class="flex items-center gap-3 mb-3">
@@ -606,7 +606,7 @@
                 </div>
                 @if($endUser->mobile)
                 <div class="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    <x-core-ui::icon name="phone" class="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span dir="ltr">{{ $endUser->mobile }}</span>
                 </div>
                 @endif
@@ -616,7 +616,7 @@
             {{-- Status Control --}}
             <div class="glass-card sidebar-section">
                 <h3 class="sidebar-title">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <x-core-ui::icon name="zap" class="w-4 h-4 text-gray-400" />
                     وضعیت تیکت
                 </h3>
                 <div class="space-y-2">
@@ -625,7 +625,7 @@
                         @csrf @method('PATCH')
                         <input type="hidden" name="status" value="in_progress">
                         <button class="w-full flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-2.5 rounded-xl transition font-semibold border border-blue-200">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>
+                            <x-core-ui::icon name="arrow-right" class="w-3.5 h-3.5" />
                             شروع بررسی
                         </button>
                     </form>
@@ -635,7 +635,7 @@
                         @csrf @method('PATCH')
                         <input type="hidden" name="status" value="closed">
                         <button class="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs py-2.5 rounded-xl transition font-semibold border border-gray-200">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <x-core-ui::icon name="check" class="w-3.5 h-3.5" />
                             بستن تیکت
                         </button>
                     </form>
@@ -644,7 +644,7 @@
                         @csrf @method('PATCH')
                         <input type="hidden" name="status" value="open">
                         <button class="w-full flex items-center justify-center gap-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs py-2.5 rounded-xl transition font-semibold border border-yellow-200">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                            <x-core-ui::icon name="refresh" class="w-3.5 h-3.5" />
                             بازگشایی مجدد
                         </button>
                     </form>
@@ -655,7 +655,7 @@
             {{-- Priority Control --}}
             <div class="glass-card sidebar-section">
                 <h3 class="sidebar-title">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"/></svg>
+                    <x-core-ui::icon name="filter" class="w-4 h-4 text-gray-400" />
                     اولویت
                 </h3>
                 <form method="POST" action="{{ route('admin.user-tickets.priority', $ticket->id) }}">
@@ -674,7 +674,7 @@
             {{-- Agent Assignment --}}
             <div class="glass-card sidebar-section">
                 <h3 class="sidebar-title">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                    <x-core-ui::icon name="user" class="w-4 h-4 text-gray-400" />
                     تخصیص کارشناس
                 </h3>
                 @if($ticket->assignee)
@@ -708,7 +708,7 @@
                  x-data="{ open: false, phone: '{{ $endUser->mobile }}', smsMsg: '', loading: false }">
                 <button @click="open=true"
                         class="w-full flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs py-2.5 rounded-xl transition font-semibold border border-purple-200">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    <x-core-ui::icon name="sms" class="w-3.5 h-3.5" />
                     ارسال پیامک به کاربر
                 </button>
                 <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="open=false">
@@ -716,12 +716,12 @@
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-gray-900 flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                    <x-core-ui::icon name="sms" class="w-4 h-4" />
                                 </div>
                                 ارسال پیامک
                             </h4>
                             <button @click="open=false" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <x-core-ui::icon name="close" class="w-5 h-5" />
                             </button>
                         </div>
                         <div class="flex flex-wrap gap-1.5 mb-3">
@@ -777,14 +777,14 @@
                 @method('DELETE')
                 <button type="submit"
                         class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    <x-core-ui::icon name="trash" class="w-4 h-4" />
                     حذف این تیکت
                 </button>
             </form>
 
             {{-- Back --}}
             <a href="{{ route('admin.user-tickets.index') }}" class="btn-ghost w-full !justify-center !text-xs !py-2.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                <x-core-ui::icon name="chevron-left" class="w-4 h-4" />
                 بازگشت به لیست
             </a>
 

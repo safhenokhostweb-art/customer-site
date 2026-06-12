@@ -31,7 +31,7 @@
     {{-- ─── Breadcrumb --}}
     <div class="flex items-center gap-3 mb-6">
         <a href="{{ route('admin.inbox.index') }}" class="text-sm text-indigo-600 hover:underline flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+            <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
             بازگشت به صندوق
         </a>
         <span class="text-gray-300">/</span>
@@ -41,7 +41,7 @@
     {{-- ─── Channel Selector ─────────────────────────────────────────────── --}}
     <div class="glass-card-strong p-6 mb-5">
         <h2 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+            <x-core-ui::icon name="message" class="w-4 h-4 text-indigo-500" />
             مقصد تیکت را انتخاب کنید
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -59,7 +59,7 @@
                         </div>
                         <div x-show="channel === 'user'" class="mr-auto">
                             <div class="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
-                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <x-core-ui::icon name="check" class="w-3 h-3 text-white" />
                             </div>
                         </div>
                     </div>
@@ -79,13 +79,13 @@
                         </div>
                         <div x-show="channel === 'platform'" class="mr-auto">
                             <div class="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <x-core-ui::icon name="check" class="w-3 h-3 text-white" />
                             </div>
                         </div>
                     </div>
                     @if(!$hasLicense)
                     <div class="mt-2 text-xs text-red-500 flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
+                        <x-core-ui::icon name="alert-triangle" class="w-3 h-3" />
                         لایسنس فعالی یافت نشد
                     </div>
                     @endif
@@ -124,7 +124,7 @@
                             </div>
                             <div x-show="ticketType === 'support'" class="shrink-0">
                                 <div class="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <x-core-ui::icon name="check" class="w-3 h-3 text-white" />
                                 </div>
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                             </div>
                             <div x-show="ticketType === 'feature_request'" class="shrink-0">
                                 <div class="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <x-core-ui::icon name="check" class="w-3 h-3 text-white" />
                                 </div>
                             </div>
                         </div>
@@ -158,7 +158,7 @@
                  class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3"
                  style="display:none">
                 <div class="flex items-start gap-2">
-                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                    <x-core-ui::icon name="info-circle" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <p class="text-xs text-amber-800 leading-relaxed">{{ $frNotice }}</p>
                 </div>
             </div>
@@ -223,7 +223,7 @@
         <div x-show="channel === 'user'" x-transition class="flex items-center gap-2">
             <input type="checkbox" name="send_sms" value="1" id="send_sms" class="rounded text-teal-600">
             <label for="send_sms" class="text-sm text-gray-600 cursor-pointer flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3"/></svg>
+                <x-core-ui::icon name="sms" class="w-4 h-4 text-green-500" />
                 ارسال پیامک اطلاع‌رسانی به کاربر
             </label>
         </div>
@@ -233,7 +233,7 @@
             <button type="submit"
                     :class="channel === 'platform' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-teal-600 hover:bg-teal-700'"
                     class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                <x-core-ui::icon name="arrow-up" class="w-4 h-4" />
                 <span x-text="channel === 'platform' && ticketType === 'feature_request' ? 'ارسال درخواست ویژگی' : (channel === 'platform' ? 'ارسال به پلتفرم' : 'ثبت تیکت کاربری')"></span>
             </button>
             <a href="{{ route('admin.inbox.index') }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">انصراف</a>

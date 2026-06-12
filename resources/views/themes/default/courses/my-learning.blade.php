@@ -35,7 +35,7 @@
             <p style="color:#6b7280; font-size:.875rem;">{{ $enrollments->count() }} دوره ثبت‌نام شده</p>
         </div>
         <a href="{{ route('courses.index') }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.6rem 1.2rem; border:1px solid #e5e7eb; border-radius:.6rem; text-decoration:none; color:#374151; font-weight:600; font-size:.875rem; background:#fff;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <x-core-ui::icon name="search" style="width:15px;height:15px" />
             مشاهده همه دوره‌ها
         </a>
     </div>
@@ -63,10 +63,10 @@
                     </a>
                     <span class="status-badge {{ $en->status === 'completed' ? 'status-completed' : 'status-active' }}">
                         @if($en->status === 'completed')
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        <x-core-ui::icon name="check" style="width:10px;height:10px" />
                         تکمیل شده
                         @else
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <x-core-ui::icon name="clock" style="width:10px;height:10px" />
                         در حال یادگیری
                         @endif
                     </span>
@@ -83,12 +83,12 @@
                 <div style="margin-top:.75rem; display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
                     @if($en->status === 'completed')
                     <a href="{{ route('courses.learn', $en->course->slug) }}" style="display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1rem; border:1px solid #bbf7d0; background:#f0fdf4; color:#065f46; border-radius:.5rem; text-decoration:none; font-weight:600; font-size:.8rem;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.41"/></svg>
+                        <x-core-ui::icon name="refresh" style="width:13px;height:13px" />
                         مرور مجدد
                     </a>
                     @else
                     <a href="{{ route('courses.learn', $en->course->slug) }}" style="display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1rem; background:var(--platform-primary,#4f46e5); color:#fff; border-radius:.5rem; text-decoration:none; font-weight:600; font-size:.8rem;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <x-core-ui::icon name="lesson" style="width:13px;height:13px" />
                         ادامه یادگیری
                     </a>
                     @endif
@@ -107,7 +107,7 @@
         <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:.5rem;">هنوز دوره‌ای ندارید</h2>
         <p style="color:#6b7280; margin-bottom:1.5rem; font-size:.875rem;">در دوره‌های آموزشی ثبت‌نام کنید و یادگیری را شروع کنید</p>
         <a href="{{ route('courses.index') }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.75rem; background:var(--platform-primary,#4f46e5); color:#fff; border-radius:.75rem; text-decoration:none; font-weight:700;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <x-core-ui::icon name="courses" style="width:16px;height:16px" />
             مشاهده دوره‌ها
         </a>
     </div>

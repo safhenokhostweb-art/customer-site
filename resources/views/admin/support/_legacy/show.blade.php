@@ -34,7 +34,7 @@
 {{-- Header --}}
 <div class="flex items-center gap-4 mb-6">
     <a href="{{ route('admin.support.index') }}" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-gray-600 bg-white/70 hover:bg-white border border-gray-200 transition-all hover:shadow-sm">
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <x-core-ui::icon name="chevron-right" class="w-5 h-5 flex-shrink-0" />
         بازگشت به لیست
     </a>
     <div>
@@ -45,17 +45,17 @@
 
 @if($error)
 <div class="error-glass mb-6 flex items-start gap-3">
-    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="x-circle" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
     <p class="text-sm text-red-700 m-0">{{ $error }}</p>
 </div>
 @endif
 
 @if(session('success'))
 <div class="glass-card-strong mb-6 p-4 border-r-4 border-r-green-400 flex items-center gap-3 rounded-2xl" x-data="{ show: true }" x-show="show" x-transition>
-    <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 flex-shrink-0" />
     <span class="text-sm text-green-800 font-medium">{{ session('success') }}</span>
     <button @click="show = false" class="mr-auto text-green-400 hover:text-green-600 transition-colors">
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <x-core-ui::icon name="close" class="w-5 h-5 flex-shrink-0" />
     </button>
 </div>
 @endif
@@ -81,13 +81,13 @@
                             </span>
                         @else
                             <span class="status-badge bg-gray-50 text-gray-600 border-gray-200">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <x-core-ui::icon name="check" class="w-5 h-5 flex-shrink-0" />
                                 بسته شده
                             </span>
                         @endif
                         @if(($ticket['priority'] ?? 'normal') === 'high')
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-600 border border-red-200">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                                <x-core-ui::icon name="trending-up" class="w-5 h-5 flex-shrink-0" />
                                 اولویت بالا
                             </span>
                         @elseif(($ticket['priority'] ?? 'normal') === 'low')
@@ -132,7 +132,7 @@
                                         <a href="{{ Storage::url($file['path'] ?? '') }}" target="_blank"
                                            class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all"
                                            title="{{ $file['name'] ?? '' }}">
-                                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <x-core-ui::icon name="paperclip" class="w-5 h-5 flex-shrink-0" />
                                             <span class="truncate max-w-[100px]">{{ $file['name'] ?? '' }}</span>
                                         </a>
                                     @endforeach
@@ -185,7 +185,7 @@
                                     {{ $authorName }}
                                     @if($isStaff)
                                         <span class="inline-flex items-center gap-0.5 text-[9px] bg-green-200/50 px-1.5 py-0.5 rounded-full mr-1">
-                                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                            <x-core-ui::icon name="shield-check" class="w-5 h-5 flex-shrink-0" />
                                             پشتیبان
                                         </span>
                                     @endif
@@ -197,7 +197,7 @@
                                             <a href="{{ Storage::url($file['path'] ?? '') }}" target="_blank"
                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 transition-all"
                                                title="{{ $file['name'] ?? '' }}">
-                                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                <x-core-ui::icon name="paperclip" class="w-5 h-5 flex-shrink-0" />
                                                 <span class="truncate max-w-[100px]">{{ $file['name'] ?? '' }}</span>
                                             </a>
                                         @endforeach
@@ -217,7 +217,7 @@
                      class="sticky bottom-2 flex justify-center">
                     <button @click="scrollDown"
                             class="bg-white text-gray-600 rounded-full px-4 py-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-all text-xs font-medium flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        <x-core-ui::icon name="chevron-down" class="w-4 h-4" />
                         پیام‌های جدید
                     </button>
                 </div>
@@ -245,10 +245,10 @@
                             class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all"
                             :class="isSending || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
                         <template x-if="!isSending">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            <x-core-ui::icon name="arrow-left" class="w-5 h-5 shrink-0" />
                         </template>
                         <template x-if="isSending">
-                            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <x-core-ui::icon name="loader" class="w-5 h-5 animate-spin" />
                         </template>
                     </button>
                 </form>
@@ -266,7 +266,7 @@
         {{-- Ticket Info --}}
         <div class="glass-card-strong p-4">
             <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="info-circle" class="w-5 h-5 shrink-0 text-gray-500" />
                 اطلاعات تیکت
             </h3>
             <div class="space-y-2 text-sm">
@@ -316,16 +316,16 @@
         {{-- Quick Actions --}}
         <div class="glass-card-strong p-4">
             <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <x-core-ui::icon name="zap" class="w-5 h-5 shrink-0 text-gray-500" />
                 اقدامات سریع
             </h3>
             <div class="space-y-2">
                 <a href="{{ route('admin.support.index') }}" class="btn-ghost w-full !text-sm !py-2 !justify-center">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    <x-core-ui::icon name="chevron-right" class="w-5 h-5 shrink-0" />
                     بازگشت به لیست
                 </a>
                 <a href="{{ route('admin.support.history') }}" class="btn-ghost w-full !text-sm !py-2 !justify-center">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <x-core-ui::icon name="clock" class="w-5 h-5 shrink-0" />
                     تاریخچه کامل
                 </a>
             </div>

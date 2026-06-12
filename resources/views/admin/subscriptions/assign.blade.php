@@ -28,9 +28,7 @@
         <div class="form-group">
             <label class="form-label">جستجو و انتخاب کاربر *</label>
             <div class="assign-search-wrap">
-                <svg class="assign-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+                <x-core-ui::icon name="search" class="assign-search-icon w-4 h-4" />
                 <input type="text" id="user-search"
                        placeholder="نام، نام خانوادگی یا شماره موبایل..."
                        class="assign-search-input" autocomplete="off" dir="rtl">
@@ -100,11 +98,11 @@
             </label>
         </div>
         <div id="payment-notice" class="assign-notice assign-notice--info" style="margin-top:.875rem">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="-ms-flex-negative:0;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="info-circle" class="w-4 h-4" style="-ms-flex-negative:0;flex-shrink:0" />
             <span>یک فاکتور پرداخت‌نشده برای کاربر ایجاد می‌شود و در هدر پنل کاربری نمایش داده می‌شود.</span>
         </div>
         <div id="activate-notice" class="assign-notice assign-notice--success" style="margin-top:.875rem;display:none">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="-ms-flex-negative:0;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="check-circle" class="w-4 h-4" style="-ms-flex-negative:0;flex-shrink:0" />
             <span>اشتراک بلافاصله فعال می‌شود، تیکت اطلاع‌رسانی ارسال خواهد شد و پیامک به موبایل کاربر ارسال می‌شود.</span>
         </div>
         <div class="form-group" style="margin-top:1rem">

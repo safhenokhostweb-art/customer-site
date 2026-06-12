@@ -1,15 +1,15 @@
-{{--
-  دستیار هوشمند AI برای تولید محتوای SEO-محور
-  پارامترها:
-    $aiType          — نوع محتوا: article | product_content | blog | product
-    $aiWidgetId      — شناسه یکتا (فقط حروف/عدد/خط تیره)
-    $aiTitleId       — id فیلد عنوان (اختیاری)
-    $aiBodyId        — id textarea یا TinyMCE editor بدنه (اختیاری)
-    $aiExcerptId     — id فیلد خلاصه (اختیاری)
-    $aiMetaTitleId   — id فیلد meta title (اختیاری)
-    $aiMetaDescId    — id فیلد meta description (اختیاری)
-    $aiTagsId        — id فیلد برچسب‌ها (اختیاری)
-    $aiUseTinymce    — آیا body از TinyMCE استفاده می‌کند؟ (bool)
+﻿{{--
+  ط¯ط³طھغŒط§ط± ظ‡ظˆط´ظ…ظ†ط¯ AI ط¨ط±ط§غŒ طھظˆظ„غŒط¯ ظ…ط­طھظˆط§غŒ SEO-ظ…ط­ظˆط±
+  ظ¾ط§ط±ط§ظ…طھط±ظ‡ط§:
+    $aiType          â€” ظ†ظˆط¹ ظ…ط­طھظˆط§: article | product_content | blog | product
+    $aiWidgetId      â€” ط´ظ†ط§ط³ظ‡ غŒع©طھط§ (ظپظ‚ط· ط­ط±ظˆظپ/ط¹ط¯ط¯/ط®ط· طھغŒط±ظ‡)
+    $aiTitleId       â€” id ظپغŒظ„ط¯ ط¹ظ†ظˆط§ظ† (ط§ط®طھغŒط§ط±غŒ)
+    $aiBodyId        â€” id textarea غŒط§ TinyMCE editor ط¨ط¯ظ†ظ‡ (ط§ط®طھغŒط§ط±غŒ)
+    $aiExcerptId     â€” id ظپغŒظ„ط¯ ط®ظ„ط§طµظ‡ (ط§ط®طھغŒط§ط±غŒ)
+    $aiMetaTitleId   â€” id ظپغŒظ„ط¯ meta title (ط§ط®طھغŒط§ط±غŒ)
+    $aiMetaDescId    â€” id ظپغŒظ„ط¯ meta description (ط§ط®طھغŒط§ط±غŒ)
+    $aiTagsId        â€” id ظپغŒظ„ط¯ ط¨ط±ع†ط³ط¨â€Œظ‡ط§ (ط§ط®طھغŒط§ط±غŒ)
+    $aiUseTinymce    â€” ط¢غŒط§ body ط§ط² TinyMCE ط§ط³طھظپط§ط¯ظ‡ ظ…غŒâ€Œع©ظ†ط¯طں (bool)
 --}}
 @php
   $wid      = $aiWidgetId    ?? 'ai';
@@ -29,21 +29,21 @@
             border:1.5px solid #c7d2fe; border-radius:1rem;
             padding:1.25rem 1.5rem; margin-bottom:1.5rem;">
 
-  {{-- هدر --}}
+  {{-- ظ‡ط¯ط± --}}
   <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;">
     <x-core-ui::icon name="spark" style="width:1.35rem;height:1.35rem;flex-shrink:0;color:#6366f1" />
     <span style="font-weight:700;color:#3730a3;font-size:0.95rem;">
-      دستیار هوش مصنوعی — تولید محتوای SEO-محور
+      ط¯ط³طھغŒط§ط± ظ‡ظˆط´ ظ…طµظ†ظˆط¹غŒ â€” طھظˆظ„غŒط¯ ظ…ط­طھظˆط§غŒ SEO-ظ…ط­ظˆط±
     </span>
     <span style="font-size:0.72rem;color:#818cf8;margin-right:0.25rem;">
-      (GapGPT · DeepSeek · Claude)
+      (GapGPT آ· DeepSeek آ· Claude)
     </span>
   </div>
 
-  {{-- ورودی + دکمه --}}
+  {{-- ظˆط±ظˆط¯غŒ + ط¯ع©ظ…ظ‡ --}}
   <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:flex-start;">
     <input id="ai-prompt-{{ $wid }}" type="text"
-      placeholder="موضوع را بنویسید... مثلاً: کفش ورزشی نایک"
+      placeholder="ظ…ظˆط¶ظˆط¹ ط±ط§ ط¨ظ†ظˆغŒط³غŒط¯... ظ…ط«ظ„ط§ظ‹: ع©ظپط´ ظˆط±ط²ط´غŒ ظ†ط§غŒع©"
       style="flex:1;min-width:220px;border:1.5px solid #c7d2fe;border-radius:0.6rem;
              padding:0.55rem 0.85rem;font-size:0.875rem;outline:none;
              background:#fff;font-family:inherit;"
@@ -55,39 +55,34 @@
              display:flex;align-items:center;gap:0.4rem;font-family:inherit;"
       onmouseover="this.style.background='#4338ca'"
       onmouseout="this.style.background='#4f46e5'">
-      <svg id="ai-spin-{{ $wid }}"
-           style="display:none;width:1rem;height:1rem;animation:_aiSpinKf 1s linear infinite"
-           fill="none" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="4" opacity=".25"/>
-        <path d="M4 12a8 8 0 018-8" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-      <span id="ai-btn-label-{{ $wid }}">✨ تولید محتوا</span>
+      <x-core-ui::icon name="loader" id="ai-spin-{{ $wid }}" style="display:none;width:1rem;height:1rem;animation:_aiSpinKf 1s linear infinite" />
+      <span id="ai-btn-label-{{ $wid }}">âœ¨ طھظˆظ„غŒط¯ ظ…ط­طھظˆط§</span>
     </button>
   </div>
 
-  {{-- پیام وضعیت --}}
+  {{-- ظ¾غŒط§ظ… ظˆط¶ط¹غŒطھ --}}
   <div id="ai-msg-{{ $wid }}"
        style="display:none;margin-top:0.6rem;font-size:0.82rem;
               padding:0.4rem 0.75rem;border-radius:0.4rem;"></div>
 
-  {{-- کلمات کلیدی تصویر --}}
+  {{-- ع©ظ„ظ…ط§طھ ع©ظ„غŒط¯غŒ طھطµظˆغŒط± --}}
   <div id="ai-img-kw-{{ $wid }}" style="display:none;margin-top:0.75rem;">
     <div style="font-size:0.78rem;color:#6366f1;font-weight:600;margin-bottom:0.3rem;">
-      🖼️ کلمات کلیدی پیشنهادی برای جستجوی تصویر:
+      ًں–¼ï¸ڈ ع©ظ„ظ…ط§طھ ع©ظ„غŒط¯غŒ ظ¾غŒط´ظ†ظ‡ط§ط¯غŒ ط¨ط±ط§غŒ ط¬ط³طھط¬ظˆغŒ طھطµظˆغŒط±:
     </div>
     <div id="ai-img-kw-list-{{ $wid }}" style="display:flex;flex-wrap:wrap;gap:0.35rem;"></div>
     <div style="font-size:0.72rem;color:#9ca3af;margin-top:0.25rem;">
-      در Unsplash، Adobe Stock یا سایت‌های مشابه جستجو کنید.
+      ط¯ط± UnsplashطŒ Adobe Stock غŒط§ ط³ط§غŒطھâ€Œظ‡ط§غŒ ظ…ط´ط§ط¨ظ‡ ط¬ط³طھط¬ظˆ ع©ظ†غŒط¯.
     </div>
   </div>
 </div>
 
-{{-- Keyframe CSS (فقط یکبار) --}}
+{{-- Keyframe CSS (ظپظ‚ط· غŒع©ط¨ط§ط±) --}}
 @once
 <style>@keyframes _aiSpinKf{to{transform:rotate(360deg)}}</style>
 @endonce
 
-{{-- اسکریپت مستقیم (بدون @push تا از مشکل ترتیب Blade جلوگیری شود) --}}
+{{-- ط§ط³ع©ط±غŒظ¾طھ ظ…ط³طھظ‚غŒظ… (ط¨ط¯ظˆظ† @push طھط§ ط§ط² ظ…ط´ع©ظ„ طھط±طھغŒط¨ Blade ط¬ظ„ظˆع¯غŒط±غŒ ط´ظˆط¯) --}}
 <script>
 (function () {
   var WID       = @json($wid);
@@ -120,7 +115,7 @@
     if (!btn) return;
     btn.disabled = on;
     if (spin)  spin.style.display = on ? 'block' : 'none';
-    if (label) label.textContent  = on ? 'در حال تولید...' : '✨ تولید محتوا';
+    if (label) label.textContent  = on ? 'ط¯ط± ط­ط§ظ„ طھظˆظ„غŒط¯...' : 'âœ¨ طھظˆظ„غŒط¯ ظ…ط­طھظˆط§';
   }
 
   function setField(id, val) {
@@ -157,7 +152,7 @@
         kDiv.style.display = 'block';
       }
     }
-    showMsg('✅ محتوا تولید شد — می‌توانید ویرایش کنید.', 'ok');
+    showMsg('âœ… ظ…ط­طھظˆط§ طھظˆظ„غŒط¯ ط´ط¯ â€” ظ…غŒâ€Œطھظˆط§ظ†غŒط¯ ظˆغŒط±ط§غŒط´ ع©ظ†غŒط¯.', 'ok');
   }
 
   function pollJob(jobId) {
@@ -174,16 +169,16 @@
             if (raw && typeof raw === 'object' && raw.title) {
               applyResult(raw);
             } else {
-              showMsg('⚠️ محتوا دریافت شد اما ساختار کامل ندارد.', 'warn');
+              showMsg('âڑ ï¸ڈ ظ…ط­طھظˆط§ ط¯ط±غŒط§ظپطھ ط´ط¯ ط§ظ…ط§ ط³ط§ط®طھط§ط± ع©ط§ظ…ظ„ ظ†ط¯ط§ط±ط¯.', 'warn');
             }
           } else if (d.status === 'failed') {
             clearInterval(_pollT); setLoading(false);
-            showMsg('❌ ' + (d.error || 'پردازش AI ناموفق بود'), 'error');
+            showMsg('â‌Œ ' + (d.error || 'ظ¾ط±ط¯ط§ط²ط´ AI ظ†ط§ظ…ظˆظپظ‚ ط¨ظˆط¯'), 'error');
           } else {
-            showMsg('⏳ در حال پردازش... (' + (attempts*3) + 'ث)', 'warn');
+            showMsg('âڈ³ ط¯ط± ط­ط§ظ„ ظ¾ط±ط¯ط§ط²ط´... (' + (attempts*3) + 'ط«)', 'warn');
             if (attempts >= 80) {
               clearInterval(_pollT); setLoading(false);
-              showMsg('⏱️ پاسخ AI دریافت نشد — API Key یا ai-worker را بررسی کنید.', 'error');
+              showMsg('âڈ±ï¸ڈ ظ¾ط§ط³ط® AI ط¯ط±غŒط§ظپطھ ظ†ط´ط¯ â€” API Key غŒط§ ai-worker ط±ط§ ط¨ط±ط±ط³غŒ ع©ظ†غŒط¯.', 'error');
             }
           }
         }).catch(function(){});
@@ -195,7 +190,7 @@
     var prompt = inp ? inp.value.trim() : '';
     if (!prompt) {
       if (inp) inp.focus();
-      showMsg('موضوع را وارد کنید.', 'error');
+      showMsg('ظ…ظˆط¶ظˆط¹ ط±ط§ ظˆط§ط±ط¯ ع©ظ†غŒط¯.', 'error');
       return;
     }
     if (_pollT) clearInterval(_pollT);
@@ -214,21 +209,22 @@
     .then(function(r){return r.json();})
     .then(function(data){
       if (!data.success && data.queued) {
-        showMsg('⏳ در صف پردازش — لطفاً صبر کنید...', 'warn');
+        showMsg('âڈ³ ط¯ط± طµظپ ظ¾ط±ط¯ط§ط²ط´ â€” ظ„ط·ظپط§ظ‹ طµط¨ط± ع©ظ†غŒط¯...', 'warn');
         pollJob(data.job_id);
         return;
       }
       setLoading(false);
       if (!data.success) {
-        showMsg('❌ ' + (data.error || 'خطا در تولید محتوا'), 'error');
+        showMsg('â‌Œ ' + (data.error || 'ط®ط·ط§ ط¯ط± طھظˆظ„غŒط¯ ظ…ط­طھظˆط§'), 'error');
         return;
       }
       applyResult(data.data);
     })
     .catch(function(e){
       setLoading(false);
-      showMsg('❌ خطا در اتصال: ' + e.message, 'error');
+      showMsg('â‌Œ ط®ط·ط§ ط¯ط± ط§طھطµط§ظ„: ' + e.message, 'error');
     });
   };
 })();
 </script>
+

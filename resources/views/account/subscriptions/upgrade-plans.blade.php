@@ -8,9 +8,7 @@
 {{-- کارت اشتراک فعلی --}}
 <div class="upg-pg__current-bar">
     <div class="upg-pg__current-bar__icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-        </svg>
+        <x-core-ui::icon name="shield-check" style="width:20px;height:20px" />
     </div>
     <div class="upg-pg__current-bar__info">
         <strong>پلن فعلی: {{ $subscription->plan->name }}</strong>
@@ -29,7 +27,7 @@
 {{-- پیام‌های flash --}}
 @if(session('error'))
 <div class="upg-pg__alert upg-pg__alert--error">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="alert-triangle" style="width:16px;height:16px" />
     {{ session('error') }}
 </div>
 @endif
@@ -42,7 +40,7 @@
 
 @if($previews->isEmpty())
 <div class="upg-pg__empty">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <x-core-ui::icon name="plan" style="width:48px;height:48px" />
     <p>پلن دیگری برای تغییر وجود ندارد.</p>
 </div>
 @else
@@ -69,10 +67,10 @@
                     @endif
                     <span class="upg-card__dir-badge upg-card__dir-badge--{{ $isUp ? 'up' : 'down' }}">
                         @if($isUp)
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        <x-core-ui::icon name="trending-up" style="width:11px;height:11px" />
                         ارتقاء
                         @else
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        <x-core-ui::icon name="trending-down" style="width:11px;height:11px" />
                         تنزل
                         @endif
                     </span>
@@ -96,7 +94,7 @@
         {{-- محاسبه هزینه --}}
         <div class="upg-card__calc">
             <div class="upg-card__calc-title">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <x-core-ui::icon name="credit-card" style="width:13px;height:13px" />
                 محاسبه هزینه
             </div>
 
@@ -129,7 +127,7 @@
 
             @if($preview['leftover_points'] > 0)
             <div class="upg-card__leftover">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                <x-core-ui::icon name="spark" style="width:13px;height:13px" />
                 {{ \App\Helpers\NumberHelper::formatFa($preview['leftover_points']) }} امتیاز به حساب شما اضافه می‌شود
             </div>
             @endif
@@ -144,19 +142,8 @@
                 @foreach($badges as $badge)
                 <div class="upg-card__benefit-item">
                     <span class="upg-card__benefit-icon" style="color:{{ $color }};background:{{ $color }}18">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                            @if($badge['icon'] === 'tag')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                            @elseif($badge['icon'] === 'truck')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0h4l3-3V10l-3-3h-4v9z"/>
-                            @elseif($badge['icon'] === 'headset')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18v-6a9 9 0 0118 0v6"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
-                            @elseif($badge['icon'] === 'gift')
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                            @else
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                            @endif
-                        </svg>
+                        @php $benefitIconMap = ['tag'=>'price-tag','truck'=>'package','headset'=>'phone','gift'=>'coupon']; @endphp
+                        <x-core-ui::icon :name="$benefitIconMap[$badge['icon']] ?? 'star'" style="width:13px;height:13px" />
                     </span>
                     <span>{{ $badge['label'] }}</span>
                 </div>
@@ -174,13 +161,11 @@
                         class="upg-card__btn"
                         style="background:linear-gradient(135deg,{{ $color }},{{ $color }}cc)"
                         onclick="return confirm('پلن شما به «{{ $plan->name }}» تغییر خواهد یافت. ادامه می‌دهید؟')">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        @if($isDirect)
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                        @endif
-                    </svg>
+                    @if($isDirect)
+                    <x-core-ui::icon name="zap" style="width:16px;height:16px" />
+                    @else
+                    <x-core-ui::icon name="credit-card" style="width:16px;height:16px" />
+                    @endif
                     @if($isDirect)
                         تغییر فوری (رایگان)
                     @else
@@ -196,7 +181,7 @@
 @endif
 
 <div class="upg-pg__bottom-note">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="info-circle" style="width:14px;height:14px" />
     اعتبار باقیمانده بر اساس نسبت روزهای مانده به کل مدت پلن محاسبه می‌شود.
 </div>
 

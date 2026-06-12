@@ -138,7 +138,7 @@
                 <div id="features-container" class="plnfrm__feats">
                     @foreach(old('features', ['']) as $f)
                     <div class="plnfrm__feat-row">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="plnfrm__feat-icon" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <x-core-ui::icon name="check" class="plnfrm__feat-icon w-3.5 h-3.5" style="color:#4f46e5" />
                         <input type="text" name="features[]" value="{{ $f }}"
                                placeholder="مثلاً: دسترسی کامل به محتوا" class="plnfrm__feat-input">
                         <button type="button" onclick="this.closest('.plnfrm__feat-row').remove()"
@@ -147,7 +147,7 @@
                     @endforeach
                 </div>
                 <button type="button" id="add-feature" class="plnfrm__feat-add">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <x-core-ui::icon name="plus" class="w-3.5 h-3.5" />
                     افزودن امکان
                 </button>
             </div>
@@ -184,7 +184,7 @@
                     <div class="plnfrm__upload-area" id="img-upload-area">
                         <input type="file" name="image" id="img-input" accept="image/*" class="plnfrm__upload-input">
                         <label for="img-input" class="plnfrm__upload-label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28" style="color:#94a3b8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <x-core-ui::icon name="image" class="w-7 h-7" style="color:#94a3b8" />
                             <span>کلیک برای انتخاب تصویر</span>
                             <small>PNG, JPG تا ۲ مگابایت</small>
                         </label>

@@ -7,7 +7,7 @@
 
     <a href="{{ route('admin.user-tickets.index') }}"
        class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-5">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <x-core-ui::icon name="chevron-left" class="w-4 h-4" />
         بازگشت به لیست تیکت‌ها
     </a>
 
@@ -34,7 +34,7 @@
         <div style="background:linear-gradient(135deg,#4338ca,#6366f1);padding:1.25rem 1.5rem;">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.2);">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <x-core-ui::icon name="edit" class="w-6 h-6 text-white" />
                 </div>
                 <div>
                     <div class="text-white font-bold text-base">تیکت جدید از طرف ادمین</div>
@@ -58,14 +58,14 @@
                     <div class="flex items-center gap-2 px-3 py-2.5 border rounded-lg transition-colors cursor-text"
                          :class="open ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-gray-200 hover:border-gray-300'"
                          @click="open = true; $nextTick(() => $refs.searchInput.focus())">
-                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <x-core-ui::icon name="user" class="w-4 h-4 text-gray-400 shrink-0" />
                         <input x-ref="searchInput" type="text" x-model="search"
                                @focus="open = true" @input="if(selected && search !== (selected.name || selected.mobile)) { selected = null; }"
                                class="flex-1 text-sm outline-none bg-transparent placeholder-gray-400"
                                placeholder="جستجو بر اساس نام، موبایل یا ایمیل...">
                         <button x-show="selected" type="button" @click.stop="clear()"
                                 class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <x-core-ui::icon name="close" class="w-4 h-4" />
                         </button>
                     </div>
 
@@ -105,7 +105,7 @@
                 <div x-show="selected" x-transition
                      class="mt-2 flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2.5"
                      style="display:none;">
-                    <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <x-core-ui::icon name="check-circle" class="w-4 h-4 text-indigo-500 shrink-0" />
                     <div class="text-sm text-indigo-700">
                         <span x-text="selected?.name || '—'"></span>
                         <span x-show="selected?.mobile" class="text-indigo-500 text-xs mr-1.5" x-text="'· ' + selected?.mobile" dir="ltr"></span>
@@ -171,7 +171,7 @@
             <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
                 <button type="submit"
                         class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
                     ثبت تیکت
                 </button>
                 <a href="{{ route('admin.user-tickets.index') }}"

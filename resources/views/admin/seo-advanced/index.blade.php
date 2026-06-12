@@ -34,7 +34,7 @@
         </div>
         <div class="admin-page-tools">
             <a href="{{ url('/sitemap.xml') }}" target="_blank" rel="noopener" class="btn btn-secondary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                <x-core-ui::icon name="globe" class="w-4 h-4" />
                 Sitemap
             </a>
         </div>
@@ -51,7 +51,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem">
         <div class="seo-kpi">
             <div class="seo-kpi__icon" style="background:#ede9fe">
-                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <x-core-ui::icon name="file-text" class="w-5 h-5 text-violet-600" />
             </div>
             <div>
                 <div class="seo-kpi__label">صفحات ثابت</div>
@@ -61,7 +61,7 @@
         </div>
         <div class="seo-kpi">
             <div class="seo-kpi__icon" style="background:#dbeafe">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <x-core-ui::icon name="edit" class="w-5 h-5 text-blue-600" />
             </div>
             <div>
                 <div class="seo-kpi__label">مطالب وبلاگ</div>
@@ -71,7 +71,7 @@
         </div>
         <div class="seo-kpi">
             <div class="seo-kpi__icon" style="background:#dcfce7">
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <x-core-ui::icon name="package" class="w-5 h-5 text-green-600" />
             </div>
             <div>
                 <div class="seo-kpi__label">محصولات</div>
@@ -81,7 +81,7 @@
         </div>
         <div class="seo-kpi">
             <div class="seo-kpi__icon" style="background:#fef9c3">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <x-core-ui::icon name="zap" class="w-5 h-5 text-amber-600" />
             </div>
             <div>
                 <div class="seo-kpi__label">URL‌های ایندکس</div>
@@ -144,15 +144,15 @@
     {{-- Quick Links --}}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:1.25rem">
         <a href="{{ route('admin.posts.index') }}" class="card" style="padding:.875rem 1rem;display:flex;align-items:center;gap:.5rem;text-decoration:none;color:#1e293b;font-size:.85rem;font-weight:600">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            <x-core-ui::icon name="edit" class="w-4 h-4 text-slate-400" />
             مطالب وبلاگ
         </a>
         <a href="{{ route('admin.products.index') }}" class="card" style="padding:.875rem 1rem;display:flex;align-items:center;gap:.5rem;text-decoration:none;color:#1e293b;font-size:.85rem;font-weight:600">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <x-core-ui::icon name="package" class="w-4 h-4 text-slate-400" />
             محصولات
         </a>
         <a href="{{ route('admin.pages.index') }}" class="card" style="padding:.875rem 1rem;display:flex;align-items:center;gap:.5rem;text-decoration:none;color:#1e293b;font-size:.85rem;font-weight:600">
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <x-core-ui::icon name="file-text" class="w-4 h-4 text-slate-400" />
             صفحات
         </a>
     </div>

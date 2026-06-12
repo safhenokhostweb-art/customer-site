@@ -9,9 +9,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-xs font-bold text-gray-800 flex items-center gap-1">
-                    <svg class="w-2 h-2 flex-shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
+                    <x-core-ui::icon name="assignment" class="w-2 h-2 flex-shrink-0 text-blue-600" />
                     امکانات ماژول {{ $featuresData['module_name'] }}
                 </h3>
                 <p class="text-[10px] text-gray-500 mt-0.5">
@@ -88,9 +86,7 @@
             </div>
         @else
             <div class="text-center py-4 text-gray-400">
-                <svg class="w-6 h-6 mx-auto mb-1.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+                <x-core-ui::icon name="module" class="w-6 h-6 mx-auto mb-1.5 text-gray-300" />
                 <p class="text-[11px]">هیچ ویژگی‌ای برای این ماژول تعریف نشده است.</p>
             </div>
         @endif
@@ -120,9 +116,7 @@
     <div class="border-t border-gray-100 px-3 py-1 bg-gray-50">
         <details class="group">
             <summary class="text-[9px] text-gray-500 cursor-pointer hover:text-gray-700 flex items-center gap-1 select-none">
-                <svg class="w-2 h-2 flex-shrink-0 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <x-core-ui::icon name="chevron-right" class="w-2 h-2 shrink-0 group-open:rotate-90 transition-transform" />
                 تاریخچه تغییرات
             </summary>
             <div class="mt-0.5 space-y-0.5">

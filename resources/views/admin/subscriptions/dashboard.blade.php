@@ -14,19 +14,19 @@
     </div>
     <div class="sub-dash__head-actions">
         <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary btn-sm">
-            <svg class="sub-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0l-4-4m4 4l-4 4"/></svg>
+            <x-core-ui::icon name="plan" class="sub-icon" />
             مدیریت پلن‌ها
         </a>
         <a href="{{ route('admin.subscribers.pending') }}" class="btn btn-secondary btn-sm">
-            <svg class="sub-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="clock" class="sub-icon" />
             در انتظار تأیید
         </a>
         <a href="{{ route('admin.subscribers.assign.form') }}" class="btn btn-secondary btn-sm">
-            <svg class="sub-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <x-core-ui::icon name="plus" class="sub-icon" />
             ثبت دستی
         </a>
         <a href="{{ route('admin.subscribers.index') }}" class="btn btn-primary btn-sm">
-            <svg class="sub-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+            <x-core-ui::icon name="users" class="sub-icon" />
             لیست مشترکین
         </a>
     </div>
@@ -52,9 +52,7 @@
     @foreach($statItems as $item)
     <div class="sub-stat-card {{ $item['gradient'] }}">
         <div class="sub-stat-card__icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
-            </svg>
+            <x-core-ui::icon name="subscription" class="w-5 h-5" />
         </div>
         <div class="sub-stat-card__body">
             <span class="sub-stat-card__label">{{ $item['label'] }}</span>
@@ -72,9 +70,7 @@
 
     <div class="sub-revenue-card sub-revenue-card--current">
         <div class="sub-revenue-card__label">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <x-core-ui::icon name="wallet" class="w-4 h-4" />
             درآمد ماه جاری
         </div>
         <div class="sub-revenue-card__amount">
@@ -85,9 +81,7 @@
 
     <div class="sub-revenue-card sub-revenue-card--last">
         <div class="sub-revenue-card__label">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
+            <x-core-ui::icon name="bar-chart" class="w-4 h-4" />
             درآمد ماه قبل
         </div>
         <div class="sub-revenue-card__amount sub-revenue-card__amount--muted">
@@ -106,7 +100,7 @@
     {{-- MRR --}}
     <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:1.25rem;padding:1.5rem 1.75rem;color:#fff;display:flex;flex-direction:column;gap:.5rem">
         <div style="display:flex;align-items:center;gap:.625rem;font-size:.82rem;color:#94a3b8">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            <x-core-ui::icon name="trending-up" class="w-4 h-4" />
             MRR — درآمد ماهانه پایدار
         </div>
         <div style="font-size:1.8rem;font-weight:800;letter-spacing:-.02em">
@@ -120,13 +114,11 @@
     @php $churnGood = $churnData['trend'] === 'good'; @endphp
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:1.25rem;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.5rem">
         <div style="display:flex;align-items:center;gap:.625rem;font-size:.82rem;color:#6b7280">
-            <svg fill="none" stroke="{{ $churnGood ? '#059669' : '#dc2626' }}" viewBox="0 0 24 24" width="16" height="16">
-                @if($churnGood)
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
-                @else
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                @endif
-            </svg>
+            @if($churnGood)
+            <x-core-ui::icon name="trending-down" class="w-4 h-4" style="color:#059669" />
+            @else
+            <x-core-ui::icon name="trending-up" class="w-4 h-4" style="color:#dc2626" />
+            @endif
             نرخ ریزش (Churn) — ماه جاری
         </div>
         <div style="display:flex;align-items:flex-end;gap:.875rem">

@@ -55,7 +55,7 @@
 {{-- Breadcrumb --}}
 <div class="flex items-center gap-2 text-sm mb-4">
     <a href="{{ route('admin.users.index') }}" class="text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <x-core-ui::icon name="chevron-right" class="w-4 h-4" />
         پنل کاربران
     </a>
     <span class="text-slate-300">/</span>
@@ -66,9 +66,9 @@
 @if(session('success'))
 <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3 mb-4"
      x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-    <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="check-circle" class="w-4 h-4 text-green-600 shrink-0" />
     <span class="text-sm text-green-700">{{ session('success') }}</span>
-    <button @click="show=false" class="mr-auto text-green-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    <button @click="show=false" class="mr-auto text-green-400"><x-core-ui::icon name="close" class="w-4 h-4" /></button>
 </div>
 @endif
 
@@ -227,12 +227,12 @@
             </div>
             @if($user->mobile)
             <div class="flex items-center gap-2 text-xs text-gray-600 mb-1.5">
-                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                <x-core-ui::icon name="phone" class="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 {{ $user->mobile }}
             </div>
             @endif
             <div class="flex items-center gap-2 text-xs text-gray-400">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <x-core-ui::icon name="calendar" class="w-3.5 h-3.5 shrink-0" />
                 عضویت {{ $user->created_at->diffForHumans() }}
             </div>
         </div>
@@ -241,7 +241,7 @@
         <form action="{{ route('admin.users.startChat', $user->id) }}" method="POST">
             @csrf
             <button type="submit" class="w-full btn-gradient text-xs justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 گفتگوی جدید
             </button>
         </form>
@@ -249,7 +249,7 @@
         {{-- Conversations List --}}
         <div class="glass-card-strong p-3 flex-1 overflow-y-auto">
             <div class="text-xs font-bold text-gray-500 mb-2 px-1 flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/></svg>
+                <x-core-ui::icon name="message" class="w-3.5 h-3.5" />
                 مکالمات ({{ $allTickets->count() }})
             </div>
             @forelse($allTickets as $t)
@@ -318,7 +318,7 @@
 
                 <a href="{{ route('admin.user-tickets.show', $ticket->id) }}"
                    class="btn-ghost text-xs py-1.5 px-3" title="مشاهده در پنل تیکت‌ها">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    <x-core-ui::icon name="eye" class="w-3.5 h-3.5" />
                 </a>
 
                 {{-- Quick status change --}}
@@ -328,13 +328,13 @@
                     <button type="submit" name="status" value="closed"
                             onclick="return confirm('این مکالمه بسته شود؟')"
                             class="btn-ghost text-xs py-1.5 px-3 text-red-600 hover:bg-red-50">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <x-core-ui::icon name="x-circle" class="w-3.5 h-3.5" />
                         بستن
                     </button>
                     @else
                     <button type="submit" name="status" value="open"
                             class="btn-ghost text-xs py-1.5 px-3 text-emerald-600 hover:bg-emerald-50">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <x-core-ui::icon name="refresh" class="w-3.5 h-3.5" />
                         بازگشایی
                     </button>
                     @endif
@@ -346,9 +346,9 @@
         <div x-show="showToast" x-transition
              class="mx-4 mt-3 flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg"
              style="display:none">
-            <svg class="w-4 h-4 shrink-0 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <x-core-ui::icon name="bell" class="w-4 h-4 shrink-0 animate-bounce" />
             <span x-text="toastText"></span>
-            <button @click="showToast=false" class="mr-auto opacity-70 hover:opacity-100"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <button @click="showToast=false" class="mr-auto opacity-70 hover:opacity-100"><x-core-ui::icon name="close" class="w-3.5 h-3.5" /></button>
         </div>
 
         {{-- Messages Area --}}
@@ -409,7 +409,7 @@
              style="display:none; position:sticky; bottom:5rem">
             <button @click="scrollDown()"
                     class="flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg hover:bg-indigo-700 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5" />
                 پیام جدید
             </button>
         </div>
@@ -446,10 +446,10 @@
                             :class="noteMode ? 'bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300' : 'bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-50'"
                             class="shrink-0 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 h-[4rem]">
                         <span x-show="!isSending">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
                         </span>
                         <span x-show="isSending">
-                            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <x-core-ui::icon name="loader" class="w-4 h-4 animate-spin" />
                         </span>
                     </button>
                 </div>
@@ -463,7 +463,7 @@
                 @csrf @method('PATCH')
                 <button type="submit" name="status" value="open"
                         class="btn-ghost text-xs text-emerald-600 hover:bg-emerald-50">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <x-core-ui::icon name="refresh" class="w-3.5 h-3.5" />
                     بازگشایی مکالمه
                 </button>
             </form>
@@ -481,7 +481,7 @@
             <form action="{{ route('admin.users.startChat', $user->id) }}" method="POST">
                 @csrf
                 <button type="submit" class="btn-gradient">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <x-core-ui::icon name="plus" class="w-4 h-4" />
                     شروع گفتگو با {{ $user->name }}
                 </button>
             </form>

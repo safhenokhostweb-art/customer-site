@@ -39,11 +39,11 @@
                     <h1 style="font-size:1.75rem; font-weight:800; margin-bottom:.5rem;">{{ $course->title }}</h1>
                     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; color:#6b7280; font-size:.875rem;">
                         <span style="display:flex; align-items:center; gap:.3rem;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <x-core-ui::icon name="users" class="" />
                             {{ $course->enrollments_count }} دانشجو
                         </span>
                         <span style="display:flex; align-items:center; gap:.3rem;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            <x-core-ui::icon name="book-open" class="" />
                             {{ $course->classes->count() }} جلسه
                         </span>
                         @if($course->isFree())
@@ -66,7 +66,7 @@
                             @else
                             <a href="{{ route('courses.learn', [$course->slug]) }}" style="display:block; text-align:center; padding:.85rem 1.5rem; background:var(--platform-primary,#4f46e5); color:#fff; border-radius:.75rem; text-decoration:none; font-weight:700; font-size:1rem;">
                                 ادامه یادگیری
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline; vertical-align:middle; margin-right:.3rem;"><polyline points="15 18 9 12 15 6"/></svg>
+                                <x-core-ui::icon name="chevron-left" class="" style="display:inline; vertical-align:middle; margin-right:.3rem;" />
                             </a>
                             @endif
                         @elseif($course->isFree())
@@ -112,7 +112,7 @@
             @if($course->description)
             <div class="card" style="margin-bottom:1.5rem;">
                 <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <x-core-ui::icon name="info-circle" class="w-4 h-4" />
                     درباره این دوره
                 </h2>
                 <div style="color:#374151; line-height:1.8; white-space:pre-line;">{{ $course->description }}</div>
@@ -124,14 +124,14 @@
         <div>
             <div class="card">
                 <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    <x-core-ui::icon name="book-open" class="w-4 h-4" />
                     محتوای دوره
                 </h2>
                 @forelse($course->classes as $class)
                 <div class="class-item {{ in_array($class->id, $completedClassIds) ? 'completed' : '' }}">
                     <div class="class-check">
                         @if(in_array($class->id, $completedClassIds))
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        <x-core-ui::icon name="check" class="w-3 h-3" />
                         @else
                         <span style="font-size:.7rem; color:#9ca3af;">{{ $class->order }}</span>
                         @endif
@@ -144,7 +144,7 @@
                         @endif
                     </div>
                     @if(!$enrollment)
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <x-core-ui::icon name="lock" class="w-3.5 h-3.5" style="color:#9ca3af" />
                     @endif
                 </div>
                 @empty

@@ -8,7 +8,7 @@
 {{-- ═══ هدر ═══════════════════════════════════════════════════════════════ --}}
 <div style="text-align:center;margin-bottom:3rem">
     <div style="display:inline-flex;align-items:center;gap:.5rem;background:#eef2ff;color:#4f46e5;border-radius:2rem;padding:.4rem 1.25rem;font-size:.82rem;font-weight:600;margin-bottom:1.25rem">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        <x-core-ui::icon name="spark" style="width:16px;height:16px" />
         پلن‌های ویژه عضویت
     </div>
     <h1 style="font-size:2rem;font-weight:800;color:#111827;margin:0 0 .75rem">انتخاب پلن مناسب</h1>
@@ -18,7 +18,7 @@
 {{-- ═══ گرید پلن‌ها ══════════════════════════════════════════════════════ --}}
 @if($plans->isEmpty())
 <div style="text-align:center;padding:4rem;color:#9ca3af">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48" style="margin:0 auto 1rem;color:#d1d5db"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+    <x-core-ui::icon name="plan" style="width:48px;height:48px;margin:0 auto 1rem;color:#d1d5db" />
     <p>در حال حاضر پلن فعالی وجود ندارد.</p>
 </div>
 @else
@@ -47,7 +47,7 @@
         {{-- اگر کاربر این پلن را دارد --}}
         @if($isActive)
         <div style="position:absolute;top:-13px;left:1.5rem;background:#d1fae5;color:#065f46;font-size:.72rem;font-weight:700;padding:.3rem .9rem;border-radius:2rem;display:flex;align-items:center;gap:.3rem">
-            <svg fill="currentColor" viewBox="0 0 20 20" width="12" height="12"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <x-core-ui::icon name="check-circle" style="width:12px;height:12px" />
             پلن فعلی شما
         </div>
         @endif
@@ -81,15 +81,8 @@
         <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem">
             @foreach($badges as $badge)
             <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.73rem;background:{{ $highlighted ? 'rgba(255,255,255,.15)' : '#f3f4f6' }};color:{{ $highlighted ? '#fff' : '#374151' }};border-radius:2rem;padding:.3rem .75rem">
-                @if($badge['icon'] === 'tag')
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                @elseif($badge['icon'] === 'truck')
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                @elseif($badge['icon'] === 'star')
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                @else
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4H5z"/></svg>
-                @endif
+                @php $bim = ['tag'=>'price-tag','truck'=>'package','star'=>'star']; @endphp
+                <x-core-ui::icon :name="$bim[$badge['icon']] ?? 'coupon'" style="width:12px;height:12px" />
                 {{ $badge['label'] }}
             </span>
             @endforeach
@@ -101,7 +94,7 @@
         <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.625rem;flex:1">
             @foreach($features as $feature)
             <li style="display:flex;align-items:flex-start;gap:.625rem;font-size:.83rem;color:{{ $textColor }}">
-                <svg fill="none" stroke="{{ $highlighted ? '#a5f3fc' : '#10b981' }}" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0;margin-top:.1rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <x-core-ui::icon name="check" style="width:16px;height:16px;flex-shrink:0;margin-top:.1rem;color:{{ $highlighted ? '#a5f3fc' : '#10b981' }}" />
                 {{ $feature }}
             </li>
             @endforeach
@@ -120,7 +113,7 @@
         {{-- دکمه --}}
         @if($isActive)
         <div style="text-align:center;background:{{ $highlighted ? 'rgba(255,255,255,.15)' : '#f3f4f6' }};color:{{ $highlighted ? '#fff' : '#6b7280' }};border-radius:.875rem;padding:.85rem;font-size:.88rem;font-weight:600">
-            <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16" style="display:inline;vertical-align:middle;margin-left:.3rem"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <x-core-ui::icon name="check-circle" style="display:inline;vertical-align:middle;margin-left:.3rem;width:16px;height:16px" />
             پلن فعال شما
         </div>
         @elseif(auth()->check())
@@ -159,11 +152,9 @@
             <button x-on:click="open === {{ $i }} ? open = null : open = {{ $i }}"
                     style="width:100%;text-align:right;padding:1rem 1.25rem;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;font-size:.9rem;font-weight:600;color:#1f2937">
                 {{ $faq['q'] }}
-                <svg x-bind:style="open === {{ $i }} ? 'transform:rotate(180deg)' : ''"
-                     style="flex-shrink:0;transition:transform .2s;color:#6b7280"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <x-core-ui::icon name="chevron-down"
+                     x-bind:style="open === {{ $i }} ? 'transform:rotate(180deg)' : ''"
+                     style="width:18px;height:18px;flex-shrink:0;transition:transform .2s;color:#6b7280" />
             </button>
             <div x-show="open === {{ $i }}" x-collapse style="padding:0 1.25rem 1rem;font-size:.85rem;color:#6b7280;line-height:1.7">
                 {{ $faq['a'] }}

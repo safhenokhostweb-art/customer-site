@@ -9,9 +9,7 @@
     <div class="flex items-center gap-3 mb-6">
         <a href="{{ route('admin.education-center.manage', ['tab' => 'walkthroughs']) }}"
            class="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
+            <x-core-ui::icon name="chevron-right" class="w-5 h-5" />
         </a>
         <h1 class="text-xl font-bold text-gray-800">
             {{ isset($walkthrough) ? 'ویرایش راهنما' : 'راهنمای جدید' }}
@@ -79,16 +77,12 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="font-semibold text-gray-700 text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                    </svg>
+                    <x-core-ui::icon name="walkthrough" class="w-4 h-4 text-blue-500" />
                     مراحل راهنما
                 </h2>
                 <button type="button" x-on:click="addStep()"
                         class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                    <x-core-ui::icon name="plus" class="w-4 h-4" />
                     افزودن مرحله
                 </button>
             </div>
@@ -129,9 +123,7 @@
             </a>
             <button type="submit"
                     class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
+                <x-core-ui::icon name="save" class="w-4 h-4" />
                 {{ isset($walkthrough) ? 'ذخیره تغییرات' : 'ایجاد راهنما' }}
             </button>
         </div>

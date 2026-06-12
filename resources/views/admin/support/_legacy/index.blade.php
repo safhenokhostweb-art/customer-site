@@ -63,7 +63,7 @@
     {{-- Actions --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <a href="{{ route('admin.support.create') }}" class="btn-gradient">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <x-core-ui::icon name="plus" class="w-5 h-5 shrink-0" />
             ثبت تیکت جدید
         </a>
     </div>
@@ -72,7 +72,7 @@
     <div class="glass-filter-bar mb-6" x-data="{ search: '', status: '', priority: '' }">
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div class="relative flex-1 w-full sm:w-auto">
-                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <x-core-ui::icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 shrink-0" />
                 <input type="text" x-model="search" placeholder="جستجوی تیکت‌ها..." class="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-200 bg-white/70 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
             </div>
             <select x-model="status" class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white/70 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all w-full sm:w-auto">
@@ -111,7 +111,7 @@
     @elseif(($t['status'] ?? '') === 'in_progress')
     <span class="status-badge bg-blue-50 text-blue-700 border-blue-200"><span class="priority-dot bg-blue-500"></span> در حال بررسی</span>
     @else
-    <span class="status-badge bg-gray-50 text-gray-600 border-gray-200"><svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> بسته</span>
+    <span class="status-badge bg-gray-50 text-gray-600 border-gray-200"><x-core-ui::icon name="check" class="w-5 h-5 shrink-0" /> بسته</span>
     @endif
     </td>
 
@@ -128,13 +128,13 @@
     <td class="p-3 text-sm text-gray-500">{{ \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($t['created_at']), 'Y/m/d H:i') }}</td>
     <td class="p-3 pl-5">
     <a href="{{ route('admin.support.show', $t['id']) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all hover:shadow-sm">
-    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+    <x-core-ui::icon name="eye" class="w-5 h-5 shrink-0" />
     مشاهده
     </a>
     </td>
     </tr>
     @empty
-    <tr><td colspan="7" class="text-center py-12"><div class="flex flex-col items-center gap-3"><span class="text-5xl">📭</span><span class="text-gray-400 font-medium">هیچ تیکتی یافت نشد</span><p class="text-gray-400 text-sm">هنوز تیکتی ثبت نشده است.</p><a href="{{ route('admin.support.create') }}" class="btn-gradient !text-sm !py-2 !px-4 mt-2"><svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg> ثبت تیکت جدید</a></div></td></tr>
+    <tr><td colspan="7" class="text-center py-12"><div class="flex flex-col items-center gap-3"><span class="text-5xl">📭</span><span class="text-gray-400 font-medium">هیچ تیکتی یافت نشد</span><p class="text-gray-400 text-sm">هنوز تیکتی ثبت نشده است.</p><a href="{{ route('admin.support.create') }}" class="btn-gradient !text-sm !py-2 !px-4 mt-2"><x-core-ui::icon name="plus" class="w-5 h-5 shrink-0" /> ثبت تیکت جدید</a></div></td></tr>
     @endforelse
     </tbody>
     </table>

@@ -25,9 +25,7 @@
 {{-- اعلان بروزرسانی موجود --}}
 @if(!empty($moduleUpdates))
     <div class="admin-pro-banner admin-pro-banner--updates" role="status">
-        <svg class="admin-pro-banner__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
+        <x-core-ui::icon name="refresh" class="admin-pro-banner__icon" />
         <div>
             <h3 class="admin-pro-module-card__title" style="color:#312e81">بروزرسانی ماژول‌ها موجود است</h3>
             <p class="admin-pro-module-card__meta" style="color:#3730a3;margin-top:0.25rem">برای {{ count($moduleUpdates) }} ماژول بروزرسانی جدید در دسترس است:</p>
@@ -305,9 +303,7 @@
             </div>
         @else
             <div class="admin-empty-state" role="status">
-                <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
+                <x-core-ui::icon name="package" class="admin-empty-state__icon" />
                 <p class="admin-empty-state__title">ماژولی نمایش داده نمی‌شود</p>
                 <p class="admin-empty-state__text">
                     @if($license && $license->license_key)

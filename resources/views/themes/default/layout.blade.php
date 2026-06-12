@@ -385,7 +385,7 @@
                     <a href="{{ route('home') }}">{{ \App\Helpers\SiteHelper::siteName() }}</a>
                 </div>
                 <button type="button" id="tb-mobile-menu-btn" class="tb-menu-btn" aria-label="منو" aria-expanded="false">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <x-core-ui::icon name="menu" style="width:24px;height:24px" />
                 </button>
                 <div class="tb-header-nav-wrap">
                     {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)
@@ -455,7 +455,7 @@
                         @endif
                         @if(\App\Helpers\SiteHelper::moduleEnabled('advanced_search'))
                             <a href="{{ route('search.index') }}" class="nav-link {{ request()->routeIs('search.*') ? 'font-semibold' : '' }}" title="جستجوی پیشرفته" aria-label="جستجو">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <x-core-ui::icon name="search" style="width:20px;height:20px;vertical-align:middle" />
                             </a>
                         @endif
                         <a href="{{ route('contact.show') }}" class="nav-link {{ request()->routeIs('contact.*') ? 'font-semibold' : '' }}">تماس</a>

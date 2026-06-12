@@ -31,7 +31,7 @@
         </div>
         <div class="admin-page-tools">
             <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 دسته جدید
             </a>
         </div>
@@ -41,7 +41,7 @@
     <div style="display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap">
         <div class="card" style="padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;min-width:160px">
             <div style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:#ede9fe;display:flex;align-items:center;justify-content:center">
-                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <x-core-ui::icon name="folder" class="w-5 h-5 text-violet-600" />
             </div>
             <div>
                 <div style="font-size:.72rem;color:#64748b;font-weight:600">تعداد دسته‌ها</div>
@@ -50,7 +50,7 @@
         </div>
         <div class="card" style="padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;min-width:160px">
             <div style="width:2.25rem;height:2.25rem;border-radius:.625rem;background:#dbeafe;display:flex;align-items:center;justify-content:center">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <x-core-ui::icon name="file-text" class="w-5 h-5 text-blue-600" />
             </div>
             <div>
                 <div style="font-size:.72rem;color:#64748b;font-weight:600">مجموع مطالب</div>
@@ -63,9 +63,7 @@
     @forelse($categories as $cat)
         <div class="cat-card">
             <div class="cat-icon">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
+                <x-core-ui::icon name="tag" class="w-5 h-5 text-white" />
             </div>
             <div style="flex:1;min-width:0">
                 <div class="cat-name">{{ $cat->name }}</div>

@@ -27,7 +27,7 @@
 
 <div class="flex items-center gap-4 mb-8">
     <a href="{{ route('admin.support.index') }}" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-gray-600 bg-white/70 hover:bg-white border border-gray-200 transition-all hover:shadow-sm">
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <x-core-ui::icon name="chevron-right" class="w-5 h-5 shrink-0" />
         بازگشت به لیست
     </a>
     <div>
@@ -39,7 +39,7 @@
 @if($errors->any())
 <div class="error-glass mb-6" x-data="{ show: true }" x-show="show" x-transition>
     <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="alert-triangle" class="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
         <div class="flex-1">
             <p class="text-sm font-semibold text-red-800 mb-1">{{ count($errors->all()) }} خطا در ارسال فرم</p>
             <ul class="list-disc list-inside space-y-0.5">
@@ -49,7 +49,7 @@
             </ul>
         </div>
         <button @click="show = false" class="text-red-400 hover:text-red-600 transition-colors shrink-0">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
         </button>
     </div>
 </div>
@@ -125,16 +125,16 @@
 
     <div class="flex items-center justify-between gap-4 px-6 sm:px-8 py-4 border-t border-gray-100 bg-gray-50/50">
         <div class="flex items-center gap-2 text-xs text-gray-400">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            <x-core-ui::icon name="lock" class="w-5 h-5 shrink-0" />
             اطلاعات با امنیت کامل ذخیره می‌شود
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.support.index') }}" class="btn-ghost">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
                 انصراف
             </a>
             <button type="submit" class="btn-gradient">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0" />
                 ثبت تیکت
             </button>
         </div>

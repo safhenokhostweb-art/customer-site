@@ -109,14 +109,14 @@
                     @php $feats = old('features', $subscription->getFeaturesArray() ?: ['']); @endphp
                     @foreach($feats as $f)
                     <div class="plnfrm__feat-row">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="plnfrm__feat-icon" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <x-core-ui::icon name="check" class="plnfrm__feat-icon w-3.5 h-3.5" style="color:#4f46e5" />
                         <input type="text" name="features[]" value="{{ $f }}" placeholder="امکان..." class="plnfrm__feat-input">
                         <button type="button" onclick="this.closest('.plnfrm__feat-row').remove()" class="plnfrm__feat-del">×</button>
                     </div>
                     @endforeach
                 </div>
                 <button type="button" id="add-feature" class="plnfrm__feat-add">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <x-core-ui::icon name="plus" class="w-3.5 h-3.5" />
                     افزودن امکان
                 </button>
             </div>
@@ -202,7 +202,7 @@
                 {{-- انتخاب محصولات خاص --}}
                 <div id="products-selector" style="{{ old('apply_to_all_products', $subscription->apply_to_all_products) ? 'display:none' : '' }}">
                     <div class="prod-search-wrap">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" class="prod-search-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <x-core-ui::icon name="search" class="prod-search-icon w-3.5 h-3.5" />
                         <input type="text" id="prod-search" placeholder="جستجوی محصول..." class="prod-search-input" autocomplete="off">
                         <span id="prod-selected-count" class="prod-count-badge" style="display:none"></span>
                     </div>
@@ -274,7 +274,7 @@
             <div class="plnfrm__preview-feats" id="prev-feats">
                 @foreach($subscription->getFeaturesArray() as $f)
                 <div style="display:flex;align-items:center;gap:.375rem">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>{{ $f }}
+                    <x-core-ui::icon name="check" class="w-3 h-3" />{{ $f }}
                 </div>
                 @endforeach
             </div>
@@ -300,7 +300,7 @@
                     <div class="plnfrm__upload-area">
                         <input type="file" name="image" id="img-input" accept="image/*" class="plnfrm__upload-input">
                         <label for="img-input" class="plnfrm__upload-label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" style="color:#94a3b8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <x-core-ui::icon name="image" class="w-6 h-6" style="color:#94a3b8" />
                             <span>{{ $subscription->image ? 'تغییر تصویر' : 'انتخاب تصویر' }}</span>
                             <small>PNG, JPG تا ۲ مگابایت</small>
                         </label>

@@ -39,7 +39,7 @@
         </div>
         @auth
         <a href="{{ route('courses.my-learning') }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.6rem 1.2rem; background:var(--platform-primary,#4f46e5); color:#fff; border-radius:.6rem; text-decoration:none; font-weight:600; font-size:.875rem;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <x-core-ui::icon name="book" class="w-4 h-4" />
             دوره‌های من
         </a>
         @endauth
@@ -74,17 +74,17 @@
             <div class="course-card-body">
                 @if(in_array($course->id, $enrolledIds))
                     <span class="course-badge badge-enrolled">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        <x-core-ui::icon name="check" class="w-2.5 h-2.5" />
                         ثبت‌نام شده
                     </span>
                 @elseif($course->isFree())
                     <span class="course-badge badge-free">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        <x-core-ui::icon name="check" class="w-2.5 h-2.5" />
                         رایگان
                     </span>
                 @else
                     <span class="course-badge badge-paid">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        <x-core-ui::icon name="price-tag" class="w-2.5 h-2.5" />
                         {{ number_format($course->price) }} تومان
                     </span>
                 @endif
@@ -96,7 +96,7 @@
 
                 <div class="course-meta">
                     <span style="display:flex; align-items:center; gap:.3rem;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <x-core-ui::icon name="users" class="w-3 h-3" />
                         {{ $course->enrollments_count }} دانشجو
                     </span>
                 </div>

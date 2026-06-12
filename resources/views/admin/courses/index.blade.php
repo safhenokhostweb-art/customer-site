@@ -39,7 +39,7 @@
         </div>
         <div class="admin-page-tools">
             <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 دوره جدید
             </a>
         </div>
@@ -73,7 +73,7 @@
                     @if($course->image)
                         <img src="{{ $course->image }}" alt="{{ $course->title }}" loading="lazy">
                     @else
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        <x-core-ui::icon name="book-open" class="w-6 h-6 text-white" />
                     @endif
                 </div>
                 <div style="flex:1;min-width:0">
@@ -122,9 +122,7 @@
         </div>
     @empty
         <div class="admin-empty-state">
-            <svg class="admin-empty-state__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-            </svg>
+            <x-core-ui::icon name="book-open" class="admin-empty-state__icon" />
             <p class="admin-empty-state__title">دوره‌ای ثبت نشده</p>
             <p class="admin-empty-state__text">با دکمهٔ «دوره جدید» اولین دوره آموزشی خود را بسازید.</p>
             <a href="{{ route('admin.courses.create') }}" class="btn btn-primary mt-3">ساخت اولین دوره</a>

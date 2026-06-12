@@ -14,16 +14,16 @@
         <a href="{{ route('admin.subscriptions.dashboard') }}" class="btn btn-secondary btn-sm">داشبورد</a>
         <a href="{{ route('admin.subscriptions.index') }}" class="btn btn-secondary btn-sm">پلن‌ها</a>
         <a href="{{ route('admin.subscribers.pending') }}" class="btn btn-sm" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="clock" class="w-3.5 h-3.5" />
             درخواست‌های pending
         </a>
         <a href="{{ route('admin.subscribers.assign.form') }}" class="btn btn-primary btn-sm">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <x-core-ui::icon name="plus" class="w-3.5 h-3.5" />
             ثبت دستی
         </a>
         <a href="{{ route('admin.subscribers.export') }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}"
            class="btn btn-secondary btn-sm">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <x-core-ui::icon name="download" class="w-3.5 h-3.5" />
             CSV
         </a>
     </div>
@@ -53,7 +53,7 @@
 <form method="GET" action="{{ route('admin.subscribers.index') }}" class="subs-filter">
     <div class="subs-filter__fields">
         <div class="subs-filter__field">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="subs-filter__icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <x-core-ui::icon name="search" class="subs-filter__icon" />
             <input type="text" name="search" value="{{ request('search') }}" placeholder="نام یا موبایل کاربر..." class="subs-filter__input">
         </div>
         <select name="status" class="subs-filter__select">
@@ -143,7 +143,7 @@
             @empty
             <tr>
                 <td colspan="7" class="subs-table__empty">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32" style="color:#cbd5e1;margin-bottom:.5rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <x-core-ui::icon name="users" class="w-8 h-8" style="color:#cbd5e1;margin-bottom:.5rem" />
                     <br>هیچ اشتراکی یافت نشد.
                 </td>
             </tr>

@@ -1,4 +1,4 @@
-@php
+﻿@php
     $position = \App\Models\Setting::get('notification_bell_position', 'bottom-right');
     $unreadCount = auth()->user()->notifications()->unread()->count();
     $inboxRecent = \App\Models\UserNotification::where('user_id', auth()->id())->latest()->limit(5)->get();
@@ -31,14 +31,14 @@
 @endphp
 @if(\App\Helpers\SiteHelper::moduleEnabled('notifications'))
 <style>
-/* ── Bell shake ── */
+/* â”€â”€ Bell shake â”€â”€ */
 @keyframes account-bell-shake {
     0%,100%{transform:rotate(0)}
     10%,30%{transform:rotate(-12deg)}
     20%,40%{transform:rotate(12deg)}
     50%{transform:rotate(0)}
 }
-/* ── Glow pulse rings ── */
+/* â”€â”€ Glow pulse rings â”€â”€ */
 @keyframes bell-ring-pulse {
     0%   { transform:scale(1);   opacity:0.55; }
     100% { transform:scale(2.8); opacity:0; }
@@ -51,7 +51,7 @@
 .bell-glow-ring:nth-child(2){ animation-delay:0.85s; }
 .bell-glow-ring:nth-child(3){ animation-delay:1.7s; }
 
-/* ── Drag hint tooltip (hover) ── */
+/* â”€â”€ Drag hint tooltip (hover) â”€â”€ */
 .bell-drag-tooltip {
     position:absolute;
     bottom:calc(100% + 0.6rem);
@@ -72,7 +72,7 @@
     opacity:1;transform:translateX(50%) translateY(0);
 }
 
-/* ── First-visit hint label ── */
+/* â”€â”€ First-visit hint label â”€â”€ */
 .bell-first-hint {
     position:absolute;
     right:calc(100% + 0.6rem);top:50%;transform:translateY(-50%);
@@ -94,7 +94,7 @@
     to  {opacity:1;transform:translateY(-50%) translateX(0)}
 }
 
-/* ── Bell states ── */
+/* â”€â”€ Bell states â”€â”€ */
 .account-notification-bell-link.has-unread { animation: account-bell-shake 2s ease-in-out infinite; }
 .account-notification-bell-link.has-unread:hover,
 .account-notification-bell-link.has-unread.dragging { animation: none; }
@@ -102,7 +102,7 @@
 #account-notification-bell.dragging { cursor:grabbing; }
 #account-notification-bell.dragging .bell-glow-ring { animation:none; opacity:0; }
 
-/* ── Notification panel ── */
+/* â”€â”€ Notification panel â”€â”€ */
 #acct-bell-panel {
     position:absolute;
     width:min(22rem, calc(100vw - 2rem));
@@ -169,11 +169,7 @@
         box-shadow:0 4px 16px rgba(79,70,229,0.5),0 0 0 3px rgba(99,102,241,0.18);
         transition:box-shadow 0.2s,transform 0.15s;
     ">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
+        <x-core-ui::icon name="bell" style="width:22px;height:22px" />
         @if($unreadCount > 0)
         <span style="
             position:absolute;top:-5px;right:-5px;min-width:1.3rem;height:1.3rem;border-radius:9999px;
@@ -185,26 +181,26 @@
     </div>
 
     {{-- Hover tooltip --}}
-    <div class="bell-drag-tooltip">🖱️ بکشید تا جابجا کنید</div>
+    <div class="bell-drag-tooltip">ًں–±ï¸ڈ ط¨ع©ط´غŒط¯ طھط§ ط¬ط§ط¨ط¬ط§ ع©ظ†غŒط¯</div>
 
     {{-- First-visit hint (shown by JS for 4s) --}}
     <div class="bell-first-hint" id="bell-first-hint" style="display:none">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 9l4 4 4-4"/><path d="M9 13V3"/><path d="M19 15l-4-4-4 4"/><path d="M15 11v10"/></svg>
-        قابل جابجایی
+        ظ‚ط§ط¨ظ„ ط¬ط§ط¨ط¬ط§غŒغŒ
     </div>
 
     {{-- Inline notification panel --}}
     <div id="acct-bell-panel" hidden>
         <div class="acct-bp__head">
-            <span>اعلان‌ها</span>
-            <a href="{{ route('account.notifications.index') }}" class="acct-bp__link-all">همه پیام‌ها</a>
+            <span>ط§ط¹ظ„ط§ظ†â€Œظ‡ط§</span>
+            <a href="{{ route('account.notifications.index') }}" class="acct-bp__link-all">ظ‡ظ…ظ‡ ظ¾غŒط§ظ…â€Œظ‡ط§</a>
         </div>
 
         @if($inboxRecent->isEmpty() && count($platformItems) === 0)
-            <div class="acct-bp__empty">موردی برای نمایش نیست.</div>
+            <div class="acct-bp__empty">ظ…ظˆط±ط¯غŒ ط¨ط±ط§غŒ ظ†ظ…ط§غŒط´ ظ†غŒط³طھ.</div>
         @else
             @if($inboxRecent->isNotEmpty())
-                <div class="acct-bp__section-title">صندوق ورودی</div>
+                <div class="acct-bp__section-title">طµظ†ط¯ظˆظ‚ ظˆط±ظˆط¯غŒ</div>
                 <ul class="acct-bp__list">
                     @foreach($inboxRecent as $n)
                     <li>
@@ -223,7 +219,7 @@
             @endif
 
             @if(count($platformItems) > 0)
-                <div class="acct-bp__section-title">اعلان سایت</div>
+                <div class="acct-bp__section-title">ط§ط¹ظ„ط§ظ† ط³ط§غŒطھ</div>
                 <ul class="acct-bp__list">
                     @foreach($platformItems as $n)
                         @php $fresh = \App\Helpers\NotificationUi::isFresh($n['created_at'] ?? null); @endphp
@@ -231,7 +227,7 @@
                             <div class="acct-bp__row {{ $fresh ? 'is-new' : '' }}"
                                  style="border-inline-start:3px solid {{ $typeAccent[$n['type']] ?? $typeAccent['info'] }};">
                                 @if($fresh)
-                                    <span class="acct-bp__new-pill">جدید</span>
+                                    <span class="acct-bp__new-pill">ط¬ط¯غŒط¯</span>
                                 @endif
                                 <span class="acct-bp__row-text">
                                     <span class="acct-bp__title">{{ \Illuminate\Support\Str::limit($n['title'], 52) }}</span>
@@ -239,7 +235,7 @@
                                         <span class="acct-bp__meta">{{ \Illuminate\Support\Str::limit(strip_tags($n['body']), 64) }}</span>
                                     @endif
                                     @if(!empty($n['link']))
-                                        <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="acct-bp__cta">{{ $n['link_text'] ?: 'مشاهده' }}</a>
+                                        <a href="{{ $n['link'] }}" target="_blank" rel="noopener" class="acct-bp__cta">{{ $n['link_text'] ?: 'ظ…ط´ط§ظ‡ط¯ظ‡' }}</a>
                                     @endif
                                 </span>
                             </div>
@@ -395,3 +391,4 @@
 })();
 </script>
 @endif
+

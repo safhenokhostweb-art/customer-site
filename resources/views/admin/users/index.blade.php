@@ -84,14 +84,10 @@
 @if(session('success'))
 <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3.5 mb-5"
      x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-    <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
+    <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0" />
     <span class="text-sm text-green-700 font-medium">{{ session('success') }}</span>
     <button @click="show=false" class="mr-auto text-green-500 hover:text-green-700">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+        <x-core-ui::icon name="close" class="w-4 h-4" />
     </button>
 </div>
 @endif
@@ -103,10 +99,7 @@
         <p class="text-sm text-gray-500 mt-0.5">مدیریت کاربران سایت و چت مستقیم با آن‌ها</p>
     </div>
     <a href="{{ route('admin.user-tickets.index') }}" class="btn-ghost text-xs">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
+        <x-core-ui::icon name="file-text" class="w-4 h-4" />
         صندوق تیکت‌ها
     </a>
 </div>
@@ -119,10 +112,7 @@
         <div class="tkt-stat__accent" style="background:linear-gradient(180deg,#6366f1,#4f46e5)"></div>
         <div class="flex items-center gap-3">
             <div class="tkt-stat__icon" style="background:#eef2ff">
-                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+                <x-core-ui::icon name="users" class="w-6 h-6 text-indigo-600" />
             </div>
             <div>
                 <div class="tkt-stat__val text-indigo-600">{{ $toFa($totalUsers) }}</div>
@@ -136,10 +126,7 @@
         <div class="tkt-stat__accent" style="background:linear-gradient(180deg,#10b981,#059669)"></div>
         <div class="flex items-center gap-3">
             <div class="tkt-stat__icon" style="background:#ecfdf5">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
+                <x-core-ui::icon name="message" class="w-6 h-6 text-emerald-600" />
             </div>
             <div>
                 <div class="tkt-stat__val text-emerald-600">{{ $toFa($usersWithActive) }}</div>
@@ -153,10 +140,7 @@
         <div class="tkt-stat__accent" style="background:linear-gradient(180deg,#3b82f6,#2563eb)"></div>
         <div class="flex items-center gap-3">
             <div class="tkt-stat__icon" style="background:#eff6ff">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
+                <x-core-ui::icon name="calendar" class="w-6 h-6 text-blue-600" />
             </div>
             <div>
                 <div class="tkt-stat__val text-blue-600">{{ $toFa($newThisMonth) }}</div>
@@ -170,10 +154,7 @@
         <div class="tkt-stat__accent" style="background:linear-gradient(180deg,#8b5cf6,#7c3aed)"></div>
         <div class="flex items-center gap-3">
             <div class="tkt-stat__icon" style="background:#f5f3ff">
-                <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
+                <x-core-ui::icon name="bar-chart" class="w-6 h-6 text-violet-600" />
             </div>
             <div>
                 <div class="tkt-stat__val text-violet-600">{{ \App\Helpers\NumberHelper::toPersianNumbers($engageRate) }}٪</div>
@@ -189,9 +170,7 @@
     {{-- جدید امروز --}}
     <div class="glass-card px-4 py-3 flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:#f0fdf4">
-            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+            <x-core-ui::icon name="plus" class="w-5 h-5 text-teal-600" />
         </div>
         <div>
             <div class="text-lg font-bold text-teal-700">{{ $toFa($newToday) }}</div>
@@ -202,10 +181,7 @@
     {{-- کل تیکت‌ها --}}
     <div class="glass-card px-4 py-3 flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:#fff7ed">
-            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-            </svg>
+            <x-core-ui::icon name="file-text" class="w-5 h-5 text-amber-600" />
         </div>
         <div>
             <div class="text-lg font-bold text-amber-700">{{ $toFa($totalTickets) }}</div>
@@ -216,10 +192,7 @@
     {{-- نتیجه جستجو --}}
     <div class="glass-card px-4 py-3 flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:#f8fafc">
-            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+            <x-core-ui::icon name="search" class="w-5 h-5 text-gray-500" />
         </div>
         <div>
             <div class="text-lg font-bold text-gray-700">{{ $toFa($users->total()) }}</div>
@@ -234,10 +207,7 @@
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#eef2ff">
-                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                </svg>
+                <x-core-ui::icon name="bar-chart" class="w-4 h-4 text-indigo-600" />
             </div>
             <span class="font-semibold text-gray-700 text-sm">روند ثبت‌نام کاربران</span>
         </div>
@@ -248,10 +218,7 @@
             </div>
             <button @click="open = !open"
                     class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                <svg class="w-4 h-4 transition-transform" :class="open ? '' : 'rotate-180'"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                </svg>
+                <x-core-ui::icon name="chevron-up" class="w-4 h-4 transition-transform" x-bind:class="open ? '' : 'rotate-180'" />
             </button>
         </div>
     </div>
@@ -283,10 +250,7 @@
     {{-- ردیف اول: جستجوی سریع --}}
     <div class="flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-48 relative">
-            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+            <x-core-ui::icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input type="text" x-model="q"
                    @keydown.enter="doSearch()"
                    placeholder="جستجو بر اساس نام یا موبایل..."
@@ -298,25 +262,18 @@
                 :class="showFilters
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-            </svg>
+            <x-core-ui::icon name="filter" class="w-4 h-4" />
             فیلترها
             <span x-show="activeCount > 0" x-text="activeCount"
                   class="bg-indigo-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"></span>
         </button>
 
         <button @click="doSearch()" class="btn-gradient text-xs px-4 py-2 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+            <x-core-ui::icon name="search" class="w-3.5 h-3.5" />
             جستجو
         </button>
         <button @click="resetFilters()" class="btn-ghost text-xs flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <x-core-ui::icon name="close" class="w-3.5 h-3.5" />
             پاک‌سازی
         </button>
     </div>
@@ -403,10 +360,7 @@
 @if($users->isEmpty())
 <div class="glass-card text-center py-20">
     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
+        <x-core-ui::icon name="users" class="w-8 h-8 text-gray-300" />
     </div>
     <h3 class="text-base font-semibold text-gray-700 mb-1">کاربری یافت نشد</h3>
     <p class="text-sm text-gray-400">
@@ -461,10 +415,7 @@
         {{-- آمار کارت --}}
         <div class="flex items-center justify-between text-xs text-gray-400 mb-3 pt-2.5 border-t border-gray-50">
             <span class="flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                </svg>
+                <x-core-ui::icon name="message" class="w-3.5 h-3.5" />
                 {{ \App\Helpers\NumberHelper::toPersianNumbers($totalTkts) }} مکالمه
             </span>
             @if($activeCount > 0)
@@ -473,10 +424,7 @@
                 </span>
             @endif
             <span class="flex items-center gap-1" title="{{ $u->created_at->format('Y-m-d') }}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
+                <x-core-ui::icon name="calendar" class="w-3.5 h-3.5" />
                 {{ $u->created_at->diffForHumans() }}
             </span>
         </div>
@@ -487,10 +435,7 @@
                   {{ $activeCount > 0
                       ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-sm hover:shadow-indigo-200 hover:shadow-md'
                       : 'border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-indigo-300' }}">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
+            <x-core-ui::icon name="message" class="w-3.5 h-3.5" />
             {{ $activeCount > 0 ? 'ادامه چت' : 'شروع چت' }}
         </a>
     </div>

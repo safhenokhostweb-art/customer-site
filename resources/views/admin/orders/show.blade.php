@@ -77,7 +77,7 @@
             {{-- Order Items --}}
             <div class="info-block">
                 <div class="info-block-header">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <x-core-ui::icon name="cart" class="w-4 h-4 text-indigo-600" />
                     آیتم‌های سفارش
                 </div>
                 <div class="table-responsive" style="margin:0">
@@ -163,7 +163,7 @@
             @if($order->statusHistory->count())
             <div class="info-block">
                 <div class="info-block-header">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0"/></svg>
+                    <x-core-ui::icon name="clock" class="w-4 h-4 text-indigo-600" />
                     تاریخچه وضعیت
                 </div>
                 <div class="info-block-body">
@@ -197,7 +197,7 @@
             @if($order->status !== 'cancelled')
             <div class="info-block" style="margin-bottom:1.25rem">
                 <div class="info-block-header">
-                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <x-core-ui::icon name="refresh" class="w-4 h-4 text-amber-600" />
                     تغییر وضعیت
                 </div>
                 <div class="info-block-body">
@@ -226,7 +226,7 @@
             {{-- Customer Info --}}
             <div class="info-block">
                 <div class="info-block-header">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <x-core-ui::icon name="user" class="w-4 h-4 text-indigo-600" />
                     اطلاعات مشتری
                 </div>
                 <div class="info-block-body" style="padding:.75rem 1.25rem">
@@ -266,7 +266,7 @@
             {{-- Order Meta --}}
             <div class="info-block">
                 <div class="info-block-header">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <x-core-ui::icon name="file-text" class="w-4 h-4 text-slate-500" />
                     اطلاعات سفارش
                 </div>
                 <div class="info-block-body" style="padding:.75rem 1.25rem">

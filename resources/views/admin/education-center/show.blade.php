@@ -73,9 +73,7 @@
                 <div class="mt-8 pt-6 border-t border-gray-100">
                     <a href="{{ route('admin.education-center.index') }}"
                        class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
-                        <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
+                        <x-core-ui::icon name="arrow-right" class="w-4 h-4 rotate-180" />
                         بازگشت به مرکز آموزش
                     </a>
                 </div>

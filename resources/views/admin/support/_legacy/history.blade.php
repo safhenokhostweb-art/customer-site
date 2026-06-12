@@ -30,7 +30,7 @@
     {{-- Header --}}
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
         <a href="{{ route('admin.support.index') }}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 0.875rem;border-radius:0.75rem;font-size:0.75rem;font-weight:500;color:#4b5563;background:rgba(255,255,255,0.7);border:1px solid #e5e7eb;text-decoration:none;transition:all 0.2s">
-            <svg style="width:1.25rem;height:1.25rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <x-core-ui::icon name="chevron-right" class="w-5 h-5 shrink-0" />
             بازگشت به پشتیبانی
         </a>
         <div>
@@ -42,25 +42,25 @@
     {{-- خطا و فلش messages --}}
     @if($error)
         <div class="error-glass" style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem">
-            <svg style="width:1.25rem;height:1.25rem;color:#ef4444;flex-shrink:0;margin-top:0.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="alert-triangle" class="w-5 h-5 shrink-0" style="color:#ef4444;margin-top:0.125rem" />
             <p style="font-size:0.875rem;color:#b91c1c;margin:0">{{ $error }}</p>
         </div>
     @endif
     @if(session('success'))
         <div class="ticket-card" style="border-color:#a7f3d0;background:rgba(236,253,245,0.8);display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem" x-data="{ show: true }" x-show="show" x-transition>
-            <svg style="width:1.25rem;height:1.25rem;color:#059669;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0" style="color:#059669" />
             <span style="font-size:0.875rem;color:#065f46;font-weight:500">{{ session('success') }}</span>
             <button @click="show = false" style="margin-right:auto;color:#34d399;background:none;border:none;cursor:pointer">
-                <svg style="width:1.25rem;height:1.25rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
             </button>
         </div>
     @endif
     @if(session('error'))
         <div class="error-glass" style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem" x-data="{ show: true }" x-show="show" x-transition>
-            <svg style="width:1.25rem;height:1.25rem;color:#ef4444;flex-shrink:0;margin-top:0.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <x-core-ui::icon name="alert-triangle" class="w-5 h-5 shrink-0" style="color:#ef4444;margin-top:0.125rem" />
             <p style="font-size:0.875rem;color:#b91c1c;flex:1;margin:0">{{ session('error') }}</p>
             <button @click="show = false" style="color:#f87171;background:none;border:none;cursor:pointer;flex-shrink:0">
-                <svg style="width:1.25rem;height:1.25rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
             </button>
         </div>
     @endif
@@ -88,7 +88,7 @@
                             @elseif($ticket['status'] === 'in_progress')
                                 <span class="status-badge" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe"><span style="width:0.375rem;height:0.375rem;border-radius:50%;background:#3b82f6;animation:pulse 2s infinite;display:inline-block"></span> در حال بررسی</span>
                             @else
-                                <span class="status-badge" style="background:#f9fafb;color:#4b5563;border-color:#e5e7eb"><svg style="width:1.25rem;height:1.25rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> بسته</span>
+                                <span class="status-badge" style="background:#f9fafb;color:#4b5563;border-color:#e5e7eb"><x-core-ui::icon name="check" class="w-5 h-5 shrink-0" /> بسته</span>
                             @endif
                             @if(isset($ticket['priority']))
                                 @php $priorityColors = ['low' => '#059669', 'normal' => '#6366f1', 'high' => '#dc2626']; @endphp
@@ -123,7 +123,7 @@
                                             <span style="font-weight:600;color:#374151">
                                                 @if($reply['author_type'] === 'staff')
                                                     <span style="display:inline-flex;align-items:center;gap:0.25rem">
-                                                        <svg style="width:1.25rem;height:1.25rem;flex-shrink:0;color:#4f46e5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                                        <x-core-ui::icon name="user" class="w-5 h-5 shrink-0" style="color:#4f46e5" />
                                                         پشتیبانی
                                                     </span>
                                                 @else
@@ -149,7 +149,7 @@
                                     <div style="display:flex;align-items:center;justify-content:space-between">
                                         <span style="font-size:0.75rem;color:#9ca3af" x-text="message.length + ' / 5000 کاراکتر'"></span>
                                         <button type="submit" class="btn-gradient" style="padding:0.5rem 1.25rem;font-size:0.8125rem">
-                                            <svg style="width:1.25rem;height:1.25rem;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                                            <x-core-ui::icon name="arrow-left" class="w-5 h-5 shrink-0" />
                                             ارسال پاسخ
                                         </button>
                                     </div>

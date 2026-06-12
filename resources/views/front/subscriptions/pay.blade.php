@@ -10,10 +10,7 @@
         {{-- ── هدر --}}
         <div class="subpay-card__header">
             <div class="subpay-card__header-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                </svg>
+                <x-core-ui::icon name="credit-card" style="width:24px;height:24px" />
             </div>
             <div>
                 <h1 class="subpay-card__title">پرداخت اشتراک</h1>
@@ -26,9 +23,7 @@
             @foreach($invoice->items as $item)
             <div class="subpay-item">
                 <div class="subpay-item__icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
+                    <x-core-ui::icon name="subscription" style="width:16px;height:16px" />
                 </div>
                 <span class="subpay-item__title">{{ $item->title }}</span>
                 <span class="subpay-item__price">{{ \App\Helpers\NumberHelper::formatFa($item->price) }} <small>تومان</small></span>
@@ -39,7 +34,7 @@
         @if($invoice->discount && $invoice->discount > 0)
         <div class="subpay-card__discount">
             <span class="subpay-card__discount-label">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="-ms-flex-negative:0;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                <x-core-ui::icon name="price-tag" style="width:14px;height:14px;flex-shrink:0" />
                 {{ $invoice->notes ?: 'تخفیف' }}
             </span>
             <span class="subpay-card__discount-amount">− {{ \App\Helpers\NumberHelper::formatFa($invoice->discount) }} تومان</span>
@@ -59,16 +54,12 @@
         @php $gatewayConfigured = \App\Services\Payment\PaymentGatewayFactory::isConfigured(); @endphp
         @if($gatewayConfigured)
         <div class="subpay-card__notice" style="background:#f0f9ff;border-bottom-color:#bae6fd">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17" style="-ms-flex-negative:0;flex-shrink:0;color:#0284c7;margin-top:1px">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-            </svg>
+            <x-core-ui::icon name="info-circle" style="width:17px;height:17px;flex-shrink:0;color:#0284c7;margin-top:1px" />
             <p style="color:#075985">برای پرداخت آنلاین به درگاه بانکی امن منتقل می‌شوید. پس از پرداخت موفق، اشتراک شما بلافاصله فعال می‌شود.</p>
         </div>
         @else
         <div class="subpay-card__notice">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17" style="-ms-flex-negative:0;flex-shrink:0;color:#d97706;margin-top:1px">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <x-core-ui::icon name="alert-triangle" style="width:17px;height:17px;flex-shrink:0;color:#d97706;margin-top:1px" />
             <p>پس از ثبت درخواست پرداخت، اشتراک شما در اسرع وقت توسط مدیریت فعال خواهد شد و از طریق پیامک اطلاع‌رسانی می‌شود.</p>
         </div>
         @endif
@@ -78,18 +69,14 @@
             @if($gatewayConfigured)
             {{-- ریدایرکت مستقیم به درگاه --}}
             <a href="{{ route('subscriptions.pay', $invoice->invoice_number) }}" class="subpay-card__btn" style="text-decoration:none">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                </svg>
+                <x-core-ui::icon name="credit-card" style="width:18px;height:18px" />
                 پرداخت آنلاین از طریق درگاه بانکی
             </a>
             @else
             <form method="POST" action="{{ route('subscriptions.confirm', $invoice->invoice_number) }}">
                 @csrf
                 <button type="submit" class="subpay-card__btn">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
+                    <x-core-ui::icon name="check" style="width:18px;height:18px" />
                     تأیید و ثبت درخواست پرداخت
                 </button>
             </form>

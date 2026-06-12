@@ -103,7 +103,7 @@
         @if($subscription->members->isNotEmpty())
         <div class="subshow__card">
             <div class="subshow__card-head" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.5rem">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <x-core-ui::icon name="users" class="w-4 h-4" style="color:#4f46e5" />
                 اعضای گروهی
                 <span style="margin-right:auto;background:#ede9fe;color:#7c3aed;font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:9999px">{{ \App\Helpers\NumberHelper::formatFa($subscription->members->count()) }} عضو</span>
             </div>
@@ -142,13 +142,13 @@
                 <div class="subshow__log-row">
                     <div class="subshow__log-icon subshow__log-icon--{{ $log->action }}">
                         @if($log->action === 'subscribed' || $log->action === 'reactivated')
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <x-core-ui::icon name="check" class="w-3.5 h-3.5" />
                         @elseif($log->action === 'cancelled')
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <x-core-ui::icon name="x-circle" class="w-3.5 h-3.5" />
                         @elseif($log->action === 'renewed')
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <x-core-ui::icon name="refresh" class="w-3.5 h-3.5" />
                         @else
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <x-core-ui::icon name="info-circle" class="w-3.5 h-3.5" />
                         @endif
                     </div>
                     <div class="subshow__log-content">
@@ -188,7 +188,7 @@
             <ul class="subshow__plan-feats">
                 @foreach($subscription->plan->getFeaturesArray() as $f)
                 <li>
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <x-core-ui::icon name="check" class="w-3 h-3" />
                     {{ $f }}
                 </li>
                 @endforeach
@@ -207,7 +207,7 @@
         @if($subscription->isActive() || $subscription->isInTrial())
         <div class="subshow__action-card" style="border-top:3px solid #6366f1">
             <p class="subshow__action-card__title" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.4rem">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="color:#6366f1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="clock" class="w-3.5 h-3.5" style="color:#6366f1" />
                 تمدید دستی
             </p>
             <form method="POST" action="{{ route('admin.subscribers.extend', $subscription) }}">
@@ -224,7 +224,7 @@
         {{-- تغییر پلن --}}
         <div class="subshow__action-card" style="border-top:3px solid #0ea5e9">
             <p class="subshow__action-card__title" style="display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:.4rem">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="color:#0ea5e9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <x-core-ui::icon name="refresh" class="w-3.5 h-3.5" style="color:#0ea5e9" />
                 تغییر پلن
             </p>
             <form method="POST" action="{{ route('admin.subscribers.change-plan', $subscription) }}"
