@@ -256,11 +256,7 @@
 
 {{-- Draggable icon button --}}
 <button id="fsw-btn" type="button" aria-label="جستجوی سریع در پنل (Ctrl+K)" title="جستجوی سریع (Ctrl+K)">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.3"
-         stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
+    <x-core-ui::icon name="search" class="w-5 h-5" style="color:#fff;pointer-events:none" />
 </button>
 
 {{-- Search modal --}}
@@ -269,21 +265,13 @@
 
         {{-- Search bar --}}
         <div id="fsw-search-bar">
-            <svg class="fsw-search-icon" xmlns="http://www.w3.org/2000/svg" width="19" height="19"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                 stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
+            <x-core-ui::icon name="search" class="fsw-search-icon w-5 h-5" />
             <input type="search" id="fsw-input"
                    placeholder="جستجو در امکانات، ماژول‌ها و بخش‌های پنل…"
                    autocomplete="off" spellcheck="false" aria-label="جستجو">
             <span class="fsw-kbd-hint">Ctrl K</span>
             <button id="fsw-close-btn" type="button" aria-label="بستن">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
-                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                     stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <x-core-ui::icon name="close" class="w-4 h-4" />
             </button>
         </div>
 
@@ -291,12 +279,7 @@
         <div id="fsw-results-wrap">
             <div id="fsw-results"></div>
             <div id="fsw-empty">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none"
-                     stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    <line x1="8" y1="11" x2="14" y2="11" stroke-linecap="round"/>
-                </svg>
+                <x-core-ui::icon name="search" class="w-10 h-10" style="margin:0 auto 0.75rem;opacity:0.35" />
                 <p>نتیجه‌ای یافت نشد</p>
             </div>
         </div>

@@ -36,7 +36,7 @@
     <aside class="learn-sidebar card" style="padding:1.25rem;">
         <div style="margin-bottom:.75rem;">
             <a href="{{ route('courses.show', $course->slug) }}" style="font-size:.78rem; color:#6b7280; text-decoration:none; display:flex; align-items:center; gap:.3rem;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                <x-core-ui::icon name="chevron-right" class="" />
                 بازگشت به دوره
             </a>
             <h3 style="font-weight:700; font-size:.95rem; margin-top:.5rem; margin-bottom:.25rem;">{{ $course->title }}</h3>
@@ -53,7 +53,7 @@
            id="nav-{{ $cls->id }}">
             <div class="check-icon" id="check-{{ $cls->id }}">
                 @if(in_array($cls->id, $completedClassIds))
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <x-core-ui::icon name="check" class="" />
                 @else
                 <span>{{ $cls->order }}</span>
                 @endif
@@ -77,12 +77,12 @@
                 <button id="complete-btn"
                     onclick="markComplete({{ $currentClass->id }})"
                     style="display:flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; background:#22c55e; color:#fff; border:none; border-radius:.65rem; font-weight:700; font-size:.875rem; cursor:pointer;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <x-core-ui::icon name="check" class="" />
                     تکمیل این جلسه
                 </button>
                 @else
                 <div id="complete-btn" style="display:flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; background:#d1fae5; color:#065f46; border-radius:.65rem; font-weight:700; font-size:.875rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <x-core-ui::icon name="check" class="" />
                     تکمیل شد
                 </div>
                 @endif
@@ -99,7 +99,7 @@
         <div style="display:flex; justify-content:space-between; gap:1rem;">
             @if($prevClass)
             <a href="{{ route('courses.learn', [$course->slug, $prevClass->order]) }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; border:1px solid #e5e7eb; border-radius:.65rem; text-decoration:none; color:#374151; font-weight:600; font-size:.875rem; background:#fff;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                <x-core-ui::icon name="chevron-right" class="" />
                 جلسه قبل
             </a>
             @else
@@ -109,11 +109,11 @@
             @if($nextClass)
             <a href="{{ route('courses.learn', [$course->slug, $nextClass->order]) }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; background:var(--platform-primary,#4f46e5); color:#fff; border-radius:.65rem; text-decoration:none; font-weight:600; font-size:.875rem;">
                 جلسه بعد
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                <x-core-ui::icon name="chevron-left" class="" />
             </a>
             @else
             <a href="{{ route('courses.show', $course->slug) }}" style="display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; background:#7c3aed; color:#fff; border-radius:.65rem; text-decoration:none; font-weight:600; font-size:.875rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <x-core-ui::icon name="check-circle" class="" />
                 پایان دوره
             </a>
             @endif

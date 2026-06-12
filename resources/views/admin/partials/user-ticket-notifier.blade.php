@@ -7,9 +7,7 @@ $_utLastId = \SaaSPlatform\Modules\Tickets\Models\Ticket::withoutTenantIsolation
      style="display:none;position:fixed;top:0;right:0;left:0;z-index:9100;padding:0.7rem 1.25rem;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;box-shadow:0 4px 24px rgba(79,70,229,0.45);animation:utSlide .35s ease">
     <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:0.875rem;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
-            <svg style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
+            <x-core-ui::icon name="bell-ring" style="width:1.125rem;height:1.125rem" />
             <span id="ut-notifier-text" style="font-size:0.85rem;font-weight:700"></span>
         </div>
         <div id="ut-notifier-links" style="display:flex;gap:0.4rem;flex-wrap:wrap;flex:1"></div>

@@ -31,7 +31,7 @@
     <div class="card" style="padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
         @if($provider)
             <div style="width:2.5rem;height:2.5rem;border-radius:.625rem;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0"/></svg>
+                <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600" />
             </div>
             <div>
                 <div style="font-size:.88rem;font-weight:700;color:#166534">سرویس فعال: {{ strtoupper($provider) }}</div>
@@ -42,7 +42,7 @@
             </div>
         @else
             <div style="width:2.5rem;height:2.5rem;border-radius:.625rem;background:#fef9c3;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <x-core-ui::icon name="alert-triangle" class="w-5 h-5 text-amber-600" />
             </div>
             <div style="font-size:.88rem;font-weight:700;color:#92400e">سرویس پیامک تنظیم نشده</div>
         @endif
@@ -94,7 +94,7 @@
                            placeholder="مثال: 10008566" class="form-control" dir="ltr">
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <x-core-ui::icon name="check" class="w-4 h-4" />
                     ذخیره تنظیمات
                 </button>
             </form>

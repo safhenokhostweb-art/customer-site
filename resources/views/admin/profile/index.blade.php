@@ -41,7 +41,7 @@
     <div x-show="showSuccess" x-transition
          class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl text-sm font-medium"
          style="display:none">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0" />
         پروفایل با موفقیت به‌روزرسانی شد.
     </div>
 
@@ -77,7 +77,7 @@
                             @endif
                         </template>
                         <label class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+                            <x-core-ui::icon name="image" class="w-6 h-6 text-white" />
                             <input type="file" name="avatar" accept="image/*" class="hidden" @change="previewAvatar($event)">
                         </label>
                     </div>
@@ -85,7 +85,7 @@
                         <p class="font-semibold text-gray-800 text-sm">{{ $user->name ?? 'ادمین' }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $user->mobile }}</p>
                         <span class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-semibold">
-                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <x-core-ui::icon name="crown" class="w-2.5 h-2.5" />
                             مدیر سیستم
                         </span>
                     </div>
@@ -99,7 +99,7 @@
                 {{-- Basic info --}}
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                     <h2 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                        <x-core-ui::icon name="user" class="w-4 h-4 text-indigo-500" />
                         اطلاعات پایه
                     </h2>
                     <div class="space-y-3">
@@ -121,7 +121,7 @@
                 {{-- Password --}}
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                     <h2 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                        <x-core-ui::icon name="lock" class="w-4 h-4 text-indigo-500" />
                         تغییر رمز عبور
                     </h2>
                     <div class="space-y-3">
@@ -144,8 +144,8 @@
                 <div class="flex justify-end">
                     <button type="submit" :disabled="isSaving"
                             class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-60">
-                        <svg x-show="isSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                        <svg x-show="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 3H7a2 2 0 00-2 2v16l7-3 7 3V5a2 2 0 00-2-2z"/></svg>
+                        <x-core-ui::icon x-show="isSaving" name="loader" class="w-4 h-4 animate-spin" />
+                        <x-core-ui::icon x-show="!isSaving" name="save" class="w-4 h-4" />
                         <span x-text="isSaving ? 'در حال ذخیره...' : 'ذخیره تغییرات'"></span>
                     </button>
                 </div>

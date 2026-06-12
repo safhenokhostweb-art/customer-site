@@ -51,7 +51,7 @@
 
     @if($platformError && $channel !== 'user')
     <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 mb-5">
-        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
+        <x-core-ui::icon name="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0" />
         <span class="text-xs text-amber-700">{{ $platformError }}</span>
     </div>
     @endif
@@ -106,13 +106,13 @@
         <button @click="ticketType = ''"
                 :class="ticketType === '' ? 'qtab-active-all' : ''"
                 class="type-qtab">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5"/></svg>
+            <x-core-ui::icon name="list" class="w-3.5 h-3.5" />
             همه
         </button>
         <button @click="ticketType = 'support'"
                 :class="ticketType === 'support' ? 'qtab-active-all' : ''"
                 class="type-qtab">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <x-core-ui::icon name="message-circle" class="w-3.5 h-3.5" />
             پشتیبانی
         </button>
         <button @click="ticketType = 'feature_request'"
@@ -159,7 +159,7 @@
             <div class="tkt-stat__accent bg-gradient-to-b from-blue-400 to-indigo-500"></div>
             <div class="flex items-start gap-3">
                 <div class="tkt-stat__icon bg-blue-50 text-blue-600">
-                    <svg class="w-6 h-6 animate-spin" style="animation-duration:3s" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    <x-core-ui::icon name="loader" class="w-6 h-6 animate-spin" style="animation-duration:3s" />
                 </div>
                 <div>
                     <div class="tkt-stat__val text-blue-700">{{ \App\Helpers\NumberHelper::formatFa($stats['in_progress']) }}</div>
@@ -171,7 +171,7 @@
             <div class="tkt-stat__accent bg-gradient-to-b from-green-400 to-teal-500"></div>
             <div class="flex items-start gap-3">
                 <div class="tkt-stat__icon bg-green-50 text-green-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <x-core-ui::icon name="check-circle" class="w-6 h-6" />
                 </div>
                 <div>
                     <div class="tkt-stat__val text-green-700">{{ \App\Helpers\NumberHelper::formatFa($stats['closed']) }}</div>
@@ -185,14 +185,14 @@
     <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.inbox.create') }}" class="btn-gradient">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4 flex-shrink-0" />
                 + تیکت جدید
             </a>
         </div>
         <div class="flex items-center gap-2">
             <a href="{{ route('tickets.site.settings') }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 transition-all shadow-sm">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <x-core-ui::icon name="settings" class="w-4 h-4 flex-shrink-0" />
                 تنظیمات
             </a>
         </div>
@@ -231,13 +231,13 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
             {{-- جستجوی موضوع/شماره --}}
             <div class="relative flex-1 min-w-0 w-full sm:w-auto" style="min-width:180px">
-                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <x-core-ui::icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input type="text" x-model="search" placeholder="موضوع یا شماره تیکت..."
                        class="w-full pr-9 pl-4 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
             </div>
             {{-- فیلتر مخاطب (نام یا موبایل) --}}
             <div class="relative w-full sm:w-auto" style="min-width:180px">
-                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-teal-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+                <x-core-ui::icon name="user" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-teal-400 pointer-events-none" />
                 <input type="text" x-model="customerFilter" placeholder="نام یا موبایل مخاطب..."
                        :class="customerFilter ? 'border-teal-400 bg-teal-50/60' : 'border-gray-200 bg-white/80'"
                        class="w-full pr-9 pl-4 py-2.5 rounded-xl border text-sm focus:ring-2 focus:ring-teal-200 focus:border-teal-400 transition-all">
@@ -270,7 +270,7 @@
             {{-- پاک کردن --}}
             <button @click="search=''; status=''; priority=''; customerFilter=''; ticketType=''"
                     class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white/80 text-sm text-gray-500 hover:bg-gray-50 transition-all justify-center w-full sm:w-auto">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <x-core-ui::icon name="close" class="w-4 h-4" />
                 پاک کردن
             </button>
         </div>
@@ -385,7 +385,7 @@
                     </span>
                     @if($needsReply)
                     <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-teal-100 text-teal-700 border border-teal-200 awaits-reply-badge shrink-0">
-                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <x-core-ui::icon name="arrow-up" class="w-2.5 h-2.5" />
                         پاسخ دهید
                     </span>
                     @endif
@@ -414,7 +414,7 @@
             @elseif($ticket->status === 'in_progress')
                 <span class="tkt-badge bg-blue-50 text-blue-700 border-blue-200"><span class="pdot bg-blue-500"></span>در حال بررسی</span>
             @else
-                <span class="tkt-badge bg-green-50 text-green-700 border-green-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>بسته</span>
+                <span class="tkt-badge bg-green-50 text-green-700 border-green-200"><x-core-ui::icon name="check" class="w-3 h-3" />بسته</span>
             @endif
         </td>
 
@@ -435,7 +435,7 @@
         <td class="p-3 pl-5">
             <a href="{{ $showUrl }}"
                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all hover:shadow-sm whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <x-core-ui::icon name="message-circle" class="w-3.5 h-3.5" />
                 چت
             </a>
         </td>
@@ -447,7 +447,7 @@
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-3xl shadow-sm">📭</div>
                 <p class="text-gray-600 font-semibold">هیچ تیکتی یافت نشد</p>
                 <a href="{{ route('admin.inbox.create') }}" class="btn-gradient !text-sm !py-2 !px-5 mt-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    <x-core-ui::icon name="plus" class="w-4 h-4" />
                     ثبت تیکت جدید
                 </a>
             </div>

@@ -374,10 +374,10 @@
     <div x-show="showToast" x-transition
          class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium"
          style="display:none">
-        <svg class="w-4 h-4 shrink-0 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <x-core-ui::icon name="bell-ring" class="w-4 h-4 shrink-0 animate-bounce" />
         <span x-text="toastText"></span>
         <button @click="showToast=false" class="mr-2 opacity-70 hover:opacity-100">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <x-core-ui::icon name="close" class="w-4 h-4" />
         </button>
     </div>
 
@@ -392,12 +392,12 @@
                 <div class="flex items-center justify-between gap-2 mb-2.5">
                     <span class="text-xs font-bold text-slate-700">گفتگوها</span>
                     <a href="{{ route('account.tickets.create') }}" class="msg-new-btn">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        <x-core-ui::icon name="plus" class="w-3 h-3" />
                         تیکت جدید
                     </a>
                 </div>
                 <div class="relative">
-                    <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <x-core-ui::icon name="search" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                     <input type="text" x-model="listSearch" placeholder="جستجو..."
                            class="msg-list-search" style="padding-right:2rem">
                 </div>
@@ -451,7 +451,7 @@
                         @elseif($ticket->status === 'in_progress')
                             <span class="tkt-badge bg-blue-50 text-blue-700 border-blue-200 !text-[10px] !py-0"><span class="pdot bg-blue-500"></span>در حال بررسی</span>
                         @else
-                            <span class="tkt-badge bg-green-50 text-green-700 border-green-200 !text-[10px] !py-0"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>بسته</span>
+                            <span class="tkt-badge bg-green-50 text-green-700 border-green-200 !text-[10px] !py-0"><x-core-ui::icon name="check" class="w-2.5 h-2.5" />بسته</span>
                         @endif
                         @if($ticket->priority === 'high')
                             <span class="tkt-badge bg-red-50 text-red-600 border-red-200 !text-[10px] !py-0">فوری</span>
@@ -464,7 +464,7 @@
                 </div>
                 <a href="{{ route('account.tickets.index') }}"
                    class="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all ml-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                    <x-core-ui::icon name="list" class="w-3.5 h-3.5" />
                     همه
                 </a>
             </div>
@@ -541,7 +541,7 @@
                                 @endif
                                 @foreach($rDocs as $rDoc)
                                 <a href="{{ $rDoc['url'] }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] bg-white/60 hover:bg-white border border-gray-200 mt-1 mr-1">
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372"/></svg>
+                                    <x-core-ui::icon name="paperclip" class="w-3 h-3 shrink-0" />
                                     {{ $rDoc['name']??'فایل' }}
                                 </a>
                                 @endforeach
@@ -560,7 +560,7 @@
                      style="position:sticky;bottom:.75rem;display:flex;justify-content:center;pointer-events:none">
                     <button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-indigo-600 text-white text-[11px] font-semibold shadow-lg hover:bg-indigo-700 transition-all cursor-pointer"
                             style="pointer-events:all">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        <x-core-ui::icon name="chevron-down" class="w-3 h-3" />
                         پیام‌های جدید
                     </button>
                 </div>
@@ -585,7 +585,7 @@
                             <div class="flex items-center gap-3 mt-1.5 mr-1">
                                 <small class="text-[10px] text-gray-400">Enter = ارسال &nbsp;|&nbsp; Shift+Enter = خط جدید</small>
                                 <label class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-indigo-600 cursor-pointer transition-colors mr-auto">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32"/></svg>
+                                    <x-core-ui::icon name="paperclip" class="w-4 h-4" />
                                     پیوست
                                     <input type="file" name="attachments[]" multiple x-ref="fileInputUser"
                                            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.zip,.txt"
@@ -607,14 +607,14 @@
                                 <div x-show="docFiles.length > 0" class="flex flex-wrap gap-1">
                                     <template x-for="f in docFiles" :key="f._pos">
                                         <div class="flex items-center gap-1 bg-white border border-emerald-200 rounded-lg px-2 py-1" style="max-width:160px">
-                                            <svg style="width:13px;height:13px;color:#94a3b8;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364L18.375 12.739"/></svg>
+                                            <x-core-ui::icon name="paperclip" class="w-3 h-3 shrink-0" style="color:#94a3b8" />
                                             <div style="min-width:0;flex:1"><div x-text="f.name" style="font-size:.65rem;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div><div x-text="f.size" style="font-size:.6rem;color:#94a3b8"></div></div>
                                             <button type="button" @click.stop="removeFile(f._pos)" style="width:14px;height:14px;border-radius:9999px;background:#fee2e2;color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;border:none;flex-shrink:0">×</button>
                                         </div>
                                     </template>
                                 </div>
                                 <div class="flex items-center gap-1" style="font-size:.65rem;color:#059669;font-weight:600">
-                                    <svg style="width:11px;height:11px" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <x-core-ui::icon name="check-circle" class="w-2.5 h-2.5" />
                                     <span x-text="selectedFiles.length + ' فایل آماده ارسال'"></span>
                                 </div>
                             </div>
@@ -624,10 +624,10 @@
                                 class="flex items-center justify-center rounded-full w-11 h-11 transition-all shrink-0 mb-5"
                                 :class="(isSending || !message.trim()) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
                             <template x-if="!isSending">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                <x-core-ui::icon name="arrow-right" class="w-5 h-5" />
                             </template>
                             <template x-if="isSending">
-                                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <x-core-ui::icon name="loader" class="w-5 h-5 animate-spin" />
                             </template>
                         </button>
                     </div>
@@ -636,7 +636,7 @@
             @else
             <div class="msg-chat-footer text-center">
                 <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <x-core-ui::icon name="check-circle" class="w-5 h-5 text-emerald-600" />
                 </div>
                 <p class="text-sm font-medium text-slate-600 mb-1">این تیکت بسته شده است</p>
                 <a href="{{ route('account.tickets.create') }}" class="btn btn-primary btn-sm mt-2">ثبت تیکت جدید</a>

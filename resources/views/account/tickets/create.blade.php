@@ -7,7 +7,7 @@
 
     <div class="mb-4">
         <a href="{{ route('account.tickets.index') }}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
-            <svg class="w-4 h-4 -scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <x-core-ui::icon name="chevron-left" class="w-4 h-4" />
             بازگشت به تیکت‌ها
         </a>
     </div>
@@ -19,7 +19,7 @@
         <div style="background:linear-gradient(135deg,#4338ca,#6366f1);padding:1.25rem 1.5rem;">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.2);">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <x-core-ui::icon name="edit" class="w-6 h-6 text-white" />
                 </div>
                 <div>
                     <div class="text-white font-bold text-base">تیکت پشتیبانی جدید</div>
@@ -80,7 +80,7 @@
 
                 <div class="flex items-center gap-3 pt-2 border-t border-slate-100">
                     <button type="submit" class="btn btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
                         ارسال تیکت
                     </button>
                     <a href="{{ route('account.tickets.index') }}" class="btn btn-secondary">انصراف</a>
@@ -91,7 +91,7 @@
 
     {{-- Tip --}}
     <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-sm text-indigo-700 flex items-start gap-2.5">
-        <svg class="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="info-circle" class="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
         <span>برای پاسخ سریع‌تر، شماره سفارش یا خطاهای دریافتی را در توضیحات ذکر کنید.</span>
     </div>
 </div>

@@ -54,7 +54,7 @@
     <div class="account-card p-4">
         <div class="flex items-start gap-3">
             <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 animate-spin" style="animation-duration:3s" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                <x-core-ui::icon name="loader" class="w-5 h-5 animate-spin" style="animation-duration:3s" />
             </div>
             <div>
                 <div class="text-2xl font-bold text-blue-700">{{ \App\Helpers\NumberHelper::formatFa($stats['in_progress']) }}</div>
@@ -66,7 +66,7 @@
     <div class="account-card p-4">
         <div class="flex items-start gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="check-circle" class="w-5 h-5" />
             </div>
             <div>
                 <div class="text-2xl font-bold text-emerald-700">{{ \App\Helpers\NumberHelper::formatFa($stats['closed']) }}</div>
@@ -94,9 +94,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
 
             {{-- Search --}}
             <div class="relative flex-1" style="min-width:200px">
-                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
-                </svg>
+                <x-core-ui::icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input type="text" x-model="search"
                        placeholder="جستجوی موضوع یا شماره تیکت..."
                        class="w-full pr-9 pl-3 py-2 rounded-xl border border-gray-200 bg-gray-50/60 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all">
@@ -111,9 +109,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                     <option value="in_progress">در حال بررسی</option>
                     <option value="closed">بسته</option>
                 </select>
-                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <x-core-ui::icon name="chevron-down" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
 
             {{-- Priority --}}
@@ -125,9 +121,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                     <option value="normal">عادی</option>
                     <option value="low">کم</option>
                 </select>
-                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <x-core-ui::icon name="chevron-down" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
 
             {{-- Clear Button --}}
@@ -140,9 +134,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                     x-transition:leave-end="opacity-0 scale-95"
                     @click="search=''; status=''; priority=''"
                     class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+                <x-core-ui::icon name="close" class="w-3.5 h-3.5" />
                 پاک کردن
             </button>
 
@@ -154,9 +146,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
         @if($tickets->isEmpty())
             <div class="text-center py-16">
                 <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
-                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
+                    <x-core-ui::icon name="message-circle" class="w-10 h-10 text-slate-300" />
                 </div>
                 <h3 class="font-semibold text-slate-600 mb-1">هنوز تیکتی ثبت نکرده‌اید</h3>
                 <p class="text-sm text-slate-400 mb-5">سوال یا مشکلی دارید؟ یک تیکت پشتیبانی ثبت کنید.</p>
@@ -237,7 +227,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                             <span class="text-sm font-medium text-gray-800 leading-tight" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">{{ $ticket->subject }}</span>
                             @if($needsReply)
                             <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 needs-reply-badge whitespace-nowrap shrink-0">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                <x-core-ui::icon name="arrow-right" class="w-2.5 h-2.5" />
                                 پاسخ کارشناس — پاسخ دهید
                             </span>
                             @endif
@@ -260,7 +250,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                         </span>
                     @else
                         <span class="tkt-badge bg-green-50 text-green-700 border-green-200">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>بسته
+                            <x-core-ui::icon name="check" class="w-3 h-3" />بسته
                         </span>
                     @endif
                 </td>
@@ -299,10 +289,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
                 <td class="px-4 py-3.5 text-left">
                     <a href="{{ route('account.tickets.show', $ticket->id) }}"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all whitespace-nowrap">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
+                        <x-core-ui::icon name="eye" class="w-3.5 h-3.5" />
                         مشاهده
                     </a>
                 </td>
@@ -323,7 +310,7 @@ x-effect="$nextTick(() => { visibleCount = [...$el.querySelectorAll('tr.ticket-r
         {{-- Create + Pagination --}}
         <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
             <a href="{{ route('account.tickets.create') }}" class="btn-gradient">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <x-core-ui::icon name="plus" class="w-4 h-4" />
                 تیکت جدید
             </a>
             @if($tickets->hasPages())

@@ -131,23 +131,24 @@
         @if(count($badges))
         <div class="plan-card__benefits-section">
             <div class="plan-card__section-title">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                <x-core-ui::icon name="spark" style="width:14px;height:14px" />
                 مزایای ویژه
             </div>
             <div class="plan-card__benefits-list">
                 @foreach($badges as $badge)
                 @php
-                $bIcons = [
-                    'tag'     => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>',
-                    'truck'   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0h4l3-3V10l-3-3h-4v9z"/>',
-                    'headset' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18v-6a9 9 0 0118 0v6"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>',
-                    'star'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>',
-                    'gift'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>',
+                $bIconNames = [
+                    'tag'     => 'price-tag',
+                    'truck'   => 'package',
+                    'headset' => 'phone',
+                    'star'    => 'star',
+                    'gift'    => 'coupon',
                 ];
+                $bIconName = $bIconNames[$badge['icon']] ?? 'check';
                 @endphp
                 <div class="plan-card__benefit-item">
                     <span class="plan-card__benefit-icon" style="color:{{ $color }};background:{{ $color }}18">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">{!! $bIcons[$badge['icon']] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' !!}</svg>
+                        <x-core-ui::icon :name="$bIconName" style="width:14px;height:14px" />
                     </span>
                     <span>{{ $badge['label'] }}</span>
                 </div>
@@ -160,14 +161,14 @@
         @if($plan->getFeaturesArray())
         <div class="plan-card__features-section">
             <div class="plan-card__section-title">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <x-core-ui::icon name="check-circle" style="width:14px;height:14px" />
                 امکانات شامل
             </div>
             <ul class="plan-card__feat-list">
                 @foreach($plan->getFeaturesArray() as $feat)
                 <li>
                     <span class="plan-card__feat-check" style="color:{{ $color }}">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <x-core-ui::icon name="check" style="width:14px;height:14px" />
                     </span>
                     {{ $feat }}
                 </li>
@@ -180,7 +181,7 @@
         @if($products->isNotEmpty())
         <div class="plan-card__products-section">
             <div class="plan-card__section-title">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <x-core-ui::icon name="shopping-bag" style="width:14px;height:14px" />
                 محصولات مشمول اشتراک
             </div>
             <div class="plan-card__products-list">
@@ -210,12 +211,12 @@
         <div class="plan-card__footer">
             @if($isActive)
             <div class="plan-card__current">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="17" height="17"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="check-circle" style="width:17px;height:17px" />
                 پلن فعلی شما
             </div>
             @elseif($blocked)
             <div class="plan-card__blocked">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                <x-core-ui::icon name="x-circle" style="width:15px;height:15px" />
                 @if($blocked->isPending()) در انتظار تأیید @else اشتراک فعال دارید @endif
             </div>
             @else
@@ -225,20 +226,18 @@
                 @if(! $plan->isFree())
                 <div class="plan-card__coupon">
                     <div class="plan-card__coupon-wrap">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="plan-card__coupon-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                        <x-core-ui::icon name="coupon" class="plan-card__coupon-icon" style="width:14px;height:14px" />
                         <input type="text" name="coupon_code" placeholder="کد تخفیف (اختیاری)"
                                class="plan-card__coupon-input" dir="ltr" maxlength="50" autocomplete="off">
                     </div>
                 </div>
                 @endif
                 <button type="submit" class="plan-card__buy-btn" style="background:linear-gradient(135deg,{{ $color }},{{ $color }}cc)">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        @if($plan->isFree())
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        @endif
-                    </svg>
+                    @if($plan->isFree())
+                    <x-core-ui::icon name="zap" style="width:16px;height:16px" />
+                    @else
+                    <x-core-ui::icon name="cart" style="width:16px;height:16px" />
+                    @endif
                     {{ $plan->isFree() ? 'شروع رایگان' : 'خرید اشتراک' }}
                 </button>
             </form>
@@ -252,7 +251,7 @@
 
 <div class="plans-pg__back">
     <a href="{{ route('account.subscriptions.index') }}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:middle;margin-left:.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        <x-core-ui::icon name="arrow-right" style="width:13px;height:13px;vertical-align:middle;margin-left:.25rem" />
         تاریخچه اشتراک‌های من
     </a>
 </div>

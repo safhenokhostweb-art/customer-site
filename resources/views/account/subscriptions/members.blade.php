@@ -8,9 +8,7 @@
 {{-- هدر اشتراک --}}
 <div class="grp-pg__hero">
     <div class="grp-pg__hero-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
+        <x-core-ui::icon name="users" style="width:24px;height:24px" />
     </div>
     <div class="grp-pg__hero-info">
         <h2 class="grp-pg__hero-title">{{ $subscription->plan->name }}</h2>
@@ -28,13 +26,13 @@
 {{-- پیام‌های flash --}}
 @if(session('success'))
 <div class="grp-pg__alert grp-pg__alert--ok">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    <x-core-ui::icon name="check" style="width:15px;height:15px" />
     {{ session('success') }}
 </div>
 @endif
 @if(session('error'))
 <div class="grp-pg__alert grp-pg__alert--err">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <x-core-ui::icon name="x-circle" style="width:15px;height:15px" />
     {{ session('error') }}
 </div>
 @endif
@@ -45,7 +43,7 @@
     @if($availableSeats > 0)
     <div class="grp-card">
         <div class="grp-card__head">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            <x-core-ui::icon name="user-plus" style="width:16px;height:16px" />
             دعوت عضو جدید
         </div>
         <form method="POST" action="{{ route('account.subscriptions.members.invite', $subscription) }}" class="grp-invite-form">
@@ -62,7 +60,7 @@
                            class="grp-invite-form__input {{ $errors->has('mobile') ? 'grp-invite-form__input--err' : '' }}"
                            autocomplete="off">
                     <button type="submit" class="grp-invite-form__btn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <x-core-ui::icon name="sms" style="width:15px;height:15px" />
                         ارسال دعوت
                     </button>
                 </div>
@@ -71,7 +69,7 @@
                 @enderror
             </div>
             <p class="grp-invite-form__hint">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <x-core-ui::icon name="info-circle" style="width:12px;height:12px" />
                 کاربر باید قبلاً در سیستم ثبت‌نام کرده باشد. پس از ارسال، پیامک اطلاع‌رسانی می‌شود.
             </p>
         </form>
@@ -79,7 +77,7 @@
     @else
     <div class="grp-card grp-card--warn">
         <div class="grp-card__head">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <x-core-ui::icon name="alert-triangle" style="width:16px;height:16px" />
             ظرفیت پر است
         </div>
         <p class="grp-card__body-text">تمام صندلی‌های اشتراک گروهی اشغال شده‌اند. برای دعوت عضو جدید باید یکی از اعضای فعلی را حذف کنید.</p>
@@ -89,13 +87,13 @@
     {{-- لیست اعضا --}}
     <div class="grp-card">
         <div class="grp-card__head">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <x-core-ui::icon name="users" style="width:16px;height:16px" />
             اعضای گروه ({{ \App\Helpers\NumberHelper::formatFa($members->count()) }} نفر)
         </div>
 
         @if($members->isEmpty())
         <div class="grp-empty">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="36" height="36"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <x-core-ui::icon name="users" style="width:36px;height:36px" />
             <p>هنوز عضوی دعوت نشده است.</p>
         </div>
         @else
@@ -111,9 +109,9 @@
                     <div class="grp-member__meta">
                         <span class="grp-member__status grp-member__status--{{ $m->status }}">
                             @if($m->status === 'active')
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <x-core-ui::icon name="check" style="width:11px;height:11px" />
                             @elseif($m->status === 'pending')
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <x-core-ui::icon name="clock" style="width:11px;height:11px" />
                             @endif
                             {{ $m->getStatusLabel() }}
                         </span>
@@ -129,7 +127,7 @@
                       onsubmit="return confirm('عضو «{{ $m->user->name ?? $m->user->mobile }}» حذف شود؟')">
                     @csrf
                     <button type="submit" class="grp-member__remove-btn" title="حذف عضو">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/></svg>
+                        <x-core-ui::icon name="trash" style="width:15px;height:15px" />
                         حذف
                     </button>
                 </form>
@@ -144,15 +142,15 @@
 {{-- راهنما --}}
 <div class="grp-guide">
     <div class="grp-guide__item">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        <x-core-ui::icon name="sms" style="width:14px;height:14px" />
         دعوت‌نامه از طریق پیامک به شماره موبایل وارد شده ارسال می‌شود.
     </div>
     <div class="grp-guide__item">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <x-core-ui::icon name="check" style="width:14px;height:14px" />
         اعضای فعال از تمام مزایای این پلن بهره‌مند می‌شوند.
     </div>
     <div class="grp-guide__item">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <x-core-ui::icon name="info-circle" style="width:14px;height:14px" />
         با انقضا یا لغو اشتراک، عضویت تمام اعضا نیز پایان می‌یابد.
     </div>
 </div>

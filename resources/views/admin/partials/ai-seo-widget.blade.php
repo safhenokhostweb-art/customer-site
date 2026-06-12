@@ -31,13 +31,7 @@
 
   {{-- هدر --}}
   <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.85rem;">
-    <svg style="width:1.35rem;height:1.35rem;flex-shrink:0"
-         fill="none" viewBox="0 0 24 24" stroke="#6366f1" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813
-           a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813
-           a4.5 4.5 0 00-3.09 3.09z"/>
-    </svg>
+    <x-core-ui::icon name="spark" style="width:1.35rem;height:1.35rem;flex-shrink:0;color:#6366f1" />
     <span style="font-weight:700;color:#3730a3;font-size:0.95rem;">
       دستیار هوش مصنوعی — تولید محتوای SEO-محور
     </span>

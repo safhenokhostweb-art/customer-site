@@ -61,6 +61,7 @@ use App\Http\Controllers\Admin\CaptchaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
+use App\Http\Controllers\Admin\ThemeMarketplaceController as AdminThemeMarketplaceController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Account\DashboardController as AccountDashboardController;
 use App\Http\Controllers\Account\TicketController as AccountTicketController;
@@ -321,6 +322,14 @@ Route::middleware('install.check')->group(function () {
             Route::put('theme-design',               [ThemeDesignController::class, 'update'])->name('theme-design.update');
             Route::post('theme-design/preset',       [ThemeDesignController::class, 'activatePreset'])->name('theme-design.preset');
             Route::post('theme-design/reset-preset', [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
+
+            // Theme Marketplace (TB-2)
+            Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {
+                Route::get('/',                        [AdminThemeMarketplaceController::class, 'index'])->name('index');
+                Route::get('/my-licenses',             [AdminThemeMarketplaceController::class, 'myLicenses'])->name('my-licenses');
+                Route::post('/{themeId}/purchase',     [AdminThemeMarketplaceController::class, 'purchase'])->name('purchase');
+                Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
+            });
         });
         Route::get('builder-health', [\App\Http\Controllers\Admin\BuilderHealthController::class, 'index'])->name('builder-health.index');
         Route::middleware(['module:currency_reform', 'permission:currency_reform'])->group(function () {
