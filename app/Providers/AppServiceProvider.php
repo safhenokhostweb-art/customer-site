@@ -15,6 +15,7 @@ use SaaSPlatform\CoreUtils\Contracts\Services\DateFormatterInterface;
 use SaaSPlatform\CoreUtils\Contracts\Services\ModuleLicenseServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -93,6 +94,12 @@ $this->app->bind(
 
     public function boot(): void
     {
+        // Register local core-ui component path as a fallback for production
+        // where saas-platform/core-utils package may not be installed.
+        // On dev, the package's CoreUtilsServiceProvider registers first and its
+        // path takes precedence. On production this is the only registration.
+        Blade::anonymousComponentPath(resource_path('views/components/core-ui'), 'core-ui');
+
         $this->configureShopWriteRateLimiters();
         $this->configureFormsWriteRateLimiters();
 
