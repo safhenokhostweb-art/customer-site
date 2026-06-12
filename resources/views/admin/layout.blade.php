@@ -144,7 +144,7 @@
                             <p class="text-xs font-semibold text-gray-700 leading-none">{{ $adminUser->name ?? 'ادمین' }}</p>
                             <p class="text-[10px] text-gray-400 mt-0.5 leading-none">{{ $adminUser->mobile }}</p>
                         </div>
-                        <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open && 'rotate-180'" />
+                        <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform" x-bind:class="open && 'rotate-180'" />
                     </button>
 
                     {{-- Dropdown --}}

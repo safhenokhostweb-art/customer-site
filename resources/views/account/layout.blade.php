@@ -278,7 +278,7 @@
                                 <p class="text-xs font-semibold text-slate-700 leading-none">{{ $__acctName }}</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5 leading-none">{{ $__acctUser->mobile ?? '' }}</p>
                             </div>
-                            <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" ::class="open && 'rotate-180'" />
+                            <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" x-bind:class="open && 'rotate-180'" />
                         </button>
 
                         <div x-show="open"
