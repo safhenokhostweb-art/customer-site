@@ -328,6 +328,12 @@ Route::middleware('install.check')->group(function () {
             Route::post('theme-design/canvas/deactivate',  [ThemeDesignController::class, 'canvasDeactivate'])->name('theme-design.canvas-deactivate');
             Route::get('theme-design/canvas/export',        [ThemeDesignController::class, 'canvasExport'])->name('theme-design.canvas-export');
             Route::post('theme-design/canvas/import',       [ThemeDesignController::class, 'canvasImport'])->name('theme-design.canvas-import');
+            // Canvas Editor (drag-and-drop)
+            Route::get('theme-design/canvas/edit',                        [ThemeDesignController::class, 'canvasEdit'])->name('theme-design.canvas-edit');
+            Route::put('theme-design/canvas/save-blocks',                 [ThemeDesignController::class, 'canvasSaveBlocks'])->name('theme-design.canvas-save-blocks');
+            Route::post('theme-design/canvas/pages',                      [ThemeDesignController::class, 'canvasAddPage'])->name('theme-design.canvas-add-page');
+            Route::delete('theme-design/canvas/pages/{key}',              [ThemeDesignController::class, 'canvasDeletePage'])->name('theme-design.canvas-delete-page');
+            Route::put('theme-design/canvas/global-styles',               [ThemeDesignController::class, 'canvasSaveGlobalStyles'])->name('theme-design.canvas-global-styles');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {

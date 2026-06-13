@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\ThemeSetting;
+use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeEngine\TenantThemeResolver;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -135,6 +137,201 @@ class ThemeDesignController extends Controller
             ->with('success', 'قالب «' . $themeName . '» با موفقیت وارد و فعال شد.');
     }
 
+    // ── Canvas Editor (drag-and-drop) ────────────────────────────────────────
+
+    public function canvasEdit()
+    {
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return redirect()->route('admin.theme-design.canvas')
+                ->with('error', 'ابتدا یک قالب Canvas نصب کنید.');
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return redirect()->route('admin.theme-design.canvas')
+                ->with('error', 'داده قالب Canvas معتبر نیست.');
+        }
+
+        // Normalize pages to keyed array
+        $raw_pages = $themeData['pages'] ?? [];
+        $pages = [];
+        if (!empty($raw_pages)) {
+            foreach ($raw_pages as $k => $page) {
+                $slug = $page['slug'] ?? (is_string($k) ? $k : 'home');
+                if (empty($slug)) $slug = 'home';
+                $pages[$slug] = [
+                    'title'   => $page['title'] ?? ($slug === 'home' ? 'صفحه اصلی' : ucfirst($slug)),
+                    'slug'    => $slug,
+                    'is_home' => !empty($page['is_home']) || $slug === '' || $slug === 'home',
+                    'blocks'  => $page['blocks'] ?? [],
+                ];
+            }
+        }
+        if (empty($pages)) {
+            $pages['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
+        }
+
+        $byCategory = BlockRegistry::byCategory();
+        $catLabels  = BlockRegistry::categoryLabels();
+        $catIcons   = BlockRegistry::categoryIcons();
+        $registry   = BlockRegistry::all();
+
+        $gs = $themeData['global_styles'] ?? [];
+        $globalStyles = [
+            'primary_color'    => $gs['primary_color']    ?? $gs['colors']['primary']    ?? '#4f46e5',
+            'secondary_color'  => $gs['secondary_color']  ?? $gs['colors']['secondary']  ?? '#7c3aed',
+            'background_color' => $gs['background_color'] ?? $gs['colors']['background'] ?? '#f9fafb',
+            'font_family'      => $gs['font_family']      ?? $gs['fonts']['body']        ?? 'Vazirmatn',
+        ];
+
+        return view('admin.theme-design.canvas-editor', compact(
+            'themeData', 'pages', 'byCategory', 'catLabels', 'catIcons', 'registry', 'globalStyles'
+        ));
+    }
+
+    public function canvasSaveBlocks(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'page_key' => 'required|string',
+            'blocks'   => 'required|array',
+        ]);
+
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+        }
+
+        // Normalize pages to slug-keyed (handles both indexed and associative arrays)
+        $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
+
+        $key = $validated['page_key'];
+
+        if (!isset($themeData['pages'][$key])) {
+            return response()->json(['success' => false, 'error' => 'صفحه «' . $key . '» یافت نشد.'], 404);
+        }
+
+        $themeData['pages'][$key]['blocks'] = $validated['blocks'];
+
+        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
+    }
+
+    public function canvasAddPage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:128',
+            'slug'  => 'nullable|string|max:128|regex:/^[a-z0-9-]*$/',
+        ]);
+
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+        }
+
+        $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
+
+        $title = $validated['title'];
+        $slug  = !empty($validated['slug']) ? $validated['slug'] : Str::slug($title, '-');
+        if (empty($slug)) $slug = 'page-' . time();
+
+        if (isset($themeData['pages'][$slug])) {
+            return response()->json(['success' => false, 'error' => 'صفحه‌ای با این آدرس قبلاً وجود دارد.'], 422);
+        }
+
+        $themeData['pages'][$slug] = [
+            'title'   => $title,
+            'slug'    => $slug,
+            'is_home' => false,
+            'blocks'  => [],
+        ];
+
+        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json([
+            'success' => true,
+            'key'     => $slug,
+            'page'    => $themeData['pages'][$slug],
+        ]);
+    }
+
+    public function canvasDeletePage(string $key): JsonResponse
+    {
+        if ($key === 'home') {
+            return response()->json(['success' => false, 'error' => 'صفحه اصلی قابل حذف نیست.'], 422);
+        }
+
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+        }
+
+        $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
+        unset($themeData['pages'][$key]);
+
+        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function canvasSaveGlobalStyles(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'primary_color'    => 'nullable|string|max:32',
+            'secondary_color'  => 'nullable|string|max:32',
+            'background_color' => 'nullable|string|max:32',
+            'font_family'      => 'nullable|string|max:128',
+        ]);
+
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+        }
+
+        if (!isset($themeData['global_styles'])) {
+            $themeData['global_styles'] = [];
+        }
+
+        foreach (['primary_color', 'secondary_color', 'background_color', 'font_family'] as $field) {
+            if (!empty($validated[$field])) {
+                $themeData['global_styles'][$field] = $validated[$field];
+            }
+        }
+
+        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json(['success' => true]);
+    }
+
     /** ذخیره تنظیمات سفارشی رنگ / فونت */
     public function update(Request $request): RedirectResponse
     {
@@ -184,6 +381,17 @@ class ThemeDesignController extends Controller
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function normalizePagesKeyed(array $pages): array
+    {
+        $keyed = [];
+        foreach ($pages as $k => $page) {
+            $slug = $page['slug'] ?? (is_string($k) ? $k : null);
+            if (empty($slug)) $slug = 'home';
+            $keyed[$slug] = array_merge($page, ['slug' => $slug]);
+        }
+        return $keyed ?: ['home' => ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []]];
+    }
 
     private function presetList(): array
     {

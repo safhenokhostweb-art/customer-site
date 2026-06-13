@@ -91,8 +91,13 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
+          <a href="{{ route('admin.theme-design.canvas-edit') }}"
+             class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm">
+            <x-core-ui::icon name="pencil" class="w-4 h-4" />
+            ویرایش ویجت‌ها (Canvas)
+          </a>
           <a href="{{ url('/') }}" target="_blank"
-             class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
+             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
             <x-core-ui::icon name="eye" class="w-4 h-4" />
             پیش‌نمایش سایت
           </a>
