@@ -326,6 +326,8 @@ Route::middleware('install.check')->group(function () {
             Route::post('theme-design/reset-preset', [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
             Route::get('theme-design/canvas',              [ThemeDesignController::class, 'canvasTheme'])->name('theme-design.canvas');
             Route::post('theme-design/canvas/deactivate',  [ThemeDesignController::class, 'canvasDeactivate'])->name('theme-design.canvas-deactivate');
+            Route::get('theme-design/canvas/export',        [ThemeDesignController::class, 'canvasExport'])->name('theme-design.canvas-export');
+            Route::post('theme-design/canvas/import',       [ThemeDesignController::class, 'canvasImport'])->name('theme-design.canvas-import');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {

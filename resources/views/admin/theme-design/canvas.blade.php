@@ -16,7 +16,7 @@
   {{-- ─── Alerts ──────────────────────────────────────────────────────────── --}}
   @if(session('success'))
     <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-      <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 flex-shrink-0" />
+      <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0" />
       <p class="text-green-800 text-sm font-medium">{{ session('success') }}</p>
     </div>
   @endif
@@ -26,14 +26,14 @@
 
   @if(!$themeData)
     {{-- ─── No Canvas Theme ───────────────────────────────────────────────── --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm py-20 text-center">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm py-16 text-center">
       <div class="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-5">
         <x-core-ui::icon name="layout" class="w-10 h-10 text-indigo-300" />
       </div>
       <h2 class="text-xl font-bold text-gray-800 mb-2">قالب Canvas فعال نیست</h2>
       <p class="text-gray-500 text-sm mb-6 max-w-xs mx-auto leading-relaxed">
         هیچ قالب Canvas‌ای روی این سایت نصب نشده است.
-        از مارکت‌پلیس یکی را خریداری و نصب کنید.
+        از مارکت‌پلیس یکی را خریداری یا یک فایل JSON وارد کنید.
       </p>
       <div class="flex items-center justify-center gap-3 flex-wrap">
         <a href="{{ route('admin.theme-marketplace.index') }}"
@@ -48,6 +48,9 @@
         </a>
       </div>
     </div>
+
+    {{-- ─── Import Form (no active theme) ────────────────────────────────── --}}
+    @include('admin.theme-design.canvas-import-panel')
 
   @else
     @php
@@ -70,7 +73,7 @@
 
       <div class="p-6 flex flex-wrap items-start justify-between gap-4">
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
                style="background: {{ $primary }}1a;">
             <x-core-ui::icon name="layout" class="w-7 h-7" style="color: {{ $primary }};" />
           </div>
@@ -92,6 +95,11 @@
              class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
             <x-core-ui::icon name="eye" class="w-4 h-4" />
             پیش‌نمایش سایت
+          </a>
+          <a href="{{ route('admin.theme-design.canvas-export') }}"
+             class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
+            <x-core-ui::icon name="download" class="w-4 h-4" />
+            صادر کردن JSON
           </a>
           <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
              class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-600 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
@@ -141,7 +149,7 @@
           ['label'=>'پس‌زمینه', 'color'=>$bg],
         ] as $swatch)
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl border border-gray-200 shadow-sm flex-shrink-0"
+            <div class="w-10 h-10 rounded-xl border border-gray-200 shadow-sm shrink-0"
                  style="background: {{ $swatch['color'] }};"></div>
             <div>
               <p class="text-xs text-gray-500">{{ $swatch['label'] }}</p>
@@ -153,7 +161,7 @@
         @if(!empty($gs['font_family']) || !empty($gs['fonts']['body']))
           @php $font = $gs['font_family'] ?? $gs['fonts']['body'] ?? ''; @endphp
           <div class="flex items-center gap-3 mr-4 pr-4 border-r border-gray-200">
-            <div class="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+            <div class="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0">
               <span class="text-sm font-bold text-gray-500" style="font-family: {{ $font }}">Aa</span>
             </div>
             <div>
@@ -184,7 +192,7 @@
             @endphp
             <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                      style="background: {{ $primary }}1a;">
                   @if($isHome)
                     <x-core-ui::icon name="home" class="w-4 h-4" style="color: {{ $primary }};" />
@@ -202,7 +210,7 @@
                   </p>
                 </div>
               </div>
-              <div class="flex items-center gap-3 flex-shrink-0">
+              <div class="flex items-center gap-3 shrink-0">
                 <span class="text-xs text-gray-400">{{ $blockCount }} بلاک</span>
                 <a href="{{ $previewUrl }}" target="_blank"
                    class="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 text-sm font-medium transition">
@@ -230,7 +238,7 @@
           <div class="space-y-2">
             @foreach($headerBks as $hb)
               <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                <span class="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0"></span>
+                <span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
                 <span class="text-xs text-gray-600 font-mono">{{ $hb['type'] ?? 'block' }}</span>
               </div>
             @endforeach
@@ -251,7 +259,7 @@
           <div class="space-y-2">
             @foreach($footerBks as $fb)
               <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                <span class="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0"></span>
+                <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
                 <span class="text-xs text-gray-600 font-mono">{{ $fb['type'] ?? 'block' }}</span>
               </div>
             @endforeach
@@ -263,7 +271,7 @@
     </div>
 
     {{-- ─── Quick Actions ───────────────────────────────────────────────────── --}}
-    <div class="bg-gradient-to-l from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white">
+    <div class="bg-linear-to-l from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white">
       <h3 class="font-bold text-lg mb-1">اقدامات سریع</h3>
       <p class="text-indigo-200 text-sm mb-5">سایت شما در حال حاضر با قالب Canvas فعال است.</p>
       <div class="flex flex-wrap gap-3">
@@ -271,6 +279,11 @@
            class="inline-flex items-center gap-2 bg-white text-indigo-700 hover:bg-indigo-50 text-sm font-semibold px-4 py-2 rounded-xl transition">
           <x-core-ui::icon name="eye" class="w-4 h-4" />
           مشاهده صفحه اصلی
+        </a>
+        <a href="{{ route('admin.theme-design.canvas-export') }}"
+           class="inline-flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
+          <x-core-ui::icon name="download" class="w-4 h-4" />
+          صادر کردن JSON
         </a>
         <a href="{{ route('admin.theme-marketplace.index') }}"
            class="inline-flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
@@ -282,6 +295,21 @@
           <x-core-ui::icon name="color-swatch" class="w-4 h-4" />
           تنظیمات تم
         </a>
+      </div>
+    </div>
+
+    {{-- ─── Replace Theme via Import ────────────────────────────────────────── --}}
+    <div x-data="{ open: false }">
+      <button x-on:click="open = !open"
+              class="w-full text-right flex items-center justify-between px-5 py-3 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition text-sm text-gray-600 font-medium">
+        <span class="flex items-center gap-2">
+          <x-core-ui::icon name="upload" class="w-4 h-4 text-gray-400" />
+          جایگزین کردن قالب با فایل JSON جدید
+        </span>
+        <x-core-ui::icon name="chevron-down" class="w-4 h-4 text-gray-400 transition" x-bind:class="open ? 'rotate-180' : ''" />
+      </button>
+      <div x-show="open" x-collapse class="mt-3">
+        @include('admin.theme-design.canvas-import-panel')
       </div>
     </div>
 

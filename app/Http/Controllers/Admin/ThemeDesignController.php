@@ -9,6 +9,7 @@ use App\Services\ThemeEngine\TenantThemeResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ThemeDesignController extends Controller
@@ -60,6 +61,78 @@ class ThemeDesignController extends Controller
 
         return redirect()->route('admin.theme-design.canvas')
             ->with('success', 'قالب Canvas غیرفعال شد. سایت به حالت پیش‌فرض بازگشت.');
+    }
+
+    public function canvasExport()
+    {
+        $raw = Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return back()->with('error', 'هیچ قالب Canvas فعالی برای صادر کردن وجود ندارد.');
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return back()->with('error', 'داده قالب Canvas معتبر نیست.');
+        }
+
+        $data['_export_meta'] = [
+            'exported_at'  => now()->toIso8601String(),
+            'theme_name'   => Setting::get('active_canvas_theme_name', ''),
+            'theme_slug'   => Setting::get('active_canvas_theme_slug', ''),
+            'theme_id'     => Setting::get('active_canvas_theme_id', ''),
+            'exported_by'  => 'canvas-admin',
+        ];
+
+        $slug     = Str::slug(Setting::get('active_canvas_theme_name', 'canvas-theme'));
+        $filename = $slug . '-' . now()->format('Ymd') . '.json';
+
+        return response(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))
+            ->header('Content-Type', 'application/json')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    public function canvasImport(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'theme_file' => 'required|file|mimes:json|max:2048',
+        ], [
+            'theme_file.required' => 'فایل قالب الزامی است.',
+            'theme_file.mimes'    => 'فایل باید از نوع JSON باشد.',
+            'theme_file.max'      => 'حداکثر حجم فایل ۲ مگابایت است.',
+        ]);
+
+        $contents = file_get_contents($request->file('theme_file')->getRealPath());
+        $data     = json_decode($contents, true);
+
+        if (!is_array($data)) {
+            return back()->with('error', 'فایل JSON معتبر نیست.');
+        }
+
+        $hasStructure = isset($data['pages']) || isset($data['blocks'])
+            || isset($data['header_blocks']) || isset($data['footer_blocks'])
+            || isset($data['global_styles']);
+
+        if (!$hasStructure) {
+            return back()->with('error', 'فایل JSON ساختار قالب Canvas را ندارد. مطمئن شوید فایل از همین سیستم صادر شده باشد.');
+        }
+
+        $meta      = $data['_export_meta'] ?? [];
+        $themeName = $meta['theme_name'] ?? $request->file('theme_file')->getClientOriginalName();
+        $themeSlug = $meta['theme_slug'] ?? Str::slug($themeName);
+        $themeId   = $meta['theme_id']   ?? 'imported-' . now()->timestamp;
+
+        unset($data['_export_meta']);
+
+        Setting::set('active_canvas_theme_data', json_encode($data), 'theme');
+        Setting::set('active_canvas_theme_name', $themeName,         'theme');
+        Setting::set('active_canvas_theme_slug', $themeSlug,         'theme');
+        Setting::set('active_canvas_theme_id',   $themeId,           'theme');
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return redirect()->route('admin.theme-design.canvas')
+            ->with('success', 'قالب «' . $themeName . '» با موفقیت وارد و فعال شد.');
     }
 
     /** ذخیره تنظیمات سفارشی رنگ / فونت */
