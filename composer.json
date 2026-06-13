@@ -39,6 +39,7 @@
         "laravel/reverb": "^1.10",
         "laravel/tinker": "^2.10.1",
         "minishlink/web-push": "^10.1",
+        "phpoffice/phpspreadsheet": "^5.8",
         "pusher/pusher-php-server": "*",
         "saas-platform/core-utils": "@dev",
         "saas-platform/modules-forms": "@dev",

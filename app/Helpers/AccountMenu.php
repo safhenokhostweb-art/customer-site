@@ -12,6 +12,7 @@ class AccountMenu
         'profile'       => 'پروفایل',
         'orders'        => 'سفارشات من',
         'subscriptions' => 'اشتراک‌های من',
+        'installments'  => 'اقساط من',
         'tickets'       => 'پشتیبانی',
         'notifications' => 'اعلان‌ها',
         'security'      => 'امنیت',
@@ -22,6 +23,7 @@ class AccountMenu
         'profile'       => 'account.profile.index',
         'orders'        => 'account.orders.index',
         'subscriptions' => 'account.subscriptions.index',
+        'installments'  => 'account.installments',
         'tickets'       => 'account.tickets.index',
         'notifications' => 'account.notifications.index',
         'security'      => 'account.security.index',
@@ -32,6 +34,7 @@ class AccountMenu
         'profile'       => 'account.profile.*',
         'orders'        => 'account.orders.*',
         'subscriptions' => 'account.subscriptions.*',
+        'installments'  => 'account.installments*',
         'tickets'       => 'account.tickets.*',
         'notifications' => 'account.notifications.*',
         'security'      => 'account.security.*',
@@ -41,7 +44,7 @@ class AccountMenu
     {
         return [
             'اصلی'           => ['overview', 'profile'],
-            'خرید و اشتراک' => ['orders', 'subscriptions'],
+            'خرید و اشتراک' => ['orders', 'subscriptions', 'installments'],
             'تعامل'          => ['tickets', 'notifications'],
             'حساب کاربری'   => ['security'],
         ];
@@ -57,6 +60,9 @@ class AccountMenu
         }
         if ($key === 'subscriptions') {
             return SiteHelper::moduleEnabled('subscription');
+        }
+        if ($key === 'installments') {
+            return SiteHelper::moduleEnabled('shop');
         }
         return true;
     }

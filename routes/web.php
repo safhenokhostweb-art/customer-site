@@ -235,6 +235,10 @@ Route::middleware('install.check')->group(function () {
         Route::get('/installment/{installmentOrderId}/callback/{paymentId}', [\App\Http\Controllers\Front\InstallmentController::class, 'installmentCallback'])->name('installment.payment.callback');
     });
 
+    // ─── گیت‌های دسترسی (احراز هویت از طریق کد ملی / نام خانوادگی) ───────────
+    Route::get('/gate/{slug}',  [\App\Http\Controllers\Front\AccessGateController::class, 'show'])->name('access-gate.show');
+    Route::post('/gate/{slug}', [\App\Http\Controllers\Front\AccessGateController::class, 'verify'])->name('access-gate.verify');
+
     // ─── تغییر زبان سایت ─────────────────────────────────────────────────────
     Route::get('/lang/{locale}', function (string $locale) {
         $supported = ['fa', 'ar', 'en'];
@@ -623,6 +627,25 @@ Route::middleware('install.check')->group(function () {
                 ->name('homepage-videos.reorder');
         });
 
+        // مدیریت لیست‌های دسترسی (FORM-EXT)
+        Route::prefix('access-lists')->name('access-lists.')->group(function () {
+            // Lists
+            Route::get('lists',                          [\App\Http\Controllers\Admin\AccessListController::class, 'listsIndex'])->name('lists.index');
+            Route::get('lists/create',                   [\App\Http\Controllers\Admin\AccessListController::class, 'listsCreate'])->name('lists.create');
+            Route::post('lists',                         [\App\Http\Controllers\Admin\AccessListController::class, 'listsStore'])->name('lists.store');
+            Route::get('lists/{list}/edit',              [\App\Http\Controllers\Admin\AccessListController::class, 'listsEdit'])->name('lists.edit');
+            Route::put('lists/{list}',                   [\App\Http\Controllers\Admin\AccessListController::class, 'listsUpdate'])->name('lists.update');
+            Route::delete('lists/{list}',                [\App\Http\Controllers\Admin\AccessListController::class, 'listsDestroy'])->name('lists.destroy');
+            Route::post('lists/{list}/import',           [\App\Http\Controllers\Admin\AccessListController::class, 'listsImport'])->name('lists.import');
+            // Gates
+            Route::get('gates',                          [\App\Http\Controllers\Admin\AccessListController::class, 'gatesIndex'])->name('gates.index');
+            Route::get('gates/create',                   [\App\Http\Controllers\Admin\AccessListController::class, 'gatesCreate'])->name('gates.create');
+            Route::post('gates',                         [\App\Http\Controllers\Admin\AccessListController::class, 'gatesStore'])->name('gates.store');
+            Route::get('gates/{gate}/edit',              [\App\Http\Controllers\Admin\AccessListController::class, 'gatesEdit'])->name('gates.edit');
+            Route::put('gates/{gate}',                   [\App\Http\Controllers\Admin\AccessListController::class, 'gatesUpdate'])->name('gates.update');
+            Route::delete('gates/{gate}',                [\App\Http\Controllers\Admin\AccessListController::class, 'gatesDestroy'])->name('gates.destroy');
+        });
+
         // مدیریت ترجمه‌های هوش مصنوعی
         Route::middleware('permission:settings')->group(function () {
             Route::get('translations',             [\App\Http\Controllers\Admin\TranslationController::class, 'index'])->name('translations.index');
@@ -630,6 +653,21 @@ Route::middleware('install.check')->group(function () {
             Route::post('translations/retry',      [\App\Http\Controllers\Admin\TranslationController::class, 'retryFailed'])->name('translations.retry');
             Route::post('translations/clear-done', [\App\Http\Controllers\Admin\TranslationController::class, 'clearDone'])->name('translations.clear-done');
             Route::get('translations/stats',       [\App\Http\Controllers\Admin\TranslationController::class, 'stats'])->name('translations.stats');
+        });
+
+        // مدیریت خرید قسطی
+        Route::prefix('installments')->name('installments.')->group(function () {
+            // طرح‌ها
+            Route::get('plans',                                    [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansIndex'])->name('plans.index');
+            Route::get('plans/create',                             [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansCreate'])->name('plans.create');
+            Route::post('plans',                                   [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansStore'])->name('plans.store');
+            Route::get('plans/{plan}/edit',                        [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansEdit'])->name('plans.edit');
+            Route::put('plans/{plan}',                             [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansUpdate'])->name('plans.update');
+            Route::delete('plans/{plan}',                          [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'plansDestroy'])->name('plans.destroy');
+            // سفارشات
+            Route::get('orders',                                   [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'ordersIndex'])->name('orders.index');
+            Route::get('orders/{order}',                           [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'ordersShow'])->name('orders.show');
+            Route::post('mark-overdue',                            [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'markOverdue'])->name('mark-overdue');
         });
 
         Route::get('/', fn () => redirect()->route('admin.dashboard'));

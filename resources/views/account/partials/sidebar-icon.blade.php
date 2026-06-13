@@ -4,6 +4,7 @@
         'profile'       => 'user',
         'orders'        => 'order',
         'subscriptions' => 'subscription',
+        'installments'  => 'credit-card',
         'forms'         => 'assignment',
         'notifications' => 'bell',
         'security'      => 'lock',

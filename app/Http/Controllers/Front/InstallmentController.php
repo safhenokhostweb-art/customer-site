@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstallmentOrder;
+use App\Models\InstallmentPayment;
 use App\Models\InstallmentPlan;
 use App\Services\InstallmentService;
 use App\Services\Payment\ZarinpalGateway;
