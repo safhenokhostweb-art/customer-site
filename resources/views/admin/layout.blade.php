@@ -129,8 +129,8 @@
                     $adminAvatarUrl = $adminUser->avatar ? url($adminUser->avatar) : null;
                     $adminInitial   = mb_substr($adminUser->name ?? $adminUser->mobile, 0, 1);
                 @endphp
-                <div x-data="{ open: false }" @click.outside="open = false" class="relative" style="z-index:50">
-                    <button @click="open = !open" type="button"
+                <div id="admin-profile-menu" class="relative" style="z-index:50">
+                    <button id="admin-profile-btn" type="button"
                             class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all group">
                         {{-- Avatar --}}
                         @if($adminAvatarUrl)
@@ -144,17 +144,13 @@
                             <p class="text-xs font-semibold text-gray-700 leading-none">{{ $adminUser->name ?? 'ادمین' }}</p>
                             <p class="text-[10px] text-gray-400 mt-0.5 leading-none">{{ $adminUser->mobile }}</p>
                         </div>
-                        <x-core-ui::icon name="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform" x-bind:class="open && 'rotate-180'" />
+                        <x-core-ui::icon name="chevron-down" id="admin-profile-caret" class="w-3.5 h-3.5 text-gray-400 transition-transform" />
                     </button>
 
                     {{-- Dropdown --}}
-                    <div x-show="open" x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                    <div id="admin-profile-dropdown"
                          class="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2"
-                         style="display:none">
+                         style="display:none;z-index:100">
                         {{-- User info --}}
                         <div class="px-4 py-3 border-b border-gray-100">
                             <div class="flex items-center gap-3">
@@ -345,5 +341,24 @@
     </script>
     @stack('scripts')
     @yield('scripts')
+    <script>
+    /* ─── Admin Profile Dropdown ─── */
+    (function(){
+        var menu     = document.getElementById('admin-profile-menu');
+        var btn      = document.getElementById('admin-profile-btn');
+        var dropdown = document.getElementById('admin-profile-dropdown');
+        var caret    = document.getElementById('admin-profile-caret');
+        if (!menu || !btn || !dropdown) return;
+        function openDrop()  { dropdown.style.display = 'block';  if (caret) caret.style.transform = 'rotate(180deg)'; }
+        function closeDrop() { dropdown.style.display = 'none';   if (caret) caret.style.transform = ''; }
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.style.display === 'none' ? openDrop() : closeDrop();
+        });
+        document.addEventListener('click', function(e) {
+            if (!menu.contains(e.target)) closeDrop();
+        });
+    })();
+    </script>
 </body>
 </html>
