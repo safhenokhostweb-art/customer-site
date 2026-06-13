@@ -488,9 +488,20 @@ class AdminMenu
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
                              'activity_log', 'users_panel', 'education_center',
-                             'site_content', 'homepage_videos', 'translations',
-                             'installments', 'access_lists'], true)) {
+                             'site_content'], true)) {
             return true;
+        }
+        if ($key === 'installments') {
+            return SiteHelper::moduleEnabled('installments');
+        }
+        if ($key === 'translations') {
+            return SiteHelper::moduleEnabled('translations');
+        }
+        if ($key === 'homepage_videos') {
+            return SiteHelper::moduleEnabled('homepage_videos');
+        }
+        if ($key === 'access_lists') {
+            return SiteHelper::moduleEnabled('access_lists');
         }
         if ($key === 'module_store') {
             return rtrim((string) config('site.platform_url', ''), '/') !== '';

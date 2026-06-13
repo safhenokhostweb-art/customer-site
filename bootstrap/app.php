@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SetTenantContext::class,
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\TrackPageView::class,
         ]);
     })
 

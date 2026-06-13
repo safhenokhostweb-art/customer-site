@@ -376,6 +376,7 @@ Route::middleware('install.check')->group(function () {
                 Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
             });
         });
+        Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.dashboard');
         Route::get('builder-health', [\App\Http\Controllers\Admin\BuilderHealthController::class, 'index'])->name('builder-health.index');
         Route::middleware(['module:currency_reform', 'permission:currency_reform'])->group(function () {
             Route::get('currency-reform', [CurrencyReformController::class, 'index'])->name('currency-reform.index');
