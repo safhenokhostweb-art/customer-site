@@ -141,11 +141,28 @@ class ThemeDesignController extends Controller
 
     public function canvasEdit()
     {
-        $raw = Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
+        $activeRaw = Setting::get('active_canvas_theme_data');
+        if (empty($activeRaw)) {
             return redirect()->route('admin.theme-design.canvas')
                 ->with('error', 'ابتدا یک قالب Canvas نصب کنید.');
         }
+
+        // Draft system: load draft if exists, else seed draft from active
+        $draftRaw = Setting::get('canvas_draft_data');
+        if (empty($draftRaw)) {
+            $draftRaw = $activeRaw;
+            Setting::set('canvas_draft_data', $activeRaw, 'theme');
+        }
+
+        // Ensure preview token exists
+        $previewToken = Setting::get('canvas_preview_token');
+        if (empty($previewToken)) {
+            $previewToken = Str::random(40);
+            Setting::set('canvas_preview_token', $previewToken, 'theme');
+        }
+
+        $raw = $draftRaw;
+        $hasDraft = ($draftRaw !== $activeRaw);
 
         $themeData = json_decode($raw, true);
         if (!is_array($themeData)) {
@@ -205,7 +222,8 @@ class ThemeDesignController extends Controller
         ];
 
         return view('admin.theme-design.canvas-editor', compact(
-            'themeData', 'pages', 'byCategory', 'catLabels', 'catIcons', 'registry', 'globalStyles'
+            'themeData', 'pages', 'byCategory', 'catLabels', 'catIcons', 'registry', 'globalStyles',
+            'hasDraft', 'previewToken'
         ));
     }
 
@@ -216,7 +234,7 @@ class ThemeDesignController extends Controller
             'blocks'   => 'required|array',
         ]);
 
-        $raw = Setting::get('active_canvas_theme_data');
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
         if (empty($raw)) {
             return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
         }
@@ -232,9 +250,7 @@ class ThemeDesignController extends Controller
         if ($key === '__header__' || $key === '__footer__') {
             $field = $key === '__header__' ? 'header_blocks' : 'footer_blocks';
             $themeData[$field] = $validated['blocks'];
-            Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-            Cache::forget('canvas_theme_data');
-            $this->resolver->clearCache();
+            Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
             return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
         }
 
@@ -247,9 +263,7 @@ class ThemeDesignController extends Controller
 
         $themeData['pages'][$key]['blocks'] = $validated['blocks'];
 
-        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-        Cache::forget('canvas_theme_data');
-        $this->resolver->clearCache();
+        Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
         return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
     }
@@ -261,7 +275,7 @@ class ThemeDesignController extends Controller
             'slug'  => 'nullable|string|max:128|regex:/^[a-z0-9-]*$/',
         ]);
 
-        $raw = Setting::get('active_canvas_theme_data');
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
         if (empty($raw)) {
             return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
         }
@@ -292,9 +306,7 @@ class ThemeDesignController extends Controller
             'blocks'  => [],
         ];
 
-        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-        Cache::forget('canvas_theme_data');
-        $this->resolver->clearCache();
+        Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
         return response()->json([
             'success' => true,
@@ -309,7 +321,7 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'صفحه اصلی قابل حذف نیست.'], 422);
         }
 
-        $raw = Setting::get('active_canvas_theme_data');
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
         if (empty($raw)) {
             return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
         }
@@ -322,9 +334,7 @@ class ThemeDesignController extends Controller
         $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
         unset($themeData['pages'][$key]);
 
-        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-        Cache::forget('canvas_theme_data');
-        $this->resolver->clearCache();
+        Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
         return response()->json(['success' => true]);
     }
@@ -338,7 +348,7 @@ class ThemeDesignController extends Controller
             'font_family'      => 'nullable|string|max:128',
         ]);
 
-        $raw = Setting::get('active_canvas_theme_data');
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
         if (empty($raw)) {
             return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
         }
@@ -358,11 +368,81 @@ class ThemeDesignController extends Controller
             }
         }
 
-        Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+        Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+
+        return response()->json(['success' => true]);
+    }
+
+    public function canvasPublish(): JsonResponse
+    {
+        $draft = Setting::get('canvas_draft_data');
+        if (empty($draft)) {
+            return response()->json(['success' => false, 'error' => 'پیش‌نویسی برای انتشار وجود ندارد.'], 404);
+        }
+
+        Setting::set('active_canvas_theme_data', $draft, 'theme');
+        Setting::set('canvas_draft_data', '', 'theme');
+
         Cache::forget('canvas_theme_data');
         $this->resolver->clearCache();
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'قالب با موفقیت منتشر شد.']);
+    }
+
+    public function canvasDiscardDraft(): RedirectResponse
+    {
+        Setting::set('canvas_draft_data', '', 'theme');
+
+        return redirect()->route('admin.theme-design.canvas-edit')
+            ->with('success', 'تغییرات پیش‌نویس رد شد.');
+    }
+
+    public function canvasPreviewPublic()
+    {
+        $token = request('token');
+        $savedToken = Setting::get('canvas_preview_token');
+
+        if (empty($token) || $token !== $savedToken) {
+            abort(403, 'لینک پیش‌نمایش معتبر نیست.');
+        }
+
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            abort(404, 'قالب یافت نشد.');
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            abort(422);
+        }
+
+        // Render the home page from draft
+        $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
+
+        $pages = $themeData['pages'] ?? [];
+        $homePage = null;
+        foreach ($pages as $page) {
+            if (!empty($page['is_home']) || ($page['slug'] ?? '') === 'home') {
+                $homePage = $page;
+                break;
+            }
+        }
+        if (!$homePage && !empty($pages)) {
+            $homePage = array_values($pages)[0];
+        }
+
+        $blocks       = $homePage['blocks'] ?? [];
+        $headerBlocks = $themeData['header_blocks'] ?? [];
+        $footerBlocks = $themeData['footer_blocks'] ?? [];
+        $globalStyles = $themeData['global_styles'] ?? [];
+
+        $renderedBlocks = collect($blocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
+        $renderedHeader = collect($headerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
+        $renderedFooter = collect($footerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
+
+        return view('canvas-preview', compact(
+            'renderedBlocks', 'renderedHeader', 'renderedFooter', 'globalStyles', 'themeData'
+        ));
     }
 
     /** ذخیره تنظیمات سفارشی رنگ / فونت */

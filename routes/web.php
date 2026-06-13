@@ -182,6 +182,9 @@ Route::middleware('install.check')->group(function () {
         });
     });
 
+    // Canvas draft preview (token-gated, no auth required)
+    Route::get('/canvas-preview', [ThemeDesignController::class, 'canvasPreviewPublic'])->name('canvas.preview');
+
     // Front: home + pages — ThemeCanvasPageController delegates to HomeController/FrontPageController
     // when no active canvas theme is installed (active_canvas_theme_data setting is empty).
     Route::get('/', [ThemeCanvasPageController::class, 'index'])->name('home');
@@ -362,6 +365,8 @@ Route::middleware('install.check')->group(function () {
             Route::post('theme-design/canvas/pages',                      [ThemeDesignController::class, 'canvasAddPage'])->name('theme-design.canvas-add-page');
             Route::delete('theme-design/canvas/pages/{key}',              [ThemeDesignController::class, 'canvasDeletePage'])->name('theme-design.canvas-delete-page');
             Route::put('theme-design/canvas/global-styles',               [ThemeDesignController::class, 'canvasSaveGlobalStyles'])->name('theme-design.canvas-global-styles');
+            Route::post('theme-design/canvas/publish',                    [ThemeDesignController::class, 'canvasPublish'])->name('theme-design.canvas-publish');
+            Route::post('theme-design/canvas/discard-draft',              [ThemeDesignController::class, 'canvasDiscardDraft'])->name('theme-design.canvas-discard-draft');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {

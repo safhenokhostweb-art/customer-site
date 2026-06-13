@@ -80,6 +80,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         {{-- Actions --}}
         <div class="flex items-center gap-2 shrink-0">
 
+            {{-- Draft badge --}}
+            <span class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block"></span>
+                پیش‌نویس
+            </span>
+
             {{-- Dirty indicator --}}
             <span x-show="isDirty" class="text-amber-500 text-xs font-medium flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block"></span>
@@ -96,22 +102,42 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 رنگ‌ها
             </button>
 
-            {{-- Preview --}}
-            <a href="{{ url('/') }}" target="_blank"
-               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 text-xs font-medium transition">
+            {{-- Preview draft --}}
+            <a href="{{ url('/canvas-preview?token=' . $previewToken) }}" target="_blank"
+               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-300 hover:text-teal-700 text-xs font-medium transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 پیش‌نمایش
             </a>
 
-            {{-- Save --}}
+            {{-- Save draft --}}
             <button
                 @click="saveCurrentPage()"
                 :disabled="saving"
-                class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition disabled:opacity-60"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-300 text-indigo-700 hover:bg-indigo-50 text-xs font-medium transition disabled:opacity-60"
             >
                 <svg x-show="!saving" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                 <svg x-show="saving" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                <span x-text="saving ? 'ذخیره...' : 'ذخیره'"></span>
+                <span x-text="saving ? 'ذخیره...' : 'ذخیره پیش‌نویس'"></span>
+            </button>
+
+            {{-- Discard draft --}}
+            <form method="POST" action="{{ route('admin.theme-design.canvas-discard-draft') }}" onsubmit="return confirm('تغییرات پیش‌نویس رد شود؟')">
+                @csrf
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    رد تغییرات
+                </button>
+            </form>
+
+            {{-- Publish --}}
+            <button
+                @click="publishDraft()"
+                :disabled="publishing"
+                class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-60"
+            >
+                <svg x-show="!publishing" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <svg x-show="publishing" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                <span x-text="publishing ? 'انتشار...' : 'انتشار'"></span>
             </button>
         </div>
     </div>
@@ -463,6 +489,7 @@ const ROUTES = {
     addPage:       '{{ route('admin.theme-design.canvas-add-page') }}',
     deletePage:    '{{ url('admin/theme-design/canvas/pages') }}',
     globalStyles:  '{{ route('admin.theme-design.canvas-global-styles') }}',
+    publish:       '{{ route('admin.theme-design.canvas-publish') }}',
 };
 
 function canvasEditor() {
@@ -473,6 +500,7 @@ function canvasEditor() {
         selectedIndex: -1,
         isDirty:       false,
         saving:        false,
+        publishing:    false,
         showAddPage:   false,
         newPageTitle:  '',
         newPageSlug:   '',
@@ -605,6 +633,26 @@ function canvasEditor() {
                 else this.showToast(d.error ?? 'خطا در ذخیره', 'error');
             } catch { this.showToast('خطای شبکه', 'error'); }
             finally { this.saving = false; }
+        },
+
+        async publishDraft() {
+            if (this.publishing) return;
+            if (this.isDirty) await this.saveCurrentPage();
+            this.publishing = true;
+            try {
+                const r = await fetch(ROUTES.publish, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                });
+                const d = await r.json();
+                if (d.success) {
+                    this.showToast('قالب منتشر شد ✓', 'success');
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    this.showToast(d.error ?? 'خطا در انتشار', 'error');
+                }
+            } catch { this.showToast('خطای شبکه', 'error'); }
+            finally { this.publishing = false; }
         },
 
         async saveGlobalStyles() {
