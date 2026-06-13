@@ -49,12 +49,18 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <template x-for="(page, key) in pages" :key="key">
                 <button
                     @click="switchPage(key)"
-                    :class="currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    :class="key === '__header__'
+                        ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
+                        : key === '__footer__'
+                            ? (currentPage === key ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200')
+                            : (currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')"
                     class="px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap flex items-center gap-1.5 group relative"
                 >
+                    <span x-show="key === '__header__'" class="text-sm leading-none">🔝</span>
+                    <span x-show="key === '__footer__'" class="text-sm leading-none">🔚</span>
                     <span x-text="page.title ?? key"></span>
                     <span
-                        x-show="!page.is_home && key !== 'home'"
+                        x-show="!page.is_home && key !== 'home' && !key.startsWith('__')"
                         @click.stop="deletePage(key)"
                         :class="currentPage === key ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-red-500'"
                         class="text-xs leading-none transition hidden group-hover:inline"
@@ -232,8 +238,10 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
             <div class="w-full max-w-2xl flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <div :class="currentPage === '__header__' ? 'bg-teal-500' : currentPage === '__footer__' ? 'bg-purple-500' : 'bg-indigo-500'" class="w-2 h-2 rounded-full"></div>
                     <span class="text-xs font-semibold text-slate-600" x-text="pages[currentPage]?.title ?? currentPage"></span>
+                    <span x-show="currentPage === '__header__'" class="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200 font-medium">بلاک‌های هدر سایت</span>
+                    <span x-show="currentPage === '__footer__'" class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-medium">بلاک‌های فوتر سایت</span>
                     <span class="text-xs text-slate-400" x-text="'(' + blocks.length + ' ویجت)'"></span>
                 </div>
                 <span class="text-[10px] text-slate-400">Ctrl+S برای ذخیره</span>
@@ -547,6 +555,7 @@ function canvasEditor() {
             this.selectedIndex = -1;
         },
         deletePage(key) {
+            if (key === 'home' || key.startsWith('__')) return;
             if (!confirm('این صفحه حذف شود؟')) return;
             fetch(ROUTES.deletePage + '/' + key, {
                 method: 'DELETE',

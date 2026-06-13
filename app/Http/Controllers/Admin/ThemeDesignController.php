@@ -172,6 +172,25 @@ class ThemeDesignController extends Controller
             $pages['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
         }
 
+        // ─── Virtual pages for header/footer block editing ───────────────────
+        $virtualPages = [
+            '__header__' => [
+                'title'      => 'هدر سایت',
+                'slug'       => '__header__',
+                'is_home'    => false,
+                'is_special' => true,
+                'blocks'     => $themeData['header_blocks'] ?? [],
+            ],
+            '__footer__' => [
+                'title'      => 'فوتر سایت',
+                'slug'       => '__footer__',
+                'is_home'    => false,
+                'is_special' => true,
+                'blocks'     => $themeData['footer_blocks'] ?? [],
+            ],
+        ];
+        $pages = $virtualPages + $pages;
+
         $byCategory = BlockRegistry::byCategory();
         $catLabels  = BlockRegistry::categoryLabels();
         $catIcons   = BlockRegistry::categoryIcons();
@@ -207,10 +226,20 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
         }
 
+        $key = $validated['page_key'];
+
+        // ─── Virtual pages: header/footer blocks ─────────────────────────────
+        if ($key === '__header__' || $key === '__footer__') {
+            $field = $key === '__header__' ? 'header_blocks' : 'footer_blocks';
+            $themeData[$field] = $validated['blocks'];
+            Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+            Cache::forget('canvas_theme_data');
+            $this->resolver->clearCache();
+            return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
+        }
+
         // Normalize pages to slug-keyed (handles both indexed and associative arrays)
         $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
-
-        $key = $validated['page_key'];
 
         if (!isset($themeData['pages'][$key])) {
             return response()->json(['success' => false, 'error' => 'صفحه «' . $key . '» یافت نشد.'], 404);
@@ -247,6 +276,10 @@ class ThemeDesignController extends Controller
         $title = $validated['title'];
         $slug  = !empty($validated['slug']) ? $validated['slug'] : Str::slug($title, '-');
         if (empty($slug)) $slug = 'page-' . time();
+
+        if (Str::startsWith($slug, '__')) {
+            return response()->json(['success' => false, 'error' => 'نام صفحه نامعتبر است.'], 422);
+        }
 
         if (isset($themeData['pages'][$slug])) {
             return response()->json(['success' => false, 'error' => 'صفحه‌ای با این آدرس قبلاً وجود دارد.'], 422);

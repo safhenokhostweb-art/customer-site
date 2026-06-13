@@ -164,6 +164,12 @@ Route::middleware('install.check')->group(function () {
         Route::post('/profile/deletion', [AccountProfileDeletionController::class, 'store'])->name('profile.deletion.store');
         Route::post('/profile/deletion/cancel', [AccountProfileDeletionController::class, 'cancel'])->name('profile.deletion.cancel');
 
+        // اقساط کاربر
+        Route::middleware('module:shop')->group(function () {
+            Route::get('/installments', [\App\Http\Controllers\Account\InstallmentAccountController::class, 'index'])->name('installments');
+            Route::get('/installments/{order}', [\App\Http\Controllers\Account\InstallmentAccountController::class, 'show'])->name('installments.show');
+        });
+
         // تیکت‌های پشتیبانی کاربر نهایی
         Route::prefix('tickets')->name('tickets.')->group(function () {
             Route::get('/',                     [AccountTicketController::class, 'index'])->name('index');
@@ -219,6 +225,15 @@ Route::middleware('install.check')->group(function () {
 
     // محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) — فقط برای سایت مالک
     Route::get('/platform-products', [PlatformProductsController::class, 'index'])->name('platform-products.index');
+
+    // ─── خرید قسطی (front) ───────────────────────────────────────────────────
+    Route::middleware(['module:shop', 'auth'])->group(function () {
+        Route::get('/installment/plans',   [\App\Http\Controllers\Front\InstallmentController::class, 'plans'])->name('installment.plans');
+        Route::post('/installment/initiate', [\App\Http\Controllers\Front\InstallmentController::class, 'initiate'])->name('installment.initiate');
+        Route::get('/installment/callback/{installmentOrderId}', [\App\Http\Controllers\Front\InstallmentController::class, 'downPaymentCallback'])->name('installment.down-payment.callback');
+        Route::get('/installment/{installmentOrderId}/pay/{paymentId}', [\App\Http\Controllers\Front\InstallmentController::class, 'payInstallment'])->name('installment.pay');
+        Route::get('/installment/{installmentOrderId}/callback/{paymentId}', [\App\Http\Controllers\Front\InstallmentController::class, 'installmentCallback'])->name('installment.payment.callback');
+    });
 
     // ─── تغییر زبان سایت ─────────────────────────────────────────────────────
     Route::get('/lang/{locale}', function (string $locale) {
@@ -606,6 +621,15 @@ Route::middleware('install.check')->group(function () {
                 ->parameters(['homepage-videos' => 'homepageVideo']);
             Route::post('homepage-videos/reorder', [\App\Http\Controllers\Admin\HomepageVideoController::class, 'reorder'])
                 ->name('homepage-videos.reorder');
+        });
+
+        // مدیریت ترجمه‌های هوش مصنوعی
+        Route::middleware('permission:settings')->group(function () {
+            Route::get('translations',             [\App\Http\Controllers\Admin\TranslationController::class, 'index'])->name('translations.index');
+            Route::post('translations/process',    [\App\Http\Controllers\Admin\TranslationController::class, 'processBatch'])->name('translations.process');
+            Route::post('translations/retry',      [\App\Http\Controllers\Admin\TranslationController::class, 'retryFailed'])->name('translations.retry');
+            Route::post('translations/clear-done', [\App\Http\Controllers\Admin\TranslationController::class, 'clearDone'])->name('translations.clear-done');
+            Route::get('translations/stats',       [\App\Http\Controllers\Admin\TranslationController::class, 'stats'])->name('translations.stats');
         });
 
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
