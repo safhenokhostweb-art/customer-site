@@ -129,6 +129,20 @@
 <x-core-ui::icon name="video" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'wallet')
 <x-core-ui::icon name="wallet" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'installments')
+<x-core-ui::icon name="credit-card" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'access_lists')
+<x-core-ui::icon name="lock" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'homepage_videos')
+<x-core-ui::icon name="video" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'translations')
+<x-core-ui::icon name="globe" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'activity_log')
+<x-core-ui::icon name="activity" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'education_center')
+<x-core-ui::icon name="courses" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'site_content')
+<x-core-ui::icon name="assignment" class="w-5 h-5 ml-3 shrink-0" />
 @else
 <x-core-ui::icon name="menu" class="w-5 h-5 ml-3 shrink-0" />
 @endif

@@ -54,6 +54,10 @@ class AdminMenu
         'accounting' => 'حسابداری',
         'education_center' => 'مرکز آموزش',
         'site_content'    => 'دستیار محتوا',
+        'installments'    => 'خرید قسطی',
+        'access_lists'    => 'لیست‌های دسترسی',
+        'homepage_videos' => 'ویدیوهای صفحه اصلی',
+        'translations'    => 'ترجمه‌های هوش مصنوعی',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -94,7 +98,11 @@ class AdminMenu
     ];
 
     public const MENU_ROUTES = [
-        'dashboard' => 'admin.dashboard',
+        'dashboard'        => 'admin.dashboard',
+        'installments'     => 'admin.installments.plans.index',
+        'access_lists'     => 'admin.access-lists.lists.index',
+        'homepage_videos'  => 'admin.homepage-videos.index',
+        'translations'     => 'admin.translations.index',
         'pages' => 'admin.pages.index',
         'categories' => 'admin.categories.index',
         'post_series' => 'admin.post-series.index',
@@ -235,6 +243,10 @@ class AdminMenu
         'accounting' => 'admin.accounting.*',
         'education_center' => 'admin.education-center.*',
         'site_content'    => 'admin.site-content.*',
+        'installments'    => 'admin.installments.*',
+        'access_lists'    => 'admin.access-lists.*',
+        'homepage_videos' => 'admin.homepage-videos.*',
+        'translations'    => 'admin.translations.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
@@ -295,12 +307,12 @@ class AdminMenu
             'اصلی' => ['dashboard'],
             // صفحات و منو نزدیک هم؛ سپس وبلاگ؛ جستجوی پیشرفته در انتهای بلوک محتوا
             'محتوا و ساختار سایت' => ['pages', 'menu', 'categories', 'post_series', 'posts', 'advanced_search'],
-            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon'],
+            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon', 'installments'],
             'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
-            'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
+            'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
             'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
-            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'settings', 'currency_reform'],
+            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
             'دستیار محتوا' => ['site_content'],
@@ -476,7 +488,8 @@ class AdminMenu
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
                              'activity_log', 'users_panel', 'education_center',
-                             'site_content'], true)) {
+                             'site_content', 'homepage_videos', 'translations',
+                             'installments', 'access_lists'], true)) {
             return true;
         }
         if ($key === 'module_store') {

@@ -8,7 +8,7 @@ class AccessListEntry extends Model
 {
     protected $fillable = ['access_list_id', 'national_id', 'last_name', 'notes'];
 
-    public function list()
+    public function accessList()
     {
         return $this->belongsTo(AccessList::class, 'access_list_id');
     }

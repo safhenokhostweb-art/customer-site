@@ -56,8 +56,8 @@
                                class="text-indigo-500 hover:underline text-xs mr-2">مشاهده ↗</a>
                         </td>
                         <td class="text-sm">
-                            @if($gate->list)
-                                <span class="badge badge-info">{{ $gate->list->name }}</span>
+                            @if($gate->accessList)
+                                <span class="badge badge-info">{{ $gate->accessList->name }}</span>
                             @else
                                 <span class="text-red-400 text-xs">بدون لیست</span>
                             @endif

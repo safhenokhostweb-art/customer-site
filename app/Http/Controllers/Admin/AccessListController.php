@@ -96,7 +96,7 @@ class AccessListController extends Controller
 
     public function gatesIndex()
     {
-        $gates = AccessGate::with('list')->latest()->get();
+        $gates = AccessGate::with('accessList')->latest()->get();
         return view('admin.access-lists.gates-index', compact('gates'));
     }
 
