@@ -80,7 +80,7 @@
 
                 <fieldset class="admin-fieldset">
                     <legend class="admin-fieldset__legend">تصویر، گالری و محتوا</legend>
-                    <x-image-picker name="featured_image" :value="old('featured_image')" context="featured" label="تصویر شاخص" />
+                    <x-smart-image-picker name="featured_image" :value="old('featured_image')" context="blog_cover" label="تصویر شاخص" />
                     <div class="form-group">
                         <label class="form-label" for="post-gallery">گالری تصاویر</label>
                         <textarea id="post-gallery" name="gallery_text" rows="4" placeholder="هر خط یک مسیر فایل (پس از آپلود در شاخص یا رسانه)">{{ old('gallery_text') }}</textarea>
@@ -107,7 +107,7 @@
                         <label class="form-label" for="post-canonical">آدرس کانونیکال (اختیاری)</label>
                         <input id="post-canonical" type="text" name="canonical_url" value="{{ old('canonical_url') }}" maxlength="500" placeholder="https://... یا /blog/..." dir="ltr">
                     </div>
-                    <x-image-picker name="og_image" :value="old('og_image')" context="featured" label="تصویر Open Graph (اختیاری)" />
+                    <x-smart-image-picker name="og_image" :value="old('og_image')" context="og_image" label="تصویر Open Graph (اختیاری)" />
                 </fieldset>
 
                 <fieldset class="admin-fieldset">

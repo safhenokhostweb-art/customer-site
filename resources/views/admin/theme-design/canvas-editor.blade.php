@@ -329,7 +329,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'string'">
                                     <input
                                         type="text"
-                                        x-model="selectedBlock.data[propKey]"
+                                        x-model="selectedBlock.props[propKey]"
                                         @input="isDirty = true"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :placeholder="schemaDef.default ?? ''"
@@ -340,7 +340,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'number'">
                                     <input
                                         type="number"
-                                        x-model.number="selectedBlock.data[propKey]"
+                                        x-model.number="selectedBlock.props[propKey]"
                                         @input="isDirty = true"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :min="0"
@@ -351,18 +351,18 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'boolean'">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <div class="relative">
-                                            <input type="checkbox" x-model="selectedBlock.data[propKey]" @change="isDirty = true" class="sr-only peer">
+                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="isDirty = true" class="sr-only peer">
                                             <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
                                             <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
                                         </div>
-                                        <span class="text-sm text-slate-700" x-text="selectedBlock.data[propKey] ? 'فعال' : 'غیرفعال'"></span>
+                                        <span class="text-sm text-slate-700" x-text="selectedBlock.props[propKey] ? 'فعال' : 'غیرفعال'"></span>
                                     </label>
                                 </template>
 
                                 {{-- select --}}
                                 <template x-if="schemaDef.type === 'select'">
                                     <select
-                                        x-model="selectedBlock.data[propKey]"
+                                        x-model="selectedBlock.props[propKey]"
                                         @change="isDirty = true"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                     >
@@ -375,15 +375,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 {{-- color --}}
                                 <template x-if="schemaDef.type === 'color'">
                                     <div class="flex items-center gap-2">
-                                        <input type="color" x-model="selectedBlock.data[propKey]" @input="isDirty = true" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text"  x-model="selectedBlock.data[propKey]" @input="isDirty = true" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000">
+                                        <input type="color" x-model="selectedBlock.props[propKey]" @input="isDirty = true" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="isDirty = true" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000">
                                     </div>
                                 </template>
 
                                 {{-- textarea --}}
                                 <template x-if="schemaDef.type === 'textarea'">
                                     <textarea
-                                        x-model="selectedBlock.data[propKey]"
+                                        x-model="selectedBlock.props[propKey]"
                                         @input="isDirty = true"
                                         rows="3"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition resize-y"
@@ -512,7 +512,7 @@ function canvasEditor() {
         // Canvas actions
         addBlock(type) {
             const defaults = JSON.parse(JSON.stringify(BLOCK_SCHEMAS[type]?.defaultProps ?? {}));
-            const block = { id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), type, data: defaults };
+            const block = { id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), type, props: defaults };
             const newBlocks = [...this.blocks, block];
             this.pages[this.currentPage].blocks = newBlocks;
             this.selectedIndex = newBlocks.length - 1;
@@ -617,7 +617,7 @@ function canvasEditor() {
         // Helpers
         blockLabel(type)   { return BLOCK_LABELS[type] ?? type; },
         blockPreview(block) {
-            const d = block?.data ?? {};
+            const d = block?.props ?? block?.data ?? {};
             return d.title || d.text || d.content || d.name || d.subtitle || d.label || '';
         },
         blockCategoryColor(type) {
@@ -642,6 +642,14 @@ function canvasEditor() {
         },
 
         init() {
+            // Normalize legacy blocks: block.data → block.props
+            Object.values(this.pages).forEach(page => {
+                (page.blocks ?? []).forEach(block => {
+                    if (!block.props && block.data) block.props = block.data;
+                    if (!block.props) block.props = {};
+                });
+            });
+
             this.$nextTick(() => {
                 const el = document.getElementById('canvas-blocks');
                 if (el && typeof Sortable !== 'undefined') {

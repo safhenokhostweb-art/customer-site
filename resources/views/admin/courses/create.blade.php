@@ -20,7 +20,7 @@
                     <label class="form-label">توضیحات</label>
                     <textarea id="course-description-editor" name="description" class="w-full min-h-[180px]" placeholder="شرح دوره...">{{ old('description') }}</textarea>
                 </div>
-                <x-image-picker name="image" :value="old('image')" context="course" label="تصویر دوره" />
+                <x-smart-image-picker name="image" :value="old('image')" context="course" label="تصویر دوره" />
                 <div class="form-group">
                     <label class="form-label">قیمت (تومان) *</label>
                     <input type="number" name="price" value="{{ old('price') }}" required min="0" placeholder="0">

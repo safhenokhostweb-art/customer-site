@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\SiteHelper;
+use App\Models\HomepageVideo;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\Page;
@@ -22,8 +23,9 @@ class HomeController extends Controller
         $pages = Page::published()->menu()->get();
         $aboutUsEnabled = (bool) Setting::get('about_us_enabled', false);
         $aboutUsTitle = Setting::get('about_us_title', 'درباره ما');
-        $aboutUsText = Setting::get('about_us_text', '');
+        $aboutUsText    = Setting::get('about_us_text', '');
+        $homepageVideos = HomepageVideo::active()->get();
 
-        return view(SiteHelper::view('home'), compact('recentPosts', 'featuredProducts', 'pages', 'aboutUsEnabled', 'aboutUsTitle', 'aboutUsText'));
+        return view(SiteHelper::view('home'), compact('recentPosts', 'featuredProducts', 'pages', 'aboutUsEnabled', 'aboutUsTitle', 'aboutUsText', 'homepageVideos'));
     }
 }

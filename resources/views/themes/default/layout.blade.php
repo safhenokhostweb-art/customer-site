@@ -467,6 +467,8 @@
                         @else
                             <a href="{{ route('login') }}" class="nav-link">ورود</a>
                         @endauth
+                        {{-- Language Switcher --}}
+                        <x-language-switcher />
                     @endif
                 </nav>
             </div>

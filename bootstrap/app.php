@@ -31,8 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // Mobile end-user auth
             'mobile.auth' => \App\Http\Middleware\AuthenticateMobileUser::class,
         ]);
+        $middleware->alias([
+            'locale' => \App\Http\Middleware\SetLocale::class,
+        ]);
         $middleware->web(append: [
             \App\Http\Middleware\SetTenantContext::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
     })
 
@@ -64,5 +68,8 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->onFailure(function () {
                      Log::error('db:backup scheduled run failed — check storage/logs/db-backup.log');
                  });
+
+        // LANG — پردازش صف ترجمه هر ۱۵ دقیقه
+        $schedule->command('translations:process', ['--batch' => 30])->everyFifteenMinutes();
     })
     ->create();

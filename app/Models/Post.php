@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,9 @@ use Illuminate\Support\Str;
 
 class Post extends Model
 {
+    use HasTranslations;
+
+    protected array $translatable = ['title', 'excerpt', 'body'];
     public const EDITORIAL_DRAFT = 'draft';
 
     public const EDITORIAL_PENDING_REVIEW = 'pending_review';

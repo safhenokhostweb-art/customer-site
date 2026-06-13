@@ -8,6 +8,15 @@
     $homeLayoutBlocks = $tb['settings']['layouts']['home'] ?? null;
 @endphp
 
+{{-- ویدیوهای صفحه نخست --}}
+@if(!empty($homepageVideos) && $homepageVideos->isNotEmpty())
+<section style="margin-bottom:2.5rem;">
+    @foreach($homepageVideos->where('is_active', true) as $hv)
+        <x-video-player :video="$hv" height="65vh" class="mb-6" />
+    @endforeach
+</section>
+@endif
+
 @if(is_array($homeLayoutBlocks) && !empty($homeLayoutBlocks))
     {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->renderBlocks($homeLayoutBlocks) !!}
 @else

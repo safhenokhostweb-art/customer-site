@@ -7,6 +7,7 @@ use App\Helpers\ImageHelper;
 use App\Helpers\Jalali;
 use App\Helpers\SiteHelper;
 use App\Models\Course;
+use App\Models\HomepageVideo;
 use App\Models\Post;
 use App\Models\Product;
 use App\Services\ThemeBuilder\BlockRenderer;
@@ -105,8 +106,34 @@ class ThemeCanvasRenderer extends BlockRenderer
             $type === 'module:referral_widget'
                 => $this->renderModuleReferralWidget($props, $id),
 
+            $type === 'module:hero_video'
+                => $this->renderModuleHeroVideo($props, $id),
+
             default => $this->renderModuleGenericPlaceholder($type, $props, $id),
         };
+    }
+
+    // ── Hero Video ───────────────────────────────────────────────────────────
+
+    protected function renderModuleHeroVideo(array $props, string $id): string
+    {
+        $videoId = (int) ($props['video_id'] ?? 0);
+        if ($videoId > 0) {
+            $video = \App\Models\HomepageVideo::find($videoId);
+        } else {
+            $video = \App\Models\HomepageVideo::active()->first();
+        }
+
+        if (!$video) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-hero-video tb-empty-state\">
+                <p class=\"tb-text\">ویدیویی برای نمایش یافت نشد.</p>
+            </div>";
+        }
+
+        $height = $this->escape($props['height'] ?? '65vh');
+        return "<div id=\"tb-{$id}\">"
+            . view('components.video-player', ['video' => $video, 'height' => $height])->render()
+            . "</div>";
     }
 
     // ── Blog ─────────────────────────────────────────────────────────────────

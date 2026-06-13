@@ -181,7 +181,7 @@
         <label class="form-label" for="product-video">ویدیو (URL)</label>
         <input id="product-video" type="text" name="video_url" value="{{ old('video_url', $p->video_url) }}" dir="ltr" placeholder="https://...">
     </div>
-    <x-image-picker name="image" :value="old('image', $p->image)" context="product" label="تصویر اصلی" />
+    <x-smart-image-picker name="image" :value="old('image', $p->image)" context="product" label="تصویر اصلی" />
     <div class="form-group">
         <label class="form-label" for="product-gallery-paths">تصاویر گالری (مسیر هر خط)</label>
         @php
@@ -291,7 +291,7 @@
         <label class="form-label" for="product-canonical">Canonical (اختیاری)</label>
         <input id="product-canonical" type="text" name="canonical_url" value="{{ old('canonical_url', $p->canonical_url) }}" dir="ltr">
     </div>
-    <x-image-picker name="og_image" :value="old('og_image', $p->og_image)" context="product" label="تصویر Open Graph" />
+    <x-smart-image-picker name="og_image" :value="old('og_image', $p->og_image)" context="og_image" label="تصویر Open Graph" />
     <div class="form-group">
         <label class="form-label" for="product-order">ترتیب نمایش</label>
         <input id="product-order" type="number" name="order" value="{{ old('order', $p->order ?? 0) }}" min="0">

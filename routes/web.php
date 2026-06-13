@@ -220,6 +220,15 @@ Route::middleware('install.check')->group(function () {
     // محصولات پلتفرم (لایسنس، ماژول، پشتیبانی) — فقط برای سایت مالک
     Route::get('/platform-products', [PlatformProductsController::class, 'index'])->name('platform-products.index');
 
+    // ─── تغییر زبان سایت ─────────────────────────────────────────────────────
+    Route::get('/lang/{locale}', function (string $locale) {
+        $supported = ['fa', 'ar', 'en'];
+        if (in_array($locale, $supported)) {
+            session(['site_locale' => $locale]);
+        }
+        return redirect()->back()->withInput();
+    })->where('locale', 'fa|ar|en')->name('lang.switch');
+
     // ─── دستیار محتوا — نمایش عمومی محتوای منتشرشده ──────────────────────────
     Route::get('/content',        [FrontSiteContentController::class, 'index'])->name('content.index');
     Route::get('/content/{slug}', [FrontSiteContentController::class, 'show'])->name('content.show');
@@ -590,6 +599,14 @@ Route::middleware('install.check')->group(function () {
         Route::get('notifications/send-users', [AdminNotificationController::class, 'sendToUsersForm'])->name('notifications.send-users.form');
         Route::post('notifications/send-users', [AdminNotificationController::class, 'sendToUsers'])->name('notifications.send-users');
         Route::get('notifications/send-users/archive', [AdminNotificationController::class, 'archive'])->name('notifications.archive');
+
+        // ویدیوهای صفحه نخست
+        Route::middleware('permission:settings')->group(function () {
+            Route::resource('homepage-videos', \App\Http\Controllers\Admin\HomepageVideoController::class)
+                ->parameters(['homepage-videos' => 'homepageVideo']);
+            Route::post('homepage-videos/reorder', [\App\Http\Controllers\Admin\HomepageVideoController::class, 'reorder'])
+                ->name('homepage-videos.reorder');
+        });
 
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
     });
