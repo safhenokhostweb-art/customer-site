@@ -58,6 +58,7 @@ class AdminMenu
         'access_lists'    => 'لیست‌های دسترسی',
         'homepage_videos' => 'ویدیوهای صفحه اصلی',
         'translations'    => 'ترجمه‌های هوش مصنوعی',
+        'analytics_local' => 'آمار و تحلیل',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -99,6 +100,7 @@ class AdminMenu
 
     public const MENU_ROUTES = [
         'dashboard'        => 'admin.dashboard',
+        'analytics_local'  => 'admin.analytics.index',
         'installments'     => 'admin.installments.plans.index',
         'access_lists'     => 'admin.access-lists.lists.index',
         'homepage_videos'  => 'admin.homepage-videos.index',
@@ -247,6 +249,7 @@ class AdminMenu
         'access_lists'    => 'admin.access-lists.*',
         'homepage_videos' => 'admin.homepage-videos.*',
         'translations'    => 'admin.translations.*',
+        'analytics_local' => 'admin.analytics.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
@@ -311,7 +314,7 @@ class AdminMenu
             'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
             'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
-            'کسب‌وکار و نمایش' => ['invoice', 'business_card', 'social_links', 'advertisements'],
+            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
@@ -488,7 +491,7 @@ class AdminMenu
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
                              'activity_log', 'users_panel', 'education_center',
-                             'site_content'], true)) {
+                             'site_content', 'analytics_local'], true)) {
             return true;
         }
         if ($key === 'installments') {
