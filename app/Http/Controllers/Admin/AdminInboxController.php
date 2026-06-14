@@ -6,16 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminNotification;
 use App\Services\AdminNotificationService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 
-class AdminNotificationController extends Controller
+class AdminInboxController extends Controller
 {
     public function index()
     {
         $notifications = AdminNotification::latest()->paginate(30);
         $unreadCount   = AdminNotificationService::unreadCount();
 
-        return view('admin.notifications.index', compact('notifications', 'unreadCount'));
+        return view('admin.inbox.index', compact('notifications', 'unreadCount'));
     }
 
     public function unreadCount(): JsonResponse

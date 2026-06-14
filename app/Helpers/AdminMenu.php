@@ -143,7 +143,7 @@ class AdminMenu
         'activity_log' => 'admin.activity-log.index',
         'advanced_search' => 'admin.modules.show',
         'menu' => 'admin.menus.index',
-        'bank_gateway' => 'admin.modules.show',
+        'bank_gateway' => 'admin.payment-gateways.index',
         'accounting' => 'admin.accounting.index',
         'education_center' => 'admin.education-center.index',
         'site_content'    => 'admin.site-content.index',

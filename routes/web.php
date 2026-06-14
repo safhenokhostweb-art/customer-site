@@ -378,6 +378,14 @@ Route::middleware('install.check')->group(function () {
             });
         });
         Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
+
+        // Admin Inbox (system notification center)
+        Route::prefix('inbox')->name('inbox.')->group(function () {
+            Route::get('/',              [\App\Http\Controllers\Admin\AdminInboxController::class, 'index'])->name('index');
+            Route::get('/unread-count', [\App\Http\Controllers\Admin\AdminInboxController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/{notification}/read', [\App\Http\Controllers\Admin\AdminInboxController::class, 'markRead'])->name('mark-read');
+            Route::post('/read-all',    [\App\Http\Controllers\Admin\AdminInboxController::class, 'markAllRead'])->name('read-all');
+        });
         Route::get('builder-health', [\App\Http\Controllers\Admin\BuilderHealthController::class, 'index'])->name('builder-health.index');
         Route::middleware(['module:currency_reform', 'permission:currency_reform'])->group(function () {
             Route::get('currency-reform', [CurrencyReformController::class, 'index'])->name('currency-reform.index');
