@@ -676,6 +676,15 @@ Route::middleware('install.check')->group(function () {
             Route::post('mark-overdue',                            [\App\Http\Controllers\Admin\InstallmentAdminController::class, 'markOverdue'])->name('mark-overdue');
         });
 
+        // ─── مدیریت درگاه‌های پرداخت ─────────────────────────────────────────────
+        Route::middleware('permission:settings')->group(function () {
+            Route::resource('payment-gateways', \App\Http\Controllers\Admin\PaymentGatewayController::class)
+                ->except('show')
+                ->parameters(['payment-gateways' => 'paymentGateway']);
+            Route::post('payment-gateways/{paymentGateway}/set-default', [\App\Http\Controllers\Admin\PaymentGatewayController::class, 'setDefault'])
+                ->name('payment-gateways.set-default');
+        });
+
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
     });
 

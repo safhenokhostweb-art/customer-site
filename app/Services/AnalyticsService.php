@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\AnalyticsPageView;
-use App\Models\Customer;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Subscription;
-use App\Models\SupportTicket;
+use App\Models\SupportConversation;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -19,22 +19,22 @@ class AnalyticsService
         $lastMonth  = now()->subMonth()->startOfMonth();
         $lastMonthEnd = now()->subMonth()->endOfMonth();
 
-        $totalUsers    = Customer::count();
-        $newUsersMonth = Customer::where('created_at', '>=', $thisMonth)->count();
+        $totalUsers    = User::count();
+        $newUsersMonth = User::where('created_at', '>=', $thisMonth)->count();
 
         $revenueMonth = Order::where('status', 'completed')
             ->where('created_at', '>=', $thisMonth)
-            ->sum('total_price');
+            ->sum('total');
 
         $revenueLastMonth = Order::where('status', 'completed')
             ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])
-            ->sum('total_price');
+            ->sum('total');
 
         $totalOrders = Order::where('created_at', '>=', $thisMonth)->count();
 
         $activeSubscriptions = Subscription::where('status', 'active')->count();
 
-        $openTickets = SupportTicket::where('status', 'open')->count();
+        $openTickets = SupportConversation::whereIn('status', ['open', 'assigned'])->count();
 
         $pageViewsToday = AnalyticsPageView::where('visited_at', '>=', $today)->count();
         $pageViewsMonth = AnalyticsPageView::where('visited_at', '>=', $thisMonth)->count();
@@ -60,7 +60,7 @@ class AnalyticsService
     {
         $rows = Order::where('status', 'completed')
             ->where('created_at', '>=', now()->subDays($days - 1)->startOfDay())
-            ->selectRaw('DATE(created_at) as day, SUM(total_price) as revenue, COUNT(*) as orders')
+            ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders')
             ->groupBy('day')
             ->orderBy('day')
             ->get()
@@ -83,7 +83,7 @@ class AnalyticsService
     /** User registrations per day for last N days */
     public function userRegistrationsChart(int $days = 30): array
     {
-        $rows = Customer::where('created_at', '>=', now()->subDays($days - 1)->startOfDay())
+        $rows = User::where('created_at', '>=', now()->subDays($days - 1)->startOfDay())
             ->selectRaw('DATE(created_at) as day, COUNT(*) as count')
             ->groupBy('day')
             ->orderBy('day')
@@ -157,7 +157,7 @@ class AnalyticsService
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->where('orders.status', 'completed')
             ->where('orders.created_at', '>=', now()->subDays(30))
-            ->selectRaw('products.title, products.id, SUM(order_items.quantity) as qty, SUM(order_items.price * order_items.quantity) as revenue')
+            ->selectRaw('products.title, products.id, SUM(order_items.quantity) as qty, SUM(order_items.total) as revenue')
             ->groupBy('products.id', 'products.title')
             ->orderByDesc('revenue')
             ->limit($limit)
@@ -168,15 +168,15 @@ class AnalyticsService
     /** Recent support tickets summary */
     public function ticketSummary(): array
     {
-        $statuses = SupportTicket::selectRaw('status, COUNT(*) as count')
+        $statuses = SupportConversation::selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
         return [
             'open'     => $statuses['open']     ?? 0,
-            'pending'  => $statuses['pending']  ?? 0,
-            'resolved' => $statuses['resolved'] ?? 0,
+            'pending'  => $statuses['assigned'] ?? 0,
+            'resolved' => $statuses['archived'] ?? 0,
             'closed'   => $statuses['closed']   ?? 0,
         ];
     }
