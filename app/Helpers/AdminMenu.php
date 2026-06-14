@@ -59,7 +59,7 @@ class AdminMenu
         'homepage_videos' => 'ویدیوهای صفحه اصلی',
         'translations'    => 'ترجمه‌های هوش مصنوعی',
         'analytics_local' => 'آمار و تحلیل',
-        'system_alerts'   => 'اعلان‌های سیستم',
+        'system_alerts'   => 'مرکز اعلان‌ها',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -102,7 +102,7 @@ class AdminMenu
     public const MENU_ROUTES = [
         'dashboard'        => 'admin.dashboard',
         'analytics_local'  => 'admin.analytics.index',
-        'system_alerts'    => 'admin.system-alerts.index',
+        'system_alerts'    => 'admin.notification-center.index',
         'installments'     => 'admin.installments.plans.index',
         'access_lists'     => 'admin.access-lists.lists.index',
         'homepage_videos'  => 'admin.homepage-videos.index',
@@ -252,7 +252,7 @@ class AdminMenu
         'homepage_videos' => 'admin.homepage-videos.*',
         'translations'    => 'admin.translations.*',
         'analytics_local' => 'admin.analytics.*',
-        'system_alerts'   => 'admin.system-alerts.*',
+        'system_alerts'   => 'admin.notification-center.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',

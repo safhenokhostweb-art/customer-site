@@ -379,10 +379,19 @@ Route::middleware('install.check')->group(function () {
         });
         Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
 
-        // System Alerts (admin notification center — must not conflict with admin.inbox.* = UnifiedSupport)
+        // Unified Notification Center
+        Route::prefix('notification-center')->name('notification-center.')->group(function () {
+            Route::get('/',                         [\App\Http\Controllers\Admin\NotificationCenterController::class, 'index'])->name('index');
+            Route::get('/unread-count',             [\App\Http\Controllers\Admin\NotificationCenterController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/alerts/{alert}/read',     [\App\Http\Controllers\Admin\NotificationCenterController::class, 'markAlertRead'])->name('mark-alert-read');
+            Route::post('/alerts/read-all',         [\App\Http\Controllers\Admin\NotificationCenterController::class, 'markAllAlertsRead'])->name('mark-all-read');
+            Route::post('/banners/{banner}/toggle', [\App\Http\Controllers\Admin\NotificationCenterController::class, 'toggleBanner'])->name('toggle-banner');
+        });
+
+        // System Alerts legacy routes (kept for bell dropdown polling — do not remove)
         Route::prefix('system-alerts')->name('system-alerts.')->group(function () {
             Route::get('/',              [\App\Http\Controllers\Admin\AdminInboxController::class, 'index'])->name('index');
-            Route::get('/unread-count', [\App\Http\Controllers\Admin\AdminInboxController::class, 'unreadCount'])->name('unread-count');
+            Route::get('/unread-count', [\App\Http\Controllers\Admin\NotificationCenterController::class, 'unreadCount'])->name('unread-count');
             Route::post('/{notification}/read', [\App\Http\Controllers\Admin\AdminInboxController::class, 'markRead'])->name('mark-read');
             Route::post('/read-all',    [\App\Http\Controllers\Admin\AdminInboxController::class, 'markAllRead'])->name('read-all');
         });

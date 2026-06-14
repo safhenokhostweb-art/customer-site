@@ -171,7 +171,7 @@
                             </template>
                         </div>
                         <div class="border-t border-gray-100 px-4 py-2.5 text-center">
-                            <a href="{{ route('admin.system-alerts.index') }}" class="text-xs text-indigo-600 hover:underline font-medium">مشاهده همه اعلان‌ها</a>
+                            <a href="{{ route('admin.notification-center.index') }}" class="text-xs text-indigo-600 hover:underline font-medium">مرکز اعلان‌ها</a>
                         </div>
                     </div>
                 </div>
