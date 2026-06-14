@@ -148,7 +148,7 @@
     <div style="margin-top:2rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.125rem 1.375rem">
         <h3 style="font-size:.875rem;font-weight:700;color:#1e293b;margin:0 0 .75rem">راهنمای درگاه‌های پشتیبانی‌شده</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.625rem">
-            @foreach(PaymentGateway::drivers() as $key => $label)
+            @foreach($drivers as $key => $label)
             <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#475569">
                 <span style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0"></span>
                 <span><strong>{{ $label }}</strong></span>
