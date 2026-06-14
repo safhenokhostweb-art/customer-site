@@ -105,6 +105,13 @@ $this->app->bind(
 
         Product::observe(ProductObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\Order::observe(\App\Observers\OrderObserver::class);
+        if (\Illuminate\Support\Facades\Schema::hasTable('support_conversations')) {
+            \App\Models\SupportConversation::observe(\App\Observers\SupportConversationObserver::class);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('subscriptions')) {
+            \App\Models\Subscription::observe(\App\Observers\SubscriptionObserver::class);
+        }
 
         View::composer('themes.default.layout', function ($view) {
             $data = $view->getData();

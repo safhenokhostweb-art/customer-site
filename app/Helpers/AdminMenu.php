@@ -184,7 +184,7 @@ class AdminMenu
         // ماژول‌های داخلی سایت
         'advanced_search' => 'standalone',
         'menu' => 'standalone',
-        'bank_gateway' => 'embedded',
+        'bank_gateway' => 'standalone',
 
         // ماژول‌های پلتفرمی
         'seo_advanced' => 'standalone',

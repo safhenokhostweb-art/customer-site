@@ -10,7 +10,7 @@ $SSH_KEY    = "$env:USERPROFILE\.ssh\deploy_saas"
 $SERVER     = "root@87.107.12.81"
 $PORT       = "9011"
 $DIR        = "c:\laragon\www\customer-site"
-$ZIPFILE    = "$env:TEMP\deploy_customer.zip"
+$ZIPFILE    = "$env:TEMP\deploy_customer_$(Get-Date -Format 'yyyyMMddHHmmss').zip"
 $PHP        = "C:\laragon\bin\php\php-8.4.16-nts-Win32-vs17-x64\php.exe"
 $COMPOSER   = "C:\laragon\bin\composer\composer.phar"
 
