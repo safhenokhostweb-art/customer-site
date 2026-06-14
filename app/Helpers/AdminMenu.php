@@ -59,6 +59,7 @@ class AdminMenu
         'homepage_videos' => 'ویدیوهای صفحه اصلی',
         'translations'    => 'ترجمه‌های هوش مصنوعی',
         'analytics_local' => 'آمار و تحلیل',
+        'system_alerts'   => 'اعلان‌های سیستم',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -101,6 +102,7 @@ class AdminMenu
     public const MENU_ROUTES = [
         'dashboard'        => 'admin.dashboard',
         'analytics_local'  => 'admin.analytics.index',
+        'system_alerts'    => 'admin.system-alerts.index',
         'installments'     => 'admin.installments.plans.index',
         'access_lists'     => 'admin.access-lists.lists.index',
         'homepage_videos'  => 'admin.homepage-videos.index',
@@ -241,7 +243,7 @@ class AdminMenu
         'activity_log' => 'admin.activity-log.*',
         'advanced_search' => 'admin.modules.show',
         'menu' => 'admin.menus.index',
-        'bank_gateway' => 'admin.modules.show',
+        'bank_gateway' => 'admin.payment-gateways.*',
         'accounting' => 'admin.accounting.*',
         'education_center' => 'admin.education-center.*',
         'site_content'    => 'admin.site-content.*',
@@ -250,6 +252,7 @@ class AdminMenu
         'homepage_videos' => 'admin.homepage-videos.*',
         'translations'    => 'admin.translations.*',
         'analytics_local' => 'admin.analytics.*',
+        'system_alerts'   => 'admin.system-alerts.*',
         'seo_advanced' => 'admin.seo-advanced.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
@@ -314,9 +317,9 @@ class AdminMenu
             'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
             'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
-            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'business_card', 'social_links', 'advertisements'],
+            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'bank_gateway', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
-            'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'bank_gateway', 'activity_log'],
+            'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
             'دستیار محتوا' => ['site_content'],
         ];
@@ -530,8 +533,11 @@ class AdminMenu
         if ($key === 'advanced_search') {
             return SiteHelper::moduleEnabled('advanced_search');
         }
-        if ($key === 'menu' || $key === 'bank_gateway') {
+        if ($key === 'menu') {
             return SiteHelper::moduleEnabled($key);
+        }
+        if ($key === 'bank_gateway') {
+            return true; // درگاه پرداخت همیشه در منو نمایش داده می‌شود
         }
         $moduleMap = [
             'coupon' => 'coupon',

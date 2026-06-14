@@ -379,8 +379,8 @@ Route::middleware('install.check')->group(function () {
         });
         Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
 
-        // Admin Inbox (system notification center)
-        Route::prefix('inbox')->name('inbox.')->group(function () {
+        // System Alerts (admin notification center — must not conflict with admin.inbox.* = UnifiedSupport)
+        Route::prefix('system-alerts')->name('system-alerts.')->group(function () {
             Route::get('/',              [\App\Http\Controllers\Admin\AdminInboxController::class, 'index'])->name('index');
             Route::get('/unread-count', [\App\Http\Controllers\Admin\AdminInboxController::class, 'unreadCount'])->name('unread-count');
             Route::post('/{notification}/read', [\App\Http\Controllers\Admin\AdminInboxController::class, 'markRead'])->name('mark-read');
