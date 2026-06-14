@@ -125,7 +125,7 @@
 
             @if(empty($articles))
             <div class="text-center py-12 text-gray-400">
-                <x-core-ui::icon name="file-text" class="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <x-core-ui::icon name="file-text" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
                 <p>مقاله‌ای وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.articles.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین مقاله</a>
             </div>
@@ -201,7 +201,7 @@
         <div class="p-4">
             @if(empty($walkthroughs))
             <div class="text-center py-12 text-gray-400">
-                <x-core-ui::icon name="walkthrough" class="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <x-core-ui::icon name="walkthrough" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
                 <p>راهنمایی وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.walkthroughs.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین راهنما</a>
             </div>
@@ -259,7 +259,7 @@
         <div class="p-4">
             @if(empty($learningPaths))
             <div class="text-center py-12 text-gray-400">
-                <x-core-ui::icon name="learning-path" class="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <x-core-ui::icon name="learning-path" class="w-12 h-12 mx-auto mb-3 text-gray-400" />
                 <p>مسیر یادگیری وجود ندارد.</p>
                 <a href="{{ route('admin.education-center.learning-paths.create') }}" class="text-blue-600 text-sm mt-2 inline-block">+ ایجاد اولین مسیر</a>
             </div>

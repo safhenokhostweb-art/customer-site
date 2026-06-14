@@ -34,7 +34,7 @@
             <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
             بازگشت به صندوق
         </a>
-        <span class="text-gray-300">/</span>
+        <span class="text-gray-400">/</span>
         <span class="text-gray-700 font-semibold text-sm">تیکت جدید</span>
     </div>
 
