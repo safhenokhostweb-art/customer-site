@@ -110,7 +110,7 @@
 
         @if(empty($articles))
             <div class="edu-empty bg-white rounded-xl border border-dashed border-gray-300">
-                <x-core-ui::icon name="file-text" class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <x-core-ui::icon name="file-text" class="w-12 h-12 mx-auto text-gray-400 mb-3" />
                 @if($search)
                     <p class="text-gray-500">نتیجه‌ای برای «{{ $search }}» یافت نشد.</p>
                     <a href="{{ route('admin.education-center.index') }}" class="text-blue-500 text-sm mt-1 inline-block">پاک کردن جستجو</a>
