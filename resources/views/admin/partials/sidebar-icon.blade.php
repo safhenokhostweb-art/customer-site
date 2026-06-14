@@ -79,6 +79,8 @@
 <x-core-ui::icon name="search" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'analytics' || $key === 'analytics_local')
 <x-core-ui::icon name="analytics" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'system_alerts')
+<x-core-ui::icon name="bell" class="w-5 h-5 ml-3 shrink-0 text-amber-500" />
 @elseif($key === 'announcements')
 <x-core-ui::icon name="announcement" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'backup')

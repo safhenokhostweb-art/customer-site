@@ -317,7 +317,7 @@ class AdminMenu
             'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
             'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
-            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'bank_gateway', 'business_card', 'social_links', 'advertisements'],
+            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'system_alerts', 'bank_gateway', 'business_card', 'social_links', 'advertisements'],
             'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
@@ -494,7 +494,7 @@ class AdminMenu
         if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
                              'activity_log', 'users_panel', 'education_center',
-                             'site_content', 'analytics_local'], true)) {
+                             'site_content', 'analytics_local', 'system_alerts'], true)) {
             return true;
         }
         if ($key === 'installments') {
