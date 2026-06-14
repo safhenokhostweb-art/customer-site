@@ -123,6 +123,37 @@
                     </button>
                 </form>
 
+                {{-- خرید قسطی --}}
+                @if(!empty($installmentPlans) && $installmentPlans->isNotEmpty())
+                <div style="margin-top:1.5rem; border:1.5px solid #e0e7ff; border-radius:0.75rem; padding:1rem; background:#f5f3ff;">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                        <svg style="width:18px;height:18px;color:#6366f1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <span style="font-size:0.85rem; font-weight:700; color:#4f46e5;">امکان خرید قسطی</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                        @foreach($installmentPlans as $plan)
+                        @php
+                            $calc = $plan['calc'];
+                        @endphp
+                        <a href="{{ route('installments.apply', ['plan_id' => $plan['id'], 'product_id' => $product->id]) }}"
+                           style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; border-radius:0.5rem; background:#fff; border:1px solid #c7d2fe; text-decoration:none; transition:background 0.15s;"
+                           onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#fff'">
+                            <div>
+                                <span style="font-weight:700; color:#3730a3; font-size:0.85rem;">{{ $plan['name'] }}</span>
+                                <span style="font-size:0.75rem; color:#6b7280; margin-right:0.4rem;">{{ $plan['period_months'] }} ماهه</span>
+                            </div>
+                            <div style="text-align:left;">
+                                <span style="font-size:0.8rem; font-weight:700; color:#4f46e5;">{{ number_format($calc['monthly_payment']) }} ت/ماه</span>
+                                @if($calc['down_payment'] > 0)
+                                <span style="font-size:0.7rem; color:#9ca3af; display:block;">پیش‌پرداخت: {{ number_format($calc['down_payment']) }} ت</span>
+                                @endif
+                            </div>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
                     <form method="post" action="{{ route('shop.wishlist.toggle', $product) }}">@csrf
                         <button type="submit" class="btn" style="padding:0.5rem 1rem;border:1px solid #e5e7eb;border-radius:0.5rem;background:#fff;cursor:pointer;">{{ $wishlist->has($product->id) ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی' }}</button>

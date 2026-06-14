@@ -232,6 +232,7 @@ Route::middleware('install.check')->group(function () {
     // ─── خرید قسطی (front) ───────────────────────────────────────────────────
     Route::middleware(['module:shop', 'auth'])->group(function () {
         Route::get('/installment/plans',   [\App\Http\Controllers\Front\InstallmentController::class, 'plans'])->name('installment.plans');
+        Route::get('/installment/apply',   [\App\Http\Controllers\Front\InstallmentController::class, 'apply'])->name('installments.apply');
         Route::post('/installment/initiate', [\App\Http\Controllers\Front\InstallmentController::class, 'initiate'])->name('installment.initiate');
         Route::get('/installment/callback/{installmentOrderId}', [\App\Http\Controllers\Front\InstallmentController::class, 'downPaymentCallback'])->name('installment.down-payment.callback');
         Route::get('/installment/{installmentOrderId}/pay/{paymentId}', [\App\Http\Controllers\Front\InstallmentController::class, 'payInstallment'])->name('installment.pay');

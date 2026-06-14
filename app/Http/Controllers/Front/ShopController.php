@@ -168,8 +168,19 @@ class ShopController extends Controller
         $pages = Page::published()->menu()->get();
         $wishlist = app(ShopWishlistService::class);
 
+        // خرید قسطی — پلن‌های فعال که برای قیمت این محصول مجاز هستند
+        $productPrice = (int) ($product->display_price ?? $product->price ?? 0);
+        $installmentPlans = collect();
+        if (SiteHelper::moduleEnabled('installments') && $productPrice > 0) {
+            $installmentPlans = \App\Models\InstallmentPlan::active()
+                ->get()
+                ->filter(fn($p) => $p->isEligible($productPrice))
+                ->map(fn($p) => array_merge($p->toArray(), ['calc' => $p->calculate($productPrice)]));
+        }
+
         return view(SiteHelper::view('shop.show'), compact(
-            'product', 'pages', 'related', 'upsells', 'crossSells', 'reviews', 'reviewAvg', 'wishlist', 'jsonLdProduct'
+            'product', 'pages', 'related', 'upsells', 'crossSells', 'reviews', 'reviewAvg', 'wishlist',
+            'jsonLdProduct', 'installmentPlans'
         ));
     }
 

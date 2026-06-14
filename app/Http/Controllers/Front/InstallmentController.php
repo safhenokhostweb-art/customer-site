@@ -19,6 +19,24 @@ class InstallmentController extends Controller
     {
     }
 
+    // ── redirect از صفحه محصول با plan و product پیش‌انتخاب‌شده ─────────────
+
+    public function apply(Request $request)
+    {
+        $planId    = (int) $request->query('plan_id', 0);
+        $productId = (int) $request->query('product_id', 0);
+
+        if ($productId > 0) {
+            $product = \App\Models\Product::active()->find($productId);
+            if ($product) {
+                $amount = (int) ($product->display_price ?? $product->price ?? 0);
+                return redirect()->route('installment.plans', ['amount' => $amount, 'plan' => $planId ?: null]);
+            }
+        }
+
+        return redirect()->route('installment.plans', ['amount' => 0]);
+    }
+
     // ── صفحه انتخاب طرح اقساطی ──────────────────────────────────────────────
 
     public function plans(Request $request)
