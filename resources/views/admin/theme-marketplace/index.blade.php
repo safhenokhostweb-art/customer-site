@@ -80,7 +80,7 @@
   {{-- All Themes Grid --}}
   @if(empty($themes))
     <div class="bg-white rounded-xl border border-gray-100 py-16 text-center">
-      <x-core-ui::icon name="puzzle" class="w-12 h-12 text-gray-200 mx-auto mb-3" />
+      <x-core-ui::icon name="puzzle" class="w-12 h-12 text-gray-300 mx-auto mb-3" />
       <p class="text-gray-400 text-sm">هنوز قالبی در فروشگاه موجود نیست.</p>
     </div>
   @else
@@ -96,7 +96,7 @@
                    alt="{{ $theme['name'] }}">
             @else
               <div class="w-full h-full flex items-center justify-center">
-                <x-core-ui::icon name="image" class="w-12 h-12 text-gray-200" />
+                <x-core-ui::icon name="image" class="w-12 h-12 text-gray-400" />
               </div>
             @endif
             {{-- Badges --}}

@@ -1,5 +1,49 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
+
+/*
+|--------------------------------------------------------------------------
+| GET /api/health — Platform monitoring probe (no auth required)
+|--------------------------------------------------------------------------
+| Checked every 5 minutes by monitor:sites on the saas-platform.
+| Must return HTTP 200 + JSON. Never throw exceptions from this route.
+*/
+Route::get('health', function () {
+    $app = 'ok';
+
+    try {
+        DB::select('SELECT 1');
+        $db = 'ok';
+    } catch (\Throwable) {
+        $db = 'error';
+    }
+
+    try {
+        $pong = Redis::connection('default')->ping();
+        $redis = $pong ? 'ok' : 'error';
+    } catch (\Throwable) {
+        $redis = 'error';
+    }
+
+    try {
+        $queueSize = \Illuminate\Support\Facades\Queue::size();
+        $queue = $queueSize < 1000 ? 'ok' : 'idle';
+    } catch (\Throwable) {
+        $queue = 'unknown';
+    }
+
+    return response()->json([
+        'app'       => $app,
+        'db'        => $db,
+        'redis'     => $redis,
+        'queue'     => $queue,
+        'timestamp' => now()->toIso8601String(),
+    ], 200);
+});
+
 use App\Http\Controllers\Api\SupportConversationController;
 use App\Http\Controllers\Api\SupportMessageController;
 use App\Http\Controllers\Api\SupportPresenceController;

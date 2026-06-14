@@ -37,6 +37,11 @@
             </p>
         </div>
         <div class="admin-page-tools">
+            <a href="{{ route('admin.builder.post.edit', $post) }}"
+               class="btn btn-primary"
+               style="display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,#6366f1,#4f46e5);border-color:#4f46e5;">
+                ✏️ سازنده بصری
+            </a>
             <a href="{{ route('admin.posts.preview', $post) }}" target="_blank"
                class="btn btn-secondary"
                style="display:inline-flex;align-items:center;gap:0.4rem;">

@@ -23,18 +23,33 @@ class PageBuilderController extends Controller
      */
     public function edit(Page $page)
     {
-        $elements = $this->getElementsForSite();
-        $content = $page->builder_content_v2 ?? $page->builder_content ?? ['sections' => []];
-        if (!isset($content['sections']) || !is_array($content['sections'])) {
-            $content = ['sections' => []];
+        [$blockLabels, $blockSchemas, $byCategory] = $this->buildRegistryData();
+
+        $raw = $page->builder_content_v2 ?? $page->builder_content ?? [];
+        // Support flat {blocks:[...]} format alongside legacy {sections:[...]}
+        if (isset($raw['blocks']) && is_array($raw['blocks'])) {
+            $initialBlocks = $raw['blocks'];
+        } elseif (isset($raw['sections']) && is_array($raw['sections'])) {
+            // Flatten legacy hierarchical format to top-level sections
+            $initialBlocks = $raw['sections'];
+        } else {
+            $initialBlocks = [];
         }
+
         return view('builder.edit', [
-            'page' => $page,
-            'elementsConfig' => $elements,
-            'builderContent' => $content,
-            'pageKits' => BuilderPageKits::definitions(),
-            'useV2' => true,
-            'testMode' => false,
+            'page'         => $page,
+            'initialBlocks'=> $initialBlocks,
+            'blockLabels'  => $blockLabels,
+            'blockSchemas' => $blockSchemas,
+            'byCategory'   => $byCategory,
+            'orderedCats'  => ['layout', 'content', 'marketing', 'dynamic', 'ecommerce', 'utility'],
+            'catLabels'    => config('builder-elements.categories', []),
+            'catIcons'     => config('builder-elements.category_icons', []),
+            'catColors'    => config('builder-elements.category_colors', []),
+            'previewUrl'   => route('builder.preview'),
+            'saveUrl'      => route('builder.page.update', $page),
+            'exitUrl'      => route('page.show', $page->slug),
+            'pageTitle'    => $page->title,
         ]);
     }
 
@@ -44,20 +59,19 @@ class PageBuilderController extends Controller
      */
     public function test()
     {
-        $elements = $this->getElementsForSite();
-        $content = $this->getFixtureBuilderContent();
-        $page = (object) [
-            'id' => 0,
-            'title' => 'صفحه تست سازنده',
-            'slug' => 'test',
-        ];
+        [$blockLabels, $blockSchemas, $byCategory] = $this->buildRegistryData();
         return view('builder.edit', [
-            'page' => $page,
-            'elementsConfig' => $elements,
-            'builderContent' => $content,
-            'pageKits' => BuilderPageKits::definitions(),
-            'useV2' => true,
-            'testMode' => true,
+            'pageTitle'    => 'صفحه تست سازنده',
+            'initialBlocks'=> [],
+            'blockLabels'  => $blockLabels,
+            'blockSchemas' => $blockSchemas,
+            'byCategory'   => $byCategory,
+            'catLabels'    => config('builder-elements.categories', []),
+            'catIcons'     => config('builder-elements.category_icons', []),
+            'catColors'    => config('builder-elements.category_colors', []),
+            'previewUrl'   => route('builder.preview'),
+            'saveUrl'      => '#',
+            'exitUrl'      => route('admin.pages.index'),
         ]);
     }
 
@@ -125,61 +139,37 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * API: Save builder content for the page.
-     * Accepts builder_content_v2 (preferred) or builder_content; stores v2 when provided.
+     * API: Save builder content (flat blocks format: {blocks:[...]}).
      */
     public function update(Request $request, Page $page): JsonResponse
     {
-        $v2 = $request->input('builder_content_v2');
-        if (is_array($v2)) {
-            $request->validate([
-                'builder_content_v2.sections' => 'array',
-                'builder_content_v2.sections.*.id' => 'string',
-                'builder_content_v2.sections.*.type' => 'string',
-                'builder_content_v2.sections.*.props' => 'array',
-                'builder_content_v2.sections.*.blocks' => 'array',
-            ]);
-            $content = $v2;
-            if (!isset($content['sections']) || !is_array($content['sections'])) {
-                $content['sections'] = [];
-            }
-            $page->update([
-                'builder_content_v2' => $content,
-                'builder_type' => Page::BUILDER_TYPE_BUILDER,
-            ]);
-            return response()->json(['success' => true, 'builder_content_v2' => $page->builder_content_v2]);
-        }
-
         $data = $request->validate([
-            'builder_content' => 'required|array',
-            'builder_content.sections' => 'array',
-            'builder_content.sections.*.id' => 'string',
-            'builder_content.sections.*.type' => 'string',
-            'builder_content.sections.*.props' => 'array',
-            'builder_content.sections.*.blocks' => 'array',
+            'blocks'   => 'required|array',
+            'blocks.*.id'    => 'string',
+            'blocks.*.type'  => 'string',
+            'blocks.*.props' => 'sometimes|array',
         ]);
-        $content = $data['builder_content'];
-        if (empty($content['sections'])) {
-            $content['sections'] = [];
-        }
+        $content = ['blocks' => $data['blocks']];
         $page->update([
-            'builder_content' => $content,
-            'builder_type' => Page::BUILDER_TYPE_BUILDER,
+            'builder_content_v2' => $content,
+            'builder_type'       => Page::BUILDER_TYPE_BUILDER,
         ]);
-        return response()->json(['success' => true, 'builder_content' => $page->builder_content]);
+        return response()->json(['success' => true]);
     }
 
     /**
-     * Return HTML preview for the given builder_content or builder_content_v2 (for iframe or inline preview).
-     * When _test_mode=1, response includes render_time_ms and memory_peak_bytes for debug overlay.
+     * Return HTML preview for flat blocks array.
+     * Accepts {blocks:[...]} (new) or legacy {sections:[...]} wrapper.
      */
     public function preview(Request $request): JsonResponse
     {
-        $content = $request->input('builder_content_v2') ?? $request->input('builder_content', ['sections' => []]);
-        $sections = $content['sections'] ?? [];
-        if (!is_array($sections)) {
-            $sections = [];
+        // Accept both flat blocks and legacy sections
+        $blocks = $request->input('blocks');
+        if (!is_array($blocks)) {
+            $content  = $request->input('builder_content_v2') ?? $request->input('builder_content', []);
+            $blocks   = $content['blocks'] ?? $content['sections'] ?? [];
         }
+        $sections = is_array($blocks) ? $blocks : [];
 
         $testMode = $request->boolean('_test_mode') || $request->input('_test_mode') === 1;
         $start = $testMode ? (microtime(true) * 1000) : 0;
@@ -242,6 +232,41 @@ class PageBuilderController extends Controller
         ]);
         $t = PageTemplate::create($data);
         return response()->json(['success' => true, 'template' => $t]);
+    }
+
+    /**
+     * Build blockLabels, blockSchemas, byCategory from builder-elements config.
+     * Returns [$blockLabels, $blockSchemas, $byCategory].
+     */
+    protected function buildRegistryData(): array
+    {
+        $config  = config('builder-elements.elements', []);
+        $enabled = $this->enabledModuleSlugs();
+        $orderedCats = ['layout', 'content', 'marketing', 'dynamic', 'ecommerce', 'utility'];
+
+        $blockLabels  = [];
+        $blockSchemas = [];
+        $byCategory   = array_fill_keys($orderedCats, []);
+
+        foreach ($config as $type => $def) {
+            $module = $def['required_module'] ?? null;
+            if ($module !== null && !in_array($module, $enabled, true)) {
+                continue;
+            }
+            $blockLabels[$type] = $def['name'];
+            $blockSchemas[$type] = [
+                'schema'       => $def['schema'] ?? [],
+                'defaultProps' => $def['defaultProps'] ?? [],
+            ];
+            $cat = $def['category'] ?? 'content';
+            if (!isset($byCategory[$cat])) {
+                $byCategory[$cat] = [];
+            }
+            $byCategory[$cat][$type] = $def;
+        }
+        // Remove empty categories
+        $byCategory = array_filter($byCategory);
+        return [$blockLabels, $blockSchemas, $byCategory];
     }
 
     /**

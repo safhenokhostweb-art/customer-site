@@ -6,6 +6,11 @@
     <div class="admin-page-head">
         <h1 class="admin-page-title">ویرایش محصول</h1>
         <div class="admin-page-tools">
+            <a href="{{ route('admin.builder.product.edit', $product) }}"
+               class="btn btn-primary btn-sm"
+               style="display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,#6366f1,#4f46e5);border-color:#4f46e5;">
+                ✏️ سازنده بصری
+            </a>
             <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">بازگشت به فهرست</a>
         </div>
     </div>

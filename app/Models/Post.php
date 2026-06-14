@@ -29,6 +29,7 @@ class Post extends Model
         'meta_title', 'meta_description', 'canonical_url', 'og_image',
         'category_id', 'series_id', 'part_number', 'user_id',
         'published_at', 'is_published', 'editorial_status', 'view_count', 'likes_count',
+        'builder_content',
     ];
 
     protected function casts(): array
@@ -36,7 +37,8 @@ class Post extends Model
         return [
             'published_at' => 'datetime',
             'is_published' => 'boolean',
-            'gallery_images' => 'array',
+            'gallery_images'   => 'array',
+            'builder_content'  => 'array',
         ];
     }
 

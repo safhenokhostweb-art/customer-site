@@ -432,7 +432,7 @@
                                 <button type="submit"
                                         :disabled="isSending || (!noteMode && !message.trim()) || (noteMode && !noteText.trim())"
                                         class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all shrink-0"
-                                        :class="(isSending||(!noteMode&&!message.trim())||(noteMode&&!noteText.trim())) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : (noteMode ? 'bg-amber-400 text-white shadow-md hover:bg-amber-500' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg')">
+                                        :class="(isSending||(!noteMode&&!message.trim())||(noteMode&&!noteText.trim())) ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : (noteMode ? 'bg-amber-400 text-white shadow-md hover:bg-amber-500' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg')">
                                     <template x-if="!isSending">
                                         <x-core-ui::icon name="arrow-right" class="w-5 h-5" />
                                     </template>

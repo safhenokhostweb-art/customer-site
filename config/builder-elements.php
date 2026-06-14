@@ -1,17 +1,19 @@
 <?php
 
 return [
-    /*
-    | Element library for the Visual Page Builder.
-    | Each element: name (label), icon (emoji or icon class), category, required_module (null = always), defaultProps.
-    */
     'elements' => [
         'heading' => [
             'name' => 'عنوان',
-            'icon' => '📝',
+            'icon' => '🔠',
             'category' => 'content',
             'required_module' => null,
-            'defaultProps' => ['level' => 2, 'text' => 'عنوان'],
+            'defaultProps' => ['level' => 2, 'text' => 'عنوان صفحه'],
+            'schema' => [
+                'text'  => ['label' => 'متن عنوان', 'type' => 'string', 'default' => 'عنوان صفحه'],
+                'level' => ['label' => 'سطح (H1–H6)', 'type' => 'select', 'default' => 2, 'options' => ['1' => 'H1 — بزرگ‌ترین', '2' => 'H2', '3' => 'H3', '4' => 'H4', '5' => 'H5', '6' => 'H6 — کوچک‌ترین']],
+                'align' => ['label' => 'تراز', 'type' => 'select', 'default' => 'right', 'options' => ['right' => 'راست', 'center' => 'وسط', 'left' => 'چپ']],
+                'color' => ['label' => 'رنگ متن', 'type' => 'color', 'default' => ''],
+            ],
         ],
         'text' => [
             'name' => 'متن',
@@ -19,6 +21,11 @@ return [
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['content' => 'متن خود را اینجا بنویسید.'],
+            'schema' => [
+                'content' => ['label' => 'متن', 'type' => 'textarea', 'default' => ''],
+                'align'   => ['label' => 'تراز', 'type' => 'select', 'default' => 'right', 'options' => ['right' => 'راست', 'center' => 'وسط', 'left' => 'چپ']],
+                'color'   => ['label' => 'رنگ متن', 'type' => 'color', 'default' => ''],
+            ],
         ],
         'image' => [
             'name' => 'تصویر',
@@ -26,13 +33,23 @@ return [
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['url' => '', 'alt' => '', 'caption' => ''],
+            'schema' => [
+                'url'     => ['label' => 'آدرس تصویر (URL)', 'type' => 'string', 'default' => ''],
+                'alt'     => ['label' => 'متن جایگزین (alt)', 'type' => 'string', 'default' => ''],
+                'caption' => ['label' => 'زیرنویس', 'type' => 'string', 'default' => ''],
+            ],
         ],
         'button' => [
             'name' => 'دکمه',
             'icon' => '🔘',
             'category' => 'content',
             'required_module' => null,
-            'defaultProps' => ['text' => 'دکمه', 'url' => '#', 'style' => 'primary'],
+            'defaultProps' => ['text' => 'کلیک کنید', 'url' => '#', 'style' => 'primary'],
+            'schema' => [
+                'text'   => ['label' => 'متن دکمه', 'type' => 'string', 'default' => 'کلیک کنید'],
+                'url'    => ['label' => 'لینک (URL)', 'type' => 'string', 'default' => '#'],
+                'style'  => ['label' => 'نوع', 'type' => 'select', 'default' => 'primary', 'options' => ['primary' => 'اصلی', 'secondary' => 'ثانویه', 'outline' => 'خطی', 'ghost' => 'شفاف']],
+            ],
         ],
         'icon' => [
             'name' => 'آیکون',
@@ -40,13 +57,22 @@ return [
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['name' => 'star', 'size' => 'md'],
+            'schema' => [
+                'name' => ['label' => 'نام آیکون', 'type' => 'string', 'default' => 'star'],
+                'size' => ['label' => 'اندازه', 'type' => 'select', 'default' => 'md', 'options' => ['sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ', 'xl' => 'خیلی بزرگ']],
+                'color' => ['label' => 'رنگ', 'type' => 'color', 'default' => ''],
+            ],
         ],
         'divider' => [
             'name' => 'جداکننده',
             'icon' => '➖',
             'category' => 'content',
             'required_module' => null,
-            'defaultProps' => [],
+            'defaultProps' => ['style' => 'solid', 'color' => ''],
+            'schema' => [
+                'style' => ['label' => 'نوع خط', 'type' => 'select', 'default' => 'solid', 'options' => ['solid' => 'توپر', 'dashed' => 'خطچین', 'dotted' => 'نقطه‌چین']],
+                'color' => ['label' => 'رنگ', 'type' => 'color', 'default' => ''],
+            ],
         ],
         'spacer' => [
             'name' => 'فاصله',
@@ -54,6 +80,9 @@ return [
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['height' => 'md'],
+            'schema' => [
+                'height' => ['label' => 'ارتفاع', 'type' => 'select', 'default' => 'md', 'options' => ['xs' => 'خیلی کوچک', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ', 'xl' => 'خیلی بزرگ']],
+            ],
         ],
         'video' => [
             'name' => 'ویدیو',
@@ -61,34 +90,57 @@ return [
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['url' => '', 'caption' => ''],
+            'schema' => [
+                'url'     => ['label' => 'آدرس ویدیو (YouTube/Aparat)', 'type' => 'string', 'default' => ''],
+                'caption' => ['label' => 'زیرنویس', 'type' => 'string', 'default' => ''],
+                'autoplay' => ['label' => 'پخش خودکار', 'type' => 'boolean', 'default' => false],
+            ],
         ],
         'hero' => [
             'name' => 'بخش قهرمان',
-            'icon' => '🎯',
+            'icon' => '🌟',
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => [
                 'title' => 'عنوان اصلی',
-                'subtitle' => 'زیرعنوان',
-                'button_text' => 'بیشتر',
+                'subtitle' => 'زیرعنوان توضیحی',
+                'button_text' => 'شروع کنید',
                 'button_url' => '#',
                 'background' => 'primary',
                 'align' => 'center',
             ],
+            'schema' => [
+                'title'       => ['label' => 'عنوان اصلی', 'type' => 'string', 'default' => 'عنوان اصلی'],
+                'subtitle'    => ['label' => 'زیرعنوان', 'type' => 'textarea', 'default' => ''],
+                'button_text' => ['label' => 'متن دکمه', 'type' => 'string', 'default' => 'شروع کنید'],
+                'button_url'  => ['label' => 'لینک دکمه', 'type' => 'string', 'default' => '#'],
+                'background'  => ['label' => 'پس‌زمینه', 'type' => 'select', 'default' => 'primary', 'options' => ['primary' => 'رنگ اصلی', 'gradient' => 'گرادیانت', 'dark' => 'تیره', 'light' => 'روشن', 'image' => 'تصویر']],
+                'align'       => ['label' => 'تراز', 'type' => 'select', 'default' => 'center', 'options' => ['right' => 'راست', 'center' => 'وسط', 'left' => 'چپ']],
+            ],
         ],
         'section' => [
             'name' => 'بخش',
-            'icon' => '▣',
+            'icon' => '📦',
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['padding' => 'md', 'background' => 'transparent', 'container' => true],
+            'schema' => [
+                'padding'    => ['label' => 'فاصله داخلی', 'type' => 'select', 'default' => 'md', 'options' => ['none' => 'بدون فاصله', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ', 'xl' => 'خیلی بزرگ']],
+                'background' => ['label' => 'پس‌زمینه', 'type' => 'select', 'default' => 'transparent', 'options' => ['transparent' => 'شفاف', 'surface' => 'سطح سفید', 'muted' => 'خاکستری روشن', 'primary' => 'رنگ اصلی', 'dark' => 'تیره']],
+                'container'  => ['label' => 'محدود به container', 'type' => 'boolean', 'default' => true],
+                'radius'     => ['label' => 'گوشه گرد', 'type' => 'select', 'default' => '', 'options' => ['' => 'بدون', 'sm' => 'کم', 'md' => 'متوسط', 'lg' => 'زیاد']],
+            ],
         ],
         'row' => [
             'name' => 'ردیف',
             'icon' => '⇄',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['gap' => 'md'],
+            'defaultProps' => ['gap' => 'md', 'columns' => 2],
+            'schema' => [
+                'columns' => ['label' => 'تعداد ستون', 'type' => 'select', 'default' => '2', 'options' => ['1' => '۱ ستون', '2' => '۲ ستون', '3' => '۳ ستون', '4' => '۴ ستون']],
+                'gap'     => ['label' => 'فاصله بین ستون‌ها', 'type' => 'select', 'default' => 'md', 'options' => ['none' => 'بدون', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+            ],
         ],
         'column' => [
             'name' => 'ستون',
@@ -96,13 +148,20 @@ return [
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['width' => '1/2'],
+            'schema' => [
+                'width' => ['label' => 'عرض', 'type' => 'select', 'default' => '1/2', 'options' => ['1/1' => 'تمام عرض', '1/2' => 'نصف', '1/3' => 'یک سوم', '2/3' => 'دو سوم', '1/4' => 'یک چهارم', '3/4' => 'سه چهارم']],
+            ],
         ],
         'grid' => [
             'name' => 'گرید',
-            'icon' => '⊞',
+            'icon' => '🔲',
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['columns' => 3, 'gap' => 'md'],
+            'schema' => [
+                'columns' => ['label' => 'ستون‌ها', 'type' => 'select', 'default' => '3', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶']],
+                'gap'     => ['label' => 'فاصله', 'type' => 'select', 'default' => 'md', 'options' => ['sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+            ],
         ],
         'columns' => [
             'name' => 'ستون‌ها',
@@ -110,6 +169,10 @@ return [
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['ratios' => '1/2,1/2', 'gap' => 'md'],
+            'schema' => [
+                'ratios' => ['label' => 'نسبت ستون‌ها', 'type' => 'select', 'default' => '1/2,1/2', 'options' => ['1/2,1/2' => '۵۰٪ — ۵۰٪', '1/3,2/3' => '۳۳٪ — ۶۶٪', '2/3,1/3' => '۶۶٪ — ۳۳٪', '1/4,3/4' => '۲۵٪ — ۷۵٪', '1/3,1/3,1/3' => '۳۳٪ — ۳۳٪ — ۳۳٪']],
+                'gap'    => ['label' => 'فاصله', 'type' => 'select', 'default' => 'md', 'options' => ['sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+            ],
         ],
         'tabs' => [
             'name' => 'تب‌ها',
@@ -117,20 +180,26 @@ return [
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['tabs' => [['title' => 'تب ۱', 'blocks' => []], ['title' => 'تب ۲', 'blocks' => []]]],
+            'schema' => [],
         ],
         'accordion' => [
             'name' => 'آکوردئون',
-            'icon' => '📋',
+            'icon' => '🪗',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['items' => [['title' => 'عنوان', 'blocks' => []]]],
+            'defaultProps' => ['items' => [['title' => 'عنوان آکوردئون', 'blocks' => []]]],
+            'schema' => [],
         ],
         'slider' => [
             'name' => 'اسلایدر',
-            'icon' => '🖼️',
+            'icon' => '🎠',
             'category' => 'layout',
             'required_module' => null,
             'defaultProps' => ['autoplay' => true, 'interval' => 5000, 'slides' => []],
+            'schema' => [
+                'autoplay' => ['label' => 'پخش خودکار', 'type' => 'boolean', 'default' => true],
+                'interval' => ['label' => 'فاصله (میلی‌ثانیه)', 'type' => 'number', 'default' => 5000],
+            ],
         ],
         'cta' => [
             'name' => 'دعوت به اقدام',
@@ -138,19 +207,30 @@ return [
             'category' => 'marketing',
             'required_module' => null,
             'defaultProps' => [
-                'title' => 'عنوان CTA',
-                'subtitle' => 'زیرعنوان',
-                'button_text' => 'اقدام',
+                'title' => 'همین الان شروع کنید',
+                'subtitle' => 'با ما در تماس باشید',
+                'button_text' => 'اقدام کنید',
                 'button_url' => '#',
                 'background' => 'primary',
             ],
+            'schema' => [
+                'title'       => ['label' => 'عنوان', 'type' => 'string', 'default' => 'همین الان شروع کنید'],
+                'subtitle'    => ['label' => 'زیرعنوان', 'type' => 'string', 'default' => ''],
+                'button_text' => ['label' => 'متن دکمه', 'type' => 'string', 'default' => 'اقدام کنید'],
+                'button_url'  => ['label' => 'لینک دکمه', 'type' => 'string', 'default' => '#'],
+                'background'  => ['label' => 'پس‌زمینه', 'type' => 'select', 'default' => 'primary', 'options' => ['primary' => 'رنگ اصلی', 'dark' => 'تیره', 'gradient' => 'گرادیانت']],
+            ],
         ],
         'testimonials' => [
-            'name' => 'نظرات',
-            'icon' => '💬',
+            'name' => 'نظرات مشتریان',
+            'icon' => '⭐',
             'category' => 'dynamic',
             'required_module' => 'reviews',
             'defaultProps' => ['title' => 'نظرات مشتریان', 'limit' => 3],
+            'schema' => [
+                'title' => ['label' => 'عنوان', 'type' => 'string', 'default' => 'نظرات مشتریان'],
+                'limit' => ['label' => 'تعداد نمایش', 'type' => 'number', 'default' => 3],
+            ],
         ],
         'blog_posts' => [
             'name' => 'پست‌های وبلاگ',
@@ -158,6 +238,11 @@ return [
             'category' => 'dynamic',
             'required_module' => 'blog',
             'defaultProps' => ['title' => 'آخرین مطالب', 'limit' => 6],
+            'schema' => [
+                'title'  => ['label' => 'عنوان بخش', 'type' => 'string', 'default' => 'آخرین مطالب'],
+                'limit'  => ['label' => 'تعداد پست', 'type' => 'number', 'default' => 6],
+                'layout' => ['label' => 'نوع نمایش', 'type' => 'select', 'default' => 'grid', 'options' => ['grid' => 'گرید', 'list' => 'لیست', 'slider' => 'اسلایدر']],
+            ],
         ],
         'product_grid' => [
             'name' => 'گرید محصولات',
@@ -165,6 +250,11 @@ return [
             'category' => 'ecommerce',
             'required_module' => 'shop',
             'defaultProps' => ['columns' => 4, 'limit' => 8],
+            'schema' => [
+                'title'   => ['label' => 'عنوان بخش', 'type' => 'string', 'default' => ''],
+                'columns' => ['label' => 'ستون‌ها', 'type' => 'select', 'default' => '4', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵']],
+                'limit'   => ['label' => 'تعداد محصول', 'type' => 'number', 'default' => 8],
+            ],
         ],
         'faq' => [
             'name' => 'سوالات متداول',
@@ -172,13 +262,20 @@ return [
             'category' => 'dynamic',
             'required_module' => null,
             'defaultProps' => ['title' => 'سوالات متداول', 'items' => []],
+            'schema' => [
+                'title' => ['label' => 'عنوان', 'type' => 'string', 'default' => 'سوالات متداول'],
+            ],
         ],
         'gallery' => [
             'name' => 'گالری',
-            'icon' => '🖼️',
+            'icon' => '🗂️',
             'category' => 'content',
             'required_module' => null,
             'defaultProps' => ['title' => '', 'items' => []],
+            'schema' => [
+                'title'   => ['label' => 'عنوان گالری', 'type' => 'string', 'default' => ''],
+                'columns' => ['label' => 'ستون‌ها', 'type' => 'select', 'default' => '3', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴']],
+            ],
         ],
         'countdown' => [
             'name' => 'شمارش معکوس',
@@ -186,6 +283,10 @@ return [
             'category' => 'marketing',
             'required_module' => null,
             'defaultProps' => ['end_date' => '', 'label' => 'پایان پیشنهاد'],
+            'schema' => [
+                'end_date' => ['label' => 'تاریخ پایان', 'type' => 'string', 'default' => ''],
+                'label'    => ['label' => 'برچسب', 'type' => 'string', 'default' => 'پایان پیشنهاد'],
+            ],
         ],
         'social_icons' => [
             'name' => 'شبکه‌های اجتماعی',
@@ -193,6 +294,7 @@ return [
             'category' => 'utility',
             'required_module' => null,
             'defaultProps' => ['links' => []],
+            'schema' => [],
         ],
         'promo_banner' => [
             'name' => 'بنر تبلیغاتی',
@@ -200,6 +302,11 @@ return [
             'category' => 'marketing',
             'required_module' => null,
             'defaultProps' => ['text' => '', 'link' => '', 'style' => 'info'],
+            'schema' => [
+                'text'  => ['label' => 'متن بنر', 'type' => 'string', 'default' => ''],
+                'link'  => ['label' => 'لینک', 'type' => 'string', 'default' => ''],
+                'style' => ['label' => 'نوع', 'type' => 'select', 'default' => 'info', 'options' => ['info' => 'اطلاعات', 'success' => 'موفقیت', 'warning' => 'هشدار', 'danger' => 'خطر', 'promo' => 'تبلیغ']],
+            ],
         ],
         'custom_html' => [
             'name' => 'HTML سفارشی',
@@ -207,14 +314,33 @@ return [
             'category' => 'utility',
             'required_module' => null,
             'defaultProps' => ['content' => ''],
+            'schema' => [
+                'content' => ['label' => 'کد HTML', 'type' => 'textarea', 'default' => ''],
+            ],
         ],
     ],
     'categories' => [
-        'content' => 'محتوای ثابت',
-        'layout' => 'چیدمان',
+        'layout'    => 'چیدمان',
+        'content'   => 'محتوای ثابت',
         'marketing' => 'بازاریابی',
-        'dynamic' => 'محتوای پویا',
+        'dynamic'   => 'محتوای پویا',
         'ecommerce' => 'فروشگاه',
-        'utility' => 'ابزار',
+        'utility'   => 'ابزار',
+    ],
+    'category_icons' => [
+        'layout'    => '🏗️',
+        'content'   => '✍️',
+        'marketing' => '📣',
+        'dynamic'   => '⚡',
+        'ecommerce' => '🛒',
+        'utility'   => '🔧',
+    ],
+    'category_colors' => [
+        'layout'    => 'text-blue-600 bg-blue-50',
+        'content'   => 'text-green-700 bg-green-50',
+        'marketing' => 'text-orange-600 bg-orange-50',
+        'dynamic'   => 'text-purple-600 bg-purple-50',
+        'ecommerce' => 'text-emerald-700 bg-emerald-50',
+        'utility'   => 'text-slate-600 bg-slate-100',
     ],
 ];

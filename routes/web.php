@@ -396,6 +396,14 @@ Route::middleware('install.check')->group(function () {
             Route::post('/read-all',    [\App\Http\Controllers\Admin\AdminInboxController::class, 'markAllRead'])->name('read-all');
         });
         Route::get('builder-health', [\App\Http\Controllers\Admin\BuilderHealthController::class, 'index'])->name('builder-health.index');
+
+        // ── Content Builder: visual block editor for posts & products ──
+        Route::prefix('builder')->name('builder.')->group(function () {
+            Route::get('posts/{post}',    [\App\Http\Controllers\Admin\ContentBuilderController::class, 'editPost'])->name('post.edit');
+            Route::put('posts/{post}',    [\App\Http\Controllers\Admin\ContentBuilderController::class, 'savePost'])->name('post.save');
+            Route::get('products/{product}', [\App\Http\Controllers\Admin\ContentBuilderController::class, 'editProduct'])->name('product.edit');
+            Route::put('products/{product}', [\App\Http\Controllers\Admin\ContentBuilderController::class, 'saveProduct'])->name('product.save');
+        });
         Route::middleware(['module:currency_reform', 'permission:currency_reform'])->group(function () {
             Route::get('currency-reform', [CurrencyReformController::class, 'index'])->name('currency-reform.index');
             Route::post('currency-reform', [CurrencyReformController::class, 'update'])->name('currency-reform.update');

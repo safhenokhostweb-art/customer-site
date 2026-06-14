@@ -275,10 +275,10 @@
                     <p class="text-xs font-semibold text-gray-800 truncate leading-tight">{{ $t->subject }}</p>
                     <p class="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1.5">
                         <span>{{ $t->ticket_number }}</span>
-                        <span class="text-gray-300">•</span>
+                        <span class="text-gray-400">•</span>
                         <span>{{ $statusLabel }}</span>
                     </p>
-                    <p class="text-[10px] text-gray-300 mt-0.5">{{ $t->updated_at->diffForHumans() }}</p>
+                    <p class="text-[10px] text-gray-500 mt-0.5">{{ $t->updated_at->diffForHumans() }}</p>
                 </div>
             </a>
             @empty
