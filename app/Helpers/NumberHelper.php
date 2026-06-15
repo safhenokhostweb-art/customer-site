@@ -50,6 +50,10 @@ class NumberHelper
         if ($amount === null) {
             return '۰';
         }
-        return self::toPersianNumbers(number_format($amount, $decimals));
+        // Strip commas if already formatted (e.g. number_format() output passed in)
+        if (is_string($amount)) {
+            $amount = str_replace(',', '', $amount);
+        }
+        return self::toPersianNumbers(number_format((float) $amount, $decimals));
     }
 }

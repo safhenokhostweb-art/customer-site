@@ -78,6 +78,10 @@ class LicenseActivationService
             $data['modules'] = [];
         }
         $license->update($data);
+
+        // Invalidate middleware cache so next request reflects updated license state
+        \App\Http\Middleware\SetTenantContext::forgetLicenseCache();
+
         return [
             'valid' => !empty($result['valid']),
             'message' => $result['message'] ?? null,
