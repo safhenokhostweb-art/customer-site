@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TranslationQueue extends Model
 {
+    protected $table = 'translation_queue';
+
     protected $fillable = [
         'translatable_type', 'translatable_id',
         'locale', 'field_name',
