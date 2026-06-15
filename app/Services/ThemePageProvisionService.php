@@ -78,7 +78,7 @@ class ThemePageProvisionService
             ];
         }
 
-        return compact('created', 'skipped', 'pages');
+        return ['created' => $created, 'skipped' => $skipped, 'pages' => $provisionedPages];
     }
 
     /**
