@@ -22,7 +22,7 @@ Route::get('health', function () {
     }
 
     try {
-        $pong = Redis::connection('default')->ping();
+        $pong  = Redis::connection('default')->ping();
         $redis = $pong ? 'ok' : 'error';
     } catch (\Throwable) {
         $redis = 'error';
@@ -30,17 +30,54 @@ Route::get('health', function () {
 
     try {
         $queueSize = \Illuminate\Support\Facades\Queue::size();
-        $queue = $queueSize < 1000 ? 'ok' : 'idle';
+        $queue     = $queueSize < 1000 ? 'ok' : 'idle';
     } catch (\Throwable) {
         $queue = 'unknown';
     }
 
+    // Failed jobs count
+    $failedJobs = null;
+    try {
+        $failedJobs = (int) DB::table('failed_jobs')->count();
+    } catch (\Throwable) {}
+
+    // Disk usage
+    $diskUsedPercent = null;
+    try {
+        $total = disk_total_space(base_path());
+        $free  = disk_free_space(base_path());
+        if ($total > 0 && $free !== false) {
+            $diskUsedPercent = (int) round((($total - $free) / $total) * 100);
+        }
+    } catch (\Throwable) {}
+
+    // Memory usage (Linux)
+    $memUsedPercent = null;
+    try {
+        if (is_readable('/proc/meminfo')) {
+            $lines   = file('/proc/meminfo');
+            $memInfo = [];
+            foreach ($lines as $line) {
+                [$key, $val] = array_pad(explode(':', $line, 2), 2, '');
+                $memInfo[trim($key)] = (int) trim(str_replace(' kB', '', $val));
+            }
+            $memTotal     = $memInfo['MemTotal']     ?? 0;
+            $memAvailable = $memInfo['MemAvailable'] ?? ($memInfo['MemFree'] ?? 0);
+            if ($memTotal > 0) {
+                $memUsedPercent = (int) round((($memTotal - $memAvailable) / $memTotal) * 100);
+            }
+        }
+    } catch (\Throwable) {}
+
     return response()->json([
-        'app'       => $app,
-        'db'        => $db,
-        'redis'     => $redis,
-        'queue'     => $queue,
-        'timestamp' => now()->toIso8601String(),
+        'app'               => $app,
+        'db'                => $db,
+        'redis'             => $redis,
+        'queue'             => $queue,
+        'failed_jobs'       => $failedJobs,
+        'disk_used_percent' => $diskUsedPercent,
+        'memory_used_percent' => $memUsedPercent,
+        'timestamp'         => now()->toIso8601String(),
     ], 200);
 });
 

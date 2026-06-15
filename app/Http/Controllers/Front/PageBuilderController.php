@@ -37,19 +37,31 @@ class PageBuilderController extends Controller
         }
 
         return view('builder.edit', [
-            'page'         => $page,
-            'initialBlocks'=> $initialBlocks,
-            'blockLabels'  => $blockLabels,
-            'blockSchemas' => $blockSchemas,
-            'byCategory'   => $byCategory,
-            'orderedCats'  => ['layout', 'content', 'marketing', 'dynamic', 'ecommerce', 'utility'],
-            'catLabels'    => config('builder-elements.categories', []),
-            'catIcons'     => config('builder-elements.category_icons', []),
-            'catColors'    => config('builder-elements.category_colors', []),
-            'previewUrl'   => route('builder.preview'),
-            'saveUrl'      => route('builder.page.update', $page),
-            'exitUrl'      => route('page.show', $page->slug),
-            'pageTitle'    => $page->title,
+            'page'             => $page,
+            'initialBlocks'    => $initialBlocks,
+            'blockLabels'      => $blockLabels,
+            'blockSchemas'     => $blockSchemas,
+            'byCategory'       => $byCategory,
+            'orderedCats'      => ['layout','content','marketing','interactive','dynamic','ecommerce','utility'],
+            'catLabels'        => config('builder-elements.categories', []),
+            'catIcons'         => config('builder-elements.category_icons', []),
+            'catColors'        => config('builder-elements.category_colors', []),
+            'previewUrl'       => route('builder.preview'),
+            'saveUrl'          => route('builder.page.update', $page),
+            'exitUrl'          => route('page.show', $page->slug),
+            'pageTitle'        => $page->title,
+            'pageId'           => $page->id,
+            'pageSlug'         => $page->slug,
+            'pagePublished'    => (bool) $page->is_published,
+            'pageShowInMenu'   => (bool) $page->show_in_menu,
+            'pageMetaTitle'    => $page->meta_title ?? '',
+            'pageMetaDesc'     => $page->meta_description ?? '',
+            'contentType'      => 'page',
+            'adminUrl'         => route('admin.pages.edit', $page),
+            'listPagesUrl'     => route('builder.api.pages'),
+            'createPageUrl'    => route('builder.api.pages.create'),
+            'pageSettingsUrl'  => route('builder.api.page.settings', $page),
+            'uploadUrl'        => route('admin.image.upload'),
         ]);
     }
 
@@ -159,34 +171,132 @@ class PageBuilderController extends Controller
 
     /**
      * Return HTML preview for flat blocks array.
-     * Accepts {blocks:[...]} (new) or legacy {sections:[...]} wrapper.
+     * mode=builder → returns {block_htmls:[...]} for interactive canvas
+     * Default        → returns {html:'...'} for legacy preview
      */
     public function preview(Request $request): JsonResponse
     {
-        // Accept both flat blocks and legacy sections
         $blocks = $request->input('blocks');
         if (!is_array($blocks)) {
-            $content  = $request->input('builder_content_v2') ?? $request->input('builder_content', []);
-            $blocks   = $content['blocks'] ?? $content['sections'] ?? [];
+            $content = $request->input('builder_content_v2') ?? $request->input('builder_content', []);
+            $blocks  = $content['blocks'] ?? $content['sections'] ?? [];
         }
-        $sections = is_array($blocks) ? $blocks : [];
-
-        $testMode = $request->boolean('_test_mode') || $request->input('_test_mode') === 1;
-        $start = $testMode ? (microtime(true) * 1000) : 0;
+        $blocks = is_array($blocks) ? $blocks : [];
 
         $renderer = app(BlockRenderer::class);
-        $renderer->setContext([
-            'menu_html' => '', // preview doesn't need menu
-        ]);
-        $html = $renderer->renderBlocks($sections);
+        $renderer->setContext(['menu_html' => '']);
+
+        // Builder mode: return per-block HTML array for live iframe canvas
+        if ($request->input('mode') === 'builder') {
+            $blockHtmls = [];
+            foreach ($blocks as $block) {
+                $blockHtmls[] = $renderer->renderBlocks([$block]);
+            }
+            return response()->json(['block_htmls' => $blockHtmls]);
+        }
+
+        $testMode = $request->boolean('_test_mode');
+        $start    = $testMode ? (microtime(true) * 1000) : 0;
+        $html     = $renderer->renderBlocks($blocks);
 
         $payload = ['html' => $html];
         if ($testMode) {
-            $payload['render_time_ms'] = round((microtime(true) * 1000) - $start, 2);
+            $payload['render_time_ms']    = round((microtime(true) * 1000) - $start, 2);
             $payload['memory_peak_bytes'] = memory_get_peak_usage(true);
         }
-
         return response()->json($payload);
+    }
+
+    // ── Pro Builder APIs ──────────────────────────────────────────────────────
+
+    /** List all pages (for the Pages panel in builder). */
+    public function listPages(): JsonResponse
+    {
+        $pages = Page::orderBy('order')->orderBy('title')
+            ->get(['id', 'title', 'slug', 'is_published', 'show_in_menu', 'updated_at']);
+
+        return response()->json([
+            'pages' => $pages->map(fn ($p) => [
+                'id'           => $p->id,
+                'title'        => $p->title,
+                'slug'         => $p->slug,
+                'is_published' => (bool) $p->is_published,
+                'show_in_menu' => (bool) $p->show_in_menu,
+                'updated_at'   => $p->updated_at?->diffForHumans(),
+                'edit_url'     => route('builder.page.edit', $p),
+                'admin_url'    => route('admin.pages.edit', $p),
+                'view_url'     => route('page.show', $p->slug),
+            ])->values(),
+        ]);
+    }
+
+    /** Create a new page from within the builder. */
+    public function createPage(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug'  => 'nullable|string|max:255|unique:pages,slug',
+        ]);
+
+        $slug = $data['slug'] ?? Str::slug($data['title']);
+        // Ensure unique
+        $base = $slug;
+        $i = 1;
+        while (Page::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        $page = Page::create([
+            'title'        => $data['title'],
+            'slug'         => $slug,
+            'is_published' => false,
+            'builder_type' => Page::BUILDER_TYPE_BUILDER,
+            'builder_content_v2' => ['blocks' => []],
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'page'     => [
+                'id'       => $page->id,
+                'title'    => $page->title,
+                'slug'     => $page->slug,
+                'edit_url' => route('builder.page.edit', $page),
+            ],
+        ]);
+    }
+
+    /** Update page settings (title, slug, SEO, published, show_in_menu). */
+    public function updatePageSettings(Request $request, Page $page): JsonResponse
+    {
+        $data = $request->validate([
+            'title'            => 'sometimes|string|max:255',
+            'slug'             => 'sometimes|string|max:255|unique:pages,slug,' . $page->id,
+            'is_published'     => 'sometimes|boolean',
+            'show_in_menu'     => 'sometimes|boolean',
+            'meta_title'       => 'sometimes|nullable|string|max:255',
+            'meta_description' => 'sometimes|nullable|string|max:500',
+        ]);
+
+        $page->update($data);
+
+        return response()->json([
+            'success' => true,
+            'page'    => [
+                'id'           => $page->id,
+                'title'        => $page->title,
+                'slug'         => $page->slug,
+                'is_published' => (bool) $page->is_published,
+                'show_in_menu' => (bool) $page->show_in_menu,
+                'view_url'     => route('page.show', $page->slug),
+            ],
+        ]);
+    }
+
+    /** Delete a page from within the builder. */
+    public function deletePage(Page $page): JsonResponse
+    {
+        $page->delete();
+        return response()->json(['success' => true]);
     }
 
     /**

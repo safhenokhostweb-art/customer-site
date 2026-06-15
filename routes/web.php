@@ -198,6 +198,11 @@ Route::middleware('install.check')->group(function () {
         Route::post('/preview', [PageBuilderController::class, 'preview'])->name('preview');
         Route::get('/templates', [PageBuilderController::class, 'templates'])->name('templates.index');
         Route::post('/templates', [PageBuilderController::class, 'saveTemplate'])->name('templates.store');
+        // Pro Builder APIs
+        Route::get('/api/pages', [PageBuilderController::class, 'listPages'])->name('api.pages');
+        Route::post('/api/pages', [PageBuilderController::class, 'createPage'])->name('api.pages.create');
+        Route::put('/api/page/{page}/settings', [PageBuilderController::class, 'updatePageSettings'])->name('api.page.settings');
+        Route::delete('/api/page/{page}', [PageBuilderController::class, 'deletePage'])->name('api.page.delete');
     });
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
