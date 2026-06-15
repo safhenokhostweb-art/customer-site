@@ -14,18 +14,30 @@ class Page extends Model
         'builder_header_template_override', 'builder_footer_template_override',
         'builder_disable_header', 'builder_disable_footer',
         'meta_title', 'meta_description', 'order', 'is_published', 'show_in_menu',
+        'is_protected', 'theme_id', 'theme_page_key',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_published' => 'boolean',
-            'show_in_menu' => 'boolean',
+            'is_published'         => 'boolean',
+            'show_in_menu'         => 'boolean',
+            'is_protected'         => 'boolean',
             'builder_disable_header' => 'boolean',
             'builder_disable_footer' => 'boolean',
-            'builder_content' => 'array',
-            'builder_content_v2' => 'array',
+            'builder_content'      => 'array',
+            'builder_content_v2'   => 'array',
         ];
+    }
+
+    public function revisions()
+    {
+        return $this->hasMany(PageRevision::class)->orderByDesc('created_at');
+    }
+
+    public function recentRevisions(int $days = 7)
+    {
+        return $this->revisions()->where('created_at', '>=', now()->subDays($days));
     }
 
     /**

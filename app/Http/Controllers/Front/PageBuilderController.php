@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Models\PageRevision;
 use App\Models\PageTemplate;
 use App\Services\ThemeBuilder\BlockRenderer;
+use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 /**
@@ -152,21 +155,113 @@ class PageBuilderController extends Controller
 
     /**
      * API: Save builder content (flat blocks format: {blocks:[...]}).
+     * Automatically creates a revision before overwriting.
      */
     public function update(Request $request, Page $page): JsonResponse
     {
         $data = $request->validate([
             'blocks'   => 'required|array',
-            'blocks.*.id'    => 'string',
-            'blocks.*.type'  => 'string',
+            'blocks.*.id'    => 'nullable|string',
+            'blocks.*.type'  => 'nullable|string',
             'blocks.*.props' => 'sometimes|array',
         ]);
+
+        // Save revision of previous content before overwriting
+        $previousContent = $page->builder_content_v2;
+        if (!empty($previousContent['blocks'] ?? [])) {
+            PageRevision::create([
+                'page_id'        => $page->id,
+                'blocks_snapshot'=> $previousContent['blocks'],
+                'saved_by'       => Auth::user()?->name ?? Auth::user()?->mobile ?? 'system',
+                'label'          => 'ذخیره خودکار',
+            ]);
+            // Prune revisions older than 7 days for this page
+            PageRevision::where('page_id', $page->id)
+                ->where('created_at', '<', now()->subDays(7))
+                ->delete();
+        }
+
         $content = ['blocks' => $data['blocks']];
         $page->update([
             'builder_content_v2' => $content,
             'builder_type'       => Page::BUILDER_TYPE_BUILDER,
         ]);
         return response()->json(['success' => true]);
+    }
+
+    /** List page revisions for the last 7 days. */
+    public function listRevisions(Page $page): JsonResponse
+    {
+        $revisions = PageRevision::where('page_id', $page->id)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderByDesc('created_at')
+            ->get(['id', 'saved_by', 'label', 'created_at']);
+
+        return response()->json([
+            'revisions' => $revisions->map(fn ($r) => [
+                'id'       => $r->id,
+                'saved_by' => $r->saved_by,
+                'label'    => $r->label,
+                'time_ago' => $r->created_at->diffForHumans(),
+                'date'     => $r->created_at->format('Y/m/d H:i'),
+            ])->values(),
+        ]);
+    }
+
+    /** Restore a revision: save current as new revision, then load the old one. */
+    public function restoreRevision(Request $request, PageRevision $revision): JsonResponse
+    {
+        $page = $revision->page;
+
+        // Save current as a revision first
+        $current = $page->builder_content_v2;
+        if (!empty($current['blocks'] ?? [])) {
+            PageRevision::create([
+                'page_id'        => $page->id,
+                'blocks_snapshot'=> $current['blocks'],
+                'saved_by'       => Auth::user()?->name ?? 'system',
+                'label'          => 'قبل از بازیابی',
+            ]);
+        }
+
+        // Restore
+        $page->update([
+            'builder_content_v2' => ['blocks' => $revision->blocks_snapshot],
+            'builder_type'       => Page::BUILDER_TYPE_BUILDER,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'blocks'  => $revision->blocks_snapshot,
+        ]);
+    }
+
+    /** Provision theme pages into the local pages table (called from saas-platform). */
+    public function provisionThemePages(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'theme_id'    => 'required|string|max:100',
+            'theme_name'  => 'required|string|max:255',
+            'pages'       => 'required|array',
+        ]);
+
+        $service = app(ThemePageProvisionService::class);
+        $result  = $service->provision($data['theme_id'], $data['theme_name'], $data['pages']);
+
+        return response()->json([
+            'success'  => true,
+            'created'  => $result['created'],
+            'skipped'  => $result['skipped'],
+            'pages'    => $result['pages'] ?? [],
+        ]);
+    }
+
+    /** Unprotect pages of a theme (called when theme is unassigned). */
+    public function unprotectThemePages(Request $request): JsonResponse
+    {
+        $data = $request->validate(['theme_id' => 'required|string|max:100']);
+        $count = app(ThemePageProvisionService::class)->unprotect($data['theme_id']);
+        return response()->json(['success' => true, 'unprotected' => $count]);
     }
 
     /**

@@ -560,6 +560,216 @@ class BlockRenderer
         return "<div class=\"tb-accordion\">" . implode('', $out) . "</div>";
     }
 
+    // Alias so Str::studly('product_grid') → renderProductGrid works
+    protected function renderProductGrid(array $props, string $inner, string $id): string
+    {
+        return $this->renderProduct_grid($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('blog_posts') falls through correctly
+    protected function renderBlog_posts(array $props, string $inner, string $id): string
+    {
+        return $this->renderBlogPosts($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('social_icons') → renderSocialIcons works
+    protected function renderSocialIcons(array $props, string $inner, string $id): string
+    {
+        return $this->renderSocial_icons($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('nav_menu') → renderNavMenu works
+    protected function renderNavMenu(array $props, string $inner, string $id): string
+    {
+        return $this->renderNav_menu($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('custom_html') → renderCustomHtml works
+    protected function renderCustomHtml2(array $props, string $inner, string $id): string
+    {
+        return $this->renderCustomHtml($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('promo_banner') → renderPromoBanner works
+    protected function renderPromo_banner(array $props, string $inner, string $id): string
+    {
+        return $this->renderPromoBanner($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('search_bar') → renderSearchBar works
+    protected function renderSearch_bar(array $props, string $inner, string $id): string
+    {
+        return $this->renderSearchBar($props, $inner, $id);
+    }
+
+    // Alias so Str::studly('cart_icon') → renderCartIcon works
+    protected function renderCart_icon(array $props, string $inner, string $id): string
+    {
+        return $this->renderCartIcon($props, $inner, $id);
+    }
+
+    /**
+     * Course list block — shows real courses from the education module.
+     */
+    protected function renderCourseList(array $props, string $inner, string $id): string
+    {
+        return $this->renderCourses($props, $inner, $id);
+    }
+
+    protected function renderCourses(array $props, string $inner, string $id): string
+    {
+        $title   = $this->escape($props['title'] ?? 'دوره‌های آموزشی');
+        $limit   = (int) ($props['limit'] ?? 6);
+        $columns = (int) ($props['columns'] ?? 3);
+
+        if (!class_exists(\App\Models\Course::class)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-courses\"><h2 class=\"tb-heading\">{$title}</h2><p class=\"tb-text\">ماژول آموزش فعال نیست.</p></div>";
+        }
+
+        $courses = \App\Models\Course::where('is_published', true)->latest()->take($limit)->get();
+        if ($courses->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-courses\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><p class=\"tb-text\">هنوز دوره‌ای منتشر نشده.</p></div>";
+        }
+
+        $colsClass = "tb-grid-cols-{$columns}";
+        $cards = [];
+        foreach ($courses as $course) {
+            try { $url = route('courses.show', $course->slug); } catch (\Throwable $e) { $url = '#'; }
+            $name = $this->escape($course->title ?? $course->name ?? '');
+            $img  = !empty($course->cover_image ?? $course->thumbnail ?? '') ? \App\Helpers\ImageHelper::url($course->cover_image ?? $course->thumbnail) : '';
+            $imgHtml = $img ? "<div class=\"tb-course-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-course-card-img tb-course-noimg\">🎓</div>";
+            $price = '';
+            if (isset($course->price)) {
+                $price = $course->price > 0 ? '<span class="tb-course-price">' . \App\Helpers\CurrencyHelper::formatPrice($course->price) . ' ' . \App\Helpers\CurrencyHelper::unitLabel() . '</span>' : '<span class="tb-course-price tb-course-free">رایگان</span>';
+            }
+            $cards[] = "<a href=\"{$url}\" class=\"tb-course-card\">{$imgHtml}<div class=\"tb-course-card-body\"><h3 class=\"tb-course-title\">{$name}</h3>{$price}</div></a>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-courses\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-md tb-courses-grid\">" . implode('', $cards) . "</div></div>";
+    }
+
+    /**
+     * Blog categories block — shows real categories with post counts.
+     */
+    protected function renderBlogCategories(array $props, string $inner, string $id): string
+    {
+        $title = $this->escape($props['title'] ?? 'دسته‌بندی وبلاگ');
+        $limit = (int) ($props['limit'] ?? 8);
+
+        if (!class_exists(\App\Models\Category::class) && !class_exists(\App\Models\PostCategory::class)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-blog-categories\"><h2 class=\"tb-heading\">{$title}</h2><p class=\"tb-text\">دسته‌بندی یافت نشد.</p></div>";
+        }
+
+        $modelClass = class_exists(\App\Models\PostCategory::class) ? \App\Models\PostCategory::class : \App\Models\Category::class;
+        try {
+            $cats = $modelClass::withCount('posts')->orderByDesc('posts_count')->take($limit)->get();
+        } catch (\Throwable $e) {
+            return "<div id=\"tb-{$id}\" class=\"tb-blog-categories\"><h2 class=\"tb-heading\">{$title}</h2></div>";
+        }
+
+        $items = [];
+        foreach ($cats as $cat) {
+            try { $url = route('blog.category', $cat->slug); } catch (\Throwable $e) { $url = '#'; }
+            $name  = $this->escape($cat->name ?? $cat->title ?? '');
+            $count = $cat->posts_count ?? 0;
+            $items[] = "<a href=\"{$url}\" class=\"tb-category-pill\">{$name}<span class=\"tb-category-count\">{$count}</span></a>";
+        }
+
+        $html = $items ? implode('', $items) : '<p class="tb-text">دسته‌بندی یافت نشد.</p>';
+        return "<div id=\"tb-{$id}\" class=\"tb-blog-categories\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-categories-grid\">{$html}</div></div>";
+    }
+
+    /**
+     * Product categories block — shows real shop categories.
+     */
+    protected function renderProductCategories(array $props, string $inner, string $id): string
+    {
+        $title   = $this->escape($props['title'] ?? 'دسته‌بندی محصولات');
+        $limit   = (int) ($props['limit'] ?? 8);
+        $columns = (int) ($props['columns'] ?? 4);
+
+        if (!class_exists(\App\Models\ProductCategory::class)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-product-categories\"><h2 class=\"tb-heading\">{$title}</h2><p class=\"tb-text\">دسته‌بندی یافت نشد.</p></div>";
+        }
+
+        try {
+            $cats = \App\Models\ProductCategory::withCount('products')->orderByDesc('products_count')->take($limit)->get();
+        } catch (\Throwable $e) {
+            return "<div id=\"tb-{$id}\" class=\"tb-product-categories\"><h2 class=\"tb-heading\">{$title}</h2></div>";
+        }
+
+        $colsClass = "tb-grid-cols-{$columns}";
+        $cards = [];
+        foreach ($cats as $cat) {
+            try { $url = route('shop.category', $cat->slug); } catch (\Throwable $e) { $url = '#'; }
+            $name  = $this->escape($cat->name ?? $cat->title ?? '');
+            $count = $cat->products_count ?? 0;
+            $img   = !empty($cat->image) ? \App\Helpers\ImageHelper::url($cat->image) : '';
+            $imgHtml = $img ? "<div class=\"tb-cat-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-cat-card-img tb-cat-noimg\">🗂️</div>";
+            $cards[] = "<a href=\"{$url}\" class=\"tb-category-card\">{$imgHtml}<div class=\"tb-cat-card-body\"><span class=\"tb-cat-name\">{$name}</span><span class=\"tb-cat-count\">{$count} محصول</span></div></a>";
+        }
+
+        $html = $cards ? implode('', $cards) : '<p class="tb-text">دسته‌بندی یافت نشد.</p>';
+        return "<div id=\"tb-{$id}\" class=\"tb-product-categories\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-md\">{$html}</div></div>";
+    }
+
+    /**
+     * Featured products — products with is_featured=true.
+     */
+    protected function renderFeaturedProducts(array $props, string $inner, string $id): string
+    {
+        $title   = $this->escape($props['title'] ?? 'محصولات ویژه');
+        $limit   = (int) ($props['limit'] ?? 4);
+        $columns = (int) ($props['columns'] ?? 4);
+
+        try {
+            $products = Product::query()->active()->where('is_featured', true)->take($limit)->get();
+            if ($products->isEmpty()) {
+                $products = Product::query()->active()->latest()->take($limit)->get();
+            }
+        } catch (\Throwable $e) {
+            return "<div id=\"tb-{$id}\" class=\"tb-featured-products\"><h2 class=\"tb-heading\">{$title}</h2></div>";
+        }
+
+        $colsClass = "tb-grid-cols-{$columns}";
+        $cards = [];
+        foreach ($products as $product) {
+            try { $url = route('shop.show', $product->slug); } catch (\Throwable $e) { $url = '#'; }
+            $name  = $this->escape($product->title ?? $product->name ?? '');
+            $price = \App\Helpers\CurrencyHelper::formatPrice($product->effective_price ?? $product->price ?? 0) . ' ' . \App\Helpers\CurrencyHelper::unitLabel();
+            $img   = $product->image ? \App\Helpers\ImageHelper::url($product->image) : '';
+            $imgHtml = $img ? "<div class=\"tb-product-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-product-card-img tb-product-card-noimg\">⭐</div>";
+            $cards[] = "<a href=\"{$url}\" class=\"tb-product-card tb-featured-card\">{$imgHtml}<div class=\"tb-product-card-inner\"><h3 class=\"tb-product-title\">{$name}</h3><div class=\"tb-product-price\">{$price}</div></div></a>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-featured-products\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-md\">" . implode('', $cards) . "</div></div>";
+    }
+
+    /**
+     * Latest blog post block — single featured post.
+     */
+    protected function renderLatestPost(array $props, string $inner, string $id): string
+    {
+        if (!\App\Helpers\SiteHelper::blogEnabled()) {
+            return '';
+        }
+        $post = Post::published()->latest('published_at')->first();
+        if (!$post) {
+            return "<div id=\"tb-{$id}\" class=\"tb-latest-post\"><p class=\"tb-text\">هنوز مطلبی منتشر نشده.</p></div>";
+        }
+        try { $url = route('blog.show', $post->slug); } catch (\Throwable $e) { $url = '#'; }
+        $t       = $this->escape($post->title);
+        $excerpt = $this->escape(\Illuminate\Support\Str::limit(strip_tags($post->excerpt ?? $post->body ?? ''), 200));
+        $date    = $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'Y/m/d') : '';
+        $img     = '';
+        if (!empty($post->featured_image)) {
+            $imgUrl = \App\Helpers\ImageHelper::url($post->featured_image);
+            $img = "<img src=\"{$this->escapeAttr($imgUrl)}\" alt=\"{$t}\" loading=\"lazy\" class=\"tb-latest-post-img\">";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-latest-post\">{$img}<h2 class=\"tb-heading\">{$t}</h2><p class=\"tb-text tb-muted\">{$date}</p><p class=\"tb-text\">{$excerpt}</p><a href=\"{$url}\" class=\"tb-btn tb-btn-primary\">ادامه مطلب</a></div>";
+    }
+
     protected function renderFallback(string $type, array $props, string $inner, string $id): string
     {
         // اگر نوع بلوک ناشناخته است، سعی می‌کنیم فقط فرزندان را (در صورت وجود) رندر کنیم

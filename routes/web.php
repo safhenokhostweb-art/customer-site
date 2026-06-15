@@ -198,11 +198,19 @@ Route::middleware('install.check')->group(function () {
         Route::post('/preview', [PageBuilderController::class, 'preview'])->name('preview');
         Route::get('/templates', [PageBuilderController::class, 'templates'])->name('templates.index');
         Route::post('/templates', [PageBuilderController::class, 'saveTemplate'])->name('templates.store');
-        // Pro Builder APIs
+        // Pro Builder APIs — Pages
         Route::get('/api/pages', [PageBuilderController::class, 'listPages'])->name('api.pages');
         Route::post('/api/pages', [PageBuilderController::class, 'createPage'])->name('api.pages.create');
         Route::put('/api/page/{page}/settings', [PageBuilderController::class, 'updatePageSettings'])->name('api.page.settings');
         Route::delete('/api/page/{page}', [PageBuilderController::class, 'deletePage'])->name('api.page.delete');
+        // Revision history (1 week)
+        Route::get('/api/page/{page}/revisions', [PageBuilderController::class, 'listRevisions'])->name('api.page.revisions');
+        Route::post('/api/revision/{revision}/restore', [PageBuilderController::class, 'restoreRevision'])->name('api.revision.restore');
+    });
+    // Theme provisioning from saas-platform (uses X-Provision-Secret header, no auth middleware)
+    Route::middleware('provision.secret')->prefix('builder')->name('builder.')->group(function () {
+        Route::post('/api/theme/provision', [PageBuilderController::class, 'provisionThemePages'])->name('api.theme.provision');
+        Route::post('/api/theme/unprotect', [PageBuilderController::class, 'unprotectThemePages'])->name('api.theme.unprotect');
     });
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');

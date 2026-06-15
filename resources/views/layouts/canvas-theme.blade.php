@@ -602,5 +602,46 @@
     </script>
 
     @stack('scripts')
+
+    {{-- ─── Builder Edit Bar (for admin users only) ─── --}}
+    @auth
+        @if(auth()->user()->isTenantAdmin() || auth()->user()->is_admin)
+        @php
+            $currentSlug  = request()->route('slug') ?? '';
+            $currentPage  = $currentSlug
+                ? \App\Models\Page::where('slug', $currentSlug)->first()
+                : \App\Models\Page::where('slug', '')->orWhere('slug', 'home')->first();
+            $builderEditUrl = $currentPage ? route('builder.page.edit', $currentPage) : null;
+        @endphp
+        @if($builderEditUrl)
+        <div id="builder-edit-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;font-family:Vazirmatn,Tahoma,sans-serif;font-size:13px;direction:rtl;display:flex;align-items:center;gap:12px;padding:8px 16px;box-shadow:0 -4px 24px rgba(0,0,0,0.3)">
+            <span style="font-weight:700;display:flex;align-items:center;gap:6px">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                حالت مدیریت
+            </span>
+            <a href="{{ $builderEditUrl }}" style="background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:5px 14px;border-radius:8px;font-weight:600;border:1px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:6px;transition:background .15s">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                ویرایش این صفحه در Builder
+            </a>
+            <a href="{{ route('admin.pages.index') }}" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);text-decoration:none;padding:5px 14px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px">
+                📄 مدیریت صفحات
+            </a>
+            <div style="flex:1"></div>
+            <a href="{{ route('admin.dashboard') }}" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:12px;display:flex;align-items:center;gap:4px">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                پنل مدیریت
+            </a>
+            <button onclick="document.getElementById('builder-edit-bar').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;line-height:1;padding:0 4px" title="بستن">×</button>
+        </div>
+        <style>
+            body { padding-bottom: 52px !important; }
+            @media(max-width:640px){
+                #builder-edit-bar { flex-wrap:wrap; gap:6px; padding:6px 10px; }
+                #builder-edit-bar a { font-size:11px; padding:4px 10px; }
+            }
+        </style>
+        @endif
+        @endif
+    @endauth
 </body>
 </html>

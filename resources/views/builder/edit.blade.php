@@ -163,6 +163,11 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
                     صفحه
                 </button>
+                <button @click="leftTab='history'; loadRevisions()" :class="leftTab==='history'?'ltab-active':'text-slate-500 hover:text-slate-300'"
+                    class="flex-1 py-2.5 text-[10px] font-semibold transition flex flex-col items-center gap-0.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    تاریخچه
+                </button>
             </div>
 
             {{-- LEFT TAB: BLOCKS ─────────────────────────────────────────── --}}
@@ -300,6 +305,50 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         ویرایش در پنل ادمین
                     </a>
+                </div>
+            </div>
+
+            {{-- LEFT TAB: REVISION HISTORY ──────────────────────────────── --}}
+            <div x-show="leftTab==='history'" class="flex flex-col flex-1 overflow-hidden">
+                <div class="px-3 py-2.5 shrink-0 flex items-center justify-between" style="border-bottom:1px solid #334155">
+                    <div>
+                        <p class="text-xs font-semibold text-white">تاریخچه بازیابی</p>
+                        <p class="text-[10px] mt-0.5" style="color:#475569">آخرین ۷ روز ذخیره می‌شود</p>
+                    </div>
+                    <button @click="loadRevisions()" class="text-[10px] text-indigo-400 hover:text-white transition">↺ بارگذاری</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto">
+                    <div x-show="revisionsLoading" class="flex items-center justify-center py-8">
+                        <span class="upload-spinner"></span>
+                    </div>
+                    <div x-show="!revisionsLoading && revisions.length === 0" class="text-center py-8 text-slate-600 text-xs px-4">
+                        <div class="text-3xl mb-2 opacity-20">🕐</div>
+                        <p>هنوز هیچ نسخه ذخیره‌ای وجود ندارد.</p>
+                        <p class="mt-1 text-slate-700">با هر ذخیره، نسخه قبلی اینجا نگه داشته می‌شود.</p>
+                    </div>
+
+                    <template x-for="(rev, i) in revisions" :key="rev.id">
+                        <div class="mx-2 my-1.5 p-3 rounded-lg" style="border:1px solid #334155;background:#0f172a">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-semibold text-white" x-text="rev.label || 'نسخه ذخیره'"></p>
+                                    <p class="text-[10px] mt-0.5" style="color:#475569" x-text="rev.time_ago"></p>
+                                    <p class="text-[10px] font-mono mt-0.5" style="color:#334155" x-text="rev.date"></p>
+                                    <p x-show="rev.saved_by" class="text-[10px] mt-0.5" style="color:#475569" x-text="'توسط: '+(rev.saved_by||'')"></p>
+                                </div>
+                                <span class="text-[10px] text-slate-600">#<span x-text="revisions.length - i"></span></span>
+                            </div>
+                            <button @click="restoreRevision(rev)"
+                                class="mt-2 w-full py-1.5 rounded-md text-[11px] font-medium transition flex items-center justify-center gap-1"
+                                style="border:1px solid #4f46e5;color:#818cf8"
+                                @mouseenter="$el.style.background='#1e1b4b'"
+                                @mouseleave="$el.style.background='transparent'">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                بازیابی این نسخه
+                            </button>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -748,6 +797,7 @@ const ROUTES = {
     createPage:   '{{ $createPageUrl }}',
     pageSettings: '{{ $pageSettingsUrl }}',
     uploadImage:  '{{ $uploadUrl }}',
+    revisionBase: '{{ url("/builder/api/revision") }}',
 };
 const PAGE_META = {
     id:           {{ $pageId }},
@@ -816,6 +866,10 @@ function elBuilder() {
         pagesLoading:  false,
         showCreatePage:false,
         newPageTitle:  '',
+        // revisions
+        revisions:       [],
+        revisionsLoading:false,
+        insertAfterIdx:  -1,
         // page settings
         pageSettings: { ...PAGE_META },
         pageSettingsSaving: false,
@@ -1089,6 +1143,49 @@ window.addEventListener('message',function(e){
 
         onIframeLoad() {
             // iframe loaded — nothing to do
+        },
+
+        // ── Revision History ──────────────────────────────────────────────────
+        async loadRevisions() {
+            @if(($pageId ?? 0) > 0)
+            this.revisionsLoading = true;
+            try {
+                const r = await fetch('{{ route("builder.api.page.revisions", $pageId ?? 0) }}', {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN }
+                });
+                const d = await r.json();
+                this.revisions = d.revisions ?? [];
+            } catch(e) { this.showToast('خطا در بارگذاری تاریخچه', 'error'); }
+            finally { this.revisionsLoading = false; }
+            @else
+            this.revisions = [];
+            @endif
+        },
+
+        async restoreRevision(rev) {
+            if (!confirm('آیا مطمئن هستید؟ محتوای فعلی قبل از بازیابی ذخیره خواهد شد.')) return;
+            try {
+                const r = await fetch('{{ url("/builder/api/revision") }}/' + rev.id + '/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF_TOKEN, 'Accept':'application/json' },
+                    body: JSON.stringify({})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    this._destroyQuills();
+                    this.blocks = (d.blocks ?? []).map(b => ({
+                        ...b,
+                        props: b.props ?? b.data ?? {},
+                        _style: b._style ?? defaultStyle(),
+                    }));
+                    this.selectedIndex = -1;
+                    this.isDirty = false;
+                    this.pushHistory();
+                    this.refreshCanvas();
+                    this.showToast('نسخه قبلی بازیابی شد ✓', 'success');
+                    this.loadRevisions();
+                } else { this.showToast('خطا در بازیابی', 'error'); }
+            } catch(e) { this.showToast('خطای شبکه', 'error'); }
         },
 
         // ── Pages management ──────────────────────────────────────────────────

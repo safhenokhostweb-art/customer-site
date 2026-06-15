@@ -88,6 +88,10 @@ class PageController extends Controller
 
     public function destroy(Page $page)
     {
+        if ($page->is_protected) {
+            return redirect()->route('admin.pages.index')
+                ->with('error', 'این صفحه متعلق به قالب سایت است و قابل حذف نیست. برای حذف، ابتدا قالب را تغییر دهید.');
+        }
         $page->delete();
         return redirect()->route('admin.pages.index')->with('success', 'صفحه حذف شد.');
     }
