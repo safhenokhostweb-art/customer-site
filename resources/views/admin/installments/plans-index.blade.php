@@ -76,14 +76,14 @@
                         </td>
                         <td class="text-sm text-slate-600">
                             @if($plan->min_amount > 0)
-                                {{ \App\Helpers\NumberHelper::formatFa(number_format($plan->min_amount)) }} <small class="text-slate-400">ت</small>
+                                {{ \App\Helpers\NumberHelper::formatFa($plan->min_amount) }} <small class="text-slate-400">ت</small>
                             @else
                                 <span class="text-slate-400">—</span>
                             @endif
                         </td>
                         <td class="text-sm text-slate-600">
                             @if($plan->max_amount > 0)
-                                {{ \App\Helpers\NumberHelper::formatFa(number_format($plan->max_amount)) }} <small class="text-slate-400">ت</small>
+                                {{ \App\Helpers\NumberHelper::formatFa($plan->max_amount) }} <small class="text-slate-400">ت</small>
                             @else
                                 <span class="text-slate-400">نامحدود</span>
                             @endif
