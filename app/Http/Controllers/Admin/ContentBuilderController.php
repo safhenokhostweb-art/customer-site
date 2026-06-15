@@ -53,7 +53,7 @@ class ContentBuilderController extends Controller
         $initialBlocks = $this->normalizeBlocks($product->builder_content);
 
         return view('builder.edit', [
-            'pageTitle'    => $product->title,
+            'pageTitle'    => $product->name,
             'initialBlocks'=> $initialBlocks,
             'blockLabels'  => $blockLabels,
             'blockSchemas' => $blockSchemas,

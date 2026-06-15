@@ -514,9 +514,22 @@ Route::middleware('install.check')->group(function () {
             Route::get('contract', [PlatformModuleController::class, 'show'])
                 ->name('contract.index')->defaults('slug', 'contract');
         });
-        Route::middleware('module:crm')->group(function () {
-            Route::get('crm', [PlatformModuleController::class, 'show'])
-                ->name('crm.index')->defaults('slug', 'crm');
+        // ─── CRM — مدیریت ارتباط با مشتری ──────────────────────────────────────
+        Route::prefix('crm')->name('crm.')->group(function () {
+            Route::get('/',                                     [\App\Http\Controllers\Admin\CrmController::class, 'index'])->name('index');
+            Route::get('/contacts',                             [\App\Http\Controllers\Admin\CrmController::class, 'contacts'])->name('contacts.index');
+            Route::get('/contacts/create',                      [\App\Http\Controllers\Admin\CrmController::class, 'createContact'])->name('contacts.create');
+            Route::post('/contacts',                            [\App\Http\Controllers\Admin\CrmController::class, 'storeContact'])->name('contacts.store');
+            Route::post('/contacts/import',                     [\App\Http\Controllers\Admin\CrmController::class, 'importContacts'])->name('contacts.import');
+            Route::get('/contacts/{contact}',                   [\App\Http\Controllers\Admin\CrmController::class, 'showContact'])->name('contacts.show');
+            Route::get('/contacts/{contact}/edit',              [\App\Http\Controllers\Admin\CrmController::class, 'editContact'])->name('contacts.edit');
+            Route::put('/contacts/{contact}',                   [\App\Http\Controllers\Admin\CrmController::class, 'updateContact'])->name('contacts.update');
+            Route::delete('/contacts/{contact}',                [\App\Http\Controllers\Admin\CrmController::class, 'destroyContact'])->name('contacts.destroy');
+            Route::post('/contacts/{contact}/activities',       [\App\Http\Controllers\Admin\CrmController::class, 'storeActivity'])->name('activities.store');
+            Route::get('/deals',                                [\App\Http\Controllers\Admin\CrmController::class, 'deals'])->name('deals.pipeline');
+            Route::post('/deals',                               [\App\Http\Controllers\Admin\CrmController::class, 'storeDeal'])->name('deals.store');
+            Route::post('/deals/{deal}/move',                   [\App\Http\Controllers\Admin\CrmController::class, 'moveDeal'])->name('deals.move');
+            Route::delete('/deals/{deal}',                      [\App\Http\Controllers\Admin\CrmController::class, 'destroyDeal'])->name('deals.destroy');
         });
         Route::middleware('module:discount_advanced')->group(function () {
             Route::get('discount-advanced', [PlatformModuleController::class, 'show'])
@@ -530,9 +543,20 @@ Route::middleware('install.check')->group(function () {
             Route::get('i18n', [PlatformModuleController::class, 'show'])
                 ->name('i18n.index')->defaults('slug', 'i18n');
         });
-        Route::middleware('module:inventory')->group(function () {
-            Route::get('inventory', [PlatformModuleController::class, 'show'])
-                ->name('inventory.index')->defaults('slug', 'inventory');
+        // ─── Inventory — انبار و موجودی ──────────────────────────────────────────
+        Route::prefix('inventory')->name('inventory.')->group(function () {
+            Route::get('/',                                          [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('index');
+            Route::get('/warehouses',                                [\App\Http\Controllers\Admin\InventoryController::class, 'warehouses'])->name('warehouses.index');
+            Route::get('/warehouses/create',                         [\App\Http\Controllers\Admin\InventoryController::class, 'createWarehouse'])->name('warehouses.create');
+            Route::post('/warehouses',                               [\App\Http\Controllers\Admin\InventoryController::class, 'storeWarehouse'])->name('warehouses.store');
+            Route::get('/warehouses/{warehouse}/edit',               [\App\Http\Controllers\Admin\InventoryController::class, 'editWarehouse'])->name('warehouses.edit');
+            Route::put('/warehouses/{warehouse}',                    [\App\Http\Controllers\Admin\InventoryController::class, 'updateWarehouse'])->name('warehouses.update');
+            Route::delete('/warehouses/{warehouse}',                 [\App\Http\Controllers\Admin\InventoryController::class, 'destroyWarehouse'])->name('warehouses.destroy');
+            Route::get('/items',                                     [\App\Http\Controllers\Admin\InventoryController::class, 'items'])->name('items.index');
+            Route::post('/items/{item}/adjust',                      [\App\Http\Controllers\Admin\InventoryController::class, 'adjustStock'])->name('items.adjust');
+            Route::post('/products/{product}/add-to-warehouse',      [\App\Http\Controllers\Admin\InventoryController::class, 'addProductToWarehouse'])->name('items.add-product');
+            Route::get('/movements',                                 [\App\Http\Controllers\Admin\InventoryController::class, 'movements'])->name('movements.index');
+            Route::get('/alerts',                                    [\App\Http\Controllers\Admin\InventoryController::class, 'alerts'])->name('alerts.index');
         });
         Route::middleware('module:marketing_automation')->group(function () {
             Route::get('marketing-automation', [PlatformModuleController::class, 'show'])
