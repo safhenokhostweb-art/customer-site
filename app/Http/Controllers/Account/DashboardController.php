@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\UserNotification;
 use App\Services\MembershipPointsService;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -63,6 +64,43 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // دوره‌های ثبت‌نام شده
+        $enrolledCourses = collect();
+        $enrolledCoursesCount = 0;
+        if (SiteHelper::moduleEnabled('courses') && Schema::hasTable('course_enrollments')) {
+            $enrolledCourses = \App\Models\CourseEnrollment::where('user_id', $user->id)
+                ->with(['course.classes'])
+                ->latest()
+                ->take(4)
+                ->get()
+                ->map(function ($enrollment) use ($user) {
+                    $course = $enrollment->course;
+                    if (!$course) { return $enrollment; }
+                    $totalClasses = $course->classes?->count() ?? 0;
+                    if ($totalClasses > 0 && Schema::hasTable('course_class_completions')) {
+                        $completed = \App\Models\CourseClassCompletion::where('user_id', $user->id)
+                            ->whereIn('course_class_id', $course->classes->pluck('id'))
+                            ->count();
+                        $enrollment->progress_percentage = (int) round($completed / $totalClasses * 100);
+                    } else {
+                        $enrollment->progress_percentage = 0;
+                    }
+                    return $enrollment;
+                });
+            $enrolledCoursesCount = \App\Models\CourseEnrollment::where('user_id', $user->id)->count();
+        }
+
+        // اقساط فعال
+        $activeInstallments = collect();
+        if (SiteHelper::moduleEnabled('installments') && Schema::hasTable('installment_orders')) {
+            $activeInstallments = \App\Models\InstallmentOrder::where('user_id', $user->id)
+                ->whereIn('status', ['active', 'pending'])
+                ->with('plan')
+                ->latest()
+                ->take(3)
+                ->get();
+        }
+
         return view('account.dashboard', compact(
             'ordersCount',
             'ordersTotal',
@@ -72,7 +110,10 @@ class DashboardController extends Controller
             'recentOrders',
             'recentInvoices',
             'recentNotifications',
-            'pointsBalance'
+            'pointsBalance',
+            'enrolledCourses',
+            'enrolledCoursesCount',
+            'activeInstallments'
         ));
     }
 }

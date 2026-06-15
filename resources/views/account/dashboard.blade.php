@@ -149,6 +149,14 @@
         <span class="ua-tile__hint">تاریخچه و مصرف ←</span>
     </a>
     @endif
+    @if(\App\Helpers\SiteHelper::moduleEnabled('courses') && isset($enrolledCoursesCount) && $enrolledCoursesCount > 0)
+    <a href="{{ route('courses.my-learning') }}" class="ua-tile ua-tile--emerald">
+        <span class="ua-tile__icon"><x-core-ui::icon name="education" class="w-7 h-7" /></span>
+        <span class="ua-tile__label">دوره‌های من</span>
+        <span class="ua-tile__value">{{ \App\Helpers\NumberHelper::formatFa($enrolledCoursesCount) }}</span>
+        <span class="ua-tile__hint">ادامه یادگیری ←</span>
+    </a>
+    @endif
 </div>
 
 {{-- ═══ دسترسی سریع ═══ --}}
@@ -267,6 +275,75 @@
             </div>
         </div>
     @endif
+
+    {{-- دوره‌های یادگیری --}}
+    @if(\App\Helpers\SiteHelper::moduleEnabled('courses') && isset($enrolledCourses) && $enrolledCourses->isNotEmpty())
+    <div class="ug-card" style="margin-top:1.5rem">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
+            <x-core-ui::icon name="education" class="w-5 h-5 text-violet-500" />
+            <span class="font-semibold text-slate-800">دوره‌های من</span>
+            @if(isset($enrolledCoursesCount) && $enrolledCoursesCount > 4)
+            <a href="{{ route('courses.my-learning') }}" class="mr-auto text-sm text-indigo-600 hover:underline">همه دوره‌ها ({{ $enrolledCoursesCount }}) ←</a>
+            @endif
+        </div>
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @foreach($enrolledCourses as $enrollment)
+            @php $course = $enrollment->course; @endphp
+            @if($course)
+            <a href="{{ route('courses.learn', $course->slug) }}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-violet-200 hover:bg-violet-50/30 transition">
+                @if($course->cover_image)
+                <img src="{{ \Illuminate\Support\Facades\Storage::url($course->cover_image) }}" class="w-12 h-12 rounded-lg object-cover shrink-0" alt="">
+                @else
+                <div class="w-12 h-12 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
+                    <x-core-ui::icon name="education" class="w-6 h-6 text-violet-500" />
+                </div>
+                @endif
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 line-clamp-1">{{ $course->title }}</p>
+                    @php
+                        $progress = $enrollment->progress_percentage ?? 0;
+                    @endphp
+                    <div class="flex items-center gap-2 mt-1">
+                        <div class="flex-1 bg-slate-200 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full bg-violet-500 transition-all" style="width: {{ $progress }}%"></div>
+                        </div>
+                        <span class="text-xs text-slate-500 shrink-0">{{ $progress }}%</span>
+                    </div>
+                </div>
+            </a>
+            @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- اقساط فعال --}}
+    @if(\App\Helpers\SiteHelper::moduleEnabled('installments') && isset($activeInstallments) && $activeInstallments->isNotEmpty())
+    <div class="ug-card" style="margin-top:1.5rem">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
+            <x-core-ui::icon name="receipt" class="w-5 h-5 text-amber-500" />
+            <span class="font-semibold text-slate-800">اقساط فعال</span>
+            <a href="{{ route('account.installments') }}" class="mr-auto text-sm text-indigo-600 hover:underline">همه اقساط ←</a>
+        </div>
+        <div class="p-5 space-y-3">
+            @foreach($activeInstallments as $inst)
+            <div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
+                <div>
+                    <p class="text-sm font-medium text-slate-800">{{ $inst->plan?->title ?? 'طرح قسطی' }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ number_format($inst->monthly_installment ?? 0) }} تومان / ماه</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs px-2 py-0.5 rounded-full {{ $inst->status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700' }}">
+                        {{ $inst->status === 'active' ? 'فعال' : 'در انتظار' }}
+                    </span>
+                    <a href="{{ route('account.installments.show', $inst) }}" class="text-xs text-indigo-500 hover:underline">جزئیات</a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
 </div>
 
 @endsection
