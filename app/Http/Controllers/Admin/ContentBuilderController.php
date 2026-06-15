@@ -106,7 +106,7 @@ class ContentBuilderController extends Controller
     protected function registryData(): array
     {
         $config  = config('builder-elements.elements', []);
-        $orderedCats = ['layout', 'content', 'marketing', 'dynamic', 'ecommerce', 'utility'];
+        $orderedCats = ['layout', 'content', 'marketing', 'interactive', 'dynamic', 'ecommerce', 'utility'];
         $enabled = $this->enabledModuleSlugs();
 
         $blockLabels  = [];

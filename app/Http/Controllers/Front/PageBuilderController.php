@@ -242,7 +242,7 @@ class PageBuilderController extends Controller
     {
         $config  = config('builder-elements.elements', []);
         $enabled = $this->enabledModuleSlugs();
-        $orderedCats = ['layout', 'content', 'marketing', 'dynamic', 'ecommerce', 'utility'];
+        $orderedCats = ['layout', 'content', 'marketing', 'interactive', 'dynamic', 'ecommerce', 'utility'];
 
         $blockLabels  = [];
         $blockSchemas = [];
