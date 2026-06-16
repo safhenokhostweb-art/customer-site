@@ -32,6 +32,7 @@ class ThemeCanvasRenderer extends BlockRenderer
     /**
      * Override renderBlock to intercept module:* types before schema validation.
      * The schema registry doesn't know about module blocks, so we bypass it here.
+     * In editor_mode, wraps block with .tb-canvas-block overlay for selection.
      */
     public function renderBlock(array $block): string
     {
@@ -41,10 +42,11 @@ class ThemeCanvasRenderer extends BlockRenderer
         if (str_starts_with($type, 'module:')) {
             try {
                 $props = $block['props'] ?? $block['data'] ?? [];
-                return $this->renderModuleBlock($type, $props, $id);
+                $html  = $this->renderModuleBlock($type, $props, $id);
             } catch (\Throwable $e) {
-                return $this->renderPlaceholder($id, $type, 'render_error');
+                $html = $this->renderPlaceholder($id, $type, 'render_error');
             }
+            return $this->wrapEditorMode($html, $id, $type);
         }
 
         return parent::renderBlock($block);

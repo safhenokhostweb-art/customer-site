@@ -61,20 +61,39 @@ class BlockRenderer
                 'type' => $type,
                 'errors' => $registry->getLastErrors(),
             ]);
-            return $this->renderPlaceholder($id, $type, 'invalid_schema');
+            $html = $this->renderPlaceholder($id, $type, 'invalid_schema');
+        } else {
+            try {
+                $html = $this->renderBlockUnsafe($block);
+            } catch (\Throwable $e) {
+                Log::error('Builder block render failed', [
+                    'element_id' => $id,
+                    'type' => $type,
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                $html = $this->renderPlaceholder($id, $type, 'render_error');
+            }
         }
 
-        try {
-            return $this->renderBlockUnsafe($block);
-        } catch (\Throwable $e) {
-            Log::error('Builder block render failed', [
-                'element_id' => $id,
-                'type' => $type,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return $this->renderPlaceholder($id, $type, 'render_error');
+        return $this->wrapEditorMode($html, $id, $type);
+    }
+
+    /**
+     * In editor_mode, wraps block HTML with canvas selection overlay.
+     * No-op in production rendering (editor_mode not set in context).
+     */
+    protected function wrapEditorMode(string $html, string $id, string $type): string
+    {
+        if (!($this->context['editor_mode'] ?? false)) {
+            return $html;
         }
+        $esc = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return "<div class=\"tb-canvas-block\" data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\">"
+            . "<div class=\"tb-block-badge\">{$esc}</div>"
+            . $html
+            . "</div>";
     }
 
     /**
