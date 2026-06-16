@@ -397,6 +397,80 @@ class ThemeDesignController extends Controller
             ->with('success', 'تغییرات پیش‌نویس رد شد.');
     }
 
+    /**
+     * TB3-02: Live iframe canvas endpoint.
+     * Renders draft page blocks into a standalone HTML page for the editor iframe.
+     */
+    public function canvasLivePreview(Request $request)
+    {
+        $pageKey = $request->input('page', 'home');
+
+        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+        if (empty($raw)) {
+            return response('<p>قالب Canvas یافت نشد</p>', 404);
+        }
+
+        $themeData = json_decode($raw, true);
+        if (!is_array($themeData)) {
+            return response('<p>داده قالب معتبر نیست</p>', 422);
+        }
+
+        // Resolve blocks for the requested page key
+        if ($pageKey === '__header__') {
+            $blocks = $themeData['header_blocks'] ?? [];
+        } elseif ($pageKey === '__footer__') {
+            $blocks = $themeData['footer_blocks'] ?? [];
+        } else {
+            $pages  = $themeData['pages'] ?? [];
+            $page   = $pages[$pageKey] ?? null;
+            $blocks = $page['blocks'] ?? [];
+        }
+
+        $globalStyles = $themeData['global_styles'] ?? [];
+
+        /** @var \App\Services\ThemeCanvas\ThemeCanvasRenderer $renderer */
+        $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
+        $renderer->setContext(['editor_mode' => true]);
+
+        $renderedBlocks = [];
+        foreach ($blocks as $block) {
+            $bid = $block['id'] ?? '';
+            if ($bid) {
+                $renderedBlocks[$bid] = $renderer->renderBlock($block);
+            }
+        }
+
+        return response()
+            ->view('admin.theme-design.canvas-live-preview', compact('blocks', 'renderedBlocks', 'globalStyles', 'pageKey'))
+            ->header('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    /**
+     * TB3-02: Per-block re-render for live prop updates.
+     * POST body: { block: {id, type, props, ...} }
+     * Returns: { html: "..." }
+     */
+    public function canvasRenderBlockAjax(Request $request): JsonResponse
+    {
+        $blockData = $request->input('block', []);
+
+        if (!is_array($blockData) || empty($blockData['type'])) {
+            return response()->json(['html' => '']);
+        }
+
+        // TB3-01 compat: normalize block.data → block.props
+        if (isset($blockData['data']) && !isset($blockData['props'])) {
+            $blockData['props'] = $blockData['data'];
+            unset($blockData['data']);
+        }
+
+        /** @var \App\Services\ThemeCanvas\ThemeCanvasRenderer $renderer */
+        $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
+        $renderer->setContext(['editor_mode' => true]);
+
+        return response()->json(['html' => $renderer->renderBlock($blockData)]);
+    }
+
     public function canvasPreviewPublic()
     {
         $token = request('token');

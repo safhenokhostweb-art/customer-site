@@ -381,6 +381,9 @@ Route::middleware('install.check')->group(function () {
             Route::put('theme-design/canvas/global-styles',               [ThemeDesignController::class, 'canvasSaveGlobalStyles'])->name('theme-design.canvas-global-styles');
             Route::post('theme-design/canvas/publish',                    [ThemeDesignController::class, 'canvasPublish'])->name('theme-design.canvas-publish');
             Route::post('theme-design/canvas/discard-draft',              [ThemeDesignController::class, 'canvasDiscardDraft'])->name('theme-design.canvas-discard-draft');
+            // TB3-02: Live iframe canvas
+            Route::get('theme-design/canvas/live-preview',                [ThemeDesignController::class, 'canvasLivePreview'])->name('theme-design.canvas-live-preview');
+            Route::post('theme-design/canvas/render-block',               [ThemeDesignController::class, 'canvasRenderBlockAjax'])->name('theme-design.canvas-render-block');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {
