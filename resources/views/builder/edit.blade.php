@@ -826,7 +826,8 @@ const QUILL_TOOLBAR = [
     [{ align:[] }],
     ['clean']
 ];
-const ORDEREDCATS = @json($orderedCats ?? ['layout','content','marketing','interactive','dynamic','ecommerce','utility']);
+@php $__orderedCats = $orderedCats ?? ['layout','content','marketing','interactive','dynamic','ecommerce','utility']; @endphp
+const ORDEREDCATS = @json($__orderedCats);
 
 // ── Default _style object ─────────────────────────────────────────────────────
 function defaultStyle() {
