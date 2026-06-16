@@ -8,7 +8,7 @@
 
 @section('content')
 @php
-$blockLabels = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>$d['name']]);
+$blockLabels  = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>$d['name']]);
 $blockSchemas = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>['schema'=>$d['schema']??[],'defaultProps'=>$d['defaultProps']??[]]]);
 $orderedCats  = ['layout','content','dynamic','ecommerce','marketing','utility','module'];
 $catColors    = ['layout'=>'text-blue-600 bg-blue-50','content'=>'text-green-700 bg-green-50','dynamic'=>'text-purple-600 bg-purple-50','ecommerce'=>'text-emerald-700 bg-emerald-50','marketing'=>'text-orange-600 bg-orange-50','utility'=>'text-slate-600 bg-slate-100','module'=>'text-indigo-700 bg-indigo-50'];
@@ -80,13 +80,25 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         {{-- Actions --}}
         <div class="flex items-center gap-2 shrink-0">
 
+            {{-- Undo / Redo --}}
+            <button @click="undo()" :disabled="historyIndex <= 0"
+                title="واگرد (Ctrl+Z)"
+                class="flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6M3 10l6-6"/></svg>
+            </button>
+            <button @click="redo()" :disabled="historyIndex >= history.length - 1"
+                title="از نو (Ctrl+Y)"
+                class="flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6M21 10l-6-6"/></svg>
+            </button>
+            <div class="h-6 w-px bg-slate-200 shrink-0"></div>
+
             {{-- Draft badge --}}
             <span class="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-semibold">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block"></span>
                 پیش‌نویس
             </span>
 
-            {{-- Dirty indicator --}}
             <span x-show="isDirty" class="text-amber-500 text-xs font-medium flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block"></span>
                 ذخیره نشده
@@ -183,7 +195,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <input type="text" x-model="globalStyles.font_family" @input="gsIsDirty=true" class="w-40 text-xs px-2 py-1.5 rounded-lg border border-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-violet-300" placeholder="Vazirmatn">
         </div>
         <button
-            @click="saveGlobalStyles()"
+            @click="saveGlobalStylesAndReload()"
             :disabled="!gsIsDirty || gsSaving"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium transition disabled:opacity-50"
         >
@@ -240,9 +252,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <div class="px-2 pb-2 grid grid-cols-2 gap-1.5">
                                 @foreach($catBlocks as $blockType => $blockDef)
                                     <button
+                                        draggable="true"
                                         @click="addBlock('{{ $blockType }}')"
+                                        @dragstart="startDragBlock($event, '{{ $blockType }}')"
+                                        @dragend="endDragBlock()"
                                         x-show="isBlockVisible('{{ $blockType }}', '{{ addslashes($blockDef['name']) }}')"
-                                        class="flex flex-col items-start gap-1 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm transition text-right cursor-pointer group"
+                                        class="flex flex-col items-start gap-1 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm transition text-right cursor-grab active:cursor-grabbing group"
                                         title="{{ $blockDef['name'] }}"
                                     >
                                         <div class="text-lg leading-none">{{ $blockEmoji[$blockType] ?? '🧩' }}</div>
@@ -257,77 +272,93 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     </div>
                 @endforeach
             </div>
+
+            <div class="px-3 py-2 border-t border-slate-100 shrink-0 bg-slate-50">
+                <p class="text-[10px] text-slate-400 text-center">کلیک یا بکشید برای افزودن</p>
+            </div>
         </div>
 
-        {{-- ── PANEL B: Canvas (center) ──────────────────────────── --}}
-        <div class="flex-1 overflow-y-auto flex flex-col items-center px-6 py-6 gap-4">
+        {{-- ── PANEL B: Live Canvas (center) ──────────────────────── --}}
+        <div class="flex-1 flex flex-col overflow-hidden bg-slate-200">
 
-            <div class="w-full max-w-2xl flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div :class="currentPage === '__header__' ? 'bg-teal-500' : currentPage === '__footer__' ? 'bg-purple-500' : 'bg-indigo-500'" class="w-2 h-2 rounded-full"></div>
-                    <span class="text-xs font-semibold text-slate-600" x-text="pages[currentPage]?.title ?? currentPage"></span>
-                    <span x-show="currentPage === '__header__'" class="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200 font-medium">بلاک‌های هدر سایت</span>
-                    <span x-show="currentPage === '__footer__'" class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-medium">بلاک‌های فوتر سایت</span>
-                    <span class="text-xs text-slate-400" x-text="'(' + blocks.length + ' ویجت)'"></span>
+            {{-- Canvas Toolbar --}}
+            <div class="h-10 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0 z-10">
+                {{-- Device Toggle --}}
+                <div class="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                    <button @click="setDevice('desktop')"
+                        :class="device==='desktop' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+                        class="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        دسکتاپ
+                    </button>
+                    <button @click="setDevice('tablet')"
+                        :class="device==='tablet' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+                        class="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        تبلت
+                    </button>
+                    <button @click="setDevice('mobile')"
+                        :class="device==='mobile' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+                        class="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        موبایل
+                    </button>
                 </div>
-                <span class="text-[10px] text-slate-400">Ctrl+S برای ذخیره</span>
+                <div class="h-4 w-px bg-slate-200 shrink-0"></div>
+                <span class="text-xs text-slate-500" x-text="blocks.length + ' بلوک — ' + (pages[currentPage]?.title ?? currentPage)"></span>
+                <span x-show="quickSaving" class="text-xs text-indigo-500 flex items-center gap-1 mr-auto">
+                    <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    ذخیره...
+                </span>
             </div>
 
-            <div id="canvas-blocks" class="w-full max-w-2xl space-y-2 min-h-48">
-                <template x-for="(block, index) in blocks" :key="block.id">
+            {{-- Canvas Area --}}
+            <div class="flex-1 overflow-auto py-4 flex justify-center">
+                <div
+                    class="relative bg-white shadow-xl transition-all duration-300 mx-auto"
+                    :style="device==='desktop' ? 'width:100%;max-width:none' : device==='tablet' ? 'width:768px;max-width:100%' : 'width:390px;max-width:100%'"
+                    style="min-height:500px;"
+                >
+                    {{-- Live Preview Iframe --}}
+                    <iframe
+                        id="tb-live-iframe"
+                        :src="livePreviewUrl()"
+                        class="w-full border-0 block"
+                        style="min-height:500px;"
+                        @load="onIframeLoad()"
+                        title="پیش‌نمایش زنده"
+                    ></iframe>
+
+                    {{-- Drag overlay indicator (TB3-03) --}}
                     <div
-                        @click="selectBlock(index)"
-                        :class="selectedIndex === index
-                            ? 'border-indigo-500 shadow-md bg-white ring-2 ring-indigo-200'
-                            : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'"
-                        class="rounded-xl border-2 cursor-pointer transition group relative"
+                        x-show="isDraggingBlock"
+                        class="absolute inset-0 z-20 flex items-start justify-center pt-24 pointer-events-none"
+                        style="background:rgba(99,102,241,0.06);border:3px dashed #6366f1;"
                     >
-                        <div class="flex items-center gap-3 p-3">
-                            <span class="drag-handle cursor-grab text-slate-300 hover:text-slate-500 text-lg leading-none select-none px-1 shrink-0" title="کشیدن برای جابجایی">⠿</span>
-
-                            <div :class="blockCategoryColor(block.type)" class="w-1 self-stretch rounded-full shrink-0"></div>
-
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm font-semibold text-slate-800" x-text="blockLabel(block.type)"></span>
-                                    <span x-show="block.type.startsWith('module:')" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium">ماژول</span>
-                                </div>
-                                <div class="text-xs text-slate-400 truncate mt-0.5" x-text="blockPreview(block)"></div>
-                            </div>
-
-                            <span class="text-[10px] text-slate-300 font-mono shrink-0" x-text="index + 1"></span>
-
-                            <div class="flex flex-col gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition">
-                                <button @click.stop="moveBlock(index, index - 1)" :disabled="index === 0"
-                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 transition text-xs">▲</button>
-                                <button @click.stop="moveBlock(index, index + 1)" :disabled="index === blocks.length - 1"
-                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 transition text-xs">▼</button>
-                            </div>
-
-                            <button
-                                @click.stop="removeBlock(index)"
-                                class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 text-sm"
-                                title="حذف ویجت"
-                            >×</button>
+                        <div class="bg-white rounded-2xl shadow-xl px-8 py-5 text-center pointer-events-none">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <p class="text-sm font-bold text-indigo-700">رها کنید تا بلوک اضافه شود</p>
+                            <p class="text-xs text-slate-400 mt-1" x-text="'نوع: ' + (draggedBlockLabel || draggedBlockType)"></p>
                         </div>
                     </div>
-                </template>
 
-                <div x-show="blocks.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
-                    <div class="text-5xl mb-4 opacity-30">🧩</div>
-                    <p class="text-slate-400 text-sm font-medium">این صفحه هنوز ویجتی ندارد</p>
-                    <p class="text-slate-300 text-xs mt-1">از کتابخانه سمت راست ویجت اضافه کنید</p>
+                    {{-- Drop receiver (pointer-events on) --}}
+                    <div
+                        x-show="isDraggingBlock"
+                        class="absolute inset-0 z-10"
+                        @dragover.prevent="onDragOverCanvas($event)"
+                        @dragleave="onDragLeaveCanvas()"
+                        @drop.prevent="onDropToCanvas($event)"
+                    ></div>
+
+                    {{-- Loading overlay --}}
+                    <div x-show="iframeLoading" class="absolute inset-0 z-30 bg-white flex items-center justify-center" style="min-height:200px;">
+                        <div class="flex items-center gap-3 text-slate-400">
+                            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            <span class="text-sm">در حال بارگذاری...</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div x-show="blocks.length > 0" class="w-full max-w-2xl">
-                <button
-                    @click="showLibraryHighlight = true"
-                    class="w-full py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/50 transition text-sm font-medium flex items-center justify-center gap-2"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    افزودن ویجت جدید
-                </button>
             </div>
         </div>
 
@@ -336,7 +367,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
             <div x-show="selectedIndex < 0" class="flex flex-col items-center justify-center h-full text-center px-6">
                 <div class="text-4xl mb-3 opacity-20">✏️</div>
-                <p class="text-slate-400 text-sm">یک ویجت از Canvas انتخاب کنید</p>
+                <p class="text-slate-400 text-sm">یک بلوک از Canvas کلیک کنید</p>
                 <p class="text-slate-300 text-xs mt-1">برای ویرایش تنظیمات</p>
             </div>
 
@@ -349,43 +380,159 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div :class="blockCategoryColor(selectedBlock.type)" class="w-2 h-2 rounded-full"></div>
                                 <span class="text-sm font-bold text-slate-800" x-text="blockLabel(selectedBlock.type)"></span>
                             </div>
-                            <button @click="selectedIndex = -1" class="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                            <button @click="selectedIndex = -1; sendToIframe({action:'select', blockId:null})" class="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
                         </div>
                         <p class="text-[11px] text-slate-400 mt-1 font-mono" x-text="selectedBlock.type"></p>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                    {{-- Block Actions (Move / Duplicate / Delete) --}}
+                    <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 shrink-0">
+                        <button @click="moveBlock(selectedIndex, selectedIndex - 1)" :disabled="selectedIndex === 0"
+                            title="بالاتر"
+                            class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                        </button>
+                        <button @click="moveBlock(selectedIndex, selectedIndex + 1)" :disabled="selectedIndex === blocks.length - 1"
+                            title="پایین‌تر"
+                            class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <button @click="duplicateBlock(selectedIndex)"
+                            title="کپی بلوک"
+                            class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </button>
+                        <button @click="removeBlock(selectedIndex)"
+                            title="حذف بلوک"
+                            class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-red-200 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-400 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+
+                    {{-- Tabs: Content / Style --}}
+                    <div class="flex border-b border-slate-100 shrink-0">
+                        <button
+                            @click="selectedTab = 'content'"
+                            :class="selectedTab === 'content' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
+                            class="flex-1 py-2 text-xs text-center transition">
+                            محتوا
+                        </button>
+                        <button
+                            @click="selectedTab = 'style'"
+                            :class="selectedTab === 'style' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
+                            class="flex-1 py-2 text-xs text-center transition">
+                            استایل
+                        </button>
+                    </div>
+
+                    {{-- Style Tab --}}
+                    <div x-show="selectedTab === 'style'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">رنگ پس‌زمینه</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color"
+                                    :value="selectedBlock.style?.bgColor || '#ffffff'"
+                                    @change="updateStyle('bgColor', $event.target.value)"
+                                    class="w-10 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
+                                <input type="text"
+                                    :value="selectedBlock.style?.bgColor || ''"
+                                    @input="updateStyle('bgColor', $event.target.value)"
+                                    placeholder="بدون رنگ"
+                                    class="flex-1 text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <button x-show="selectedBlock.style?.bgColor" @click="updateStyle('bgColor', '')"
+                                    class="text-slate-400 hover:text-red-500 text-sm transition">×</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">رنگ متن</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color"
+                                    :value="selectedBlock.style?.textColor || '#000000'"
+                                    @change="updateStyle('textColor', $event.target.value)"
+                                    class="w-10 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
+                                <input type="text"
+                                    :value="selectedBlock.style?.textColor || ''"
+                                    @input="updateStyle('textColor', $event.target.value)"
+                                    placeholder="بدون رنگ"
+                                    class="flex-1 text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <button x-show="selectedBlock.style?.textColor" @click="updateStyle('textColor', '')"
+                                    class="text-slate-400 hover:text-red-500 text-sm transition">×</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">پدینگ عمودی (px)</label>
+                                <input type="number" min="0" max="200"
+                                    :value="selectedBlock.style?.paddingY ?? ''"
+                                    @input="updateStyle('paddingY', $event.target.value === '' ? '' : Number($event.target.value))"
+                                    placeholder="پیش‌فرض"
+                                    class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">پدینگ افقی (px)</label>
+                                <input type="number" min="0" max="200"
+                                    :value="selectedBlock.style?.paddingX ?? ''"
+                                    @input="updateStyle('paddingX', $event.target.value === '' ? '' : Number($event.target.value))"
+                                    placeholder="پیش‌فرض"
+                                    class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">گوشه‌های گرد (px)</label>
+                            <input type="number" min="0" max="100"
+                                :value="selectedBlock.style?.borderRadius ?? ''"
+                                @input="updateStyle('borderRadius', $event.target.value === '' ? '' : Number($event.target.value))"
+                                placeholder="۰"
+                                class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">شفافیت</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="0.1" max="1" step="0.05"
+                                    :value="selectedBlock.style?.opacity ?? 1"
+                                    @input="updateStyle('opacity', Number($event.target.value))"
+                                    class="flex-1">
+                                <span class="text-xs text-slate-500 w-8 text-left" x-text="Math.round((selectedBlock.style?.opacity ?? 1) * 100) + '%'"></span>
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <button @click="resetBlockStyle()"
+                                class="w-full text-xs py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-red-500 transition">
+                                پاک کردن همه استایل‌ها
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Content (Props) Form --}}
+                    <div x-show="selectedTab === 'content'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                         <template x-for="(schemaDef, propKey) in selectedSchema" :key="propKey">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5" x-text="schemaDef.label || propKey"></label>
 
-                                {{-- string --}}
                                 <template x-if="schemaDef.type === 'string'">
                                     <input
                                         type="text"
                                         x-model="selectedBlock.props[propKey]"
-                                        @input="isDirty = true"
+                                        @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :placeholder="schemaDef.default ?? ''"
                                     >
                                 </template>
 
-                                {{-- number --}}
                                 <template x-if="schemaDef.type === 'number'">
                                     <input
                                         type="number"
                                         x-model.number="selectedBlock.props[propKey]"
-                                        @input="isDirty = true"
+                                        @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :min="0"
                                     >
                                 </template>
 
-                                {{-- boolean --}}
                                 <template x-if="schemaDef.type === 'boolean'">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <div class="relative">
-                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="isDirty = true" class="sr-only peer">
+                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="schedulePropUpdate()" class="sr-only peer">
                                             <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
                                             <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
                                         </div>
@@ -393,11 +540,10 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </label>
                                 </template>
 
-                                {{-- select --}}
                                 <template x-if="schemaDef.type === 'select'">
                                     <select
                                         x-model="selectedBlock.props[propKey]"
-                                        @change="isDirty = true"
+                                        @change="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                     >
                                         <template x-for="(label, val) in schemaDef.options" :key="val">
@@ -406,19 +552,17 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </select>
                                 </template>
 
-                                {{-- color --}}
                                 <template x-if="schemaDef.type === 'color'">
                                     <div class="flex items-center gap-2">
-                                        <input type="color" x-model="selectedBlock.props[propKey]" @input="isDirty = true" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="isDirty = true" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000">
+                                        <input type="color" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000">
                                     </div>
                                 </template>
 
-                                {{-- textarea --}}
                                 <template x-if="schemaDef.type === 'textarea'">
                                     <textarea
                                         x-model="selectedBlock.props[propKey]"
-                                        @input="isDirty = true"
+                                        @input="schedulePropUpdate()"
                                         rows="3"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition resize-y"
                                         :placeholder="schemaDef.default ?? ''"
@@ -431,22 +575,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <p class="text-xs text-slate-400">این ویجت تنظیماتی ندارد</p>
                         </div>
                     </div>
-
-                    <div class="px-4 py-3 border-t border-slate-100 shrink-0">
-                        <button
-                            @click="removeBlock(selectedIndex)"
-                            class="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 text-xs font-medium transition"
-                        >
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            حذف این ویجت
-                        </button>
-                    </div>
                 </div>
             </template>
         </div>
     </div>
 
-    {{-- ══════════════════ ADD PAGE MODAL ══════════════════ --}}
+    {{-- ADD PAGE MODAL --}}
     <div x-show="showAddPage" x-transition.opacity class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div @click.outside="showAddPage = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 class="text-base font-bold text-slate-800 mb-4">افزودن صفحه جدید</h3>
@@ -456,7 +590,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <input x-model="newPageTitle" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="مثال: درباره ما" @keydown.enter="confirmAddPage()">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-600 mb-1.5 block">اسلاگ (URL) <span class="text-slate-400 font-normal">اختیاری — فقط a-z و -</span></label>
+                    <label class="text-xs font-semibold text-slate-600 mb-1.5 block">اسلاگ (URL) <span class="text-slate-400 font-normal">اختیاری</span></label>
                     <input x-model="newPageSlug" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="about-us">
                 </div>
             </div>
@@ -485,41 +619,56 @@ const BLOCK_SCHEMAS = @json($blockSchemas);
 const INITIAL_PAGES = @json($pages);
 const GLOBAL_STYLES = @json($globalStyles);
 const ROUTES = {
-    saveBlocks:    '{{ route('admin.theme-design.canvas-save-blocks') }}',
-    addPage:       '{{ route('admin.theme-design.canvas-add-page') }}',
-    deletePage:    '{{ url('admin/theme-design/canvas/pages') }}',
-    globalStyles:  '{{ route('admin.theme-design.canvas-global-styles') }}',
-    publish:       '{{ route('admin.theme-design.canvas-publish') }}',
+    saveBlocks:   '{{ route('admin.theme-design.canvas-save-blocks') }}',
+    addPage:      '{{ route('admin.theme-design.canvas-add-page') }}',
+    deletePage:   '{{ url('admin/theme-design/canvas/pages') }}',
+    globalStyles: '{{ route('admin.theme-design.canvas-global-styles') }}',
+    publish:      '{{ route('admin.theme-design.canvas-publish') }}',
+    livePreview:  '{{ route('admin.theme-design.canvas-live-preview') }}',
+    renderBlock:  '{{ route('admin.theme-design.canvas-render-block') }}',
 };
 
 function canvasEditor() {
     return {
-        // State
+        // ── State ──────────────────────────────────────────────
         pages:         JSON.parse(JSON.stringify(INITIAL_PAGES)),
-        currentPage:   Object.keys(INITIAL_PAGES)[0] ?? 'home',
+        currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
         selectedIndex: -1,
+        selectedTab:   'content',
         isDirty:       false,
         saving:        false,
+        quickSaving:   false,
         publishing:    false,
         showAddPage:   false,
         newPageTitle:  '',
         newPageSlug:   '',
         librarySearch: '',
         expandedCats:  { layout:true, content:true, module:true, dynamic:false, ecommerce:false, marketing:false, utility:false },
-        showLibraryHighlight: false,
         showGlobalStyles: false,
         globalStyles:  JSON.parse(JSON.stringify(GLOBAL_STYLES)),
         gsIsDirty:     false,
         gsSaving:      false,
-        toast: { show: false, msg: '', type: 'success', _timer: null },
+        toast:         { show: false, msg: '', type: 'success', _timer: null },
+        // TB3-02: iframe
+        device:        'desktop',
+        iframeTimestamp: Date.now(),
+        iframeLoading:  true,
+        iframeReady:    false,
+        propUpdateTimer: null,
+        // TB3-03: drag
+        isDraggingBlock:    false,
+        draggedBlockType:   null,
+        draggedBlockLabel:  null,
+        dropTargetIndex:    -1,
+        dropTargetBeforeId: null,
+        // TB3-S2: undo/redo history
+        history:       [],
+        historyIndex:  -1,
+        maxHistory:    25,
 
-        // Computed
-        get blocks() {
-            return this.pages[this.currentPage]?.blocks ?? [];
-        },
-        set blocks(val) {
-            if (this.pages[this.currentPage]) this.pages[this.currentPage].blocks = val;
-        },
+        // ── Computed ──────────────────────────────────────────
+        get blocks() { return this.pages[this.currentPage]?.blocks ?? []; },
+        set blocks(val) { if (this.pages[this.currentPage]) this.pages[this.currentPage].blocks = val; },
         get selectedBlock() {
             if (this.selectedIndex < 0 || this.selectedIndex >= this.blocks.length) return null;
             return this.blocks[this.selectedIndex];
@@ -529,15 +678,12 @@ function canvasEditor() {
             return BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
         },
 
-        // Block library
-        toggleCategory(key)   { this.expandedCats[key] = !this.expandedCats[key]; },
+        // ── Library ──────────────────────────────────────────
+        toggleCategory(key)    { this.expandedCats[key] = !this.expandedCats[key]; },
         isCategoryVisible(key) {
             if (!this.librarySearch) return true;
             const s = this.librarySearch.toLowerCase();
-            return Object.keys(BLOCK_LABELS).some(t => {
-                const label = (BLOCK_LABELS[t] ?? '').toLowerCase();
-                return t.includes(s) || label.includes(s);
-            });
+            return Object.keys(BLOCK_LABELS).some(t => t.includes(s) || (BLOCK_LABELS[t]??'').toLowerCase().includes(s));
         },
         isBlockVisible(type, name) {
             if (!this.librarySearch) return true;
@@ -545,43 +691,150 @@ function canvasEditor() {
             return type.toLowerCase().includes(s) || name.toLowerCase().includes(s);
         },
 
-        // Canvas actions
-        addBlock(type) {
+        // ── Canvas Actions ────────────────────────────────────
+        addBlock(type, atIndex = -1) {
+            this.pushHistory();
             const defaults = JSON.parse(JSON.stringify(BLOCK_SCHEMAS[type]?.defaultProps ?? {}));
             const block = { id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), type, props: defaults };
-            const newBlocks = [...this.blocks, block];
-            this.pages[this.currentPage].blocks = newBlocks;
-            this.selectedIndex = newBlocks.length - 1;
+            const arr = [...this.blocks];
+            if (atIndex >= 0 && atIndex <= arr.length) {
+                arr.splice(atIndex, 0, block);
+                this.selectedIndex = atIndex;
+            } else {
+                arr.push(block);
+                this.selectedIndex = arr.length - 1;
+            }
+            this.pages[this.currentPage].blocks = arr;
             this.isDirty = true;
-            this.$nextTick(() => {
-                const el = document.getElementById('canvas-blocks');
-                el && el.lastElementChild && el.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            });
+            this.autoSaveAndReload();
         },
+
         removeBlock(index) {
+            this.pushHistory();
             const arr = [...this.blocks];
             arr.splice(index, 1);
             this.pages[this.currentPage].blocks = arr;
-            if (this.selectedIndex >= arr.length) this.selectedIndex = arr.length - 1;
+            this.selectedIndex = arr.length > 0 ? Math.min(index, arr.length - 1) : -1;
             this.isDirty = true;
+            this.autoSaveAndReload();
         },
-        selectBlock(index) { this.selectedIndex = index; },
+
+        duplicateBlock(index) {
+            this.pushHistory();
+            const clone = JSON.parse(JSON.stringify(this.blocks[index]));
+            clone.id = 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            const arr = [...this.blocks];
+            arr.splice(index + 1, 0, clone);
+            this.pages[this.currentPage].blocks = arr;
+            this.selectedIndex = index + 1;
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        selectBlock(index) {
+            this.selectedIndex = index;
+            this.selectedTab = 'content';
+            if (this.selectedBlock) this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+        },
+
         moveBlock(from, to) {
             if (to < 0 || to >= this.blocks.length) return;
+            this.pushHistory();
             const arr = [...this.blocks];
             const [item] = arr.splice(from, 1);
             arr.splice(to, 0, item);
             this.pages[this.currentPage].blocks = arr;
             this.selectedIndex = to;
             this.isDirty = true;
+            this.autoSaveAndReload();
         },
 
-        // Page management
+        // ── TB3-S2: Undo / Redo ──────────────────────────────
+        pushHistory() {
+            if (this.historyIndex < this.history.length - 1) {
+                this.history = this.history.slice(0, this.historyIndex + 1);
+            }
+            this.history.push(JSON.parse(JSON.stringify(this.blocks)));
+            if (this.history.length > this.maxHistory) {
+                this.history.shift();
+            } else {
+                this.historyIndex++;
+            }
+        },
+
+        undo() {
+            if (this.historyIndex <= 0) return;
+            this.historyIndex--;
+            this.pages[this.currentPage].blocks = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+            this.selectedIndex = -1;
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        redo() {
+            if (this.historyIndex >= this.history.length - 1) return;
+            this.historyIndex++;
+            this.pages[this.currentPage].blocks = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+            this.selectedIndex = -1;
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        // ── TB3-S2: Per-block style overrides ────────────────
+        updateStyle(styleKey, value) {
+            if (!this.selectedBlock) return;
+            if (!this.selectedBlock.style) this.selectedBlock.style = {};
+            if (value === '' || value === null) {
+                delete this.selectedBlock.style[styleKey];
+                if (Object.keys(this.selectedBlock.style).length === 0) {
+                    delete this.selectedBlock.style;
+                }
+            } else {
+                this.selectedBlock.style[styleKey] = value;
+            }
+            this.isDirty = true;
+            this.schedulePropUpdate();
+        },
+
+        resetBlockStyle() {
+            if (!this.selectedBlock) return;
+            delete this.selectedBlock.style;
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        schedulePropUpdate() {
+            this.isDirty = true;
+            clearTimeout(this.propUpdateTimer);
+            this.propUpdateTimer = setTimeout(() => this.pushPropUpdate(), 350);
+        },
+
+        async pushPropUpdate() {
+            if (!this.selectedBlock || !this.iframeReady) return;
+            try {
+                const blockPayload = JSON.parse(JSON.stringify(this.selectedBlock)); // includes .style if set
+                const r = await fetch(ROUTES.renderBlock, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                    body: JSON.stringify({ block: blockPayload })
+                });
+                const d = await r.json();
+                if (d.html) this.sendToIframe({ action: 'updateBlock', blockId: this.selectedBlock.id, html: d.html });
+            } catch (_) {}
+        },
+
+        // ── Page Management ────────────────────────────────────
         switchPage(key) {
             if (this.isDirty) this.saveCurrentPage();
             this.currentPage   = key;
             this.selectedIndex = -1;
+            this.selectedTab   = 'content';
+            // Reset history for new page
+            this.history      = [JSON.parse(JSON.stringify(this.pages[key]?.blocks ?? []))];
+            this.historyIndex = 0;
+            this.reloadIframe();
         },
+
         deletePage(key) {
             if (key === 'home' || key.startsWith('__')) return;
             if (!confirm('این صفحه حذف شود؟')) return;
@@ -591,13 +844,12 @@ function canvasEditor() {
             }).then(r => r.json()).then(d => {
                 if (d.success) {
                     delete this.pages[key];
-                    if (this.currentPage === key) this.currentPage = Object.keys(this.pages)[0];
+                    if (this.currentPage === key) { this.currentPage = Object.keys(this.pages)[0]; this.reloadIframe(); }
                     this.showToast('صفحه حذف شد.', 'success');
-                } else {
-                    this.showToast(d.error ?? 'خطا در حذف صفحه', 'error');
-                }
+                } else this.showToast(d.error ?? 'خطا', 'error');
             }).catch(() => this.showToast('خطای شبکه', 'error'));
         },
+
         confirmAddPage() {
             if (!this.newPageTitle.trim()) return;
             fetch(ROUTES.addPage, {
@@ -608,17 +860,14 @@ function canvasEditor() {
                 if (d.success) {
                     this.pages[d.key] = d.page;
                     this.showAddPage  = false;
-                    this.newPageTitle = '';
-                    this.newPageSlug  = '';
+                    this.newPageTitle = ''; this.newPageSlug = '';
                     this.switchPage(d.key);
                     this.showToast('صفحه افزوده شد.', 'success');
-                } else {
-                    this.showToast(d.error ?? 'خطا در افزودن صفحه', 'error');
-                }
+                } else this.showToast(d.error ?? 'خطا', 'error');
             }).catch(() => this.showToast('خطای شبکه', 'error'));
         },
 
-        // Save
+        // ── Save / Publish ────────────────────────────────────
         async saveCurrentPage() {
             if (this.saving) return;
             this.saving = true;
@@ -630,10 +879,26 @@ function canvasEditor() {
                 });
                 const d = await r.json();
                 if (d.success) { this.isDirty = false; this.showToast('ذخیره شد ✓', 'success'); }
-                else this.showToast(d.error ?? 'خطا در ذخیره', 'error');
+                else this.showToast(d.error ?? 'خطا', 'error');
             } catch { this.showToast('خطای شبکه', 'error'); }
             finally { this.saving = false; }
         },
+
+        async autoSave() {
+            if (this.quickSaving) return;
+            this.quickSaving = true;
+            try {
+                await fetch(ROUTES.saveBlocks, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                    body: JSON.stringify({ page_key: this.currentPage, blocks: this.blocks })
+                });
+                this.isDirty = false;
+            } catch (_) {}
+            finally { this.quickSaving = false; }
+        },
+
+        async autoSaveAndReload() { await this.autoSave(); this.reloadIframe(); },
 
         async publishDraft() {
             if (this.publishing) return;
@@ -645,17 +910,13 @@ function canvasEditor() {
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
                 });
                 const d = await r.json();
-                if (d.success) {
-                    this.showToast('قالب منتشر شد ✓', 'success');
-                    setTimeout(() => window.location.reload(), 800);
-                } else {
-                    this.showToast(d.error ?? 'خطا در انتشار', 'error');
-                }
+                if (d.success) { this.showToast('قالب منتشر شد ✓', 'success'); setTimeout(() => window.location.reload(), 800); }
+                else this.showToast(d.error ?? 'خطا', 'error');
             } catch { this.showToast('خطای شبکه', 'error'); }
             finally { this.publishing = false; }
         },
 
-        async saveGlobalStyles() {
+        async saveGlobalStylesAndReload() {
             if (this.gsSaving) return;
             this.gsSaving = true;
             try {
@@ -665,14 +926,104 @@ function canvasEditor() {
                     body: JSON.stringify(this.globalStyles)
                 });
                 const d = await r.json();
-                if (d.success) { this.gsIsDirty = false; this.showToast('رنگ‌ها ذخیره شد ✓', 'success'); }
+                if (d.success) { this.gsIsDirty = false; this.showToast('رنگ‌ها ذخیره شد ✓', 'success'); this.reloadIframe(); }
                 else this.showToast(d.error ?? 'خطا', 'error');
             } catch { this.showToast('خطای شبکه', 'error'); }
             finally { this.gsSaving = false; }
         },
 
-        // Helpers
-        blockLabel(type)   { return BLOCK_LABELS[type] ?? type; },
+        // ── TB3-02: Live Iframe ───────────────────────────────
+        livePreviewUrl() {
+            return ROUTES.livePreview + '?page=' + encodeURIComponent(this.currentPage) + '&t=' + this.iframeTimestamp;
+        },
+
+        reloadIframe() {
+            this.iframeLoading  = true;
+            this.iframeReady    = false;
+            this.iframeTimestamp = Date.now();
+        },
+
+        getIframe() { return document.getElementById('tb-live-iframe'); },
+
+        sendToIframe(msg) {
+            const iframe = this.getIframe();
+            if (iframe && iframe.contentWindow) {
+                try { iframe.contentWindow.postMessage(msg, '*'); } catch (_) {}
+            }
+        },
+
+        onIframeLoad() { setTimeout(() => { this.iframeLoading = false; }, 150); },
+
+        handleIframeMessage(e) {
+            const d = e.data;
+            if (!d || !d.action) return;
+            switch (d.action) {
+                case 'ready':
+                    this.iframeReady   = true;
+                    this.iframeLoading = false;
+                    if (this.selectedBlock) this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                    break;
+                case 'iframeHeight':
+                    const iframe = this.getIframe();
+                    if (iframe) iframe.style.height = Math.max(400, d.height || 400) + 'px';
+                    break;
+                case 'blockSelected':
+                    const idx = this.blocks.findIndex(b => b.id === d.blockId);
+                    if (idx >= 0) { this.selectedIndex = idx; this.selectedTab = 'content'; }
+                    break;
+                case 'dropIndexResult':
+                    this.dropTargetIndex    = d.index ?? this.blocks.length;
+                    this.dropTargetBeforeId = d.beforeId ?? '__end__';
+                    this.sendToIframe({ action: 'setDropTarget', beforeId: this.dropTargetBeforeId });
+                    break;
+            }
+        },
+
+        setDevice(d) { this.device = d; },
+
+        // ── TB3-03: Drag from Library ─────────────────────────
+        startDragBlock(event, blockType) {
+            this.draggedBlockType  = blockType;
+            this.draggedBlockLabel = BLOCK_LABELS[blockType] ?? blockType;
+            this.isDraggingBlock   = true;
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain', blockType);
+            this.sendToIframe({ action: 'showDropZones', visible: true });
+        },
+
+        endDragBlock() {
+            this.isDraggingBlock    = false;
+            this.draggedBlockType   = null;
+            this.draggedBlockLabel  = null;
+            this.dropTargetIndex    = -1;
+            this.dropTargetBeforeId = null;
+            this.sendToIframe({ action: 'showDropZones', visible: false });
+        },
+
+        onDragOverCanvas(event) {
+            if (!this.isDraggingBlock) return;
+            const iframe = this.getIframe();
+            if (iframe) {
+                const rect = iframe.getBoundingClientRect();
+                const scrollY = iframe.contentWindow?.scrollY ?? 0;
+                const relY = event.clientY - rect.top + scrollY;
+                this.sendToIframe({ action: 'getDropIndex', clientY: relY });
+            }
+        },
+
+        onDragLeaveCanvas() { this.sendToIframe({ action: 'setDropTarget', beforeId: null }); },
+
+        onDropToCanvas(event) {
+            event.preventDefault();
+            const type = this.draggedBlockType || event.dataTransfer.getData('text/plain');
+            if (!type) { this.endDragBlock(); return; }
+            const idx = this.dropTargetIndex >= 0 ? this.dropTargetIndex : this.blocks.length;
+            this.addBlock(type, idx);
+            this.endDragBlock();
+        },
+
+        // ── Helpers ──────────────────────────────────────────
+        blockLabel(type)    { return BLOCK_LABELS[type] ?? type; },
         blockPreview(block) {
             const d = block?.props ?? block?.data ?? {};
             return d.title || d.text || d.content || d.name || d.subtitle || d.label || '';
@@ -683,12 +1034,11 @@ function canvasEditor() {
             if (type.startsWith('module:shop'))   return 'bg-emerald-500';
             if (type.startsWith('module:course')) return 'bg-violet-500';
             if (type.startsWith('module:form'))   return 'bg-amber-500';
-            if (type.startsWith('module:pricing') || type.startsWith('module:plan') || type.startsWith('module:subscriber')) return 'bg-pink-500';
+            if (type.startsWith('module:pricing') || type.startsWith('module:plan')) return 'bg-pink-500';
             if (type.startsWith('module:'))       return 'bg-indigo-500';
             if (type === 'hero' || type === 'cta') return 'bg-purple-500';
             if (['section','grid','columns','slider','accordion'].includes(type)) return 'bg-blue-400';
             if (['heading','text','image','gallery','video','button','divider','counter'].includes(type)) return 'bg-green-500';
-            if (['blog_posts','testimonials','product_grid','product_slider'].includes(type)) return 'bg-purple-400';
             if (['countdown','promo_banner'].includes(type)) return 'bg-orange-400';
             return 'bg-slate-400';
         },
@@ -699,38 +1049,39 @@ function canvasEditor() {
         },
 
         init() {
-            // Normalize legacy blocks: block.data → block.props
+            // TB3-01: Normalize block.data → block.props
             Object.values(this.pages).forEach(page => {
                 (page.blocks ?? []).forEach(block => {
-                    if (!block.props && block.data) block.props = block.data;
+                    if (!block.props && block.data) { block.props = block.data; delete block.data; }
                     if (!block.props) block.props = {};
                 });
             });
 
-            this.$nextTick(() => {
-                const el = document.getElementById('canvas-blocks');
-                if (el && typeof Sortable !== 'undefined') {
-                    Sortable.create(el, {
-                        animation: 180,
-                        handle: '.drag-handle',
-                        ghostClass: 'opacity-40',
-                        chosenClass: 'ring-2 ring-indigo-400',
-                        onEnd: (evt) => {
-                            if (evt.oldIndex === evt.newIndex) return;
-                            const arr = [...this.blocks];
-                            const [item] = arr.splice(evt.oldIndex, 1);
-                            arr.splice(evt.newIndex, 0, item);
-                            this.pages[this.currentPage].blocks = arr;
-                            this.selectedIndex = evt.newIndex;
-                            this.isDirty = true;
-                        }
-                    });
+            // TB3-S2: Initialize undo history with current state
+            this.history = [JSON.parse(JSON.stringify(this.blocks))];
+            this.historyIndex = 0;
+
+            // TB3-02: postMessage bridge
+            window.addEventListener('message', (e) => this.handleIframeMessage(e));
+
+            // TB3-S2: Keyboard shortcuts
+            window.addEventListener('keydown', (e) => {
+                const tag = document.activeElement?.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.undo();
+                } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                    e.preventDefault();
+                    this.redo();
                 }
             });
 
             window.addEventListener('beforeunload', (e) => {
                 if (this.isDirty) { e.preventDefault(); e.returnValue = ''; }
             });
+
+            this.iframeLoading = true;
         }
     };
 }
