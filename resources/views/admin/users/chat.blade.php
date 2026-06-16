@@ -443,8 +443,8 @@
                     ></textarea>
                     <button type="submit"
                             :disabled="isSending"
-                            :class="noteMode ? 'bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300' : 'bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-50'"
-                            class="shrink-0 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 h-[4rem]">
+                            :style="noteMode ? 'background:#f59e0b' : 'background:linear-gradient(135deg,#6366f1,#8b5cf6)'"
+                            class="shrink-0 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 h-[4rem] disabled:opacity-50">
                         <span x-show="!isSending">
                             <x-core-ui::icon name="arrow-right" class="w-4 h-4" />
                         </span>

@@ -753,8 +753,8 @@
                             <div class="flex gap-2">
                                 <button type="submit"
                                         :disabled="!smsMsg.trim()"
-                                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition"
-                                        :class="!smsMsg.trim() ? 'bg-gray-300 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md'">
+                                        :style="!smsMsg.trim() ? 'background:#d1d5db;cursor:not-allowed' : 'background:linear-gradient(to right,#9333ea,#4f46e5);box-shadow:0 2px 8px rgba(79,70,229,.3)'"
+                                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition">
                                     ارسال
                                 </button>
                                 <button type="button" @click="open=false"

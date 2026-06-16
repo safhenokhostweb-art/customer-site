@@ -606,8 +606,8 @@
 
                         {{-- Send button --}}
                         <button type="submit" :disabled="isSending"
-                                :class="noteMode ? 'from-amber-500 to-orange-500' : 'from-indigo-600 to-purple-600'"
-                                class="flex items-center justify-center rounded-full w-10 h-10 bg-gradient-to-br text-white shadow-md hover:shadow-lg transition-all shrink-0 disabled:opacity-60">
+                                :style="noteMode ? 'background:linear-gradient(135deg,#f59e0b,#ea580c)' : 'background:linear-gradient(135deg,#4f46e5,#9333ea)'"
+                                class="flex items-center justify-center rounded-full w-10 h-10 text-white shadow-md hover:shadow-lg transition-all shrink-0 disabled:opacity-60">
                             <template x-if="!isSending">
                                 <x-core-ui::icon name="arrow-up" class="w-4 h-4" />
                             </template>

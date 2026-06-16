@@ -242,8 +242,8 @@
                     </div>
                     <button type="submit"
                             :disabled="isSending || !message.trim()"
-                            class="flex items-center justify-center rounded-full p-3 min-w-[48px] h-[48px] transition-all"
-                            :class="isSending || !message.trim() ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg'">
+                            :style="(isSending || !message.trim()) ? 'background:#d1d5db;color:#6b7280;cursor:not-allowed' : 'background:linear-gradient(to right,#4f46e5,#9333ea);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3)'"
+                            class="flex items-center justify-center rounded-full p-3 min-w-12 h-12 transition-all">
                         <template x-if="!isSending">
                             <x-core-ui::icon name="arrow-left" class="w-5 h-5 shrink-0" />
                         </template>
