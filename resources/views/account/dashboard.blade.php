@@ -33,6 +33,13 @@
 /* ─── pulse dot ─── */
 .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;animation:pulse-anim 2s infinite}
 @keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.2)}}
+
+/* ─── Mobile Layout Fixes ─── */
+@media(max-width:639px){
+  .ua-tile__value{font-size:1.5rem}
+  .ua-action{padding:0.6rem 0.75rem}
+  .ua-action__icon{width:2rem;height:2rem}
+}
 </style>
 @endpush
 
@@ -50,10 +57,10 @@
 {{-- ═══ بنر خوش‌آمدید ═══ --}}
 <div class="ug-card mb-7">
     <div class="absolute inset-0 bg-linear-to-l from-indigo-500/8 via-sky-400/4 to-transparent pointer-events-none"></div>
-    <div class="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-             style="background:linear-gradient(135deg,#7c3aed,#2563eb)">
-            <x-core-ui::icon name="user" class="w-7 h-7 text-white" />
+    <div class="relative z-10 p-6 sm:p-8 flex flex-col items-start sm:flex-row sm:items-center gap-5">
+        <div class="rounded-2xl flex items-center justify-center"
+             style="background:linear-gradient(135deg,#7c3aed,#2563eb);width:3.5rem;height:3.5rem;min-width:3.5rem;flex-shrink:0">
+            <x-core-ui::icon name="user" style="width:1.75rem;height:1.75rem;color:#fff" />
         </div>
         <div class="flex-1">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">

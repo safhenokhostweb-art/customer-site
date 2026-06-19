@@ -66,6 +66,14 @@
 /* ─── pulse dot ─── */
 .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.2)}}
+
+/* ─── Mobile Layout Fixes ─── */
+@media(max-width:639px){
+  .admin-dashboard-page .dash-welcome-row{flex-direction:column!important;align-items:flex-start!important}
+  .admin-dashboard-page .dash-tile__value{font-size:1.5rem}
+  .admin-dashboard-page .q-link__label{font-size:0.8rem}
+  .admin-dashboard-page .dashboard-modules-shell{grid-template-columns:1fr!important}
+}
 </style>
 @endpush
 @section('content')
@@ -90,10 +98,10 @@
 {{-- ═══ بنر خوش‌آمدید ═══ --}}
 <div class="g-card mb-7">
     <div class="absolute inset-0 bg-linear-to-l from-indigo-600/10 via-sky-500/5 to-transparent pointer-events-none"></div>
-    <div class="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-             style="background:linear-gradient(135deg,#6366f1,#0284c7)">
-            <x-core-ui::icon name="store" class="w-7 h-7 text-white" />
+    <div class="relative z-10 p-6 sm:p-8 flex flex-col items-start sm:flex-row sm:items-center gap-5">
+        <div class="rounded-2xl flex items-center justify-center shrink-0"
+             style="background:linear-gradient(135deg,#6366f1,#0284c7);width:3.5rem;height:3.5rem;min-width:3.5rem;flex-shrink:0">
+            <x-core-ui::icon name="store" style="width:1.75rem;height:1.75rem;color:#fff" />
         </div>
         <div class="flex-1">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
