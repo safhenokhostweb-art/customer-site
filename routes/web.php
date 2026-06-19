@@ -62,6 +62,7 @@ use App\Http\Controllers\Admin\CaptchaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
+use App\Http\Controllers\Admin\ThemeDesignMediaController;
 use App\Http\Controllers\Admin\ThemeMarketplaceController as AdminThemeMarketplaceController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Account\DashboardController as AccountDashboardController;
@@ -384,6 +385,10 @@ Route::middleware('install.check')->group(function () {
             // TB3-02: Live iframe canvas
             Route::get('theme-design/canvas/live-preview',                [ThemeDesignController::class, 'canvasLivePreview'])->name('theme-design.canvas-live-preview');
             Route::post('theme-design/canvas/render-block',               [ThemeDesignController::class, 'canvasRenderBlockAjax'])->name('theme-design.canvas-render-block');
+            // TB3-07: Media Manager
+            Route::get('theme-design/canvas/media',                       [ThemeDesignMediaController::class, 'index'])->name('theme-design.media-index');
+            Route::post('theme-design/canvas/media/upload',               [ThemeDesignMediaController::class, 'upload'])->name('theme-design.media-upload');
+            Route::delete('theme-design/canvas/media',                    [ThemeDesignMediaController::class, 'destroy'])->name('theme-design.media-destroy');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {

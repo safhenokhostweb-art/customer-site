@@ -110,6 +110,32 @@ body.tb-drag-active .tb-drop-zone {
     color: #6366f1; font-size: 0.95rem; font-weight: 600;
 }
 .tb-module-placeholder .tb-module-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+/* Visibility helpers */
+@media (min-width: 1024px) { .tb-hide-desktop { display: none !important; } }
+@media (min-width: 768px) and (max-width: 1023px) { .tb-hide-tablet { display: none !important; } }
+@media (max-width: 767px) { .tb-hide-mobile { display: none !important; } }
+
+/* Animation keyframes */
+@keyframes tb-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tb-slide-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes tb-slide-right { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes tb-zoom-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes tb-bounce-in { 0% { opacity:0; transform: scale(0.7); } 60% { transform: scale(1.06); } 100% { opacity:1; transform: scale(1); } }
+.tb-anim-fade-in  { animation: tb-fade-in   var(--tb-anim-duration,0.6s) both; }
+.tb-anim-slide-up { animation: tb-slide-up  var(--tb-anim-duration,0.6s) both; }
+.tb-anim-slide-right { animation: tb-slide-right var(--tb-anim-duration,0.6s) both; }
+.tb-anim-zoom-in  { animation: tb-zoom-in   var(--tb-anim-duration,0.6s) both; }
+.tb-anim-bounce-in { animation: tb-bounce-in var(--tb-anim-duration,0.7s) both; }
+
+/* Inline editing */
+[data-tb-editable]:focus {
+    outline: 2px dashed #6366f1 !important;
+    outline-offset: 2px;
+    border-radius: 3px;
+    min-width: 30px;
+    min-height: 1em;
+}
 </style>
 </head>
 <body>
@@ -145,10 +171,84 @@ body.tb-drag-active .tb-drop-zone {
     'use strict';
 
     var state = { selectedBlockId: null };
+    var inlineState = { active: false, el: null, propKey: null, inlineType: 'text', timer: null };
 
     function notifyParent(msg) {
         try { parent.postMessage(msg, '*'); } catch (_) {}
     }
+
+    /* ── Inline editing (TB3-04) ─────────────────────────────── */
+    function enableInlineEditing(el) {
+        if (inlineState.active && inlineState.el !== el) disableInlineEditing();
+        inlineState.active    = true;
+        inlineState.el        = el;
+        inlineState.propKey   = el.getAttribute('data-tb-editable');
+        inlineState.inlineType = el.getAttribute('data-tb-inline-type') || 'text';
+        el.contentEditable = 'true';
+        el.focus();
+        var range = document.createRange();
+        range.selectNodeContents(el);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    function disableInlineEditing() {
+        if (!inlineState.active || !inlineState.el) return;
+        var el = inlineState.el;
+        el.contentEditable = 'false';
+        sendInlineChange(true);
+        inlineState.active = false;
+        inlineState.el = null;
+    }
+
+    function sendInlineChange(isFinal) {
+        if (!inlineState.el || !inlineState.propKey) return;
+        var el = inlineState.el;
+        var value = inlineState.inlineType === 'html' ? el.innerHTML : el.innerText;
+        var blockEl = el.closest('[data-tb-block-id]');
+        var blockId = blockEl ? blockEl.getAttribute('data-tb-block-id') : null;
+        if (!blockId) return;
+        notifyParent({ action: 'inlinePropChange', blockId: blockId, propKey: inlineState.propKey, value: value, final: !!isFinal });
+    }
+
+    document.addEventListener('dblclick', function (e) {
+        var editableEl = e.target.closest('[data-tb-editable]');
+        if (editableEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            enableInlineEditing(editableEl);
+            return;
+        }
+        disableInlineEditing();
+    }, true);
+
+    document.addEventListener('blur', function (e) {
+        if (inlineState.active && inlineState.el && !inlineState.el.contains(e.relatedTarget)) {
+            disableInlineEditing();
+        }
+    }, true);
+
+    document.addEventListener('input', function (e) {
+        if (!inlineState.active || e.target !== inlineState.el) return;
+        clearTimeout(inlineState.timer);
+        inlineState.timer = setTimeout(function () { sendInlineChange(false); }, 400);
+    }, true);
+
+    document.addEventListener('keydown', function (e) {
+        if (!inlineState.active) return;
+        if (e.key === 'Escape') { disableInlineEditing(); }
+        if (e.key === 'Enter' && inlineState.inlineType !== 'html') { e.preventDefault(); disableInlineEditing(); }
+    }, true);
+
+    document.addEventListener('paste', function (e) {
+        if (!inlineState.active) return;
+        if (inlineState.inlineType !== 'html') {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+            document.execCommand('insertText', false, text);
+        }
+    }, true);
 
     /* Block click → select */
     document.addEventListener('click', function (e) {
@@ -174,6 +274,7 @@ body.tb-drag-active .tb-drop-zone {
     }
 
     function updateBlockHtml(blockId, html) {
+        disableInlineEditing();
         var el = document.querySelector('[data-tb-block-id="' + blockId + '"]');
         if (!el) return;
         var badge = el.querySelector('.tb-block-badge');
@@ -227,6 +328,9 @@ body.tb-drag-active .tb-drop-zone {
             case 'getDropIndex':
                 var res = getDropIndexAtY(d.clientY || 0);
                 notifyParent({ action: 'dropIndexResult', index: res.index, beforeId: res.beforeId });
+                break;
+            case 'inlinePropChange':
+                /* no-op in iframe — parent sent this; it was already handled above */
                 break;
         }
     });

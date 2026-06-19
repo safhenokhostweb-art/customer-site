@@ -76,6 +76,7 @@ class BlockRenderer
             }
         }
 
+        $html = $this->applyBlockStyle($html, $block['style'] ?? []);
         return $this->wrapEditorMode($html, $id, $type);
     }
 
@@ -371,8 +372,11 @@ class BlockRenderer
         $btnUrl = $this->escapeAttr($props['button_url'] ?? '#');
         $bg = $props['background'] ?? 'primary';
         $align = $props['align'] ?? 'center';
-        $btn = $btnText ? "<a href=\"{$btnUrl}\" class=\"tb-btn tb-btn-primary\">{$btnText}</a>" : '';
-        return "<section id=\"tb-{$id}\" class=\"tb-hero tb-bg-{$bg} tb-align-{$align}\"><div class=\"tb-hero-inner\"><h1 class=\"tb-hero-title\">{$title}</h1><p class=\"tb-hero-subtitle\">{$subtitle}</p>{$btn}</div></section>";
+        $eaTitle = $this->editableAttr('title');
+        $eaSub   = $this->editableAttr('subtitle');
+        $eaBtn   = $this->editableAttr('button_text');
+        $btn = $btnText ? "<a href=\"{$btnUrl}\" class=\"tb-btn tb-btn-primary\"{$eaBtn}>{$btnText}</a>" : '';
+        return "<section id=\"tb-{$id}\" class=\"tb-hero tb-bg-{$bg} tb-align-{$align}\"><div class=\"tb-hero-inner\"><h1 class=\"tb-hero-title\"{$eaTitle}>{$title}</h1><p class=\"tb-hero-subtitle\"{$eaSub}>{$subtitle}</p>{$btn}</div></section>";
     }
 
     protected function renderHeading(array $props, string $inner, string $id): string
@@ -392,7 +396,8 @@ class BlockRenderer
         $inline[] = 'display:block';
         $inline[] = 'width:100%';
         $styleAttr = $inline ? ' style="' . implode(';', $inline) . '"' : '';
-        return "<h{$level} id=\"tb-{$id}\" class=\"tb-heading\"{$styleAttr}>{$text}</h{$level}>";
+        $ea = $this->editableAttr('text');
+        return "<h{$level} id=\"tb-{$id}\" class=\"tb-heading\"{$styleAttr}{$ea}>{$text}</h{$level}>";
     }
 
     protected function renderText(array $props, string $inner, string $id): string
@@ -413,8 +418,9 @@ class BlockRenderer
         }
         $wrapperAttr = $wrapperStyles ? ' style="' . implode(';', $wrapperStyles) . '"' : '';
         $innerAttr = $innerStyles ? ' style="' . implode(';', $innerStyles) . '"' : '';
+        $ea = $this->editableAttr('content', 'html');
         // محتوای متنی را داخل یک div داخلی می‌پیچیم تا تراز قطعاً روی متن اعمال شود
-        return "<div id=\"tb-{$id}\" class=\"tb-text\"{$wrapperAttr}><div{$innerAttr}>{$content}</div></div>";
+        return "<div id=\"tb-{$id}\" class=\"tb-text\"{$wrapperAttr}><div{$innerAttr}{$ea}>{$content}</div></div>";
     }
 
     protected function renderImage(array $props, string $inner, string $id): string
@@ -426,7 +432,8 @@ class BlockRenderer
             return "<figure id=\"tb-{$id}\" class=\"tb-image tb-image-placeholder\"><span>تصویر</span></figure>";
         }
         $img = "<img src=\"{$url}\" alt=\"{$alt}\" loading=\"lazy\" class=\"tb-img\">";
-        $cap = $caption ? "<figcaption class=\"tb-image-caption\">{$caption}</figcaption>" : '';
+        $eaCap = $this->editableAttr('caption');
+        $cap = $caption ? "<figcaption class=\"tb-image-caption\"{$eaCap}>{$caption}</figcaption>" : '';
         return "<figure id=\"tb-{$id}\" class=\"tb-image\">{$img}{$cap}</figure>";
     }
 
@@ -435,7 +442,8 @@ class BlockRenderer
         $text = $this->escape($props['text'] ?? '');
         $url = $this->escapeAttr($props['url'] ?? '#');
         $style = $props['style'] ?? 'primary';
-        return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-{$style}\">{$text}</a>";
+        $ea = $this->editableAttr('text');
+        return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-{$style}\"{$ea}>{$text}</a>";
     }
 
     protected function renderDivider(array $props, string $inner, string $id): string
@@ -501,8 +509,11 @@ class BlockRenderer
         $btnText = $this->escape($props['button_text'] ?? '');
         $btnUrl = $this->escapeAttr($props['button_url'] ?? '#');
         $bg = $props['background'] ?? 'primary';
-        $btn = $btnText ? "<a href=\"{$btnUrl}\" class=\"tb-btn tb-btn-primary\">{$btnText}</a>" : '';
-        return "<section id=\"tb-{$id}\" class=\"tb-cta tb-bg-{$bg}\"><h2 class=\"tb-cta-title\">{$title}</h2><p class=\"tb-cta-subtitle\">{$subtitle}</p>{$btn}</section>";
+        $eaTitle = $this->editableAttr('title');
+        $eaSub   = $this->editableAttr('subtitle');
+        $eaBtn   = $this->editableAttr('button_text');
+        $btn = $btnText ? "<a href=\"{$btnUrl}\" class=\"tb-btn tb-btn-primary\"{$eaBtn}>{$btnText}</a>" : '';
+        return "<section id=\"tb-{$id}\" class=\"tb-cta tb-bg-{$bg}\"><h2 class=\"tb-cta-title\"{$eaTitle}>{$title}</h2><p class=\"tb-cta-subtitle\"{$eaSub}>{$subtitle}</p>{$btn}</section>";
     }
 
     protected function renderPromoBanner(array $props, string $inner, string $id): string
@@ -798,6 +809,74 @@ class BlockRenderer
             return '';
         }
         return "<div id=\"tb-{$id}\" class=\"tb-block tb-block-{$type}\" data-type=\"{$type}\">{$content}</div>";
+    }
+
+    protected function applyBlockStyle(string $html, array $style): string
+    {
+        if (empty($style)) return $html;
+        $css = [];
+        $cls = [];
+        if (!empty($style['bgColor'])) $css[] = "background-color:{$style['bgColor']}";
+        if (!empty($style['textColor'])) $css[] = "color:{$style['textColor']}";
+        if (!empty($style['bgGradientFrom']) && !empty($style['bgGradientTo'])) {
+            $dir = $style['bgGradientDir'] ?? '135deg';
+            $css[] = "background:linear-gradient({$dir},{$style['bgGradientFrom']},{$style['bgGradientTo']})";
+        }
+        if (!empty($style['fontSize'])) $css[] = "font-size:{$style['fontSize']}px";
+        if (!empty($style['fontWeight'])) $css[] = "font-weight:{$style['fontWeight']}";
+        if (!empty($style['lineHeight'])) $css[] = "line-height:{$style['lineHeight']}";
+        if (!empty($style['textAlign'])) $css[] = "text-align:{$style['textAlign']}";
+        if (!empty($style['letterSpacing'])) $css[] = "letter-spacing:{$style['letterSpacing']}px";
+        if (isset($style['paddingTop'])    && $style['paddingTop']    !== '') $css[] = "padding-top:{$style['paddingTop']}px";
+        if (isset($style['paddingRight'])  && $style['paddingRight']  !== '') $css[] = "padding-right:{$style['paddingRight']}px";
+        if (isset($style['paddingBottom']) && $style['paddingBottom'] !== '') $css[] = "padding-bottom:{$style['paddingBottom']}px";
+        if (isset($style['paddingLeft'])   && $style['paddingLeft']   !== '') $css[] = "padding-left:{$style['paddingLeft']}px";
+        if (isset($style['marginTop'])    && $style['marginTop']    !== '') $css[] = "margin-top:{$style['marginTop']}px";
+        if (isset($style['marginBottom']) && $style['marginBottom'] !== '') $css[] = "margin-bottom:{$style['marginBottom']}px";
+        if (isset($style['borderWidth']) && $style['borderWidth'] !== '') {
+            $bStyle = $style['borderStyle'] ?? 'solid';
+            $bColor = $style['borderColor'] ?? '#e5e7eb';
+            $css[] = "border:{$style['borderWidth']}px {$bStyle} {$bColor}";
+        }
+        if (!empty($style['borderRadius'])) $css[] = "border-radius:{$style['borderRadius']}px";
+        $shadowMap = [
+            'sm'   => '0 1px 3px rgba(0,0,0,0.12),0 1px 2px rgba(0,0,0,0.08)',
+            'md'   => '0 4px 6px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.08)',
+            'lg'   => '0 10px 25px rgba(0,0,0,0.12),0 4px 10px rgba(0,0,0,0.08)',
+            'xl'   => '0 20px 40px rgba(0,0,0,0.15)',
+            'none' => 'none',
+        ];
+        if (!empty($style['shadow']) && isset($shadowMap[$style['shadow']])) {
+            $css[] = "box-shadow:{$shadowMap[$style['shadow']]}";
+        }
+        if (isset($style['opacity']) && $style['opacity'] !== '' && (float)$style['opacity'] != 1.0) {
+            $css[] = "opacity:{$style['opacity']}";
+        }
+        if (!empty($style['animationDuration'])) {
+            $css[] = "--tb-anim-duration:{$style['animationDuration']}s";
+        }
+        if (!empty($style['hideDesktop'])) $cls[] = 'tb-hide-desktop';
+        if (!empty($style['hideTablet']))  $cls[] = 'tb-hide-tablet';
+        if (!empty($style['hideMobile']))  $cls[] = 'tb-hide-mobile';
+        if (!empty($style['animation']) && $style['animation'] !== 'none') {
+            $cls[] = 'tb-anim-' . preg_replace('/[^a-z0-9_-]/i', '', $style['animation']);
+        }
+        if (!empty($style['customClass'])) {
+            foreach (explode(' ', $style['customClass']) as $c) {
+                $c = preg_replace('/[^a-zA-Z0-9_-]/', '', $c);
+                if ($c) $cls[] = $c;
+            }
+        }
+        if (empty($css) && empty($cls)) return $html;
+        $styleAttr = !empty($css) ? ' style="' . implode(';', $css) . '"' : '';
+        $classAttr = !empty($cls) ? ' class="' . implode(' ', $cls) . '"' : '';
+        return "<div{$classAttr}{$styleAttr}>{$html}</div>";
+    }
+
+    protected function editableAttr(string $propKey, string $inlineType = 'text'): string
+    {
+        if (!($this->context['editor_mode'] ?? false)) return '';
+        return " data-tb-editable=\"{$propKey}\" data-tb-inline-type=\"{$inlineType}\"";
     }
 
     protected function spacingClass(string $v): string
