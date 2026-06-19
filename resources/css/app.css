@@ -36,10 +36,77 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
-@source '../**/*.js';
+@source '../js/**/*.js';
+@source '../../app/**/*.php';
 @source '../../../saas-platform/packages/saas-platform/modules/forms/resources/views/**/*.blade.php';
 @source '../../../saas-platform/packages/saas-platform/modules/tickets/resources/views/**/*.blade.php';
 @source '../../../saas-platform/packages/saas-platform/modules/forms/resources/**/*.php';
+
+/* ─── Responsive Utilities (sm/md/lg/xl breakpoints) ───────────────────────
+   Tailwind v4 content scanner does not reliably pick up sm:/lg: variants from
+   blade files on Windows. These explicit @media rules guarantee they are always
+   compiled into the output bundle regardless of scan results.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 40rem) {
+  .sm\:flex-row { flex-direction: row !important; }
+  .sm\:flex-col { flex-direction: column !important; }
+  .sm\:flex { display: flex !important; }
+  .sm\:block { display: block !important; }
+  .sm\:hidden { display: none !important; }
+  .sm\:items-center { align-items: center !important; }
+  .sm\:items-start { align-items: flex-start !important; }
+  .sm\:justify-between { justify-content: space-between !important; }
+  .sm\:justify-start { justify-content: flex-start !important; }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+  .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
+  .sm\:col-span-1 { grid-column: span 1 / span 1 !important; }
+  .sm\:col-span-2 { grid-column: span 2 / span 2 !important; }
+  .sm\:col-span-4 { grid-column: span 4 / span 4 !important; }
+  .sm\:text-sm { font-size: .875rem !important; line-height: 1.25rem !important; }
+  .sm\:text-base { font-size: 1rem !important; line-height: 1.5rem !important; }
+  .sm\:text-lg { font-size: 1.125rem !important; line-height: 1.75rem !important; }
+  .sm\:text-xl { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+  .sm\:text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .sm\:text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+  .sm\:p-6 { padding: 1.5rem !important; }
+  .sm\:p-8 { padding: 2rem !important; }
+  .sm\:px-4 { padding-inline: 1rem !important; }
+  .sm\:py-2 { padding-block: .5rem !important; }
+  .sm\:w-auto { width: auto !important; }
+  .sm\:w-full { width: 100% !important; }
+  .sm\:gap-4 { gap: 1rem !important; }
+  .sm\:gap-6 { gap: 1.5rem !important; }
+}
+
+@media (min-width: 48rem) {
+  .md\:flex { display: flex !important; }
+  .md\:block { display: block !important; }
+  .md\:hidden { display: none !important; }
+  .md\:flex-row { flex-direction: row !important; }
+  .md\:items-center { align-items: center !important; }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
+}
+
+@media (min-width: 64rem) {
+  .lg\:flex { display: flex !important; }
+  .lg\:block { display: block !important; }
+  .lg\:hidden { display: none !important; }
+  .lg\:flex-row { flex-direction: row !important; }
+  .lg\:items-center { align-items: center !important; }
+  .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)) !important; }
+  .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
+  .lg\:col-span-3 { grid-column: span 3 / span 3 !important; }
+}
+
+@media (min-width: 80rem) {
+  .xl\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
+  .xl\:col-span-2 { grid-column: span 2 / span 2 !important; }
+}
 
 @theme {
     --font-sans: 'Vazirmatn', 'Tahoma', ui-sans-serif, system-ui, sans-serif;
