@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\ThemeSetting;
+use App\Models\SiteThemeTemplate;
 use App\Services\ThemeCanvas\BlockRegistry;
+use App\Services\ThemeCanvas\SiteThemeTemplateService;
 use App\Services\ThemeEngine\TenantThemeResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +18,10 @@ use Illuminate\View\View;
 
 class ThemeDesignController extends Controller
 {
-    public function __construct(private TenantThemeResolver $resolver) {}
+    public function __construct(
+        private TenantThemeResolver $resolver,
+        private SiteThemeTemplateService $templateSvc,
+    ) {}
 
     public function index(): View
     {
@@ -565,6 +570,44 @@ class ThemeDesignController extends Controller
         Setting::set('theme_preset_slug', '', 'theme');
         $this->resolver->clearCache();
         return back()->with('success', 'تم به تنظیمات سفارشی بازنشانی شد.');
+    }
+
+    // ── Template Library ─────────────────────────────────────────────────────
+
+    public function canvasTemplates(Request $request): JsonResponse
+    {
+        $templates = $this->templateSvc->list(
+            type:     $request->input('type'),
+            category: $request->input('category'),
+            term:     $request->input('search'),
+        );
+
+        return response()->json(['templates' => $templates]);
+    }
+
+    public function canvasSaveAsTemplate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name'     => 'required|string|max:200',
+            'type'     => 'required|in:' . implode(',', array_keys(SiteThemeTemplate::TYPES)),
+            'category' => 'required|in:' . implode(',', array_keys(SiteThemeTemplate::CATEGORIES)),
+            'blocks'   => 'required|array',
+        ]);
+
+        $template = $this->templateSvc->save($data);
+
+        return response()->json(['success' => true, 'template' => ['id' => $template->id, 'name' => $template->name]]);
+    }
+
+    public function canvasInsertTemplate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'template_id' => 'required|integer|exists:site_theme_templates,id',
+        ]);
+
+        $blocks = $this->templateSvc->insertBlocks((int) $data['template_id']);
+
+        return response()->json(['success' => true, 'blocks' => $blocks]);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

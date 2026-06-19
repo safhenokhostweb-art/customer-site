@@ -165,6 +165,9 @@ Route::middleware('install.check')->group(function () {
         Route::post('/profile/deletion', [AccountProfileDeletionController::class, 'store'])->name('profile.deletion.store');
         Route::post('/profile/deletion/cancel', [AccountProfileDeletionController::class, 'cancel'])->name('profile.deletion.cancel');
 
+        // مصرف منابع سایت
+        Route::get('/resources', fn() => view('admin.account.resources'))->name('resources.index');
+
         // اقساط کاربر
         Route::middleware('module:shop')->group(function () {
             Route::get('/installments', [\App\Http\Controllers\Account\InstallmentAccountController::class, 'index'])->name('installments');
@@ -389,6 +392,10 @@ Route::middleware('install.check')->group(function () {
             Route::get('theme-design/canvas/media',                       [ThemeDesignMediaController::class, 'index'])->name('theme-design.media-index');
             Route::post('theme-design/canvas/media/upload',               [ThemeDesignMediaController::class, 'upload'])->name('theme-design.media-upload');
             Route::delete('theme-design/canvas/media',                    [ThemeDesignMediaController::class, 'destroy'])->name('theme-design.media-destroy');
+            // TB6: Template Library
+            Route::get('theme-design/canvas/templates',                   [ThemeDesignController::class, 'canvasTemplates'])->name('theme-design.canvas.templates');
+            Route::post('theme-design/canvas/save-as-template',           [ThemeDesignController::class, 'canvasSaveAsTemplate'])->name('theme-design.canvas.save-as-template');
+            Route::post('theme-design/canvas/insert-template',            [ThemeDesignController::class, 'canvasInsertTemplate'])->name('theme-design.canvas.insert-template');
 
             // Theme Marketplace (TB-2)
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {
