@@ -34,8 +34,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'mobile.auth' => \App\Http\Middleware\AuthenticateMobileUser::class,
             // Theme provisioning from saas-platform
             'provision.secret' => \App\Http\Middleware\ProvisionSecretMiddleware::class,
-        ]);
-        $middleware->alias([
             'locale' => \App\Http\Middleware\SetLocale::class,
         ]);
         $middleware->web(append: [
