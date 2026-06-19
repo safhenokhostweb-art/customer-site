@@ -214,7 +214,50 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         {{-- ── PANEL A: Block Library (RTL = right side) ─────────── --}}
         <div class="w-72 bg-white border-l border-slate-200 flex flex-col overflow-hidden shrink-0 z-20">
 
-            <div class="px-4 py-3 border-b border-slate-100 shrink-0">
+            {{-- TB4: Tab toggle: بلوک‌ها / ساختار --}}
+            <div class="flex border-b border-slate-100 shrink-0">
+                <button @click="leftPanelTab='blocks'"
+                    :class="leftPanelTab==='blocks' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
+                    class="flex-1 py-2 text-xs text-center transition">بلوک‌ها</button>
+                <button @click="leftPanelTab='tree'"
+                    :class="leftPanelTab==='tree' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
+                    class="flex-1 py-2 text-xs text-center transition">ساختار</button>
+            </div>
+
+            {{-- TB4: Structure Tree Tab --}}
+            <div x-show="leftPanelTab==='tree'" class="flex-1 overflow-y-auto">
+                <div x-show="flattenTree().length === 0" class="flex flex-col items-center justify-center py-10 text-center text-slate-400">
+                    <svg class="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                    <p class="text-xs">هنوز بلوکی اضافه نشده</p>
+                </div>
+                <div class="py-2">
+                    <template x-for="node in flattenTree()" :key="node.block.id + node.depth">
+                        <div
+                            @click="selectBlock(node.path)"
+                            :style="'padding-right:' + (12 + node.depth * 14) + 'px'"
+                            :class="isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50'"
+                            class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
+                            <span :class="blockCategoryColor(node.block.type)" class="w-2 h-2 rounded-full shrink-0"></span>
+                            <template x-if="isContainerType(node.block.type)">
+                                <svg @click.stop="toggleTreeNode(node.block.id)"
+                                    class="w-3 h-3 text-slate-400 shrink-0 transition-transform"
+                                    :class="treeExpanded[node.block.id] === false ? '-rotate-90' : ''"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </template>
+                            <template x-if="!isContainerType(node.block.type)">
+                                <span class="w-3 h-3 shrink-0"></span>
+                            </template>
+                            <span class="flex-1 truncate" :class="isSelectedPath(node.path) ? 'text-indigo-700 font-medium' : 'text-slate-700'"
+                                  x-text="node.block.props?.label ? (blockLabel(node.block.type) + ': ' + node.block.props.label) : blockLabel(node.block.type)"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            {{-- Blocks Library Search (blocks tab only) --}}
+            <div x-show="leftPanelTab==='blocks'" class="px-4 py-3 border-b border-slate-100 shrink-0">
                 <div class="relative">
                     <input
                         x-model="librarySearch"
@@ -226,7 +269,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto">
+            <div x-show="leftPanelTab==='blocks'" class="flex-1 overflow-y-auto">
                 @foreach($orderedCats as $catKey)
                     @if(!isset($byCategory[$catKey])) @continue @endif
                     @php
@@ -273,7 +316,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 @endforeach
             </div>
 
-            <div class="px-3 py-2 border-t border-slate-100 shrink-0 bg-slate-50">
+            <div x-show="leftPanelTab==='blocks'" class="px-3 py-2 border-t border-slate-100 shrink-0 bg-slate-50">
                 <p class="text-[10px] text-slate-400 text-center">کلیک یا بکشید برای افزودن</p>
             </div>
         </div>
@@ -365,13 +408,13 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         {{-- ── PANEL C: Props Panel (LTR = left side) ─────────────── --}}
         <div class="w-80 bg-white border-r border-slate-200 flex flex-col overflow-hidden shrink-0 z-20">
 
-            <div x-show="selectedIndex < 0" class="flex flex-col items-center justify-center h-full text-center px-6">
+            <div x-show="!selectedPath" class="flex flex-col items-center justify-center h-full text-center px-6">
                 <div class="text-4xl mb-3 opacity-20">✏️</div>
                 <p class="text-slate-400 text-sm">یک بلوک از Canvas کلیک کنید</p>
                 <p class="text-slate-300 text-xs mt-1">برای ویرایش تنظیمات</p>
             </div>
 
-            <template x-if="selectedIndex >= 0 && selectedBlock">
+            <template x-if="selectedPath && selectedBlock">
                 <div class="flex flex-col h-full overflow-hidden">
 
                     <div class="px-4 py-3 border-b border-slate-100 shrink-0">
@@ -380,29 +423,38 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div :class="blockCategoryColor(selectedBlock.type)" class="w-2 h-2 rounded-full"></div>
                                 <span class="text-sm font-bold text-slate-800" x-text="blockLabel(selectedBlock.type)"></span>
                             </div>
-                            <button @click="selectedIndex = -1; sendToIframe({action:'select', blockId:null})" class="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                            <button @click="selectedPath = null; sendToIframe({action:'select', blockId:null})" class="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                        </div>
+                        {{-- Breadcrumb for nested selection --}}
+                        <div x-show="selectedPath.length > 1" class="flex items-center gap-1 mt-1 flex-wrap">
+                            <template x-for="(pidx, d) in selectedPath.slice(0, -1)" :key="d">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 cursor-pointer hover:bg-indigo-100 transition"
+                                      @click="selectBlock(selectedPath.slice(0, d+1))"
+                                      x-text="blockLabel(getBlockByPath(selectedPath.slice(0,d+1))?.type ?? '')"></span>
+                                <span class="text-slate-300 text-[10px]">›</span>
+                            </template>
                         </div>
                         <p class="text-[11px] text-slate-400 mt-1 font-mono" x-text="selectedBlock.type"></p>
                     </div>
 
-                    {{-- Block Actions (Move / Duplicate / Delete) --}}
+                    {{-- Block Actions (Move / Duplicate / Delete) — TB4: path-aware --}}
                     <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 shrink-0">
-                        <button @click="moveBlock(selectedIndex, selectedIndex - 1)" :disabled="selectedIndex === 0"
+                        <button @click="moveSelectedUp()" :disabled="!canMoveUp()"
                             title="بالاتر"
                             class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
                         </button>
-                        <button @click="moveBlock(selectedIndex, selectedIndex + 1)" :disabled="selectedIndex === blocks.length - 1"
+                        <button @click="moveSelectedDown()" :disabled="!canMoveDown()"
                             title="پایین‌تر"
                             class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                        <button @click="duplicateBlock(selectedIndex)"
+                        <button @click="duplicateSelected()"
                             title="کپی بلوک"
                             class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         </button>
-                        <button @click="removeBlock(selectedIndex)"
+                        <button @click="removeSelected()"
                             title="حذف بلوک"
                             class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-red-200 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-400 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -764,9 +816,88 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         <div x-show="Object.keys(selectedSchema).length === 0" class="text-center py-6">
                             <p class="text-xs text-slate-400">این ویجت تنظیماتی ندارد</p>
                         </div>
+
+                        {{-- TB4: Container Children Panel --}}
+                        <template x-if="isContainerType(selectedBlock?.type)">
+                            <div class="mt-4 pt-4 border-t border-slate-200">
+                                <div class="flex items-center justify-between px-1 mb-2">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                                        <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                                        فرزندان (<span x-text="selectedBlock?.children?.length ?? 0"></span>)
+                                    </span>
+                                    <button @click="showAddChildModal = true"
+                                        class="text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium transition flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                        افزودن
+                                    </button>
+                                </div>
+                                <div class="space-y-1 max-h-48 overflow-y-auto">
+                                    <template x-for="(child, ci) in (selectedBlock?.children ?? [])" :key="child.id">
+                                        <div class="flex items-center gap-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs group">
+                                            <span :class="blockCategoryColor(child.type)" class="w-1.5 h-1.5 rounded-full shrink-0"></span>
+                                            <span class="flex-1 truncate text-slate-700" x-text="child.props?.label ? (blockLabel(child.type) + ': ' + child.props.label) : blockLabel(child.type)"></span>
+                                            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+                                                <button @click="selectBlock([...selectedPath, ci])"
+                                                    class="w-5 h-5 flex items-center justify-center rounded text-indigo-500 hover:bg-indigo-50" title="ویرایش">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                </button>
+                                                <button @click="moveChildUp(ci)" :disabled="ci === 0"
+                                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-30" title="بالاتر">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+                                                </button>
+                                                <button @click="moveChildDown(ci)" :disabled="ci >= (selectedBlock?.children?.length ?? 0) - 1"
+                                                    class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-30" title="پایین‌تر">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                                </button>
+                                                <button @click="removeChild(ci)"
+                                                    class="w-5 h-5 flex items-center justify-center rounded text-red-400 hover:bg-red-50" title="حذف">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <div x-show="!(selectedBlock?.children?.length)" class="text-center py-4 text-slate-400 text-xs">
+                                        هیچ بلوک فرزندی وجود ندارد
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </template>
+        </div>
+    </div>
+
+    {{-- TB4: Add Child Block Modal --}}
+    <div x-show="showAddChildModal" x-transition.opacity class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div @click.outside="showAddChildModal = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5">
+            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                افزودن بلوک فرزند به <span class="text-indigo-600" x-text="blockLabel(selectedBlock?.type)"></span>
+            </h3>
+            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                @foreach($orderedCats as $catKey)
+                    @if(!isset($byCategory[$catKey])) @continue @endif
+                    @foreach($byCategory[$catKey] as $blockType => $blockDef)
+                        <button
+                            @click="addChildBlock('{{ $blockType }}'); showAddChildModal = false"
+                            class="flex items-center gap-2 px-2 py-2 rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-xs text-right transition">
+                            <span class="text-base leading-none shrink-0">
+                                @switch($blockType)
+                                    @case('hero') 🌟 @break @case('section') 📦 @break
+                                    @case('flex_container') 📐 @break @case('grid') 🔲 @break
+                                    @case('columns') ⬜ @break @case('heading') 🔠 @break
+                                    @case('text') 📄 @break @case('image') 🖼️ @break
+                                    @case('button') 🔘 @break @case('cta') 📢 @break
+                                    @default 🧩
+                                @endswitch
+                            </span>
+                            <span class="font-medium text-slate-700 leading-tight">{{ $blockDef['name'] }}</span>
+                        </button>
+                    @endforeach
+                @endforeach
+            </div>
+            <button @click="showAddChildModal = false" class="w-full mt-3 text-xs py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition">انصراف</button>
         </div>
     </div>
 
@@ -871,7 +1002,10 @@ function canvasEditor() {
         // ── State ──────────────────────────────────────────────
         pages:         JSON.parse(JSON.stringify(INITIAL_PAGES)),
         currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
-        selectedIndex: -1,
+        selectedPath:  null,          // null | [0] | [0, 1] | ...
+        leftPanelTab:  'blocks',      // 'blocks' | 'tree'
+        treeExpanded:  {},
+        showAddChildModal: false,
         selectedTab:   'content',
         isDirty:       false,
         saving:        false,
@@ -894,11 +1028,12 @@ function canvasEditor() {
         iframeReady:    false,
         propUpdateTimer: null,
         // TB3-03: drag
-        isDraggingBlock:    false,
-        draggedBlockType:   null,
-        draggedBlockLabel:  null,
-        dropTargetIndex:    -1,
-        dropTargetBeforeId: null,
+        isDraggingBlock:      false,
+        draggedBlockType:     null,
+        draggedBlockLabel:    null,
+        dropTargetIndex:      -1,
+        dropTargetBeforeId:   null,
+        dragTargetContainerId: null,
         // TB3-S2: undo/redo history
         history:       [],
         historyIndex:  -1,
@@ -913,8 +1048,11 @@ function canvasEditor() {
         get blocks() { return this.pages[this.currentPage]?.blocks ?? []; },
         set blocks(val) { if (this.pages[this.currentPage]) this.pages[this.currentPage].blocks = val; },
         get selectedBlock() {
-            if (this.selectedIndex < 0 || this.selectedIndex >= this.blocks.length) return null;
-            return this.blocks[this.selectedIndex];
+            if (!this.selectedPath || this.selectedPath.length === 0) return null;
+            return this.getBlockByPath(this.selectedPath);
+        },
+        get selectedIndex() {
+            return this.selectedPath?.length > 0 ? (this.selectedPath[0] ?? -1) : -1;
         },
         get selectedSchema() {
             if (!this.selectedBlock) return {};
@@ -934,50 +1072,190 @@ function canvasEditor() {
             return type.toLowerCase().includes(s) || name.toLowerCase().includes(s);
         },
 
-        // ── Canvas Actions ────────────────────────────────────
-        addBlock(type, atIndex = -1) {
-            this.pushHistory();
-            const defaults = JSON.parse(JSON.stringify(BLOCK_SCHEMAS[type]?.defaultProps ?? {}));
-            const block = { id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), type, props: defaults };
-            const arr = [...this.blocks];
-            if (atIndex >= 0 && atIndex <= arr.length) {
-                arr.splice(atIndex, 0, block);
-                this.selectedIndex = atIndex;
-            } else {
-                arr.push(block);
-                this.selectedIndex = arr.length - 1;
+        // ── TB4: Block Tree Helpers ───────────────────────────
+        makeBlock(type) {
+            return {
+                id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                type,
+                props: JSON.parse(JSON.stringify(BLOCK_SCHEMAS[type]?.defaultProps ?? {})),
+                ...(this.isContainerType(type) ? { children: [] } : {})
+            };
+        },
+        isContainerType(type) {
+            return ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'].includes(type);
+        },
+        getBlockByPath(path, arr) {
+            arr = arr ?? this.blocks;
+            if (!path || path.length === 0) return null;
+            let block = arr[path[0]];
+            for (let i = 1; i < path.length; i++) {
+                if (!block) return null;
+                block = (block.children ?? [])[path[i]];
             }
-            this.pages[this.currentPage].blocks = arr;
-            this.isDirty = true;
-            this.autoSaveAndReload();
+            return block ?? null;
+        },
+        getSiblingArray(path) {
+            if (!path || path.length === 0) return null;
+            if (path.length === 1) return this.blocks;
+            const parent = this.getBlockByPath(path.slice(0, -1));
+            if (!parent) return null;
+            if (!parent.children) parent.children = [];
+            return parent.children;
+        },
+        findBlockPath(blockId, arr, prefix) {
+            arr = arr ?? this.blocks;
+            prefix = prefix ?? [];
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].id === blockId) return [...prefix, i];
+                if (arr[i].children?.length) {
+                    const found = this.findBlockPath(blockId, arr[i].children, [...prefix, i]);
+                    if (found) return found;
+                }
+            }
+            return null;
+        },
+        flattenTree(arr, depth, prefix) {
+            arr    = arr    ?? this.blocks;
+            depth  = depth  ?? 0;
+            prefix = prefix ?? [];
+            const result = [];
+            for (let i = 0; i < arr.length; i++) {
+                const block = arr[i];
+                const path  = [...prefix, i];
+                result.push({ block, depth, path });
+                if (this.isContainerType(block.type) && block.children?.length && this.treeExpanded[block.id] !== false) {
+                    result.push(...this.flattenTree(block.children, depth + 1, path));
+                }
+            }
+            return result;
+        },
+        isSelectedPath(path) {
+            if (!this.selectedPath || !path) return false;
+            if (this.selectedPath.length !== path.length) return false;
+            return this.selectedPath.every((v, i) => v === path[i]);
+        },
+        toggleTreeNode(blockId) {
+            this.treeExpanded[blockId] = this.treeExpanded[blockId] !== false ? false : true;
         },
 
-        removeBlock(index) {
+        // ── Canvas Actions ────────────────────────────────────
+        addBlock(type, atIndex = -1, parentPath = null) {
             this.pushHistory();
-            const arr = [...this.blocks];
-            arr.splice(index, 1);
-            this.pages[this.currentPage].blocks = arr;
-            this.selectedIndex = arr.length > 0 ? Math.min(index, arr.length - 1) : -1;
+            const block = this.makeBlock(type);
+            if (parentPath !== null) {
+                const container = this.getBlockByPath(parentPath);
+                if (!container) return;
+                if (!container.children) container.children = [];
+                container.children.push(block);
+                this.selectedPath = [...parentPath, container.children.length - 1];
+            } else {
+                const arr = [...this.blocks];
+                const idx = (atIndex >= 0 && atIndex <= arr.length) ? atIndex : arr.length;
+                arr.splice(idx, 0, block);
+                this.pages[this.currentPage].blocks = arr;
+                this.selectedPath = [idx];
+            }
             this.isDirty = true;
             this.autoSaveAndReload();
         },
 
-        duplicateBlock(index) {
+        addChildBlock(type) {
+            if (!this.selectedPath || !this.isContainerType(this.selectedBlock?.type)) return;
+            this.addBlock(type, -1, this.selectedPath);
+        },
+
+        removeSelected() {
+            if (!this.selectedPath) return;
             this.pushHistory();
-            const clone = JSON.parse(JSON.stringify(this.blocks[index]));
-            clone.id = 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-            const arr = [...this.blocks];
-            arr.splice(index + 1, 0, clone);
-            this.pages[this.currentPage].blocks = arr;
-            this.selectedIndex = index + 1;
+            const siblings = this.getSiblingArray(this.selectedPath);
+            if (!siblings) return;
+            const idx = this.selectedPath[this.selectedPath.length - 1];
+            siblings.splice(idx, 1);
+            this.selectedPath = null;
             this.isDirty = true;
             this.autoSaveAndReload();
         },
 
-        selectBlock(index) {
-            this.selectedIndex = index;
+        duplicateSelected() {
+            if (!this.selectedPath) return;
+            this.pushHistory();
+            const siblings = this.getSiblingArray(this.selectedPath);
+            if (!siblings) return;
+            const idx = this.selectedPath[this.selectedPath.length - 1];
+            const clone = JSON.parse(JSON.stringify(siblings[idx]));
+            this._regenIds(clone);
+            siblings.splice(idx + 1, 0, clone);
+            this.selectedPath = [...this.selectedPath.slice(0, -1), idx + 1];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        _regenIds(block) {
+            block.id = 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            (block.children ?? []).forEach(c => this._regenIds(c));
+        },
+
+        selectBlock(pathOrIndex) {
+            const path = Array.isArray(pathOrIndex) ? pathOrIndex : (pathOrIndex >= 0 ? [pathOrIndex] : null);
+            this.selectedPath = path;
             this.selectedTab = 'content';
             if (this.selectedBlock) this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+        },
+
+        moveSelectedUp() {
+            if (!this.selectedPath) return;
+            const siblings = this.getSiblingArray(this.selectedPath);
+            const idx = this.selectedPath[this.selectedPath.length - 1];
+            if (!siblings || idx <= 0) return;
+            this.pushHistory();
+            [siblings[idx - 1], siblings[idx]] = [siblings[idx], siblings[idx - 1]];
+            this.selectedPath = [...this.selectedPath.slice(0, -1), idx - 1];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        moveSelectedDown() {
+            if (!this.selectedPath) return;
+            const siblings = this.getSiblingArray(this.selectedPath);
+            const idx = this.selectedPath[this.selectedPath.length - 1];
+            if (!siblings || idx >= siblings.length - 1) return;
+            this.pushHistory();
+            [siblings[idx], siblings[idx + 1]] = [siblings[idx + 1], siblings[idx]];
+            this.selectedPath = [...this.selectedPath.slice(0, -1), idx + 1];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
+        canMoveUp()   { if (!this.selectedPath) return false; return (this.selectedPath[this.selectedPath.length - 1] ?? 0) > 0; },
+        canMoveDown() {
+            if (!this.selectedPath) return false;
+            const siblings = this.getSiblingArray(this.selectedPath);
+            const idx = this.selectedPath[this.selectedPath.length - 1];
+            return siblings && idx < siblings.length - 1;
+        },
+
+        moveChildUp(ci) {
+            if (!this.selectedBlock?.children || ci <= 0) return;
+            this.pushHistory();
+            const ch = this.selectedBlock.children;
+            [ch[ci - 1], ch[ci]] = [ch[ci], ch[ci - 1]];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+        moveChildDown(ci) {
+            const ch = this.selectedBlock?.children ?? [];
+            if (ci >= ch.length - 1) return;
+            this.pushHistory();
+            [ch[ci], ch[ci + 1]] = [ch[ci + 1], ch[ci]];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+        removeChild(ci) {
+            if (!this.selectedBlock?.children) return;
+            this.pushHistory();
+            this.selectedBlock.children.splice(ci, 1);
+            this.isDirty = true;
+            this.autoSaveAndReload();
         },
 
         moveBlock(from, to) {
@@ -987,7 +1265,7 @@ function canvasEditor() {
             const [item] = arr.splice(from, 1);
             arr.splice(to, 0, item);
             this.pages[this.currentPage].blocks = arr;
-            this.selectedIndex = to;
+            this.selectedPath = [to];
             this.isDirty = true;
             this.autoSaveAndReload();
         },
@@ -1009,7 +1287,7 @@ function canvasEditor() {
             if (this.historyIndex <= 0) return;
             this.historyIndex--;
             this.pages[this.currentPage].blocks = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
-            this.selectedIndex = -1;
+            this.selectedPath = null;
             this.isDirty = true;
             this.autoSaveAndReload();
         },
@@ -1018,7 +1296,7 @@ function canvasEditor() {
             if (this.historyIndex >= this.history.length - 1) return;
             this.historyIndex++;
             this.pages[this.currentPage].blocks = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
-            this.selectedIndex = -1;
+            this.selectedPath = null;
             this.isDirty = true;
             this.autoSaveAndReload();
         },
@@ -1069,9 +1347,9 @@ function canvasEditor() {
         // ── Page Management ────────────────────────────────────
         switchPage(key) {
             if (this.isDirty) this.saveCurrentPage();
-            this.currentPage   = key;
-            this.selectedIndex = -1;
-            this.selectedTab   = 'content';
+            this.currentPage  = key;
+            this.selectedPath = null;
+            this.selectedTab  = 'content';
             // Reset history for new page
             this.history      = [JSON.parse(JSON.stringify(this.pages[key]?.blocks ?? []))];
             this.historyIndex = 0;
@@ -1210,14 +1488,19 @@ function canvasEditor() {
                     const iframe = this.getIframe();
                     if (iframe) iframe.style.height = Math.max(400, d.height || 400) + 'px';
                     break;
-                case 'blockSelected':
-                    const idx = this.blocks.findIndex(b => b.id === d.blockId);
-                    if (idx >= 0) { this.selectedIndex = idx; this.selectedTab = 'content'; }
+                case 'blockSelected': {
+                    const path = this.findBlockPath(d.blockId);
+                    if (path) { this.selectedPath = path; this.selectedTab = 'content'; }
                     break;
+                }
                 case 'dropIndexResult':
-                    this.dropTargetIndex    = d.index ?? this.blocks.length;
-                    this.dropTargetBeforeId = d.beforeId ?? '__end__';
+                    this.dropTargetIndex       = d.index ?? this.blocks.length;
+                    this.dropTargetBeforeId    = d.beforeId ?? '__end__';
+                    this.dragTargetContainerId = d.containerId ?? null;
                     this.sendToIframe({ action: 'setDropTarget', beforeId: this.dropTargetBeforeId });
+                    if (this.dragTargetContainerId) {
+                        this.sendToIframe({ action: 'setContainerTarget', containerId: this.dragTargetContainerId });
+                    }
                     break;
                 case 'inlinePropChange':
                     const ib = this.blocks.find(b => b.id === d.blockId);
@@ -1247,12 +1530,14 @@ function canvasEditor() {
         },
 
         endDragBlock() {
-            this.isDraggingBlock    = false;
-            this.draggedBlockType   = null;
-            this.draggedBlockLabel  = null;
-            this.dropTargetIndex    = -1;
-            this.dropTargetBeforeId = null;
+            this.isDraggingBlock       = false;
+            this.draggedBlockType      = null;
+            this.draggedBlockLabel     = null;
+            this.dropTargetIndex       = -1;
+            this.dropTargetBeforeId    = null;
+            this.dragTargetContainerId = null;
             this.sendToIframe({ action: 'showDropZones', visible: false });
+            this.sendToIframe({ action: 'setContainerTarget', containerId: null });
         },
 
         onDragOverCanvas(event) {
@@ -1262,7 +1547,8 @@ function canvasEditor() {
                 const rect = iframe.getBoundingClientRect();
                 const scrollY = iframe.contentWindow?.scrollY ?? 0;
                 const relY = event.clientY - rect.top + scrollY;
-                this.sendToIframe({ action: 'getDropIndex', clientY: relY });
+                const relX = event.clientX - rect.left;
+                this.sendToIframe({ action: 'getDropIndex', clientY: relY, clientX: relX });
             }
         },
 
@@ -1272,6 +1558,14 @@ function canvasEditor() {
             event.preventDefault();
             const type = this.draggedBlockType || event.dataTransfer.getData('text/plain');
             if (!type) { this.endDragBlock(); return; }
+            if (this.dragTargetContainerId) {
+                const containerPath = this.findBlockPath(this.dragTargetContainerId);
+                if (containerPath) {
+                    this.addBlock(type, -1, containerPath);
+                    this.endDragBlock();
+                    return;
+                }
+            }
             const idx = this.dropTargetIndex >= 0 ? this.dropTargetIndex : this.blocks.length;
             this.addBlock(type, idx);
             this.endDragBlock();
@@ -1382,13 +1676,22 @@ function canvasEditor() {
             this.toast = { show: true, msg, type, _timer: setTimeout(() => this.toast.show = false, 3200) };
         },
 
+        // TB3-01 + TB4: Normalize blocks recursively
+        normalizeBlock(block) {
+            if (block.data !== undefined && block.props === undefined) { block.props = block.data; delete block.data; }
+            if (!block.props) block.props = {};
+            if (!block.children) {
+                if (Array.isArray(block.blocks)) { block.children = block.blocks; delete block.blocks; }
+                else if (Array.isArray(block.props?.blocks)) { block.children = block.props.blocks; delete block.props.blocks; }
+            }
+            if (Array.isArray(block.children)) block.children = block.children.map(c => this.normalizeBlock(c));
+            return block;
+        },
+
         init() {
-            // TB3-01: Normalize block.data → block.props
+            // TB3-01 + TB4: Normalize block.data → block.props, migrate legacy children locations
             Object.values(this.pages).forEach(page => {
-                (page.blocks ?? []).forEach(block => {
-                    if (!block.props && block.data) { block.props = block.data; delete block.data; }
-                    if (!block.props) block.props = {};
-                });
+                if (Array.isArray(page.blocks)) page.blocks = page.blocks.map(b => this.normalizeBlock(b));
             });
 
             // TB3-S2: Initialize undo history with current state

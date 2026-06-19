@@ -136,6 +136,23 @@ body.tb-drag-active .tb-drop-zone {
     min-width: 30px;
     min-height: 1em;
 }
+
+/* ── TB4: Flex Container ── */
+.tb-flex-container { width: 100%; }
+.tb-fc-empty {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 80px; border: 2px dashed #c7d2fe; border-radius: 8px;
+    color: #818cf8; font-size: 0.8rem; font-weight: 500;
+    background: rgba(99,102,241,0.04); width: 100%;
+}
+.tb-canvas-block[data-tb-container="1"].tb-selected {
+    outline: 2px solid #10b981;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+}
+.tb-canvas-block[data-tb-container="1"].tb-container-drag-over {
+    outline: 2px dashed #6366f1 !important;
+    background: rgba(99,102,241,0.04) !important;
+}
 </style>
 </head>
 <body>
@@ -289,8 +306,19 @@ body.tb-drag-active .tb-drop-zone {
         });
     }
 
+    // TB4: container drag highlight
+    var currentContainerTarget = null;
+    function setContainerTarget(containerId) {
+        if (currentContainerTarget) { currentContainerTarget.classList.remove('tb-container-drag-over'); currentContainerTarget = null; }
+        if (containerId) {
+            var el = document.querySelector('[data-tb-block-id="' + containerId + '"][data-tb-container="1"]');
+            if (el) { el.classList.add('tb-container-drag-over'); currentContainerTarget = el; }
+        }
+    }
+
     function getDropIndexAtY(clientY) {
-        var blocks = Array.from(document.querySelectorAll('[data-tb-block-id]'));
+        // Only top-level blocks
+        var blocks = Array.from(document.body.querySelectorAll(':scope > [data-tb-block-id]'));
         var result = { index: blocks.length, beforeId: '__end__' };
         for (var i = 0; i < blocks.length; i++) {
             var rect = blocks[i].getBoundingClientRect();
@@ -300,6 +328,15 @@ body.tb-drag-active .tb-drop-zone {
             }
         }
         return result;
+    }
+
+    function getContainerAtPoint(x, y) {
+        var els = document.elementsFromPoint(x, y);
+        for (var i = 0; i < els.length; i++) {
+            var c = els[i].closest('[data-tb-container="1"]');
+            if (c) return c.getAttribute('data-tb-block-id');
+        }
+        return null;
     }
 
     function sendHeight() {
@@ -320,14 +357,19 @@ body.tb-drag-active .tb-drop-zone {
                 break;
             case 'showDropZones':
                 document.body.classList.toggle('tb-drag-active', !!d.visible);
-                if (!d.visible) setDropTarget(null);
+                if (!d.visible) { setDropTarget(null); setContainerTarget(null); }
                 break;
             case 'setDropTarget':
                 setDropTarget(d.beforeId || null);
                 break;
+            case 'setContainerTarget':
+                setContainerTarget(d.containerId || null);
+                break;
             case 'getDropIndex':
-                var res = getDropIndexAtY(d.clientY || 0);
-                notifyParent({ action: 'dropIndexResult', index: res.index, beforeId: res.beforeId });
+                var cY = d.clientY || 0; var cX = d.clientX || 0;
+                var res = getDropIndexAtY(cY);
+                var cid = getContainerAtPoint(cX, cY);
+                notifyParent({ action: 'dropIndexResult', index: res.index, beforeId: res.beforeId, containerId: cid });
                 break;
             case 'inlinePropChange':
                 /* no-op in iframe — parent sent this; it was already handled above */

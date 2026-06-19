@@ -146,6 +146,20 @@ return [
             'styles' => ['layout', 'typography', 'background', 'effects'],
             'children' => 'blocks',
         ],
+        'flex_container' => [
+            'type' => 'flex_container',
+            'props' => [
+                'label'          => ['required' => false, 'type' => 'string'],
+                'direction'      => ['required' => false, 'type' => 'string'],
+                'gap'            => ['required' => false, 'type' => 'string'],
+                'alignItems'     => ['required' => false, 'type' => 'string'],
+                'justifyContent' => ['required' => false, 'type' => 'string'],
+                'wrap'           => ['required' => false, 'type' => 'boolean'],
+                'minHeight'      => ['required' => false, 'type' => 'integer'],
+            ],
+            'styles' => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'blocks',
+        ],
         'tabs' => [
             'type' => 'tabs',
             'props' => [
