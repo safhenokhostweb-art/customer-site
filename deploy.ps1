@@ -51,10 +51,25 @@ foreach ($pkg in $localPackages) {
 }
 
 if (Test-Path $ZIPFILE) { Remove-Item $ZIPFILE }
+
+# Remove Vite dev-server hot file before packaging — it must NEVER reach production
+$hotFile = Join-Path $DIR "public\hot"
+$hotBackup = $null
+if (Test-Path $hotFile) {
+    $hotBackup = Get-Content $hotFile -Raw
+    Remove-Item $hotFile -Force
+    Write-Host "     Removed public/hot before archive" -ForegroundColor DarkGray
+}
+
 $exclude = @('.git', 'node_modules', 'tests', 'storage', '.env', '.env.local', '.env.testing')
 $items   = Get-ChildItem -Path $DIR | Where-Object { $_.Name -notin $exclude }
 Compress-Archive -Path ($items | ForEach-Object { $_.FullName }) -DestinationPath $ZIPFILE -Force
 Write-Host "     Archive: $ZIPFILE ($('{0:N1}' -f ((Get-Item $ZIPFILE).Length / 1MB)) MB)" -ForegroundColor Green
+
+# Restore hot file for local dev if it existed
+if ($hotBackup) {
+    Set-Content $hotFile $hotBackup -NoNewline
+}
 
 # ── ۳. Upload به سرور ────────────────────────────────────────
 Write-Host "`n[3/4] Uploading to server..." -ForegroundColor Yellow
