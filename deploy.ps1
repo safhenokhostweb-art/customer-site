@@ -51,7 +51,7 @@ foreach ($pkg in $localPackages) {
 }
 
 if (Test-Path $ZIPFILE) { Remove-Item $ZIPFILE }
-$exclude = @('.git', 'node_modules', 'tests', 'storage', 'bootstrap', '.env', '.env.local', '.env.testing')
+$exclude = @('.git', 'node_modules', 'tests', 'storage', '.env', '.env.local', '.env.testing')
 $items   = Get-ChildItem -Path $DIR | Where-Object { $_.Name -notin $exclude }
 Compress-Archive -Path ($items | ForEach-Object { $_.FullName }) -DestinationPath $ZIPFILE -Force
 Write-Host "     Archive: $ZIPFILE ($('{0:N1}' -f ((Get-Item $ZIPFILE).Length / 1MB)) MB)" -ForegroundColor Green
