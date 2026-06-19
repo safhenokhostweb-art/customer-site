@@ -76,7 +76,7 @@ class BlockRenderer
             }
         }
 
-        $html = $this->applyBlockStyle($html, $block['style'] ?? []);
+        $html = $this->applyBlockStyle($html, $block['style'] ?? [], $block['responsive'] ?? [], $id);
         return $this->wrapEditorMode($html, $id, $type);
     }
 
@@ -837,11 +837,17 @@ class BlockRenderer
         return "<div id=\"tb-{$id}\" class=\"tb-block tb-block-{$type}\" data-type=\"{$type}\">{$content}</div>";
     }
 
-    protected function applyBlockStyle(string $html, array $style): string
+    // TB5: Build CSS declarations from a style object (shared for desktop + breakpoints)
+    private function buildCssDeclarations(array $style): array
     {
-        if (empty($style)) return $html;
         $css = [];
-        $cls = [];
+        $shadowMap = [
+            'sm'   => '0 1px 3px rgba(0,0,0,0.12),0 1px 2px rgba(0,0,0,0.08)',
+            'md'   => '0 4px 6px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.08)',
+            'lg'   => '0 10px 25px rgba(0,0,0,0.12),0 4px 10px rgba(0,0,0,0.08)',
+            'xl'   => '0 20px 40px rgba(0,0,0,0.15)',
+            'none' => 'none',
+        ];
         if (!empty($style['bgColor'])) $css[] = "background-color:{$style['bgColor']}";
         if (!empty($style['textColor'])) $css[] = "color:{$style['textColor']}";
         if (!empty($style['bgGradientFrom']) && !empty($style['bgGradientTo'])) {
@@ -865,13 +871,6 @@ class BlockRenderer
             $css[] = "border:{$style['borderWidth']}px {$bStyle} {$bColor}";
         }
         if (!empty($style['borderRadius'])) $css[] = "border-radius:{$style['borderRadius']}px";
-        $shadowMap = [
-            'sm'   => '0 1px 3px rgba(0,0,0,0.12),0 1px 2px rgba(0,0,0,0.08)',
-            'md'   => '0 4px 6px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.08)',
-            'lg'   => '0 10px 25px rgba(0,0,0,0.12),0 4px 10px rgba(0,0,0,0.08)',
-            'xl'   => '0 20px 40px rgba(0,0,0,0.15)',
-            'none' => 'none',
-        ];
         if (!empty($style['shadow']) && isset($shadowMap[$style['shadow']])) {
             $css[] = "box-shadow:{$shadowMap[$style['shadow']]}";
         }
@@ -881,6 +880,16 @@ class BlockRenderer
         if (!empty($style['animationDuration'])) {
             $css[] = "--tb-anim-duration:{$style['animationDuration']}s";
         }
+        if (!empty($style['hidden'])) $css[] = 'display:none';
+        return $css;
+    }
+
+    // TB5: Apply desktop + responsive breakpoint styles
+    protected function applyBlockStyle(string $html, array $style, array $responsive = [], string $id = ''): string
+    {
+        $desktopCss = $this->buildCssDeclarations($style);
+        $cls = [];
+
         if (!empty($style['hideDesktop'])) $cls[] = 'tb-hide-desktop';
         if (!empty($style['hideTablet']))  $cls[] = 'tb-hide-tablet';
         if (!empty($style['hideMobile']))  $cls[] = 'tb-hide-mobile';
@@ -893,10 +902,40 @@ class BlockRenderer
                 if ($c) $cls[] = $c;
             }
         }
-        if (empty($css) && empty($cls)) return $html;
-        $styleAttr = !empty($css) ? ' style="' . implode(';', $css) . '"' : '';
+
+        // TB5: block-specific class for responsive targeting
+        if ($id !== '' && !empty($responsive)) {
+            $blkId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $id);
+            $cls[] = "tb-blk-{$blkId}";
+        }
+
+        if (empty($desktopCss) && empty($cls)) return $html;
+
+        $styleAttr = !empty($desktopCss) ? ' style="' . implode(';', $desktopCss) . '"' : '';
         $classAttr = !empty($cls) ? ' class="' . implode(' ', $cls) . '"' : '';
-        return "<div{$classAttr}{$styleAttr}>{$html}</div>";
+        $wrapped = "<div{$classAttr}{$styleAttr}>{$html}</div>";
+
+        // TB5: inject responsive breakpoint <style> block
+        if (!empty($responsive) && $id !== '') {
+            $blkId    = preg_replace('/[^a-zA-Z0-9_\-]/', '', $id);
+            $selector = ".tb-blk-{$blkId}";
+            $mediaCss = '';
+
+            $tabletCss = $this->buildCssDeclarations($responsive['tablet'] ?? []);
+            if (!empty($tabletCss)) {
+                $mediaCss .= "@media(max-width:1024px){{$selector}{" . implode(';', $tabletCss) . "}}";
+            }
+            $mobileCss = $this->buildCssDeclarations($responsive['mobile'] ?? []);
+            if (!empty($mobileCss)) {
+                $mediaCss .= "@media(max-width:480px){{$selector}{" . implode(';', $mobileCss) . "}}";
+            }
+
+            if ($mediaCss !== '') {
+                $wrapped .= "<style data-tb-blk=\"{$blkId}\">{$mediaCss}</style>";
+            }
+        }
+
+        return $wrapped;
     }
 
     protected function editableAttr(string $propKey, string $inlineType = 'text'): string

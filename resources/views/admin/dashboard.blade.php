@@ -108,6 +108,9 @@
     </div>
 </div>
 
+{{-- ═══ Lifecycle Status Widget ═══ --}}
+@include('admin.partials.lifecycle-widget')
+
 {{-- ═══ هشدارهای مهم ═══ --}}
 @if(isset($importantAlerts) && $importantAlerts->isNotEmpty())
 <div class="mb-6 rounded-xl overflow-hidden border-2 border-amber-400 shadow-lg" id="dashboard-important-alerts">

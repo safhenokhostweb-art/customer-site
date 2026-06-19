@@ -40,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetTenantContext::class,
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TrackPageView::class,
+            \App\Http\Middleware\CheckSiteLifecycle::class,
         ]);
     })
 

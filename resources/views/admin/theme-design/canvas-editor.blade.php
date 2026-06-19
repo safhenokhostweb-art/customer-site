@@ -251,6 +251,13 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </template>
                             <span class="flex-1 truncate" :class="isSelectedPath(node.path) ? 'text-indigo-700 font-medium' : 'text-slate-700'"
                                   x-text="node.block.props?.label ? (blockLabel(node.block.type) + ': ' + node.block.props.label) : blockLabel(node.block.type)"></span>
+                            {{-- TB5: hide-on-device badges --}}
+                            <span x-show="node.block.style?.hideDesktop" class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded shrink-0">D</span>
+                            <span x-show="node.block.style?.hideTablet"  class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded shrink-0">T</span>
+                            <span x-show="node.block.style?.hideMobile"  class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded shrink-0">M</span>
+                            {{-- TB5: responsive override dot --}}
+                            <span x-show="node.block.responsive && Object.keys(node.block.responsive).length > 0"
+                                class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                         </div>
                     </template>
                 </div>
@@ -484,7 +491,44 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     </div>
 
                     {{-- Style Tab --}}
-                    <div x-show="selectedTab === 'style'" class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+                    <div x-show="selectedTab === 'style'" class="flex-1 overflow-y-auto">
+
+                        {{-- TB5: Breakpoint Toggle Bar --}}
+                        <div class="flex items-center gap-0.5 bg-slate-50 border-b border-slate-100 p-2 sticky top-0 z-10">
+                            <span class="text-[10px] text-slate-400 ml-1">ریسپانسیو:</span>
+                            <button @click="activeBreakpoint='desktop'"
+                                :class="activeBreakpoint==='desktop' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'"
+                                class="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                D
+                            </button>
+                            <button @click="activeBreakpoint='tablet'"
+                                :class="activeBreakpoint==='tablet' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'"
+                                class="relative flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                T
+                                <span x-show="selectedBlock?.responsive?.tablet && Object.keys(selectedBlock.responsive.tablet).length > 0"
+                                    class="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full"></span>
+                            </button>
+                            <button @click="activeBreakpoint='mobile'"
+                                :class="activeBreakpoint==='mobile' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'"
+                                class="relative flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v13a2 2 0 002 2z"/></svg>
+                                M
+                                <span x-show="selectedBlock?.responsive?.mobile && Object.keys(selectedBlock.responsive.mobile).length > 0"
+                                    class="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full"></span>
+                            </button>
+                            <span x-show="activeBreakpoint !== 'desktop'" class="mr-auto text-[9px] text-amber-600 font-medium">
+                                override روی <span x-text="activeBreakpoint === 'tablet' ? 'تبلت' : 'موبایل'"></span>
+                            </span>
+                            <button x-show="activeBreakpoint !== 'desktop'"
+                                @click="resetBlockStyle()"
+                                class="mr-1 text-[10px] text-red-500 hover:text-red-700 font-medium underline">
+                                پاک کردن
+                            </button>
+                        </div>
+
+                        <div class="px-3 py-3 space-y-2">
 
                         {{-- Typography --}}
                         <div class="border border-slate-100 rounded-lg overflow-hidden">
@@ -496,12 +540,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <div x-show="styleSection.typography" class="p-3 space-y-3">
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label class="text-xs text-slate-500 mb-1 block">اندازه فونت (px)</label>
-                                        <input type="number" min="8" max="120" :value="selectedBlock.style?.fontSize ?? ''" @input="updateStyle('fontSize', $event.target.value===''?'':Number($event.target.value))" placeholder="پیش‌فرض" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">اندازه فونت (px)<span x-show="hasResponsiveOverride('fontSize', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
+                                        <input type="number" min="8" max="120" :value="getCascadedValue('fontSize', '')" @input="updateStyle('fontSize', $event.target.value===''?'':Number($event.target.value))" placeholder="پیش‌فرض" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
-                                        <label class="text-xs text-slate-500 mb-1 block">وزن فونت</label>
-                                        <select :value="selectedBlock.style?.fontWeight ?? ''" @change="updateStyle('fontWeight', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">وزن فونت<span x-show="hasResponsiveOverride('fontWeight', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
+                                        <select :value="getCascadedValue('fontWeight', '')" @change="updateStyle('fontWeight', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <option value="">پیش‌فرض</option>
                                             <option value="300">Light</option>
                                             <option value="400">Normal</option>
@@ -513,7 +557,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-500 mb-1 block">تراز متن</label>
-                                        <select :value="selectedBlock.style?.textAlign ?? ''" @change="updateStyle('textAlign', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <select :value="getCascadedValue('textAlign', '')" @change="updateStyle('textAlign', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <option value="">پیش‌فرض</option>
                                             <option value="right">راست</option>
                                             <option value="center">وسط</option>
@@ -522,7 +566,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-500 mb-1 block">فاصله خطوط</label>
-                                        <input type="number" min="1" max="4" step="0.1" :value="selectedBlock.style?.lineHeight ?? ''" @input="updateStyle('lineHeight', $event.target.value===''?'':Number($event.target.value))" placeholder="۱.۵" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="1" max="4" step="0.1" :value="getCascadedValue('lineHeight', '')" @input="updateStyle('lineHeight', $event.target.value===''?'':Number($event.target.value))" placeholder="۱.۵" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -537,22 +581,22 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </button>
                             <div x-show="styleSection.colors" class="p-3 space-y-3">
                                 <div>
-                                    <label class="text-xs text-slate-500 mb-1 block">رنگ پس‌زمینه</label>
+                                    <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">رنگ پس‌زمینه<span x-show="hasResponsiveOverride('bgColor', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
                                     <div class="flex items-center gap-2">
-                                        <input type="color" :value="selectedBlock.style?.bgColor || '#ffffff'" @change="updateStyle('bgColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text" :value="selectedBlock.style?.bgColor || ''" @input="updateStyle('bgColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
-                                        <button x-show="selectedBlock.style?.bgColor" @click="updateStyle('bgColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
+                                        <input type="color" :value="getCascadedValue('bgColor', '#ffffff')" @change="updateStyle('bgColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text" :value="getCascadedValue('bgColor', '')" @input="updateStyle('bgColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <button x-show="getCascadedValue('bgColor')" @click="updateStyle('bgColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="text-xs text-slate-500 mb-1 block">رنگ متن</label>
+                                    <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">رنگ متن<span x-show="hasResponsiveOverride('textColor', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
                                     <div class="flex items-center gap-2">
-                                        <input type="color" :value="selectedBlock.style?.textColor || '#000000'" @change="updateStyle('textColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text" :value="selectedBlock.style?.textColor || ''" @input="updateStyle('textColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
-                                        <button x-show="selectedBlock.style?.textColor" @click="updateStyle('textColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
+                                        <input type="color" :value="getCascadedValue('textColor', '#000000')" @change="updateStyle('textColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text" :value="getCascadedValue('textColor', '')" @input="updateStyle('textColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <button x-show="getCascadedValue('textColor')" @click="updateStyle('textColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
                                     </div>
                                 </div>
-                                <div>
+                                <div x-show="activeBreakpoint === 'desktop'">
                                     <label class="flex items-center gap-2 text-xs text-slate-500 mb-2 cursor-pointer">
                                         <input type="checkbox" :checked="!!(selectedBlock.style?.bgGradientFrom)" @change="toggleGradient($event.target.checked)" class="rounded">
                                         گرادیان پس‌زمینه
@@ -592,27 +636,27 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ بالا</label>
-                                        <input type="number" min="0" max="200" :value="selectedBlock.style?.paddingTop ?? ''" @input="updateStyle('paddingTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingTop', '')" @input="updateStyle('paddingTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ پایین</label>
-                                        <input type="number" min="0" max="200" :value="selectedBlock.style?.paddingBottom ?? ''" @input="updateStyle('paddingBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingBottom', '')" @input="updateStyle('paddingBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ راست</label>
-                                        <input type="number" min="0" max="200" :value="selectedBlock.style?.paddingRight ?? ''" @input="updateStyle('paddingRight', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingRight', '')" @input="updateStyle('paddingRight', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ چپ</label>
-                                        <input type="number" min="0" max="200" :value="selectedBlock.style?.paddingLeft ?? ''" @input="updateStyle('paddingLeft', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingLeft', '')" @input="updateStyle('paddingLeft', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">مارجین بالا</label>
-                                        <input type="number" min="-100" max="200" :value="selectedBlock.style?.marginTop ?? ''" @input="updateStyle('marginTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginTop', '')" @input="updateStyle('marginTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">مارجین پایین</label>
-                                        <input type="number" min="-100" max="200" :value="selectedBlock.style?.marginBottom ?? ''" @input="updateStyle('marginBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginBottom', '')" @input="updateStyle('marginBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -629,11 +673,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">ضخامت (px)</label>
-                                        <input type="number" min="0" max="20" :value="selectedBlock.style?.borderWidth ?? ''" @input="updateStyle('borderWidth', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="20" :value="getCascadedValue('borderWidth', '')" @input="updateStyle('borderWidth', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">سبک</label>
-                                        <select :value="selectedBlock.style?.borderStyle ?? 'solid'" @change="updateStyle('borderStyle', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <select :value="getCascadedValue('borderStyle', 'solid')" @change="updateStyle('borderStyle', $event.target.value)" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <option value="solid">solid</option>
                                             <option value="dashed">dashed</option>
                                             <option value="dotted">dotted</option>
@@ -641,11 +685,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">رنگ حاشیه</label>
-                                        <input type="color" :value="selectedBlock.style?.borderColor || '#e5e7eb'" @change="updateStyle('borderColor', $event.target.value)" class="w-full h-8 rounded border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="color" :value="getCascadedValue('borderColor', '#e5e7eb')" @change="updateStyle('borderColor', $event.target.value)" class="w-full h-8 rounded border border-slate-200 cursor-pointer p-0.5">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">گوشه گرد (px)</label>
-                                        <input type="number" min="0" max="100" :value="selectedBlock.style?.borderRadius ?? ''" @input="updateStyle('borderRadius', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="100" :value="getCascadedValue('borderRadius', '')" @input="updateStyle('borderRadius', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -662,7 +706,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-3 gap-1.5">
                                     <template x-for="s in ['none','sm','md','lg','xl']" :key="s">
                                         <button @click="updateStyle('shadow', s)"
-                                            :class="(selectedBlock.style?.shadow ?? 'none') === s ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-white hover:bg-slate-50'"
+                                            :class="(getCascadedValue('shadow', 'none')) === s ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-white hover:bg-slate-50'"
                                             class="py-1.5 text-xs rounded border border-slate-200 transition font-medium" x-text="s"></button>
                                     </template>
                                 </div>
@@ -678,17 +722,19 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </button>
                             <div x-show="styleSection.opacity" class="p-3">
                                 <div class="flex items-center gap-2">
-                                    <input type="range" min="0.1" max="1" step="0.05" :value="selectedBlock.style?.opacity ?? 1" @input="updateStyle('opacity', Number($event.target.value))" class="flex-1">
-                                    <span class="text-xs text-slate-500 w-10 text-left" x-text="Math.round((selectedBlock.style?.opacity ?? 1) * 100) + '%'"></span>
+                                    <input type="range" min="0.1" max="1" step="0.05" :value="getCascadedValue('opacity', 1)" @input="updateStyle('opacity', Number($event.target.value))" class="flex-1">
+                                    <span class="text-xs text-slate-500 w-10 text-left" x-text="Math.round(getCascadedValue('opacity', 1) * 100) + '%'"></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="pt-1">
-                            <button @click="resetBlockStyle()" class="w-full text-xs py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-red-500 transition">
-                                پاک کردن همه استایل‌ها
+                            <button @click="resetBlockStyle()" class="w-full text-xs py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-red-500 transition"
+                                x-text="activeBreakpoint === 'desktop' ? 'پاک کردن همه استایل‌ها' : 'پاک کردن override ' + (activeBreakpoint === 'tablet' ? 'تبلت' : 'موبایل')">
                             </button>
                         </div>
+
+                        </div>{{-- end px-3 py-3 --}}
                     </div>
 
                     {{-- Advanced Tab --}}
@@ -1006,6 +1052,8 @@ function canvasEditor() {
         leftPanelTab:  'blocks',      // 'blocks' | 'tree'
         treeExpanded:  {},
         showAddChildModal: false,
+        // TB5: responsive editor
+        activeBreakpoint: 'desktop',   // 'desktop' | 'tablet' | 'mobile'
         selectedTab:   'content',
         isDirty:       false,
         saving:        false,
@@ -1057,6 +1105,34 @@ function canvasEditor() {
         get selectedSchema() {
             if (!this.selectedBlock) return {};
             return BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+        },
+        // TB5: reactive style object for the active breakpoint
+        get currentBpStyle() {
+            if (!this.selectedBlock) return {};
+            if (this.activeBreakpoint === 'desktop') return this.selectedBlock.style ?? {};
+            if (!this.selectedBlock.responsive) return {};
+            return this.selectedBlock.responsive[this.activeBreakpoint] ?? {};
+        },
+        // TB5: get a value with cascade fallback (mobile → tablet → desktop)
+        getCascadedValue(key, def = '') {
+            if (!this.selectedBlock) return def;
+            if (this.activeBreakpoint === 'mobile') {
+                const m = this.selectedBlock.responsive?.mobile?.[key];
+                if (m !== undefined && m !== '') return m;
+                const t = this.selectedBlock.responsive?.tablet?.[key];
+                if (t !== undefined && t !== '') return t;
+            }
+            if (this.activeBreakpoint === 'tablet') {
+                const t = this.selectedBlock.responsive?.tablet?.[key];
+                if (t !== undefined && t !== '') return t;
+            }
+            return this.selectedBlock.style?.[key] ?? def;
+        },
+        // TB5: true when a breakpoint has an override for this key
+        hasResponsiveOverride(key, bp) {
+            if (!this.selectedBlock?.responsive) return false;
+            const v = this.selectedBlock.responsive[bp]?.[key];
+            return v !== undefined && v !== '';
         },
 
         // ── Library ──────────────────────────────────────────
@@ -1301,17 +1377,28 @@ function canvasEditor() {
             this.autoSaveAndReload();
         },
 
-        // ── TB3-S2: Per-block style overrides ────────────────
+        // ── TB3-S2: Per-block style overrides (TB5: breakpoint-aware) ─
         updateStyle(styleKey, value) {
             if (!this.selectedBlock) return;
-            if (!this.selectedBlock.style) this.selectedBlock.style = {};
-            if (value === '' || value === null) {
-                delete this.selectedBlock.style[styleKey];
-                if (Object.keys(this.selectedBlock.style).length === 0) {
-                    delete this.selectedBlock.style;
+            const bp = this.activeBreakpoint;
+            if (bp === 'desktop') {
+                if (!this.selectedBlock.style) this.selectedBlock.style = {};
+                if (value === '' || value === null) {
+                    delete this.selectedBlock.style[styleKey];
+                    if (Object.keys(this.selectedBlock.style).length === 0) delete this.selectedBlock.style;
+                } else {
+                    this.selectedBlock.style[styleKey] = value;
                 }
             } else {
-                this.selectedBlock.style[styleKey] = value;
+                if (!this.selectedBlock.responsive) this.selectedBlock.responsive = {};
+                if (!this.selectedBlock.responsive[bp]) this.selectedBlock.responsive[bp] = {};
+                if (value === '' || value === null) {
+                    delete this.selectedBlock.responsive[bp][styleKey];
+                    if (Object.keys(this.selectedBlock.responsive[bp]).length === 0) delete this.selectedBlock.responsive[bp];
+                    if (Object.keys(this.selectedBlock.responsive).length === 0) delete this.selectedBlock.responsive;
+                } else {
+                    this.selectedBlock.responsive[bp][styleKey] = value;
+                }
             }
             this.isDirty = true;
             this.schedulePropUpdate();
@@ -1319,7 +1406,15 @@ function canvasEditor() {
 
         resetBlockStyle() {
             if (!this.selectedBlock) return;
-            delete this.selectedBlock.style;
+            const bp = this.activeBreakpoint;
+            if (bp === 'desktop') {
+                delete this.selectedBlock.style;
+            } else {
+                if (this.selectedBlock.responsive?.[bp]) {
+                    delete this.selectedBlock.responsive[bp];
+                    if (Object.keys(this.selectedBlock.responsive).length === 0) delete this.selectedBlock.responsive;
+                }
+            }
             this.isDirty = true;
             this.autoSaveAndReload();
         },
@@ -1517,7 +1612,7 @@ function canvasEditor() {
             }
         },
 
-        setDevice(d) { this.device = d; },
+        setDevice(d) { this.device = d; this.activeBreakpoint = d; },
 
         // ── TB3-03: Drag from Library ─────────────────────────
         startDragBlock(event, blockType) {
