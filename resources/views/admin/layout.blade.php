@@ -287,10 +287,12 @@
                 @if($errors->any())
                     <div class="admin-errors" role="alert"
                          x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-                        <strong class="flex-1">خطاها:
-                            @foreach($errors->all() as $error) {{ $error }}{{ !$loop->last ? '، ' : '' }} @endforeach
-                        </strong>
-                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
+                        <strong>خطاها:</strong>
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
                 @yield('content')

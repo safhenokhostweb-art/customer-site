@@ -87,6 +87,53 @@ class PageController extends Controller
         return redirect()->route('admin.pages.index')->with('success', 'صفحه به‌روزرسانی شد.');
     }
 
+    public function bulkStatus(Request $request)
+    {
+        $request->validate([
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer|exists:pages,id',
+            'status' => 'required|in:published,draft',
+        ]);
+
+        $isPublished = $request->status === 'published';
+        Page::whereIn('id', $request->ids)->update(['is_published' => $isPublished]);
+
+        $label = $isPublished ? 'منتشر شده' : 'پیش‌نویس';
+        return back()->with('success', count($request->ids) . ' صفحه به وضعیت «' . $label . '» تغییر یافت.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:pages,id',
+        ]);
+
+        $activeThemeId = Setting::get('active_canvas_theme_id', '');
+        $pages = Page::whereIn('id', $request->ids)->get();
+
+        $deleted  = 0;
+        $skipped  = 0;
+
+        foreach ($pages as $page) {
+            if ($page->is_protected && !empty($activeThemeId) && $page->theme_id === $activeThemeId) {
+                $skipped++;
+                continue;
+            }
+            if ($page->is_protected) {
+                $page->update(['is_protected' => false, 'theme_id' => null, 'theme_page_key' => null]);
+            }
+            $page->delete();
+            $deleted++;
+        }
+
+        $msg = $deleted . ' صفحه حذف شد.';
+        if ($skipped) {
+            $msg .= ' ' . $skipped . ' صفحه متعلق به قالب فعال بود و حذف نشد.';
+        }
+        return back()->with($skipped && !$deleted ? 'error' : 'success', $msg);
+    }
+
     public function destroy(Page $page)
     {
         if ($page->is_protected) {
