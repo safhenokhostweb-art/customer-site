@@ -13,10 +13,6 @@
         <span class="text-slate-800">{{ $contact->name }}</span>
     </nav>
 
-    @if(session('success'))
-    <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm">{{ session('success') }}</div>
-    @endif
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Contact Card --}}

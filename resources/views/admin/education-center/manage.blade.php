@@ -58,20 +58,6 @@
         </div>
     </div>
 
-    {{-- Flash --}}
-    @if(session('success'))
-    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-        <x-core-ui::icon name="check" class="w-4 h-4 text-green-500 shrink-0" />
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
-        {{ $errors->first() }}
-    </div>
-    @endif
-
     {{-- Tabs --}}
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="flex border-b border-gray-200 overflow-x-auto">
