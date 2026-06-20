@@ -64,6 +64,7 @@ use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
 use App\Http\Controllers\Admin\ThemeDesignMediaController;
 use App\Http\Controllers\Admin\ThemeMarketplaceController as AdminThemeMarketplaceController;
+use App\Http\Controllers\Admin\ThemeBundleController as AdminThemeBundleController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Account\DashboardController as AccountDashboardController;
 use App\Http\Controllers\Account\TicketController as AccountTicketController;
@@ -407,6 +408,13 @@ Route::middleware('install.check')->group(function () {
                 Route::post('/{themeId}/purchase',     [AdminThemeMarketplaceController::class, 'purchase'])->name('purchase');
                 Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
             });
+
+            // Theme Bundles (GAP-010)
+            Route::prefix('theme-bundles')->name('theme-bundles.')->group(function () {
+                Route::get('/',                        [AdminThemeBundleController::class, 'index'])->name('index');
+                Route::get('/{bundleId}',              [AdminThemeBundleController::class, 'show'])->name('show');
+                Route::post('/{bundleId}/purchase',    [AdminThemeBundleController::class, 'purchase'])->name('purchase');
+            });
         });
         Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
 
@@ -443,6 +451,7 @@ Route::middleware('install.check')->group(function () {
             Route::get('license', [AdminLicenseController::class, 'index'])->name('license.index');
             Route::get('module-store', [\App\Http\Controllers\Admin\ModuleStoreController::class, 'index'])->name('module-store.index');
             Route::get('modules', [AdminModuleController::class, 'index'])->name('modules.index');
+            Route::post('modules/dismiss-updates', [AdminModuleController::class, 'dismissUpdates'])->name('modules.dismiss-updates');
             Route::get('modules/changelog', [AdminModuleChangeLogController::class, 'index'])->name('modules.changelog');
             Route::get('modules/{slug}', [AdminModuleController::class, 'show'])->name('modules.show')->where('slug', '[a-z0-9_]+');
             Route::post('modules/{slug}', [AdminModuleController::class, 'update'])->name('modules.update')->where('slug', '[a-z0-9_]+');

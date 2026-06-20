@@ -37,6 +37,8 @@ class AdminMenu
         'forms_submissions' => 'گزارش ارسال فرم‌ها',
         'captcha' => 'تنظیمات کپچا',
         'theme_design' => 'ظاهر و تم',
+        'theme_marketplace' => 'فروشگاه قالب‌ها',
+        'theme_bundles' => 'باندل‌های قالب',
         'builder_health' => 'سلامت المان‌های سازنده',
         'settings' => 'تنظیمات',
         'currency_reform' => 'حذف ۴ صفر پول',
@@ -132,6 +134,8 @@ class AdminMenu
         'forms_submissions' => 'admin.forms.submissions.index',
         'captcha' => 'admin.captcha.index',
         'theme_design' => 'admin.theme-design.index',
+        'theme_marketplace' => 'admin.theme-marketplace.index',
+        'theme_bundles' => 'admin.theme-bundles.index',
         'builder_health' => 'admin.builder-health.index',
         'settings' => 'admin.settings.index',
         'currency_reform' => 'admin.currency-reform.index',
@@ -231,6 +235,8 @@ class AdminMenu
         'forms_submissions' => 'admin.forms.submissions.*',
         'captcha' => 'admin.captcha.*',
         'theme_design' => 'admin.theme-design.index',
+        'theme_marketplace' => 'admin.theme-marketplace.*',
+        'theme_bundles' => 'admin.theme-bundles.*',
         'builder_health' => 'admin.builder-health.*',
         'settings' => 'admin.settings.*',
         'currency_reform' => 'admin.currency-reform.*',
@@ -318,7 +324,7 @@ class AdminMenu
             'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'notifications'],
             'اشتراک و آموزش' => ['subscription', 'courses'],
             'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'system_alerts', 'bank_gateway', 'business_card', 'social_links', 'advertisements'],
-            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
+            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'theme_marketplace', 'theme_bundles', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
             'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log'],
             'آموزش و راهنما' => ['education_center'],
             'دستیار محتوا' => ['site_content'],
@@ -510,6 +516,9 @@ class AdminMenu
             return SiteHelper::moduleEnabled('access_lists');
         }
         if ($key === 'module_store') {
+            return rtrim((string) config('site.platform_url', ''), '/') !== '';
+        }
+        if ($key === 'theme_marketplace' || $key === 'theme_bundles') {
             return rtrim((string) config('site.platform_url', ''), '/') !== '';
         }
         if ($key === 'categories' || $key === 'posts' || $key === 'post_series') {

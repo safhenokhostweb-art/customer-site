@@ -122,6 +122,25 @@ class ModuleController extends Controller
     }
 
     /**
+     * بستن و تایید بنر بروزرسانی ماژول‌ها در داشبورد.
+     */
+    public function dismissUpdates(UpdateCheckService $updateCheck): \Illuminate\Http\JsonResponse
+    {
+        $license = License::current();
+        $modules = [];
+        if ($license && $license->license_key && $license->isValid()) {
+            $result = $updateCheck->checkModuleUpdates();
+            if (!empty($result['success'])) {
+                $modules = $result['modules'] ?? [];
+            }
+        }
+        $slugs = array_column($modules, 'slug');
+        sort($slugs);
+        Setting::set('module_updates_dismissed_sig', implode(',', $slugs), 'system');
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * صفحهٔ تنظیمات/اطلاعات یک ماژول (برای ماژول‌هایی که صفحهٔ اختصاصی ادمین ندارند: منو، جستجوی پیشرفته، درگاه بانکی و ...).
      */
     public function show(string $slug)

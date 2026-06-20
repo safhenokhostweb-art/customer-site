@@ -47,6 +47,10 @@
 <x-core-ui::icon name="store" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'theme_design')
 <x-core-ui::icon name="sun" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'theme_marketplace')
+<x-core-ui::icon name="store" class="w-5 h-5 ml-3 shrink-0" />
+@elseif($key === 'theme_bundles')
+<x-core-ui::icon name="grid" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'builder_health')
 <x-core-ui::icon name="check-circle" class="w-5 h-5 ml-3 shrink-0" />
 @elseif($key === 'currency_reform')

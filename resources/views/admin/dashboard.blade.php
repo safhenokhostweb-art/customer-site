@@ -93,6 +93,11 @@
             $moduleUpdates = $result['modules'];
         }
     }
+    $updateSlugs = array_column($moduleUpdates, 'slug');
+    sort($updateSlugs);
+    $updateSignature = implode(',', $updateSlugs);
+    $dismissedSignature = \App\Models\Setting::get('module_updates_dismissed_sig', '');
+    $showModuleUpdatesBanner = !empty($moduleUpdates) && $updateSignature !== $dismissedSignature;
 @endphp
 
 {{-- ═══ بنر خوش‌آمدید ═══ --}}
@@ -146,17 +151,37 @@
 @endif
 
 {{-- ═══ آپدیت ماژول‌ها ═══ --}}
-@if(!empty($moduleUpdates))
-<div class="g-card-strong p-4 mb-6 border-r-4 border-r-indigo-500">
+@if($showModuleUpdatesBanner)
+<div class="g-card-strong p-4 mb-6 border-r-4 border-r-indigo-500" id="module-updates-banner">
     <div class="flex items-start gap-3">
         <x-core-ui::icon name="store" class="w-6 h-6 text-indigo-600 shrink-0 mt-0.5" />
         <div class="flex-1">
             <h3 class="font-semibold text-indigo-900 mb-1">بروزرسانی ماژول‌ها موجود است</h3>
             <p class="text-sm text-indigo-800 mb-2">{{ count($moduleUpdates) }} ماژول بروزرسانی دارد.</p>
-            <a href="{{ route('admin.modules.index') }}" class="btn btn-primary btn-sm">مشاهده و دریافت</a>
+            <div class="flex items-center gap-3 flex-wrap">
+                <a href="{{ route('admin.modules.index') }}"
+                   class="btn btn-primary btn-sm"
+                   onclick="dismissModuleUpdatesBanner()">مشاهده و دریافت</a>
+                <button type="button"
+                        class="text-sm text-indigo-500 hover:text-indigo-700 underline"
+                        onclick="dismissModuleUpdatesBanner()">تایید و بستن</button>
+            </div>
         </div>
     </div>
 </div>
+<script>
+function dismissModuleUpdatesBanner() {
+    fetch('{{ route('admin.modules.dismiss-updates') }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    }).catch(() => {});
+    document.getElementById('module-updates-banner')?.remove();
+}
+</script>
 @endif
 
 {{-- ═══ کاشی‌های آمار ═══ --}}

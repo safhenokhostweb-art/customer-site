@@ -54,6 +54,28 @@ class PlatformApiService
         return $resp->ok() ? $resp->json() : null;
     }
 
+    // ── Theme Bundles (GAP-010) ───────────────────────────────────────────────
+
+    public function themeBundles(): array
+    {
+        $resp = $this->tenantGet('/api/theme-bundles');
+        return $resp->ok() ? ($resp->json('bundles') ?? []) : [];
+    }
+
+    public function themeBundle(int $bundleId): ?array
+    {
+        $resp = $this->tenantGet("/api/theme-bundles/{$bundleId}");
+        return $resp->ok() ? $resp->json('bundle') : null;
+    }
+
+    public function purchaseBundle(int $bundleId, string $redirectBackUrl): array
+    {
+        $resp = $this->tenantPost("/api/theme-bundles/{$bundleId}/purchase", [
+            'redirect_back_url' => $redirectBackUrl,
+        ]);
+        return $resp->json() ?? ['success' => false, 'error' => 'no_response'];
+    }
+
     // ── مجوز ادغام مکالمات ─────────────────────────────────────────────────
 
     public function listMergePermissions(): array
