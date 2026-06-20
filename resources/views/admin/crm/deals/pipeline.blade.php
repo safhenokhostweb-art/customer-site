@@ -76,7 +76,7 @@
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-{{ $color }}-700">{{ number_format($deal->value) }} ت</span>
                         @if($deal->expected_close_date)
-                        <span class="text-xs text-slate-400">{{ $deal->expected_close_date->format('Y/m/d') }}</span>
+                        <span class="text-xs text-slate-400">{{ \App\Helpers\Jalali::formatFa($deal->expected_close_date, 'Y/m/d') }}</span>
                         @endif
                     </div>
                     <div class="mt-2 flex items-center gap-1">

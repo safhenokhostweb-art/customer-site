@@ -53,7 +53,7 @@
                         </span>
                         {{-- Rule 10: Last Updated badge (prominent) --}}
                         <span class="text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1">
-                            {{ $article['last_updated_label'] ?? ('آخرین بروزرسانی: ' . (isset($article['updated_at']) ? \Carbon\Carbon::parse($article['updated_at'])->format('Y-m-d') : '—')) }}
+                            {{ $article['last_updated_label'] ?? ('آخرین بروزرسانی: ' . (isset($article['updated_at']) ? \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($article['updated_at']), 'Y/m/d') : '—')) }}
                         </span>
                     </div>
                     <h1 class="text-xl font-bold text-gray-900 leading-snug">{{ $article['title'] ?? '' }}</h1>

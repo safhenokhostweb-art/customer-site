@@ -66,7 +66,7 @@
                 @if($n->body)
                 <p class="text-xs text-slate-500 mt-0.5 truncate">{{ $n->body }}</p>
                 @endif
-                <p class="text-[11px] text-slate-400 mt-1">{{ $n->created_at->diffForHumans() }}</p>
+                <p class="text-[11px] text-slate-400 mt-1">{{ \App\Helpers\Jalali::diffForHumansFa($n->created_at) }}</p>
             </div>
 
             {{-- Actions --}}

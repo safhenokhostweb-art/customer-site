@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Models\Setting;
 use App\Services\BuilderLayoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -89,8 +90,16 @@ class PageController extends Controller
     public function destroy(Page $page)
     {
         if ($page->is_protected) {
-            return redirect()->route('admin.pages.index')
-                ->with('error', 'این صفحه متعلق به قالب سایت است و قابل حذف نیست. برای حذف، ابتدا قالب را تغییر دهید.');
+            $activeThemeId = Setting::get('active_canvas_theme_id', '');
+
+            // If the page's theme is no longer the active theme (theme was deleted/changed),
+            // auto-unprotect and allow deletion instead of blocking the user.
+            if (empty($activeThemeId) || $page->theme_id !== $activeThemeId) {
+                $page->update(['is_protected' => false, 'theme_id' => null, 'theme_page_key' => null]);
+            } else {
+                return redirect()->route('admin.pages.index')
+                    ->with('error', 'این صفحه متعلق به قالب سایت است و قابل حذف نیست. برای حذف، ابتدا قالب را تغییر دهید.');
+            }
         }
         $page->delete();
         return redirect()->route('admin.pages.index')->with('success', 'صفحه حذف شد.');

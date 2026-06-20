@@ -160,7 +160,7 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
                             <p class="text-sm font-medium text-slate-800">{{ $activity->subject }}</p>
-                            <span class="text-xs text-slate-400 shrink-0 mr-2">{{ $activity->created_at->diffForHumans() }}</span>
+                            <span class="text-xs text-slate-400 shrink-0 mr-2">{{ \App\Helpers\Jalali::diffForHumansFa($activity->created_at) }}</span>
                         </div>
                         <p class="text-xs text-slate-500">{{ \App\Models\CrmActivity::typeLabel($activity->type) }}</p>
                         @if($activity->body)

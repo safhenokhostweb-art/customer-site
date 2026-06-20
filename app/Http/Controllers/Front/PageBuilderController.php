@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Helpers\Jalali;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageRevision;
@@ -202,8 +203,8 @@ class PageBuilderController extends Controller
                 'id'       => $r->id,
                 'saved_by' => $r->saved_by,
                 'label'    => $r->label,
-                'time_ago' => $r->created_at->diffForHumans(),
-                'date'     => $r->created_at->format('Y/m/d H:i'),
+                'time_ago' => Jalali::diffForHumansFa($r->created_at),
+                'date'     => Jalali::formatFa($r->created_at, 'Y/m/d H:i'),
             ])->values(),
         ]);
     }
@@ -317,7 +318,7 @@ class PageBuilderController extends Controller
                 'slug'         => $p->slug,
                 'is_published' => (bool) $p->is_published,
                 'show_in_menu' => (bool) $p->show_in_menu,
-                'updated_at'   => $p->updated_at?->diffForHumans(),
+                'updated_at'   => Jalali::diffForHumansFa($p->updated_at),
                 'edit_url'     => route('builder.page.edit', $p),
                 'admin_url'    => route('admin.pages.edit', $p),
                 'view_url'     => route('page.show', $p->slug),

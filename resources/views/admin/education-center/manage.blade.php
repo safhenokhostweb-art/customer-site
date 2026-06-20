@@ -162,7 +162,7 @@
                                 </span>
                             </td>
                             <td class="py-2.5 px-2 text-gray-400 text-xs">
-                                {{ isset($article['updated_at']) ? \Carbon\Carbon::parse($article['updated_at'])->format('Y/m/d') : '—' }}
+                                {{ isset($article['updated_at']) ? \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($article['updated_at']), 'Y/m/d') : '—' }}
                             </td>
                             <td class="py-2.5 pl-2">
                                 <div class="flex items-center gap-1 justify-end">

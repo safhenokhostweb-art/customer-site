@@ -131,7 +131,7 @@
                         </span>
                         {{-- Rule 10: Last Updated badge --}}
                         <span class="edu-update-badge">
-                            {{ $article['last_updated_label'] ?? ('آخرین بروزرسانی: ' . (isset($article['updated_at']) ? \Carbon\Carbon::parse($article['updated_at'])->format('Y-m-d') : '—')) }}
+                            {{ $article['last_updated_label'] ?? ('آخرین بروزرسانی: ' . (isset($article['updated_at']) ? \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($article['updated_at']), 'Y/m/d') : '—')) }}
                         </span>
                     </div>
 

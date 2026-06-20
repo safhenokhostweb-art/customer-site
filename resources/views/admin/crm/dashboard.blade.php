@@ -130,7 +130,7 @@
                     @if($activity->deal) · {{ $activity->deal->title }} @endif
                 </p>
             </div>
-            <span class="text-xs text-slate-400 shrink-0">{{ $activity->created_at->diffForHumans() }}</span>
+            <span class="text-xs text-slate-400 shrink-0">{{ \App\Helpers\Jalali::diffForHumansFa($activity->created_at) }}</span>
         </div>
         @empty
         <p class="text-slate-400 text-sm py-4 text-center">هنوز فعالیتی ثبت نشده است.</p>

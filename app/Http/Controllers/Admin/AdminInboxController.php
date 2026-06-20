@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\Jalali;
 use App\Http\Controllers\Controller;
 use App\Models\AdminNotification;
 use App\Services\AdminNotificationService;
@@ -31,7 +32,7 @@ class AdminInboxController extends Controller
                     'title' => $n->title,
                     'body'  => $n->body,
                     'link'  => $n->link,
-                    'ago'   => $n->created_at->diffForHumans(),
+                    'ago'   => Jalali::diffForHumansFa($n->created_at),
                 ]),
         ]);
     }

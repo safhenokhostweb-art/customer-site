@@ -85,7 +85,7 @@
     </div>
     <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-indigo-800">مکالمه فعال: {{ $openTicket->subject }}</p>
-        <p class="text-xs text-indigo-500 mt-0.5">آخرین فعالیت {{ $openTicket->updated_at->locale('fa')->diffForHumans() }}</p>
+        <p class="text-xs text-indigo-500 mt-0.5">آخرین فعالیت {{ \App\Helpers\Jalali::diffForHumansFa($openTicket->updated_at) }}</p>
     </div>
     <a href="{{ route('account.tickets.show', $openTicket->id) }}"
        style="color:#fff;flex-shrink:0;display:inline-flex;align-items:center;gap:0.375rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:0.45rem 1rem;border-radius:0.5rem;font-size:0.75rem;font-weight:700;text-decoration:none;box-shadow:0 2px 8px rgba(79,70,229,0.35);transition:box-shadow .2s"

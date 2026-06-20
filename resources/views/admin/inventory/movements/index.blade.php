@@ -46,7 +46,7 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($movements as $mv)
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $mv->moved_at->format('Y/m/d H:i') }}</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ \App\Helpers\Jalali::formatFa($mv->moved_at, 'Y/m/d H:i') }}</td>
                     <td class="px-4 py-3 font-medium text-slate-800">{{ $mv->product?->title ?? '—' }}</td>
                     <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $mv->warehouse?->name ?? '—' }}</td>
                     <td class="px-4 py-3">

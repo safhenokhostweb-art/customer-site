@@ -252,9 +252,9 @@
         </div>
         <div class="info-box" style="margin-right: 4%;">
             <div class="info-label">اطلاعات فاکتور</div>
-            <div class="info-sub">تاریخ صدور: {{ verta($invoice->created_at)->format('Y/m/d') }}</div>
+            <div class="info-sub">تاریخ صدور: {{ \App\Helpers\Jalali::formatFa($invoice->created_at, 'Y/m/d') }}</div>
             @if($invoice->paid_at)
-                <div class="info-sub">تاریخ پرداخت: {{ verta($invoice->paid_at)->format('Y/m/d') }}</div>
+                <div class="info-sub">تاریخ پرداخت: {{ \App\Helpers\Jalali::formatFa($invoice->paid_at, 'Y/m/d') }}</div>
             @endif
             <div style="margin-top:6px;">
                 @if($invoice->status === 'paid')
