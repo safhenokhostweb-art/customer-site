@@ -694,7 +694,8 @@ Route::middleware('install.check')->group(function () {
 
         // اعلان‌های تولبار سایت (ماژول notifications) + مرکز اعلان‌ها برای کاربران
         Route::resource('notifications', \App\Http\Controllers\Admin\SiteNotificationController::class)
-            ->except('show');
+            ->except('show')
+            ->parameters(['notifications' => 'site_notification']);
         Route::patch('notifications/{site_notification}/toggle', [\App\Http\Controllers\Admin\SiteNotificationController::class, 'toggle'])
             ->name('notifications.toggle');
         Route::post('notifications/bulk', [\App\Http\Controllers\Admin\SiteNotificationController::class, 'bulk'])
