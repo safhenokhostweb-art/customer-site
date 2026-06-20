@@ -100,6 +100,8 @@ body.admin-body {
     width: var(--admin-sidebar-w);
     min-width: var(--admin-sidebar-w);
     min-height: 0;
+    height: 100%; /* تضمین پر شدن کامل ارتفاع viewport */
+    align-self: stretch;
     background: linear-gradient(165deg, var(--admin-sidebar-bg1) 0%, var(--admin-sidebar-bg2) 100%);
     border-left: 1px solid color-mix(in srgb, var(--admin-sidebar-border) 55%, transparent);
     box-shadow: -4px 0 24px color-mix(in srgb, var(--admin-sidebar-bg2) 50%, transparent);
@@ -124,6 +126,7 @@ body.admin-body {
     min-width: 0;
     min-height: 0;
     flex: 1;
+    height: 100%; /* تضمین پر شدن کامل ارتفاع سایدبار */
     transition: width 0.25s ease, min-width 0.25s ease;
 }
 

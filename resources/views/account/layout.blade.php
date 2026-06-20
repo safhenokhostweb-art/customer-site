@@ -127,12 +127,12 @@
         .form-input:focus, input:focus, textarea:focus, select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
         .form-group { margin-bottom: 1rem; }
         @media (max-width: 767px) { #account-sidebar { display: none !important; } #account-mobile-nav { display: block; } }
-        @media (min-width: 768px) { #account-mobile-nav { display: none; } }
+        @media (min-width: 768px) { #account-mobile-nav { display: none; } #account-sidebar { height: 100%; } }
     </style>
     @stack('head')
 </head>
-<body class="min-h-screen bg-slate-50">
-<div class="flex min-h-screen">
+<body class="bg-slate-50" style="margin:0;padding:0;overflow:hidden;height:100vh;">
+<div class="flex h-screen overflow-hidden">
 
     {{-- ════════════════ SIDEBAR ════════════════ --}}
     @php
@@ -145,10 +145,10 @@
     $acctGrpIdx = 0;
     @endphp
 
-    <aside id="account-sidebar" class="account-sidebar-shell hidden md:flex md:shrink-0 w-64 flex-col min-h-0 md:max-h-screen md:sticky md:top-0 self-start">
+    <aside id="account-sidebar" class="account-sidebar-shell hidden md:flex md:shrink-0 flex-col w-64">
 
         {{-- Brand --}}
-        <div class="account-sidebar-brand flex items-center px-4 py-5 border-b border-slate-700/40">
+        <div class="account-sidebar-brand flex items-center px-4 py-3 border-b border-slate-700/40">
             <x-core-ui::icon name="user" class="w-7 h-7 text-sky-400 shrink-0" />
             <span class="acct-brand-name mr-3 text-lg font-bold text-slate-100 truncate">{{ \App\Helpers\SiteHelper::siteName() }}</span>
         </div>
@@ -226,7 +226,7 @@
     </aside>
     {{-- ═══════════════════════════════════════ --}}
 
-    <div class="flex flex-col flex-1 min-w-0">
+    <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
         <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-4 shrink-0">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">

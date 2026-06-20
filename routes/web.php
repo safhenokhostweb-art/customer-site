@@ -316,8 +316,8 @@ Route::middleware('install.check')->group(function () {
         Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('profile.index');
         Route::put('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('profile.update');
         Route::middleware('permission:pages')->group(function () {
-            Route::post('pages/bulk-status', [AdminPageController::class, 'bulkStatus'])->name('admin.pages.bulk-status');
-            Route::post('pages/bulk-delete', [AdminPageController::class, 'bulkDelete'])->name('admin.pages.bulk-delete');
+            Route::post('pages/bulk-status', [AdminPageController::class, 'bulkStatus'])->name('pages.bulk-status');
+            Route::post('pages/bulk-delete', [AdminPageController::class, 'bulkDelete'])->name('pages.bulk-delete');
             Route::resource('pages', AdminPageController::class);
         });
         Route::middleware(['module:blog'])->group(function () {
