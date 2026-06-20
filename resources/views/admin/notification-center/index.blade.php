@@ -241,7 +241,7 @@
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            {{ $alert->created_at->diffForHumans() }}
+                            {{ \App\Helpers\Jalali::diffForHumansFa($alert->created_at) }}
                         </p>
                     </div>
 
@@ -368,10 +368,10 @@
                         <div class="flex items-center gap-3 mt-2.5 text-[11px] text-slate-400">
                             <span>موقعیت: <strong class="text-slate-600">{{ $banner->position }}</strong></span>
                             @if($banner->starts_at)
-                            <span>از {{ $banner->starts_at->format('Y/m/d') }}</span>
+                            <span>از {{ \App\Helpers\Jalali::formatFa($banner->starts_at, 'Y/m/d') }}</span>
                             @endif
                             @if($banner->expires_at)
-                            <span>تا {{ $banner->expires_at->format('Y/m/d') }}</span>
+                            <span>تا {{ \App\Helpers\Jalali::formatFa($banner->expires_at, 'Y/m/d') }}</span>
                             @endif
                         </div>
                     </div>
@@ -462,7 +462,7 @@
                                     </svg>
                                     {{ number_format($batch->recipient_count ?? 0) }} کاربر
                                 </span>
-                                <span>{{ $batch->sent_at?->diffForHumans() }}</span>
+                                <span>{{ $batch->sent_at ? \App\Helpers\Jalali::diffForHumansFa($batch->sent_at) : '' }}</span>
                                 @if($batch->createdByUser)
                                 <span>توسط {{ $batch->createdByUser->name ?? '—' }}</span>
                                 @endif

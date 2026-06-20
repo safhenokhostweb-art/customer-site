@@ -84,10 +84,10 @@
                                 @endif
                             </td>
                             <td class="text-sm text-slate-500">
-                                {{ $event->last_attempted_at ? $event->last_attempted_at->diffForHumans() : '—' }}
+                                {{ $event->last_attempted_at ? \App\Helpers\Jalali::diffForHumansFa($event->last_attempted_at) : '—' }}
                             </td>
                             <td class="text-sm text-slate-500">
-                                {{ $event->created_at->format('Y/m/d H:i') }}
+                                {{ \App\Helpers\Jalali::formatFa($event->created_at, 'Y/m/d H:i') }}
                             </td>
                         </tr>
                         @if($event->response_body)

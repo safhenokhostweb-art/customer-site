@@ -233,7 +233,7 @@
             @endif
             <div class="flex items-center gap-2 text-xs text-gray-400">
                 <x-core-ui::icon name="calendar" class="w-3.5 h-3.5 shrink-0" />
-                عضویت {{ $user->created_at->diffForHumans() }}
+                عضویت {{ \App\Helpers\Jalali::diffForHumansFa($user->created_at) }}
             </div>
         </div>
 
@@ -278,7 +278,7 @@
                         <span class="text-gray-400">•</span>
                         <span>{{ $statusLabel }}</span>
                     </p>
-                    <p class="text-[10px] text-gray-500 mt-0.5">{{ $t->updated_at->diffForHumans() }}</p>
+                    <p class="text-[10px] text-gray-500 mt-0.5">{{ \App\Helpers\Jalali::diffForHumansFa($t->updated_at) }}</p>
                 </div>
             </a>
             @empty

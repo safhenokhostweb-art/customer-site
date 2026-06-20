@@ -51,7 +51,7 @@
                             </td>
                             <td class="text-sm text-slate-500">
                                 @if($endpoint->last_called_at)
-                                    {{ $endpoint->last_called_at->diffForHumans() }}
+                                    {{ \App\Helpers\Jalali::diffForHumansFa($endpoint->last_called_at) }}
                                     @if($endpoint->last_status_code)
                                         <span class="inline-block px-1.5 py-0.5 rounded text-xs font-mono {{ $endpoint->last_status_code >= 200 && $endpoint->last_status_code < 300 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                             {{ $endpoint->last_status_code }}

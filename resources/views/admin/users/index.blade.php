@@ -423,9 +423,9 @@
                     {{ \App\Helpers\NumberHelper::toPersianNumbers($activeCount) }} باز
                 </span>
             @endif
-            <span class="flex items-center gap-1" title="{{ $u->created_at->format('Y-m-d') }}">
+            <span class="flex items-center gap-1" title="{{ \App\Helpers\Jalali::formatFa($u->created_at, 'Y/m/d') }}">
                 <x-core-ui::icon name="calendar" class="w-3.5 h-3.5" />
-                {{ $u->created_at->diffForHumans() }}
+                {{ \App\Helpers\Jalali::diffForHumansFa($u->created_at) }}
             </span>
         </div>
 

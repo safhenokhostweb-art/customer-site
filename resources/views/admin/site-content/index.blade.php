@@ -135,7 +135,7 @@
                         <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">آرشیو</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3 text-gray-500 text-xs">{{ $item->created_at->format('Y/m/d') }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ \App\Helpers\Jalali::formatFa($item->created_at, 'Y/m/d') }}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2 justify-end">
                             @if($item->status !== 'published')
