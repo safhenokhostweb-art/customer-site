@@ -250,37 +250,47 @@
                 @include('admin.partials.persian-date-admin-assets')
                 @include('admin.partials.license-transient-banner')
                 @if(session('success'))
-                    <div class="admin-flash admin-flash--success" role="status">
+                    <div class="admin-flash admin-flash--success" role="status"
+                         x-data="{ show: true }" x-show="show" x-transition.duration.300ms
+                         x-init="setTimeout(() => show = false, 5000)">
                         <x-core-ui::icon name="check-circle" aria-hidden="true" />
-                        <span>{{ session('success') }}</span>
+                        <span class="flex-1">{{ session('success') }}</span>
+                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
                     </div>
                 @endif
                 @if(session('warning'))
-                    <div class="admin-flash admin-flash--warning" role="alert">
+                    <div class="admin-flash admin-flash--warning" role="alert"
+                         x-data="{ show: true }" x-show="show" x-transition.duration.300ms
+                         x-init="setTimeout(() => show = false, 7000)">
                         <x-core-ui::icon name="alert-triangle" aria-hidden="true" />
-                        <span>{{ session('warning') }}</span>
+                        <span class="flex-1">{{ session('warning') }}</span>
+                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
                     </div>
                 @endif
                 @if(session('error'))
-                    <div class="admin-flash admin-flash--error" role="alert">
+                    <div class="admin-flash admin-flash--error" role="alert"
+                         x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
                         <x-core-ui::icon name="x-circle" aria-hidden="true" />
-                        <span>{{ session('error') }}</span>
+                        <span class="flex-1">{{ session('error') }}</span>
+                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
                     </div>
                 @endif
                 @if(session('info'))
-                    <div class="admin-flash admin-flash--info" role="status">
+                    <div class="admin-flash admin-flash--info" role="status"
+                         x-data="{ show: true }" x-show="show" x-transition.duration.300ms
+                         x-init="setTimeout(() => show = false, 6000)">
                         <x-core-ui::icon name="info-circle" aria-hidden="true" />
-                        <span>{{ session('info') }}</span>
+                        <span class="flex-1">{{ session('info') }}</span>
+                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
                     </div>
                 @endif
                 @if($errors->any())
-                    <div class="admin-errors" role="alert">
-                        <strong>خطاها:</strong>
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                    <div class="admin-errors" role="alert"
+                         x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
+                        <strong class="flex-1">خطاها:
+                            @foreach($errors->all() as $error) {{ $error }}{{ !$loop->last ? '، ' : '' }} @endforeach
+                        </strong>
+                        <button @click="show=false" class="admin-flash__close" aria-label="بستن">✕</button>
                     </div>
                 @endif
                 @yield('content')
