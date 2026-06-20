@@ -3,10 +3,6 @@
 @section('header', 'فروشگاه ماژول')
 
 @section('content')
-@if(session('warning'))
-    <div class="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">{{ session('warning') }}</div>
-@endif
-
 @if($error)
     <div class="mb-4 p-4 rounded-lg bg-slate-100 border border-slate-200 text-slate-700">{{ $error }}</div>
     <p class="text-sm text-slate-500">برای خرید ماژول می‌توانید مستقیماً به فروشگاه پلتفرم بروید:</p>

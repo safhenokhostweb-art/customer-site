@@ -15,10 +15,6 @@
     ['label' => 'پیامک', 'url' => null],
 ]])
 
-@if(session('success'))
-    <div class="alert alert-success mb-4">{{ session('success') }}</div>
-@endif
-
 <div class="admin-page" style="max-width:700px">
     <div class="admin-page-head">
         <div>

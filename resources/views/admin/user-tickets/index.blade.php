@@ -24,16 +24,6 @@
     get bulkCount() { return this.bulkSelected.length; }
 }">
 
-    {{-- Flash --}}
-    @if(session('success'))
-    <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3.5 mb-5"
-         x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-        <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0" />
-        <span class="text-sm text-green-800 font-medium flex-1">{{ session('success') }}</span>
-        <button @click="show=false" class="text-green-400 hover:text-green-600"><x-core-ui::icon name="close" class="w-4 h-4" /></button>
-    </div>
-    @endif
-
     {{-- Escalation Alert --}}
     @php $openUrgent = $allTickets->where('status','open')->where('priority','high')->count(); @endphp
     @if($openUrgent > 0)

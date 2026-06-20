@@ -46,24 +46,6 @@
             <p style="font-size:0.875rem;color:#b91c1c;margin:0">{{ $error }}</p>
         </div>
     @endif
-    @if(session('success'))
-        <div class="ticket-card" style="border-color:#a7f3d0;background:rgba(236,253,245,0.8);display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem" x-data="{ show: true }" x-show="show" x-transition>
-            <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0" style="color:#059669" />
-            <span style="font-size:0.875rem;color:#065f46;font-weight:500">{{ session('success') }}</span>
-            <button @click="show = false" style="margin-right:auto;color:#34d399;background:none;border:none;cursor:pointer">
-                <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
-            </button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="error-glass" style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem" x-data="{ show: true }" x-show="show" x-transition>
-            <x-core-ui::icon name="alert-triangle" class="w-5 h-5 shrink-0" style="color:#ef4444;margin-top:0.125rem" />
-            <p style="font-size:0.875rem;color:#b91c1c;flex:1;margin:0">{{ session('error') }}</p>
-            <button @click="show = false" style="color:#f87171;background:none;border:none;cursor:pointer;flex-shrink:0">
-                <x-core-ui::icon name="close" class="w-5 h-5 shrink-0" />
-            </button>
-        </div>
-    @endif
 
     {{-- لیست تیکت‌ها --}}
     @if($tickets->isEmpty())

@@ -18,16 +18,6 @@
     </a>
   </div>
 
-  {{-- Flash --}}
-  @if(session('success'))
-    <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-      <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-500 shrink-0" />
-      {{ session('success') }}
-    </div>
-  @endif
-  @if(session('error'))
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{ session('error') }}</div>
-  @endif
   @if(!empty($error))
     <div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 text-sm">{{ $error }}</div>
   @endif

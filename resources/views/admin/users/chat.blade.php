@@ -62,16 +62,6 @@
     <span class="text-slate-700 font-medium">{{ $user->name }}</span>
 </div>
 
-{{-- Flash --}}
-@if(session('success'))
-<div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3 mb-4"
-     x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-    <x-core-ui::icon name="check-circle" class="w-4 h-4 text-green-600 shrink-0" />
-    <span class="text-sm text-green-700">{{ session('success') }}</span>
-    <button @click="show=false" class="mr-auto text-green-400"><x-core-ui::icon name="close" class="w-4 h-4" /></button>
-</div>
-@endif
-
 @php
     $avatarColors = ['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777'];
     $uColor = $avatarColors[crc32($user->name ?? $user->email ?? '') % count($avatarColors)];

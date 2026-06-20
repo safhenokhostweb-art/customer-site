@@ -21,10 +21,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-
     @if($lists->isEmpty())
     <div class="admin-empty-state">
         <x-core-ui::icon name="list" class="w-14 h-14 text-indigo-200 mx-auto mb-4" />

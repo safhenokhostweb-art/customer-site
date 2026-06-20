@@ -14,10 +14,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-
     @if($videos->isEmpty())
         <div class="flex flex-col items-center justify-center py-20 text-slate-400">
             <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">

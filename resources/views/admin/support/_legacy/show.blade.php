@@ -50,14 +50,6 @@
 </div>
 @endif
 
-@if(session('success'))
-<div class="glass-card-strong mb-6 p-4 border-r-4 border-r-green-400 flex items-center gap-3 rounded-2xl" x-data="{ show: true }" x-show="show" x-transition>
-    <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 flex-shrink-0" />
-    <span class="text-sm text-green-800 font-medium">{{ session('success') }}</span>
-    <button @click="show = false" class="mr-auto text-green-400 hover:text-green-600 transition-colors">
-        <x-core-ui::icon name="close" class="w-5 h-5 flex-shrink-0" />
-    </button>
-</div>
 @endif
 
 @if($ticket)

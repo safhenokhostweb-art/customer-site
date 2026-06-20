@@ -80,17 +80,6 @@
     }
 }">
 
-{{-- Flash --}}
-@if(session('success'))
-<div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-3.5 mb-5"
-     x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-    <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0" />
-    <span class="text-sm text-green-700 font-medium">{{ session('success') }}</span>
-    <button @click="show=false" class="mr-auto text-green-500 hover:text-green-700">
-        <x-core-ui::icon name="close" class="w-4 h-4" />
-    </button>
-</div>
-@endif
 
 {{-- هدر --}}
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">

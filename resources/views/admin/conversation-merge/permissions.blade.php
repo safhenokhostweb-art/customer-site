@@ -41,14 +41,6 @@
     </div>
     @endif
 
-    {{-- پیام‌های flash --}}
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">{{ session('success') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    @endif
-
     {{-- جدول کاربران --}}
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">

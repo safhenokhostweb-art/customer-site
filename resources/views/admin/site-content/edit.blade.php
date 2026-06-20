@@ -40,10 +40,6 @@ $hasSteps = $siteContent->hasSteps();
         <div x-show="aiError" x-text="aiError" class="mt-2 text-sm text-red-600"></div>
     </div>
 
-    @if(session('success'))
-    <div class="mb-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm">{{ session('success') }}</div>
-    @endif
-
     <form method="POST" action="{{ route('admin.site-content.update', $siteContent) }}">
         @csrf @method('PUT')
 

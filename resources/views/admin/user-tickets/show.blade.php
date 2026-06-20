@@ -218,20 +218,6 @@
         </div>
     </div>
 
-    {{-- Flash Messages --}}
-    @foreach(['success' => 'green', 'error' => 'red'] as $flashKey => $fc)
-    @if(session($flashKey))
-    <div class="glass-card mb-4 p-4 border-r-4 border-r-{{ $fc }}-400 flex items-center gap-3"
-         x-data="{ show: true }" x-show="show" x-transition>
-        <x-core-ui::icon name="check-circle" class="w-5 h-5 text-{{ $fc }}-600 shrink-0" />
-        <span class="text-sm text-{{ $fc }}-800 font-medium flex-1">{{ session($flashKey) }}</span>
-        <button @click="show=false" class="text-{{ $fc }}-400 hover:text-{{ $fc }}-600 shrink-0">
-            <x-core-ui::icon name="close" class="w-4 h-4" />
-        </button>
-    </div>
-    @endif
-    @endforeach
-
     {{-- ── Main Grid ── --}}
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
 

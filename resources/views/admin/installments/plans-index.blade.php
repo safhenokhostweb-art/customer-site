@@ -22,13 +22,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger mb-4">{{ session('error') }}</div>
-    @endif
-
     @if($plans->isEmpty())
     <div class="admin-empty-state">
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 text-indigo-200">

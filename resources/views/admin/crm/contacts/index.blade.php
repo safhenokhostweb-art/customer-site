@@ -25,10 +25,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm">{{ session('success') }}</div>
-    @endif
-
     {{-- Filters --}}
     <form method="GET" class="flex flex-wrap gap-3 mb-5">
         <input name="q" value="{{ request('q') }}" placeholder="جستجو نام، موبایل، شرکت..." class="flex-1 min-w-48 px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">

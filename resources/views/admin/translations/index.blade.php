@@ -20,10 +20,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-
     {{-- Stats cards --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">

@@ -26,13 +26,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger mb-4">{{ session('error') }}</div>
-    @endif
-
     {{-- Stats --}}
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.875rem;margin-bottom:1.5rem">
         @foreach([

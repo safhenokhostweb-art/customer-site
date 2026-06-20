@@ -4,10 +4,6 @@
 @section('content')
 <div class="admin-page">
 
-    @if(session('success'))
-    <div class="alert alert-success mb-4">{{ session('success') }}</div>
-    @endif
-
     {{-- ═══ Canvas Theme Status Banner ═══ --}}
     @if($canvasActive)
     <div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:1rem;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;color:#fff;">

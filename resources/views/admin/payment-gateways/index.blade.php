@@ -58,17 +58,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:.75rem;padding:.75rem 1rem;margin-bottom:1.25rem;color:#15803d;font-size:.85rem">
-            ✓ {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:.75rem;padding:.75rem 1rem;margin-bottom:1.25rem;color:#dc2626;font-size:.85rem">
-            ✕ {{ session('error') }}
-        </div>
-    @endif
-
     {{-- Info Box --}}
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.875rem;padding:.875rem 1.125rem;margin-bottom:1.5rem;font-size:.82rem;color:#1e40af;display:flex;gap:.625rem;align-items:flex-start">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.1rem"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>

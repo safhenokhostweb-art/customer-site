@@ -24,14 +24,6 @@
     <a href="{{ route('account.subscriptions.index') }}" class="upg-pg__back-link">بازگشت</a>
 </div>
 
-{{-- پیام‌های flash --}}
-@if(session('error'))
-<div class="upg-pg__alert upg-pg__alert--error">
-    <x-core-ui::icon name="alert-triangle" style="width:16px;height:16px" />
-    {{ session('error') }}
-</div>
-@endif
-
 {{-- عنوان --}}
 <div class="upg-pg__intro">
     <h2 class="upg-pg__intro-title">پلن مورد نظر را انتخاب کنید</h2>

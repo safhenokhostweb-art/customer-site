@@ -23,20 +23,6 @@
     <a href="{{ route('account.subscriptions.show', $subscription) }}" class="grp-pg__back-btn">بازگشت</a>
 </div>
 
-{{-- پیام‌های flash --}}
-@if(session('success'))
-<div class="grp-pg__alert grp-pg__alert--ok">
-    <x-core-ui::icon name="check" style="width:15px;height:15px" />
-    {{ session('success') }}
-</div>
-@endif
-@if(session('error'))
-<div class="grp-pg__alert grp-pg__alert--err">
-    <x-core-ui::icon name="x-circle" style="width:15px;height:15px" />
-    {{ session('error') }}
-</div>
-@endif
-
 <div class="grp-layout">
 
     {{-- فرم دعوت --}}

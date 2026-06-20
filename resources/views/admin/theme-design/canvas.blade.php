@@ -13,17 +13,6 @@
     <span class="text-gray-800 font-medium">قالب Canvas</span>
   </nav>
 
-  {{-- ─── Alerts ──────────────────────────────────────────────────────────── --}}
-  @if(session('success'))
-    <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-      <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0" />
-      <p class="text-green-800 text-sm font-medium">{{ session('success') }}</p>
-    </div>
-  @endif
-  @if(session('error'))
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{{ session('error') }}</div>
-  @endif
-
   @if(!$themeData)
     {{-- ─── No Canvas Theme ───────────────────────────────────────────────── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm py-16 text-center">

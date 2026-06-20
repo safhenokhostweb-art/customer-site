@@ -45,11 +45,6 @@
         پروفایل با موفقیت به‌روزرسانی شد.
     </div>
 
-    @if(session('success'))
-    <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl text-sm font-medium">
-        {{ session('success') }}
-    </div>
-    @endif
 
     <form action="{{ route('admin.profile.update') }}" method="POST"
           enctype="multipart/form-data" @submit.prevent="save($el)">

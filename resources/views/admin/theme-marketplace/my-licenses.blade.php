@@ -18,22 +18,16 @@
     </a>
   </div>
 
-  {{-- Flash --}}
-  @if(session('success') || (!empty($purchased) && !session()->has('success')))
+  @if(!empty($purchased))
     <div class="bg-green-50 border border-green-200 rounded-xl p-5 flex items-start gap-4">
       <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
         <x-core-ui::icon name="check-circle" class="w-5 h-5 text-green-600" />
       </div>
       <div>
         <p class="font-semibold text-green-800 text-sm">خرید موفق!</p>
-        <p class="text-green-700 text-sm mt-0.5">
-          {{ session('success') ?: ($msg ?: 'قالب با موفقیت خریداری شد. اکنون می‌توانید آن را نصب کنید.') }}
-        </p>
+        <p class="text-green-700 text-sm mt-0.5">{{ $msg ?: 'قالب با موفقیت خریداری شد. اکنون می‌توانید آن را نصب کنید.' }}</p>
       </div>
     </div>
-  @endif
-  @if(session('error'))
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{ session('error') }}</div>
   @endif
   @if(!empty($error))
     <div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 text-sm">{{ $error }}</div>

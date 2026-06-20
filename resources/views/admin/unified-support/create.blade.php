@@ -19,14 +19,6 @@
     get canSubmitPlatform() { return @js($hasLicense ? 'true' : 'false') === 'true'; }
 }">
 
-    {{-- ─── Flash --}}
-    @if(session('error'))
-    <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 mb-5"
-         x-data="{ show: true }" x-show="show" x-transition.duration.300ms>
-        <span class="text-sm text-red-800 flex-1">{{ session('error') }}</span>
-        <button @click="show=false">✕</button>
-    </div>
-    @endif
 
     {{-- ─── Breadcrumb --}}
     <div class="flex items-center gap-3 mb-6">

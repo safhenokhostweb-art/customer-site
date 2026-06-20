@@ -12,10 +12,6 @@
 
     @include('admin.activity-log.guide')
 
-    @if(session('error'))
-        <div class="alert alert-danger mb-4">{{ session('error') }}</div>
-    @endif
-
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.activity-log.index') }}" class="flex flex-wrap items-end gap-3">
