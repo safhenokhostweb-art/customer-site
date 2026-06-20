@@ -162,7 +162,8 @@
           <div class="p-4 flex flex-col flex-1">
             {{-- Name + category --}}
             <div class="flex items-start justify-between gap-2 mb-1">
-              <h3 class="font-bold text-gray-900 text-base leading-snug">{{ $theme['name'] }}</h3>
+              <a href="{{ route('admin.theme-marketplace.show', $theme['id']) }}"
+                 class="font-bold text-gray-900 text-base leading-snug hover:text-indigo-600 transition">{{ $theme['name'] }}</a>
               @if($theme['category'] ?? null)
                 <span class="shrink-0 bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full mt-0.5">{{ \App\Services\ThemeCategoryHelper::label($theme['category']) }}</span>
               @endif

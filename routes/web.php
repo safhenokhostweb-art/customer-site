@@ -403,6 +403,7 @@ Route::middleware('install.check')->group(function () {
             Route::prefix('theme-marketplace')->name('theme-marketplace.')->group(function () {
                 Route::get('/',                        [AdminThemeMarketplaceController::class, 'index'])->name('index');
                 Route::get('/my-licenses',             [AdminThemeMarketplaceController::class, 'myLicenses'])->name('my-licenses');
+                Route::get('/{themeId}',               [AdminThemeMarketplaceController::class, 'show'])->name('show');
                 Route::post('/{themeId}/purchase',     [AdminThemeMarketplaceController::class, 'purchase'])->name('purchase');
                 Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
             });

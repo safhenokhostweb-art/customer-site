@@ -29,6 +29,23 @@ class ThemeMarketplaceController extends Controller
         return view('admin.theme-marketplace.index', compact('themes', 'purchased', 'failed', 'msg'));
     }
 
+    public function show(Request $request, int $themeId)
+    {
+        if (!$this->platform->isConfigured()) {
+            return redirect()->route('admin.theme-marketplace.index')
+                ->with('error', 'اتصال به پلتفرم پیکربندی نشده است.');
+        }
+
+        $theme = Cache::remember("theme_marketplace_detail_{$themeId}", 300, fn () => $this->platform->marketplaceTheme($themeId));
+
+        if (!$theme) {
+            return redirect()->route('admin.theme-marketplace.index')
+                ->with('error', 'قالب یافت نشد.');
+        }
+
+        return view('admin.theme-marketplace.show', compact('theme'));
+    }
+
     public function purchase(Request $request, int $themeId)
     {
         if (!$this->platform->isConfigured()) {
