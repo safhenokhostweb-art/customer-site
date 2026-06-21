@@ -116,6 +116,36 @@ class ProcessRenewalsCommand extends Command
             'user'   => $sub->user?->mobile,
             'plan'   => $sub->plan?->name,
         ]);
+
+        // C02 — اگر سایت تعلیق بود، پس از تمدید رایگان فعال‌سازی مجدد کن
+        $this->reactivateSiteIfSuspended($sub->plan?->name ?? 'رایگان');
+    }
+
+    /**
+     * C02 — Notify platform to reactivate site lifecycle after subscription renewal.
+     * Non-blocking — renewal is already committed before this runs.
+     */
+    private function reactivateSiteIfSuspended(string $planName): void
+    {
+        try {
+            $localStatus = \App\Models\Setting::get('site_lifecycle_status', 'active');
+
+            if (in_array($localStatus, ['suspended', 'grace_period', 'archived'], true)) {
+                $platform = app(\App\Services\PlatformApiService::class);
+                $ok = $platform->requestLifecycleReactivation();
+
+                if ($ok) {
+                    \App\Models\Setting::set('site_lifecycle_status', 'active', 'lifecycle');
+                    Log::info("C02: lifecycle reactivated after free plan renewal [{$planName}]");
+                } else {
+                    Log::warning("C02: lifecycle reactivation returned false after free renewal [{$planName}]");
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('C02: lifecycle reactivation failed in ProcessRenewals — non-blocking', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

@@ -826,6 +826,483 @@ class BlockRenderer
         return "<div id=\"tb-{$id}\" class=\"tb-latest-post\">{$img}<h2 class=\"tb-heading\">{$t}</h2><p class=\"tb-text tb-muted\">{$date}</p><p class=\"tb-text\">{$excerpt}</p><a href=\"{$url}\" class=\"tb-btn tb-btn-primary\">ادامه مطلب</a></div>";
     }
 
+    // ── HVAC / Industry-specific block renderers ─────────────────────────
+
+    protected function renderNavHeader(array $props, string $inner, string $id): string
+    {
+        $logoText = $this->escape($props['logo_text'] ?? 'Acool HVAC');
+        $phone    = $this->escape($props['phone'] ?? '');
+        $ctaText  = $this->escape($props['cta_text'] ?? 'Book Service');
+        $ctaUrl   = $this->escapeAttr($props['cta_url'] ?? '#contact');
+        $links    = is_array($props['links'] ?? null) ? $props['links'] : [];
+        $sticky   = ($props['sticky'] ?? true) ? 'position:sticky;top:0;' : '';
+
+        $navLinks = '';
+        foreach ($links as $link) {
+            $href  = $this->escapeAttr(is_array($link) ? ($link['url'] ?? '#') : '#');
+            $label = $this->escape(is_array($link) ? ($link['label'] ?? '') : (string)$link);
+            $navLinks .= "<a href=\"{$href}\" style=\"color:#374151;font-weight:500;text-decoration:none;font-size:0.9375rem;transition:color 0.2s;\">{$label}</a>";
+        }
+
+        $phoneSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+        $phoneHtml = $phone
+            ? "<a href=\"tel:{$this->escapeAttr(preg_replace('/[^+\d]/', '', $phone))}\" style=\"display:flex;align-items:center;gap:0.4rem;color:#1e3a5f;font-weight:600;text-decoration:none;\">{$phoneSvg}{$phone}</a>"
+            : '';
+
+        $logoSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+
+        return "<nav id=\"tb-{$id}\" style=\"{$sticky}background:#ffffff;box-shadow:0 2px 12px rgba(0,0,0,0.08);z-index:999;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;min-height:70px;\">
+  <a href=\"/\" style=\"font-size:1.4rem;font-weight:800;color:#1e3a5f;text-decoration:none;display:flex;align-items:center;gap:0.5rem;\">
+    <span style=\"display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#1e3a5f,#0ea5e9);border-radius:8px;\">{$logoSvg}</span>
+    {$logoText}
+  </a>
+  <div style=\"display:flex;align-items:center;gap:2rem;\">{$navLinks}</div>
+  <div style=\"display:flex;align-items:center;gap:1.5rem;\">
+    {$phoneHtml}
+    <a href=\"{$ctaUrl}\" style=\"background:#0ea5e9;color:#fff;padding:0.625rem 1.4rem;border-radius:6px;font-weight:600;text-decoration:none;font-size:0.9rem;white-space:nowrap;\">{$ctaText}</a>
+  </div>
+</div>
+</nav>";
+    }
+
+    protected function renderNav_header(array $props, string $inner, string $id): string
+    {
+        return $this->renderNavHeader($props, $inner, $id);
+    }
+
+    protected function renderHvacHero(array $props, string $inner, string $id): string
+    {
+        $badge    = $this->escape($props['badge'] ?? 'Professional HVAC Services');
+        $title    = $this->escape($props['title'] ?? 'Expert Air Conditioning & HVAC Repair Services');
+        $subtitle = $this->escape($props['subtitle'] ?? 'Trusted by thousands of homeowners. 24/7 emergency service available.');
+        $btn1Text = $this->escape($props['btn_primary_text'] ?? 'Get Free Quote');
+        $btn1Url  = $this->escapeAttr($props['btn_primary_url'] ?? '#contact');
+        $btn2Text = $this->escape($props['btn_secondary_text'] ?? 'Our Services');
+        $btn2Url  = $this->escapeAttr($props['btn_secondary_url'] ?? '#services');
+        $phone    = $this->escape($props['phone'] ?? '');
+        $rating   = $this->escape($props['rating'] ?? '4.9');
+        $ratingLbl = $this->escape($props['rating_label'] ?? '500+ Reviews');
+
+        $stars = '<span style="color:#f59e0b;font-size:1rem;">★★★★★</span>';
+        $ratingHtml = "<div style=\"display:flex;align-items:center;gap:0.6rem;\">{$stars}<span style=\"color:rgba(255,255,255,0.9);font-size:0.875rem;\">{$rating}/5.0 · {$ratingLbl}</span></div>";
+        $phoneHtml  = $phone ? "<div style=\"display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.85);font-size:0.95rem;\"><span style=\"color:#0ea5e9;\">&#9990;</span> Emergency: {$phone}</div>" : '';
+
+        $techSvg = '<svg viewBox="0 0 280 320" width="280" height="320" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="140" cy="70" r="50" fill="#0ea5e9" opacity="0.15"/>
+  <circle cx="140" cy="65" r="35" fill="#dbeafe"/>
+  <ellipse cx="140" cy="170" rx="65" ry="80" fill="#1e40af"/>
+  <rect x="105" y="120" width="70" height="15" rx="3" fill="#2563eb"/>
+  <text x="140" y="220" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">HVAC TECH</text>
+  <rect x="80" y="200" width="35" height="50" rx="4" fill="#1d4ed8"/>
+  <rect x="165" y="200" width="35" height="50" rx="4" fill="#1d4ed8"/>
+  <rect x="60" y="130" width="25" height="60" rx="4" fill="#2563eb"/>
+  <rect x="195" y="130" width="25" height="60" rx="4" fill="#2563eb"/>
+  <rect x="170" y="100" width="45" height="35" rx="6" fill="#0ea5e9" opacity="0.8"/>
+  <text x="192" y="122" text-anchor="middle" fill="white" font-size="10">AC</text>
+</svg>';
+
+        $bgPattern = "background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%)";
+
+        return "<section id=\"tb-{$id}\" style=\"{$bgPattern};padding:5rem 0;overflow:hidden;position:relative;\">
+<div style=\"position:absolute;inset:0;opacity:0.05;background-image:radial-gradient(circle at 2px 2px,white 1px,transparent 0);background-size:32px 32px;\"></div>
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:4rem;position:relative;z-index:1;\">
+  <div style=\"flex:1;min-width:0;\">
+    <div style=\"display:inline-flex;align-items:center;gap:0.5rem;background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3);color:#7dd3fc;padding:0.4rem 1rem;border-radius:999px;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;margin-bottom:1.5rem;\">&check; {$badge}</div>
+    <h1 style=\"font-size:clamp(2rem,3.5vw,2.875rem);font-weight:800;color:#ffffff;line-height:1.15;margin:0 0 1.25rem;\">{$title}</h1>
+    <p style=\"font-size:1.0625rem;color:rgba(255,255,255,0.75);line-height:1.7;margin:0 0 2rem;\">{$subtitle}</p>
+    <div style=\"display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;\">
+      <a href=\"{$btn1Url}\" style=\"background:#0ea5e9;color:#fff;padding:0.875rem 2rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:1rem;box-shadow:0 4px 15px rgba(14,165,233,0.4);\">{$btn1Text}</a>
+      <a href=\"{$btn2Url}\" style=\"background:transparent;color:#fff;padding:0.875rem 2rem;border-radius:8px;font-weight:600;text-decoration:none;font-size:1rem;border:2px solid rgba(255,255,255,0.4);\">{$btn2Text}</a>
+    </div>
+    <div style=\"display:flex;flex-direction:column;gap:0.6rem;\">
+      {$ratingHtml}
+      {$phoneHtml}
+    </div>
+  </div>
+  <div style=\"flex-shrink:0;display:flex;align-items:center;justify-content:center;\">
+    <div style=\"background:rgba(255,255,255,0.05);border:2px solid rgba(14,165,233,0.3);border-radius:20px;padding:2rem;backdrop-filter:blur(4px);\">
+      {$techSvg}
+    </div>
+  </div>
+</div>
+</section>";
+    }
+
+    protected function renderHvac_hero(array $props, string $inner, string $id): string
+    {
+        return $this->renderHvacHero($props, $inner, $id);
+    }
+
+    protected function renderClientLogos(array $props, string $inner, string $id): string
+    {
+        $title = $this->escape($props['title'] ?? 'Our Trusted Partners');
+        $logos = is_array($props['logos'] ?? null) ? $props['logos'] : [];
+
+        if (empty($logos)) {
+            $logos = [
+                ['name' => 'Carrier'], ['name' => 'Trane'], ['name' => 'Lennox'],
+                ['name' => 'Daikin'], ['name' => 'Mitsubishi'], ['name' => 'Rheem'],
+                ['name' => 'York'], ['name' => 'Goodman'], ['name' => 'Honeywell'],
+            ];
+        }
+
+        $items = '';
+        foreach ($logos as $logo) {
+            $name = $this->escape(is_array($logo) ? ($logo['name'] ?? '') : (string)$logo);
+            $items .= "<div style=\"display:flex;align-items:center;justify-content:center;padding:0.75rem 1.5rem;border:1px solid #e5e7eb;border-radius:8px;min-width:100px;background:#fff;\">
+                <span style=\"font-weight:700;color:#6b7280;font-size:0.875rem;letter-spacing:0.05em;\">{$name}</span>
+            </div>";
+        }
+
+        return "<section id=\"tb-{$id}\" style=\"background:#f8fafc;padding:3rem 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <p style=\"text-align:center;color:#9ca3af;font-size:0.875rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 1.5rem;\">{$title}</p>
+  <div style=\"display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1rem;\">{$items}</div>
+</div>
+</section>";
+    }
+
+    protected function renderClient_logos(array $props, string $inner, string $id): string
+    {
+        return $this->renderClientLogos($props, $inner, $id);
+    }
+
+    protected function renderAboutSection(array $props, string $inner, string $id): string
+    {
+        $badge   = $this->escape($props['badge'] ?? 'About Us');
+        $title   = $this->escape($props['title'] ?? 'We Are Your Trusted HVAC Experts');
+        $desc    = $this->sanitizeHtml($props['description'] ?? 'With over 15 years of experience, Acool HVAC provides top-quality air conditioning and heating solutions for residential and commercial clients.');
+        $btnText = $this->escape($props['btn_text'] ?? 'Learn More');
+        $btnUrl  = $this->escapeAttr($props['btn_url'] ?? '#');
+        $features = is_array($props['features'] ?? null) ? $props['features'] : [];
+        $stats    = is_array($props['stats'] ?? null) ? $props['stats'] : [];
+
+        $featuresHtml = '';
+        foreach ($features as $f) {
+            $label = $this->escape(is_array($f) ? ($f['label'] ?? (string)$f) : (string)$f);
+            $featuresHtml .= "<div style=\"display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;\">
+                <span style=\"display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#0ea5e9;border-radius:50%;color:#fff;font-size:0.7rem;flex-shrink:0;margin-top:0.1rem;\">&#10003;</span>
+                <span style=\"color:#374151;font-size:0.9375rem;line-height:1.5;\">{$label}</span>
+            </div>";
+        }
+
+        $statsHtml = '';
+        foreach ($stats as $s) {
+            $val   = $this->escape(is_array($s) ? ($s['value'] ?? '') : '');
+            $label = $this->escape(is_array($s) ? ($s['label'] ?? '') : '');
+            $statsHtml .= "<div style=\"text-align:center;padding:1rem;\">
+                <div style=\"font-size:1.75rem;font-weight:800;color:#1e3a5f;\">{$val}</div>
+                <div style=\"font-size:0.8rem;color:#6b7280;margin-top:0.2rem;\">{$label}</div>
+            </div>";
+        }
+        $statsBlock = $statsHtml ? "<div style=\"display:flex;flex-wrap:wrap;gap:0.5rem;border-top:1px solid #e5e7eb;margin-top:1.5rem;padding-top:1.5rem;\">{$statsHtml}</div>" : '';
+
+        $imgBg = "background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%)";
+        $imgSvg = '<svg viewBox="0 0 400 320" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="320" fill="#dbeafe" rx="16"/>
+  <rect x="60" y="60" width="280" height="200" rx="12" fill="#bfdbfe"/>
+  <rect x="100" y="90" width="200" height="140" rx="8" fill="#93c5fd"/>
+  <text x="200" y="170" text-anchor="middle" fill="#1e40af" font-size="14" font-weight="700" font-family="sans-serif">HVAC SYSTEM</text>
+  <circle cx="200" cy="135" r="25" fill="#1e40af" opacity="0.2"/>
+  <text x="200" y="140" text-anchor="middle" fill="#1e40af" font-size="22">❄️</text>
+</svg>';
+
+        return "<section id=\"tb-{$id}\" style=\"background:#ffffff;padding:5rem 0;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:4rem;flex-wrap:wrap;\">
+  <div style=\"flex:1;min-width:280px;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.1);\">{$imgSvg}</div>
+  <div style=\"flex:1;min-width:280px;\">
+    <div style=\"display:inline-block;background:#eff6ff;color:#0ea5e9;padding:0.35rem 0.9rem;border-radius:999px;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;margin-bottom:1rem;\">{$badge}</div>
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#1e3a5f;line-height:1.2;margin:0 0 1rem;\">{$title}</h2>
+    <div style=\"color:#4b5563;line-height:1.7;margin-bottom:1.25rem;\">{$desc}</div>
+    {$featuresHtml}
+    <a href=\"{$btnUrl}\" style=\"display:inline-block;margin-top:1.25rem;background:#0ea5e9;color:#fff;padding:0.75rem 1.75rem;border-radius:8px;font-weight:700;text-decoration:none;\">{$btnText}</a>
+    {$statsBlock}
+  </div>
+</div>
+</section>";
+    }
+
+    protected function renderAbout_section(array $props, string $inner, string $id): string
+    {
+        return $this->renderAboutSection($props, $inner, $id);
+    }
+
+    protected function renderServiceCards(array $props, string $inner, string $id): string
+    {
+        $title    = $this->escape($props['title'] ?? 'Our Services');
+        $subtitle = $this->escape($props['subtitle'] ?? 'Comprehensive HVAC solutions for every need');
+        $cols     = max(2, min(4, (int)($props['columns'] ?? 3)));
+        $cards    = is_array($props['cards'] ?? null) ? $props['cards'] : [];
+
+        $cardItems = '';
+        foreach ($cards as $card) {
+            $name = $this->escape(is_array($card) ? ($card['title'] ?? '') : '');
+            $desc = $this->escape(is_array($card) ? ($card['description'] ?? '') : '');
+            $icon = $this->escape(is_array($card) ? ($card['icon'] ?? '❄️') : '❄️');
+            $url  = $this->escapeAttr(is_array($card) ? ($card['url'] ?? '#') : '#');
+            $cardItems .= "<a href=\"{$url}\" style=\"display:block;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;text-decoration:none;transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04);\">
+                <div style=\"display:flex;align-items:center;justify-content:center;width:56px;height:56px;background:#eff6ff;border-radius:12px;font-size:1.75rem;margin-bottom:1rem;\">{$icon}</div>
+                <h3 style=\"font-size:1rem;font-weight:700;color:#1e3a5f;margin:0 0 0.5rem;\">{$name}</h3>
+                <p style=\"font-size:0.875rem;color:#6b7280;line-height:1.6;margin:0;\">{$desc}</p>
+                <div style=\"margin-top:1rem;color:#0ea5e9;font-size:0.8rem;font-weight:600;\">Learn More →</div>
+            </a>";
+        }
+
+        $gridStyle = "display:grid;grid-template-columns:repeat({$cols},1fr);gap:1.5rem;";
+
+        return "<section id=\"tb-{$id}\" style=\"background:#f8fafc;padding:5rem 0;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <div style=\"text-align:center;margin-bottom:3rem;\">
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#1e3a5f;margin:0 0 0.75rem;\">{$title}</h2>
+    <p style=\"color:#6b7280;font-size:1rem;margin:0;\">{$subtitle}</p>
+  </div>
+  <div style=\"{$gridStyle}\">{$cardItems}</div>
+</div>
+</section>";
+    }
+
+    protected function renderService_cards(array $props, string $inner, string $id): string
+    {
+        return $this->renderServiceCards($props, $inner, $id);
+    }
+
+    protected function renderStatsRow(array $props, string $inner, string $id): string
+    {
+        $title    = $this->escape($props['title'] ?? 'Why Choose Acool?');
+        $subtitle = $this->escape($props['subtitle'] ?? 'Delivering excellence in HVAC services for over 15 years');
+        $bg       = $this->escapeAttr($props['background'] ?? '#1e3a5f');
+        $stats    = is_array($props['stats'] ?? null) ? $props['stats'] : [];
+
+        $items = '';
+        foreach ($stats as $stat) {
+            $val   = $this->escape(is_array($stat) ? ($stat['value'] ?? '') : '');
+            $label = $this->escape(is_array($stat) ? ($stat['label'] ?? '') : '');
+            $icon  = $this->escape(is_array($stat) ? ($stat['icon'] ?? '') : '');
+            $items .= "<div style=\"text-align:center;padding:1.5rem;\">
+                <div style=\"font-size:2.5rem;margin-bottom:0.5rem;\">{$icon}</div>
+                <div style=\"font-size:2.25rem;font-weight:800;color:#ffffff;line-height:1;\">{$val}</div>
+                <div style=\"font-size:0.875rem;color:rgba(255,255,255,0.7);margin-top:0.4rem;\">{$label}</div>
+            </div>";
+        }
+
+        $divider = "<div style=\"width:1px;background:rgba(255,255,255,0.15);height:80px;\"></div>";
+        $finalItems = '';
+        $statArr = array_values($stats);
+        foreach ($statArr as $i => $stat) {
+            $val   = $this->escape(is_array($stat) ? ($stat['value'] ?? '') : '');
+            $label = $this->escape(is_array($stat) ? ($stat['label'] ?? '') : '');
+            $icon  = $this->escape(is_array($stat) ? ($stat['icon'] ?? '') : '');
+            if ($i > 0) $finalItems .= $divider;
+            $finalItems .= "<div style=\"text-align:center;padding:1.5rem 2rem;flex:1;\">
+                <div style=\"font-size:2rem;margin-bottom:0.5rem;\">{$icon}</div>
+                <div style=\"font-size:2.25rem;font-weight:800;color:#ffffff;line-height:1;\">{$val}</div>
+                <div style=\"font-size:0.875rem;color:rgba(255,255,255,0.7);margin-top:0.4rem;\">{$label}</div>
+            </div>";
+        }
+
+        $bgStyle = str_starts_with($bg, '#') ? "background:{$bg}" : "background:linear-gradient(135deg,#1e3a5f,#1e40af)";
+
+        return "<section id=\"tb-{$id}\" style=\"{$bgStyle};padding:4.5rem 0;position:relative;overflow:hidden;\">
+<div style=\"position:absolute;inset:0;opacity:0.04;background-image:radial-gradient(circle at 2px 2px,white 1px,transparent 0);background-size:28px 28px;\"></div>
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;position:relative;z-index:1;\">
+  <div style=\"text-align:center;margin-bottom:3rem;\">
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#ffffff;margin:0 0 0.75rem;\">{$title}</h2>
+    <p style=\"color:rgba(255,255,255,0.7);font-size:1rem;margin:0;\">{$subtitle}</p>
+  </div>
+  <div style=\"display:flex;align-items:center;justify-content:center;flex-wrap:wrap;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;\">{$finalItems}</div>
+</div>
+</section>";
+    }
+
+    protected function renderStats_row(array $props, string $inner, string $id): string
+    {
+        return $this->renderStatsRow($props, $inner, $id);
+    }
+
+    protected function renderTrustBadges(array $props, string $inner, string $id): string
+    {
+        $title    = $this->escape($props['title'] ?? 'Why Choose Us');
+        $subtitle = $this->escape($props['subtitle'] ?? 'We deliver quality and reliability in every job');
+        $cols     = max(2, min(4, (int)($props['columns'] ?? 3)));
+        $items    = is_array($props['items'] ?? null) ? $props['items'] : [];
+
+        $cards = '';
+        foreach ($items as $item) {
+            $name = $this->escape(is_array($item) ? ($item['title'] ?? '') : '');
+            $desc = $this->escape(is_array($item) ? ($item['description'] ?? '') : '');
+            $icon = $this->escape(is_array($item) ? ($item['icon'] ?? '✓') : '✓');
+            $cards .= "<div style=\"background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.75rem;text-align:center;\">
+                <div style=\"display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:#eff6ff;border-radius:12px;font-size:1.6rem;margin:0 auto 1rem;\">{$icon}</div>
+                <h3 style=\"font-size:1rem;font-weight:700;color:#1e3a5f;margin:0 0 0.5rem;\">{$name}</h3>
+                <p style=\"font-size:0.875rem;color:#6b7280;line-height:1.6;margin:0;\">{$desc}</p>
+            </div>";
+        }
+
+        return "<section id=\"tb-{$id}\" style=\"background:#f8fafc;padding:5rem 0;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <div style=\"text-align:center;margin-bottom:3rem;\">
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#1e3a5f;margin:0 0 0.75rem;\">{$title}</h2>
+    <p style=\"color:#6b7280;font-size:1rem;margin:0;\">{$subtitle}</p>
+  </div>
+  <div style=\"display:grid;grid-template-columns:repeat({$cols},1fr);gap:1.5rem;\">{$cards}</div>
+</div>
+</section>";
+    }
+
+    protected function renderTrust_badges(array $props, string $inner, string $id): string
+    {
+        return $this->renderTrustBadges($props, $inner, $id);
+    }
+
+    protected function renderProjectCards(array $props, string $inner, string $id): string
+    {
+        $title    = $this->escape($props['title'] ?? 'Our Projects');
+        $subtitle = $this->escape($props['subtitle'] ?? 'Take a look at some of our completed HVAC installations');
+        $cols     = max(2, min(4, (int)($props['columns'] ?? 2)));
+        $cards    = is_array($props['cards'] ?? null) ? $props['cards'] : [];
+
+        $bgColors = ['#dbeafe', '#dcfce7', '#fef3c7', '#fce7f3', '#e0e7ff', '#f0fdf4'];
+        $cardItems = '';
+        foreach ($cards as $i => $card) {
+            $name  = $this->escape(is_array($card) ? ($card['title'] ?? '') : '');
+            $desc  = $this->escape(is_array($card) ? ($card['description'] ?? '') : '');
+            $cat   = $this->escape(is_array($card) ? ($card['category'] ?? '') : '');
+            $url   = $this->escapeAttr(is_array($card) ? ($card['url'] ?? '#') : '#');
+            $imgBg = $bgColors[$i % count($bgColors)];
+            $cardItems .= "<div style=\"background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);\">
+                <div style=\"height:200px;background:{$imgBg};display:flex;align-items:center;justify-content:center;font-size:3rem;\">🏗️</div>
+                <div style=\"padding:1.5rem;\">
+                    " . ($cat ? "<span style=\"background:#eff6ff;color:#0ea5e9;padding:0.25rem 0.75rem;border-radius:999px;font-size:0.75rem;font-weight:600;\">{$cat}</span>" : '') . "
+                    <h3 style=\"font-size:1.0625rem;font-weight:700;color:#1e3a5f;margin:0.75rem 0 0.4rem;\">{$name}</h3>
+                    <p style=\"font-size:0.875rem;color:#6b7280;margin:0 0 1rem;line-height:1.5;\">{$desc}</p>
+                    <a href=\"{$url}\" style=\"color:#0ea5e9;font-size:0.875rem;font-weight:600;text-decoration:none;\">View Project →</a>
+                </div>
+            </div>";
+        }
+
+        return "<section id=\"tb-{$id}\" style=\"background:#ffffff;padding:5rem 0;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <div style=\"text-align:center;margin-bottom:3rem;\">
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#1e3a5f;margin:0 0 0.75rem;\">{$title}</h2>
+    <p style=\"color:#6b7280;font-size:1rem;margin:0;\">{$subtitle}</p>
+  </div>
+  <div style=\"display:grid;grid-template-columns:repeat({$cols},1fr);gap:1.5rem;\">{$cardItems}</div>
+</div>
+</section>";
+    }
+
+    protected function renderProject_cards(array $props, string $inner, string $id): string
+    {
+        return $this->renderProjectCards($props, $inner, $id);
+    }
+
+    protected function renderContactInfo(array $props, string $inner, string $id): string
+    {
+        $title    = $this->escape($props['title'] ?? 'Contact Us');
+        $subtitle = $this->escape($props['subtitle'] ?? 'Get in touch — we\'re here to help 24/7');
+        $bg       = $this->escapeAttr($props['background'] ?? '#1e3a5f');
+        $items    = is_array($props['items'] ?? null) ? $props['items'] : [];
+
+        $bgStyle = str_starts_with($bg, '#') ? "background:{$bg}" : "background:linear-gradient(135deg,#0f172a,#1e3a5f)";
+
+        $cardItems = '';
+        foreach ($items as $item) {
+            $label = $this->escape(is_array($item) ? ($item['label'] ?? '') : '');
+            $value = $this->escape(is_array($item) ? ($item['value'] ?? '') : '');
+            $icon  = $this->escape(is_array($item) ? ($item['icon'] ?? '📌') : '📌');
+            $cardItems .= "<div style=\"text-align:center;padding:1.5rem;\">
+                <div style=\"font-size:2rem;margin-bottom:0.75rem;\">{$icon}</div>
+                <div style=\"font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;\">{$label}</div>
+                <div style=\"font-size:1rem;font-weight:600;color:#ffffff;\">{$value}</div>
+            </div>";
+        }
+
+        return "<section id=\"tb-{$id}\" style=\"{$bgStyle};padding:4rem 0;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <div style=\"text-align:center;margin-bottom:2.5rem;\">
+    <h2 style=\"font-size:clamp(1.5rem,2.5vw,2.25rem);font-weight:800;color:#ffffff;margin:0 0 0.75rem;\">{$title}</h2>
+    <p style=\"color:rgba(255,255,255,0.7);font-size:1rem;margin:0;\">{$subtitle}</p>
+  </div>
+  <div style=\"display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;\">{$cardItems}</div>
+</div>
+</section>";
+    }
+
+    protected function renderContact_info(array $props, string $inner, string $id): string
+    {
+        return $this->renderContactInfo($props, $inner, $id);
+    }
+
+    protected function renderSiteFooter(array $props, string $inner, string $id): string
+    {
+        $logoText   = $this->escape($props['logo_text'] ?? 'Acool HVAC');
+        $tagline    = $this->escape($props['tagline'] ?? 'Professional air conditioning & HVAC repair services you can trust.');
+        $copyright  = $this->escape($props['copyright'] ?? '© ' . date('Y') . ' Acool HVAC. All rights reserved.');
+        $bg         = $this->escapeAttr($props['background'] ?? '#0f172a');
+        $links      = is_array($props['links'] ?? null) ? $props['links'] : [];
+        $social     = is_array($props['social_links'] ?? null) ? $props['social_links'] : [];
+        $columns    = is_array($props['columns'] ?? null) ? $props['columns'] : [];
+
+        $bgStyle = str_starts_with($bg, '#') ? "background:{$bg}" : "background:#0f172a";
+
+        $colsHtml = '';
+        foreach ($columns as $col) {
+            $colTitle = $this->escape(is_array($col) ? ($col['title'] ?? '') : '');
+            $colLinks = is_array($col) && isset($col['links']) ? $col['links'] : [];
+            $linkItems = '';
+            foreach ($colLinks as $lnk) {
+                $lhref  = $this->escapeAttr(is_array($lnk) ? ($lnk['url'] ?? '#') : '#');
+                $llabel = $this->escape(is_array($lnk) ? ($lnk['label'] ?? '') : (string)$lnk);
+                $linkItems .= "<li style=\"margin-bottom:0.5rem;\"><a href=\"{$lhref}\" style=\"color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.875rem;transition:color 0.2s;\">{$llabel}</a></li>";
+            }
+            $colsHtml .= "<div>
+                <h4 style=\"color:#ffffff;font-size:0.9rem;font-weight:700;margin:0 0 1rem;letter-spacing:0.04em;\">{$colTitle}</h4>
+                <ul style=\"list-style:none;padding:0;margin:0;\">{$linkItems}</ul>
+            </div>";
+        }
+
+        $socialHtml = '';
+        foreach ($social as $s) {
+            $surl   = $this->escapeAttr(is_array($s) ? ($s['url'] ?? '#') : '#');
+            $slabel = $this->escape(is_array($s) ? ($s['label'] ?? '') : (string)$s);
+            $icon   = $this->escape(is_array($s) ? ($s['icon'] ?? $slabel[0] ?? '●') : $slabel[0] ?? '●');
+            $socialHtml .= "<a href=\"{$surl}\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.875rem;\">{$icon}</a>";
+        }
+
+        $gridCols = count($columns) > 0 ? '1fr ' . implode(' ', array_fill(0, count($columns), '1fr')) : '1fr 1fr 1fr';
+
+        return "<footer id=\"tb-{$id}\" style=\"{$bgStyle};padding:4rem 0 2rem;\">
+<div style=\"max-width:1200px;margin:0 auto;padding:0 1.5rem;\">
+  <div style=\"display:grid;grid-template-columns:{$gridCols};gap:3rem;margin-bottom:3rem;\">
+    <div>
+      <a href=\"/\" style=\"font-size:1.3rem;font-weight:800;color:#ffffff;text-decoration:none;display:block;margin-bottom:1rem;\">{$logoText}</a>
+      <p style=\"color:rgba(255,255,255,0.55);font-size:0.875rem;line-height:1.7;margin:0 0 1.5rem;\">{$tagline}</p>
+      <div style=\"display:flex;gap:0.75rem;flex-wrap:wrap;\">{$socialHtml}</div>
+    </div>
+    {$colsHtml}
+  </div>
+  <div style=\"border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;\">
+    <p style=\"color:rgba(255,255,255,0.4);font-size:0.8rem;margin:0;\">{$copyright}</p>
+    <div style=\"display:flex;gap:1.5rem;\">" .
+      implode('', array_map(function($lnk) {
+          $href  = $this->escapeAttr(is_array($lnk) ? ($lnk['url'] ?? '#') : '#');
+          $label = $this->escape(is_array($lnk) ? ($lnk['label'] ?? '') : (string)$lnk);
+          return "<a href=\"{$href}\" style=\"color:rgba(255,255,255,0.4);font-size:0.8rem;text-decoration:none;\">{$label}</a>";
+      }, $links)) .
+    "</div>
+  </div>
+</div>
+</footer>";
+    }
+
+    protected function renderSite_footer(array $props, string $inner, string $id): string
+    {
+        return $this->renderSiteFooter($props, $inner, $id);
+    }
+
+    // ── End HVAC block renderers ──────────────────────────────────────────
+
     protected function renderFallback(string $type, array $props, string $inner, string $id): string
     {
         // اگر نوع بلوک ناشناخته است، سعی می‌کنیم فقط فرزندان را (در صورت وجود) رندر کنیم

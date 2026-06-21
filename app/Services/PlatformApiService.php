@@ -109,6 +109,65 @@ class PlatformApiService
         return $resp->ok() && (bool) $resp->json('data.can_merge');
     }
 
+    // ── Lifecycle API (C02/C04) ──────────────────────────────────────────────
+
+    /**
+     * After subscription payment, notify platform to reactivate lifecycle.
+     * Idempotent — safe to call even if site is already active.
+     */
+    public function requestLifecycleReactivation(): bool
+    {
+        try {
+            $resp = $this->tenantPost('/api/lifecycle/reactivate', []);
+            return $resp->ok() && ($resp->json('success') === true);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Get current lifecycle status and restore fee from platform.
+     */
+    public function getLifecycleStatus(): array
+    {
+        try {
+            $resp = $this->tenantGet('/api/lifecycle/status');
+            return $resp->ok() ? ($resp->json() ?? []) : [];
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Request site restoration — creates SiteLifecycleInvoice on platform.
+     * Returns ['success', 'invoice_number', 'amount', 'is_free', ...].
+     */
+    public function requestLifecycleRestore(): array
+    {
+        try {
+            $resp = $this->tenantPost('/api/lifecycle/request-restore', []);
+            return $resp->json() ?? ['success' => false, 'error' => 'no_response'];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Confirm restore after payment — marks invoice paid + restores site.
+     */
+    public function confirmLifecycleRestore(string $invoiceNumber, string $paymentRef): bool
+    {
+        try {
+            $resp = $this->tenantPost('/api/lifecycle/confirm-restore', [
+                'invoice_number' => $invoiceNumber,
+                'payment_ref'    => $paymentRef,
+            ]);
+            return $resp->ok() && ($resp->json('success') === true);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     // ── HTTP helpers ─────────────────────────────────────────────────────────
 
     private function get(string $path, array $query = []): Response

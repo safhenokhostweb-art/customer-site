@@ -248,12 +248,47 @@ class SubscriptionPaymentController extends Controller
             }
         }
 
+        // C02: پس از فعال‌سازی اشتراک، وضعیت lifecycle سایت را به active برگردان
+        $this->triggerLifecycleReactivation();
+
         $successMsg = "اشتراک «{$plan->name}» با موفقیت فعال شد.";
         if ($refId && $refId !== 'manual') {
             $successMsg .= " شماره پیگیری: {$refId}";
         }
 
         return redirect()->route('account.subscriptions.index')->with('success', $successMsg);
+    }
+
+    /**
+     * C02 — After subscription payment/activation, reactivate site lifecycle if suspended.
+     * Calls platform API then updates local settings immediately for instant effect.
+     * Failures are logged but never block the subscription activation.
+     */
+    private function triggerLifecycleReactivation(): void
+    {
+        try {
+            $localStatus = \App\Models\Setting::get('site_lifecycle_status', 'active');
+
+            // Only call platform if site might be non-active
+            if (in_array($localStatus, ['suspended', 'grace_period', 'archived'], true)) {
+                $platform = app(\App\Services\PlatformApiService::class);
+                $ok = $platform->requestLifecycleReactivation();
+
+                if ($ok) {
+                    // Immediate local effect: clear suspended page for this request
+                    \App\Models\Setting::set('site_lifecycle_status', 'active', 'lifecycle');
+                    Log::info('C02: lifecycle reactivated after subscription payment');
+                } else {
+                    Log::warning('C02: platform lifecycle reactivation returned false', [
+                        'local_status' => $localStatus,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('C02: lifecycle reactivation failed — non-blocking', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function buildCallbackUrl(string $invoiceNumber): string

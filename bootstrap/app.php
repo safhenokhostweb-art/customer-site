@@ -75,5 +75,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // LANG — پردازش صف ترجمه هر ۱۵ دقیقه
         $schedule->command('translations:process', ['--batch' => 30])->everyFifteenMinutes();
+
+        // C03 — پردازش کمپین‌های SMS زمان‌بندی‌شده هر ۵ دقیقه
+        $schedule->command('sms:process-scheduled')->everyFiveMinutes()->withoutOverlapping(5);
     })
     ->create();

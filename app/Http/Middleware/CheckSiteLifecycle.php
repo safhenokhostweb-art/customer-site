@@ -24,6 +24,14 @@ class CheckSiteLifecycle
         '/logout',
         '/api',
         '/site-suspended',
+        // C04 — allow self-service restore even when suspended
+        '/account/lifecycle',
+        '/account/subscriptions/plans',
+        '/account/subscriptions/subscribe',
+        '/subscription/pay',
+        '/subscription/callback',
+        // C01 — direct lifecycle payment link (admin sends to customer)
+        '/lifecycle-pay',
     ];
 
     public function handle(Request $request, Closure $next): Response

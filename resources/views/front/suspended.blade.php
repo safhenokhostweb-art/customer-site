@@ -166,12 +166,40 @@
 
         <p>
             این سایت به دلیل انقضای اشتراک موقتاً از دسترس خارج شده است.<br>
-            اگر مشتری این سایت هستید، برای تمدید و فعال‌سازی مجدد با مالک سایت تماس بگیرید.
+            اگر مالک این سایت هستید، از طریق دکمه‌های زیر سایت خود را فعال‌سازی مجدد کنید.
         </p>
 
         <div class="divider"></div>
 
+        @auth
+        {{-- C04: اگر کاربر لاگین است، دکمه فعال‌سازی مستقیم نمایش داده می‌شود --}}
+        <div class="actions" style="flex-direction:column; gap:1rem; align-items:center;">
+            <form method="POST" action="/account/lifecycle/restore" style="width:100%;">
+                @csrf
+                <button type="submit" class="btn-primary" style="width:100%;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    فعال‌سازی مجدد سایت
+                </button>
+            </form>
+
+            <a href="/account/subscriptions/plans" class="btn-secondary" style="width:100%;justify-content:center;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                تمدید اشتراک
+            </a>
+        </div>
+        @else
+        {{-- C04: اگر کاربر لاگین نیست، لینک ورود نمایش داده می‌شود --}}
         <div class="actions">
+            <a href="/login?redirect=lifecycle-restore" class="btn-primary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                ورود و فعال‌سازی مجدد
+            </a>
             <a href="/login" class="btn-secondary">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -179,9 +207,10 @@
                 ورود به پنل کاربری
             </a>
         </div>
+        @endauth
 
         <p class="footer-note">
-            اگر این پیام به اشتباه نمایش داده می‌شود، لطفاً با پشتیبانی تماس بگیرید.
+            اگر این پیام به اشتباه نمایش داده می‌شود، با پشتیبانی تماس بگیرید.
         </p>
     </div>
 </body>

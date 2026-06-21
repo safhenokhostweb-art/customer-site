@@ -84,6 +84,7 @@ use App\Http\Controllers\Account\ProfileActivityController as AccountProfileActi
 use App\Http\Controllers\Account\ProfileDeletionController as AccountProfileDeletionController;
 use App\Http\Controllers\Account\PointsController as AccountPointsController;
 use App\Http\Controllers\Account\ReferralController as AccountReferralController;
+use App\Http\Controllers\Account\AccountLifecycleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -115,6 +116,14 @@ Route::middleware('install.check')->group(function () {
     */
     Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
     Route::get('/site-api/menus', [SiteMenuApiController::class, 'index'])->name('site-api.menus');
+
+    // C01 — Direct lifecycle invoice payment (accessible while suspended, with/without auth)
+    Route::prefix('lifecycle-pay')->name('lifecycle.pay.')->middleware('auth')->group(function () {
+        Route::get('/{invoiceRef}',                         [\App\Http\Controllers\Front\LifecyclePaymentController::class, 'show'])->name('show');
+        Route::post('/{invoiceRef}',                        [\App\Http\Controllers\Front\LifecyclePaymentController::class, 'initiate'])->name('initiate');
+        Route::get('/callback/{localInvoiceNumber}',        [\App\Http\Controllers\Front\LifecyclePaymentController::class, 'callback'])->name('callback');
+        Route::post('/manual/{localInvoiceNumber}',         [\App\Http\Controllers\Front\LifecyclePaymentController::class, 'manualConfirm'])->name('manual-confirm');
+    });
 
     // Auth
     Route::get('/login',    [LoginController::class,   'showLoginForm'])->name('login');
@@ -166,6 +175,13 @@ Route::middleware('install.check')->group(function () {
         Route::get('/profile/deletion', [AccountProfileDeletionController::class, 'index'])->name('profile.deletion.index');
         Route::post('/profile/deletion', [AccountProfileDeletionController::class, 'store'])->name('profile.deletion.store');
         Route::post('/profile/deletion/cancel', [AccountProfileDeletionController::class, 'cancel'])->name('profile.deletion.cancel');
+
+        // C04 — Self-service lifecycle restore
+        Route::prefix('lifecycle')->name('lifecycle.')->group(function () {
+            Route::post('/restore',                                      [AccountLifecycleController::class, 'requestRestore'])->name('restore');
+            Route::get('/restore/callback/{invoiceNumber}',              [AccountLifecycleController::class, 'callback'])->name('callback');
+            Route::post('/restore/manual-confirm/{invoiceNumber}',       [AccountLifecycleController::class, 'manualConfirm'])->name('manual-confirm');
+        });
 
         // مصرف منابع سایت
         Route::get('/resources', fn() => view('admin.account.resources'))->name('resources.index');
