@@ -16,8 +16,15 @@ class PlatformApiService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('platform.api_url', env('PLATFORM_API_URL', '')), '/');
-        $this->token   = config('platform.admin_token', env('PLATFORM_ADMIN_TOKEN', ''));
+        // Accept both naming conventions: PLATFORM_API_URL (new) or PLATFORM_URL (legacy)
+        $this->baseUrl = rtrim(config('platform.api_url',
+            env('PLATFORM_API_URL', env('PLATFORM_URL', ''))
+        ), '/');
+
+        // Accept both naming conventions: PLATFORM_ADMIN_TOKEN (new) or PLATFORM_API_TOKEN (legacy)
+        $this->token = config('platform.admin_token',
+            env('PLATFORM_ADMIN_TOKEN', env('PLATFORM_API_TOKEN', ''))
+        );
     }
 
     // ── Theme Marketplace (TB-2) ────────────────────────────────────────────
