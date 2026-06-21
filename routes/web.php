@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\ReferralController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\MessagingController;
 use App\Http\Controllers\Admin\SmsController;
+use App\Http\Controllers\Admin\SmsCampaignController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\BusinessCardController;
@@ -507,6 +508,20 @@ Route::middleware('install.check')->group(function () {
         Route::middleware(['module:sms', 'permission:sms'])->group(function () {
             Route::get('sms', [SmsController::class, 'index'])->name('sms.index');
             Route::post('sms', [SmsController::class, 'update'])->name('sms.update');
+
+            // SMS Campaigns
+            Route::prefix('sms/campaigns')->name('sms.campaigns.')->group(function () {
+                Route::get('/', [SmsCampaignController::class, 'index'])->name('index');
+                Route::get('/create', [SmsCampaignController::class, 'create'])->name('create');
+                Route::post('/', [SmsCampaignController::class, 'store'])->name('store');
+                Route::get('/{campaign}', [SmsCampaignController::class, 'show'])->name('show');
+                Route::get('/{campaign}/edit', [SmsCampaignController::class, 'edit'])->name('edit');
+                Route::put('/{campaign}', [SmsCampaignController::class, 'update'])->name('update');
+                Route::delete('/{campaign}', [SmsCampaignController::class, 'destroy'])->name('destroy');
+                Route::post('/{campaign}/send', [SmsCampaignController::class, 'send'])->name('send');
+                Route::post('/{campaign}/cancel', [SmsCampaignController::class, 'cancel'])->name('cancel');
+                Route::post('/{campaign}/duplicate', [SmsCampaignController::class, 'duplicate'])->name('duplicate');
+            });
         });
         Route::middleware(['module:courses', 'permission:courses'])->group(function () {
             Route::resource('courses', CourseController::class);
