@@ -539,6 +539,7 @@ Route::middleware('install.check')->group(function () {
                 Route::post('/{campaign}/send', [SmsCampaignController::class, 'send'])->name('send');
                 Route::post('/{campaign}/cancel', [SmsCampaignController::class, 'cancel'])->name('cancel');
                 Route::post('/{campaign}/duplicate', [SmsCampaignController::class, 'duplicate'])->name('duplicate');
+                Route::get('/{campaign}/export-csv', [SmsCampaignController::class, 'exportCsv'])->name('export-csv');
             });
         });
         Route::middleware(['module:courses', 'permission:courses'])->group(function () {

@@ -156,7 +156,17 @@
     <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-semibold text-gray-800">لیست مخاطبین</h2>
-            <span class="text-sm text-gray-500">{{ number_format($campaign->total_recipients) }} نفر</span>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500">{{ number_format($campaign->total_recipients) }} نفر</span>
+                {{-- GAP-L03: CSV export button --}}
+                <a href="{{ route('admin.sms.campaigns.export-csv', $campaign) }}"
+                   class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    دانلود CSV
+                </a>
+            </div>
         </div>
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-100">

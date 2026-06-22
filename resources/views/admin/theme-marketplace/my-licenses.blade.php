@@ -112,10 +112,24 @@
               <p class="font-mono text-xs text-gray-700 select-all break-all">{{ $lic['license_key'] }}</p>
             </div>
 
-            <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+            <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
               <span>تاریخ خرید: {{ $lic['purchased_at'] ?? '—' }}</span>
               @if($theme['version'] ?? null)
                 <span>نسخه {{ $theme['version'] ?? '—' }}</span>
+              @endif
+            </div>
+            {{-- GAP-L01: License expiry date --}}
+            <div class="text-xs mb-3 {{ ($lic['is_permanent'] ?? true) ? 'text-green-600' : 'text-amber-600' }}">
+              @if($lic['is_permanent'] ?? true)
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  انقضا: بدون محدودیت (دائمی)
+                </span>
+              @elseif($lic['expires_at'] ?? null)
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  انقضا: {{ $lic['expires_at'] }}
+                </span>
               @endif
             </div>
 

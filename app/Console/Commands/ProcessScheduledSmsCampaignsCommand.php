@@ -28,6 +28,9 @@ class ProcessScheduledSmsCampaignsCommand extends Command
     {
         $dryRun = $this->option('dry-run');
 
+        // GAP-L04 — Recover campaigns stuck in "running" for more than 2 hours
+        $this->recoverStuckCampaigns();
+
         $campaigns = SmsCampaign::where('status', SmsCampaign::STATUS_SCHEDULED)
             ->where('scheduled_at', '<=', now())
             ->get();
@@ -117,5 +120,36 @@ class ProcessScheduledSmsCampaignsCommand extends Command
         $this->info("{$prefix}ارسال شد: {$sent} | skip: {$skipped} | خطا: {$failed}");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * GAP-L04 — Reset campaigns stuck in "running" for more than 2 hours back to "failed".
+     * This handles the case where a job died without completing or marking the campaign done.
+     */
+    private function recoverStuckCampaigns(): void
+    {
+        $stuckCutoff = now()->subHours(2);
+
+        $stuck = SmsCampaign::where('status', SmsCampaign::STATUS_RUNNING)
+            ->where('started_at', '<', $stuckCutoff)
+            ->get();
+
+        foreach ($stuck as $campaign) {
+            // If all recipients were actually sent, mark complete — otherwise fail
+            $totalSent = $campaign->recipients()->where('status', 'sent')->count();
+            $newStatus  = ($totalSent >= $campaign->total_recipients && $campaign->total_recipients > 0)
+                ? SmsCampaign::STATUS_COMPLETED
+                : SmsCampaign::STATUS_FAILED;
+
+            $campaign->update(['status' => $newStatus, 'completed_at' => now()]);
+
+            Log::warning("ProcessScheduledSmsCampaigns: recovered stuck campaign [{$campaign->id}] → {$newStatus}", [
+                'name'       => $campaign->name,
+                'started_at' => $campaign->started_at?->toDateTimeString(),
+                'total_sent' => $totalSent,
+            ]);
+
+            $this->warn("⟳ بازیابی کمپین گیر کرده [{$campaign->id}] {$campaign->name} → {$newStatus}");
+        }
     }
 }

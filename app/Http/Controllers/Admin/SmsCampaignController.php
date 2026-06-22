@@ -157,6 +157,44 @@ class SmsCampaignController extends Controller
             ->with('success', 'کپی کمپین ایجاد شد.');
     }
 
+    /** GAP-L03 — Export campaign recipient delivery report as CSV. */
+    public function exportCsv(SmsCampaign $campaign)
+    {
+        $this->authorizeCampaign($campaign);
+
+        $filename = 'campaign_' . $campaign->id . '_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+        ];
+
+        $callback = function () use ($campaign) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM for correct display in Excel
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, ['موبایل', 'وضعیت', 'پیام خطا', 'تاریخ ارسال']);
+
+            $campaign->recipients()->orderBy('id')->chunk(200, function ($rows) use ($handle) {
+                foreach ($rows as $row) {
+                    fputcsv($handle, [
+                        $row->mobile,
+                        $row->status,
+                        $row->error_message ?? '',
+                        $row->sent_at ? $row->sent_at->toDateTimeString() : '',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     private function authorizeCampaign(SmsCampaign $campaign): void
     {
         abort_if($campaign->site_id !== app('site_id'), 404);
