@@ -63,6 +63,14 @@ if (Test-Path $hotFile) {
 
 $exclude = @('.git', 'node_modules', 'tests', 'storage', '.env', '.env.local', '.env.testing')
 $items   = Get-ChildItem -Path $DIR | Where-Object { $_.Name -notin $exclude }
+
+# حذف فایل‌های کش لوکال قبل از آرشیو تا کانفیگ سرور بازنویسی نشود
+$localCache = @('bootstrap\cache\config.php', 'bootstrap\cache\routes-v7.php', 'bootstrap\cache\events.php', 'bootstrap\cache\services.php')
+foreach ($cf in $localCache) {
+    $cfPath = Join-Path $DIR $cf
+    if (Test-Path $cfPath) { Remove-Item $cfPath -Force }
+}
+
 Compress-Archive -Path ($items | ForEach-Object { $_.FullName }) -DestinationPath $ZIPFILE -Force
 Write-Host "     Archive: $ZIPFILE ($('{0:N1}' -f ((Get-Item $ZIPFILE).Length / 1MB)) MB)" -ForegroundColor Green
 
