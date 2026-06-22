@@ -209,7 +209,41 @@
         </div>
         @endauth
 
-        <p class="footer-note">
+        @php
+            $supportPhone    = \App\Models\Setting::get('support_phone', '');
+            $supportTelegram = \App\Models\Setting::get('support_telegram', '');
+        @endphp
+
+        @if($supportPhone || $supportTelegram)
+        <div class="divider"></div>
+        <div style="text-align:right;padding:1rem 0 0;">
+            <p style="font-size:0.85rem;color:#64748b;margin-bottom:0.75rem;text-align:center;">
+                برای راهنمایی با پشتیبانی تماس بگیرید:
+            </p>
+            <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+                @if($supportPhone)
+                <a href="tel:{{ $supportPhone }}"
+                   style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:8px 16px;border-radius:10px;font-size:0.85rem;font-weight:600;text-decoration:none;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+                    </svg>
+                    {{ $supportPhone }}
+                </a>
+                @endif
+                @if($supportTelegram)
+                <a href="https://t.me/{{ ltrim($supportTelegram, '@') }}" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:8px 16px;border-radius:10px;font-size:0.85rem;font-weight:600;text-decoration:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    {{ $supportTelegram }}
+                </a>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        <p class="footer-note" style="margin-top:1rem;">
             اگر این پیام به اشتباه نمایش داده می‌شود، با پشتیبانی تماس بگیرید.
         </p>
     </div>

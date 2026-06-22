@@ -78,5 +78,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // C03 — پردازش کمپین‌های SMS زمان‌بندی‌شده هر ۵ دقیقه
         $schedule->command('sms:process-scheduled')->everyFiveMinutes()->withoutOverlapping(5);
+
+        // GAP-H05 — Dunning: یادآوری فاکتورهای تمدید پرداخت‌نشده — روزانه ساعت ۱۰:۳۰
+        $schedule->command('subscriptions:process-dunning')->dailyAt('10:30');
     })
     ->create();

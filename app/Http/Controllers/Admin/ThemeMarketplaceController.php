@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\PlatformApiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -163,5 +164,52 @@ class ThemeMarketplaceController extends Controller
         }
 
         return back()->with('success', "قالب «{$backupName}» با موفقیت بازگردانی شد.");
+    }
+
+    /**
+     * GAP-H06 — دانلود فاکتور PDF برای خرید قالب.
+     */
+    public function invoiceDownload(string $licenseKey)
+    {
+        if (! $this->platform->isConfigured()) {
+            abort(503, 'سرویس در دسترس نیست.');
+        }
+
+        $data = $this->platform->getThemeLicenseInvoiceData($licenseKey);
+
+        if (! $data || empty($data['success'])) {
+            abort(404, 'اطلاعات فاکتور یافت نشد.');
+        }
+
+        // Build a plain-object that matches what invoice/pdf.blade.php expects
+        $amountToman = (int) round(($data['amount_rial'] ?? 0) / 10);
+        $invoice = (object) [
+            'invoice_number'   => $data['invoice_number'] ?? 'THEME',
+            'customer_name'    => $data['customer_name'] ?? '',
+            'customer_mobile'  => $data['customer_mobile'] ?? '',
+            'customer_phone'   => '',
+            'created_at'       => $data['purchased_at'] ? \Carbon\Carbon::parse($data['purchased_at']) : now(),
+            'paid_at'          => $data['purchased_at'] ? \Carbon\Carbon::parse($data['purchased_at']) : null,
+            'status'           => 'paid',
+            'subtotal'         => $amountToman,
+            'discount'         => 0,
+            'total'            => $amountToman,
+            'notes'            => "کلید مجوز: {$data['license_key']}" . ($data['gateway_ref'] ? "\nشماره پیگیری پرداخت: {$data['gateway_ref']}" : ''),
+            'items'            => collect([
+                (object) [
+                    'title'    => "قالب «{$data['theme_name']}»",
+                    'quantity' => 1,
+                    'price'    => $amountToman,
+                    'total'    => $amountToman,
+                ],
+            ]),
+        ];
+
+        $pdf = Pdf::loadView('invoice.pdf', compact('invoice'))
+            ->setPaper('A4', 'portrait');
+
+        $filename = 'theme-invoice-' . $data['invoice_number'] . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

@@ -61,6 +61,13 @@ class PlatformApiService
         return $resp->ok() ? $resp->json() : null;
     }
 
+    /** GAP-H06 — Get invoice data for a theme license (for PDF generation) */
+    public function getThemeLicenseInvoiceData(string $licenseKey): ?array
+    {
+        $resp = $this->tenantGet("/api/theme-marketplace/licenses/{$licenseKey}/invoice-data");
+        return $resp->ok() ? $resp->json() : null;
+    }
+
     // ── Theme Bundles (GAP-010) ───────────────────────────────────────────────
 
     public function themeBundles(): array

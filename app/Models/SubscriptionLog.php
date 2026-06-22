@@ -21,6 +21,9 @@ class SubscriptionLog extends Model
     public const ACTION_AUTO_RENEW_INVOICE  = 'auto_renew_invoice_created';
     public const ACTION_UPGRADED            = 'upgraded';
     public const ACTION_DOWNGRADED          = 'downgraded';
+    public const ACTION_DUNNING_DAY3        = 'dunning_reminder_day3';
+    public const ACTION_DUNNING_DAY7        = 'dunning_reminder_day7';
+    public const ACTION_DUNNING_DAY14       = 'dunning_final_warning_day14';
 
     protected $fillable = [
         'subscription_id', 'user_id', 'action', 'details', 'performed_by',

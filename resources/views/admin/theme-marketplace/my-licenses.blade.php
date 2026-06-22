@@ -120,7 +120,7 @@
             </div>
 
             {{-- CTA --}}
-            <div class="mt-auto">
+            <div class="mt-auto flex flex-col gap-2">
               <form method="POST"
                 action="{{ route('admin.theme-marketplace.install', $theme['id'] ?? 0) }}"
                 onsubmit="return confirm('قالب «{{ $theme['name'] ?? '' }}» نصب و فعال شود؟')">
@@ -131,6 +131,15 @@
                   {{ $isOutdated ? 'آپدیت و نصب' : 'نصب و فعال‌سازی' }}
                 </button>
               </form>
+              {{-- GAP-H06: PDF invoice download --}}
+              <a href="{{ route('admin.theme-marketplace.invoice-download', $lic['license_key']) }}"
+                 target="_blank"
+                 class="w-full inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 text-xs font-medium py-2 rounded-lg transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                دانلود فاکتور PDF
+              </a>
             </div>
           </div>
         </div>
