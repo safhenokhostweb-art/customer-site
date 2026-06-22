@@ -44,6 +44,7 @@
         .support { text-align: center; font-size: .8rem; color: #94a3b8; }
         .support a { color: #6366f1; text-decoration: none; font-weight: 600; }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
 <div class="card">
@@ -84,13 +85,27 @@
         </div>
     </div>
 
-    <div class="actions">
-        <a href="javascript:history.back()" class="btn-primary">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            تلاش مجدد
-        </a>
+    <div x-data="{
+        seconds: 180,
+        get ready() { return this.seconds <= 0; },
+        get label() {
+            if (this.ready) return 'تلاش مجدد';
+            let m = Math.floor(this.seconds/60), s = this.seconds%60;
+            return 'تلاش مجدد (' + m + ':' + (s<10?'0':'') + s + ')';
+        },
+        init() { let t = setInterval(() => { if(this.seconds > 0) this.seconds--; else clearInterval(t); }, 1000); }
+    }" class="actions">
+        <template x-if="!ready">
+            <button disabled class="btn-primary" style="opacity:.55;cursor:not-allowed" x-text="label"></button>
+        </template>
+        <template x-if="ready">
+            <a href="javascript:history.back()" class="btn-primary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                تلاش مجدد
+            </a>
+        </template>
         <a href="/" class="btn-secondary">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>

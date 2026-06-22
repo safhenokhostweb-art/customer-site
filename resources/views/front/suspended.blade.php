@@ -243,6 +243,45 @@
         </div>
         @endif
 
+        @php
+            $suspendedAtRaw = \App\Models\Setting::get('site_lifecycle_changed_at', '');
+            $archiveDays    = (int) (\App\Models\Setting::get('lifecycle_archive_after_days', 0) ?: 90);
+            $archiveDate    = null;
+            if ($suspendedAtRaw && $status === 'suspended') {
+                try {
+                    $archiveDate = \Carbon\Carbon::parse($suspendedAtRaw)->addDays($archiveDays);
+                } catch (\Throwable $e) {
+                    $archiveDate = null;
+                }
+            }
+        @endphp
+
+        @if($archiveDate)
+        <div class="divider"></div>
+        <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:1rem 1.25rem;margin-top:1rem;text-align:right;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.4rem;">
+                <svg width="16" height="16" fill="none" stroke="#b45309" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span style="font-size:.8rem;font-weight:700;color:#92400e;">مهلت بازیابی سایت</span>
+            </div>
+            <p style="font-size:.82rem;color:#78350f;line-height:1.7;margin:0;">
+                در صورت عدم پرداخت، سایت شما در تاریخ
+                <strong>{{ \App\Helpers\Jalali::formatFa($archiveDate, 'Y/m/d') }}</strong>
+                (@php echo \App\Helpers\NumberHelper::formatFa(max(0, (int) now()->diffInDays($archiveDate, false))) @endphp روز دیگر)
+                به‌طور خودکار آرشیو خواهد شد.
+                پس از آرشیو، بازیابی اطلاعات با هزینه اضافی امکان‌پذیر است.
+            </p>
+        </div>
+        @else
+        <div class="divider"></div>
+        <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:.875rem 1.25rem;margin-top:1rem;">
+            <p style="font-size:.8rem;color:#92400e;margin:0;line-height:1.7;text-align:center;">
+                ⚠️ در صورت عدم پرداخت، سایت شما پس از ۹۰ روز به‌طور خودکار آرشیو خواهد شد.
+            </p>
+        </div>
+        @endif
+
         <p class="footer-note" style="margin-top:1rem;">
             اگر این پیام به اشتباه نمایش داده می‌شود، با پشتیبانی تماس بگیرید.
         </p>

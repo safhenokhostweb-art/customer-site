@@ -105,6 +105,12 @@
 
 {{-- Payment schedule --}}
 @if($order->payments->isNotEmpty())
+@php
+    $nextPaymentId = $order->payments
+        ->whereIn('status', ['pending'])
+        ->sortBy('installment_number')
+        ->first()?->id;
+@endphp
 <div class="inst-show__card" style="margin-top:1.25rem">
     <div class="inst-show__card-head">
         <x-core-ui::icon name="calendar" class="w-4 h-4 ml-1 text-indigo-500 inline-block" />
@@ -140,8 +146,9 @@
                     $pCls = $pmapCls[$payment->status] ?? 'gray';
                     $pTxt = $pmapTxt[$payment->status] ?? $payment->status;
                     $canPay = in_array($payment->status, ['pending','overdue']) && $order->status === 'active';
+                    $isNext = $payment->id === $nextPaymentId;
                 @endphp
-                <tr style="{{ $payment->status === 'overdue' ? 'background:#fff1f2;' : '' }}">
+                <tr style="{{ $payment->status === 'overdue' ? 'background:#fff1f2;' : ($isNext ? 'background:#fffbeb;border-right:3px solid #f59e0b;' : '') }}">
                     <td style="font-weight:700;color:#6366f1;text-align:center">
                         {{ \App\Helpers\NumberHelper::formatFa($payment->installment_number) }}
                     </td>
@@ -154,6 +161,9 @@
                     </td>
                     <td>
                         <span class="inst-show__badge inst-show__badge--{{ $pCls }}">{{ $pTxt }}</span>
+                        @if($isNext)
+                        <span style="display:inline-block;margin-right:.375rem;font-size:.65rem;font-weight:700;background:#f59e0b;color:#fff;padding:.1rem .45rem;border-radius:9999px;vertical-align:middle;">بعدی</span>
+                        @endif
                     </td>
                     <td style="font-size:.8rem;color:#64748b;white-space:nowrap">
                         {{ $payment->paid_at ? \App\Helpers\Jalali::formatFa($payment->paid_at, 'Y/m/d') : '—' }}

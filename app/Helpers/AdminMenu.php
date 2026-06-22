@@ -359,35 +359,35 @@ class AdminMenu
             // 1 ─ داشبورد
             'داشبورد' => ['dashboard'],
 
-            // 2 ─ ساختار سایت: صفحات، منو، محتوای ثابت، جستجو
-            'وبسایت' => ['pages', 'menu', 'site_content', 'advanced_search'],
+            // 2 ─ ساختار سایت: صفحات، محتوای ثابت، منو، جستجو
+            'وبسایت' => ['pages', 'site_content', 'menu', 'advanced_search'],
 
-            // 3 ─ محتوای پویا: وبلاگ، دوره‌ها، ویدیو، ترجمه، مستندات
-            'محتوا' => ['categories', 'post_series', 'posts', 'courses', 'homepage_videos', 'translations', 'education_center'],
+            // 3 ─ فروشگاه: سفارشات (اول)، محصولات، دسته‌بندی، ویژگی‌ها، نظرات، کوپن، قسطی، انبار
+            'فروشگاه' => ['orders', 'products', 'product_categories', 'product_attributes', 'shop_product_reviews', 'coupon', 'installments', 'inventory'],
 
-            // 4 ─ ظاهر و قالب
-            'ظاهر' => ['theme_design', 'theme_marketplace', 'theme_bundles'],
+            // 4 ─ مالی: فاکتور (اول)، اشتراک، درگاه، حسابداری
+            'مالی' => ['invoice', 'subscription', 'bank_gateway', 'accounting'],
 
-            // 5 ─ فروشگاه: محصولات، سفارشات، کوپن، قسطی، انبار (license-based)
-            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon', 'installments', 'inventory'],
+            // 5 ─ محتوای پویا: مطالب (اول)، دوره‌ها، دسته‌بندی، مجموعه‌ها، مرکز آموزش، ویدیو، ترجمه
+            'محتوا' => ['posts', 'courses', 'categories', 'post_series', 'education_center', 'homepage_videos', 'translations'],
 
-            // 6 ─ مارکتینگ: فرم‌ها، کمپین‌ها، ارتباطات، تبلیغات
-            'مارکتینگ' => ['forms', 'forms_submissions', 'access_lists', 'referral', 'whatsapp', 'sms', 'sms_campaigns', 'notifications', 'advertisements'],
-
-            // 7 ─ کسب‌وکار: CRM، نظرات، آمار، سئو، شبکه‌های اجتماعی، کارت ویزیت
-            'کسب‌وکار' => ['crm', 'reviews', 'analytics_local', 'seo_advanced', 'social_links', 'business_card'],
-
-            // 8 ─ مالی: اشتراک، فاکتور، حسابداری، درگاه
-            'مالی' => ['subscription', 'invoice', 'accounting', 'bank_gateway'],
-
-            // 9 ─ تنظیمات و امنیت
-            'تنظیمات' => ['captcha', 'settings', 'currency_reform'],
-
-            // 10 ─ پشتیبانی و کاربران
+            // 6 ─ پشتیبانی و کاربران
             'پشتیبانی' => ['support', 'users_panel'],
 
-            // 11 ─ سیستم: لایسنس، ماژول‌ها، لاگ، مانیتورینگ، سلامت
-            'سیستم' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log', 'system_alerts', 'builder_health'],
+            // 7 ─ مارکتینگ: پیامک (اول)، کمپین‌ها، واتساپ، اعلان‌ها، فرم‌ها، گزارش، معرفی، تبلیغات، دسترسی
+            'مارکتینگ' => ['sms', 'sms_campaigns', 'whatsapp', 'notifications', 'forms', 'forms_submissions', 'referral', 'advertisements', 'access_lists'],
+
+            // 8 ─ کسب‌وکار: آمار (اول)، CRM، نظرات، سئو، شبکه‌های اجتماعی، کارت ویزیت
+            'کسب‌وکار' => ['analytics_local', 'crm', 'reviews', 'seo_advanced', 'social_links', 'business_card'],
+
+            // 9 ─ ظاهر و قالب
+            'ظاهر' => ['theme_design', 'theme_marketplace', 'theme_bundles'],
+
+            // 10 ─ تنظیمات و امنیت: تنظیمات (اول)، کپچا، حذف صفر
+            'تنظیمات' => ['settings', 'captcha', 'currency_reform'],
+
+            // 11 ─ سیستم: مرکز اعلان‌ها (اول)، ماژول‌ها، لاگ، لایسنس، فروشگاه ماژول، تاریخچه، سلامت
+            'سیستم' => ['system_alerts', 'modules', 'activity_log', 'license', 'module_store', 'modules_changelog', 'builder_health'],
         ];
     }
 
