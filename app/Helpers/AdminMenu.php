@@ -533,6 +533,13 @@ class AdminMenu
             if (! self::hasStandalonePanel($slug)) {
                 continue;
             }
+            // Skip foundation/utility slugs (blog, shop, smart_image, etc.) that are
+            // enabled in the license but have no dedicated admin page — they either
+            // surface through static groups or have no sidebar UI at all.
+            $route = self::MENU_ROUTES[$slug] ?? null;
+            if ($route === null || $route === 'admin.modules.show') {
+                continue;
+            }
             $out[] = $slug;
         }
         return $out;
