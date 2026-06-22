@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('admin.layout')
 
 @section('title', 'مصرف منابع سایت')
 
@@ -142,7 +142,7 @@
   <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
     <h3 class="font-semibold text-indigo-900 text-sm mb-1">نیاز به فضای بیشتر دارید؟</h3>
     <p class="text-sm text-indigo-700">برای ارتقای پلن یا افزایش سقف منابع با تیم پشتیبانی تماس بگیرید.</p>
-    <a href="{{ route('front.contact') ?? '#' }}"
+    <a href="{{ url('/contact') }}"
        class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
       تماس با پشتیبانی
     </a>
