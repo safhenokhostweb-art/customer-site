@@ -100,6 +100,18 @@
             <x-core-ui::icon name="shield-check" class="w-4 h-4" />
             لایسنس‌های من
           </a>
+          @if($hasBackup)
+          <form method="POST"
+                action="{{ route('admin.theme-marketplace.rollback') }}"
+                onsubmit="return confirm('قالب «{{ $backupName }}» بازگردانی شود؟ قالب فعلی حذف خواهد شد.')">
+            @csrf
+            <button type="submit"
+                    class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium px-4 py-2 rounded-xl border border-amber-200 transition">
+              <x-core-ui::icon name="arrow-uturn-left" class="w-4 h-4" />
+              بازگردانی «{{ $backupName }}»
+            </button>
+          </form>
+          @endif
           <form method="POST"
                 action="{{ route('admin.theme-design.canvas-deactivate') }}"
                 onsubmit="return confirm('قالب Canvas غیرفعال شود و سایت به حالت پیش‌فرض برگردد؟')">

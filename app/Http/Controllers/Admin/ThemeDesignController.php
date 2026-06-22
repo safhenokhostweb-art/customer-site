@@ -49,10 +49,13 @@ class ThemeDesignController extends Controller
         }
 
         return view('admin.theme-design.canvas', [
-            'themeData' => $themeData,
-            'themeName' => Setting::get('active_canvas_theme_name', ''),
-            'themeSlug' => Setting::get('active_canvas_theme_slug', ''),
-            'themeId'   => Setting::get('active_canvas_theme_id', ''),
+            'themeData'  => $themeData,
+            'themeName'  => Setting::get('active_canvas_theme_name', ''),
+            'themeSlug'  => Setting::get('active_canvas_theme_slug', ''),
+            'themeId'    => Setting::get('active_canvas_theme_id', ''),
+            'backupName' => Setting::get('canvas_theme_backup_name', ''),
+            'backupAt'   => Setting::get('canvas_theme_backup_at', ''),
+            'hasBackup'  => (bool) Setting::get('canvas_theme_backup_data'),
         ]);
     }
 
