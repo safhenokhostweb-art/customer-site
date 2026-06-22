@@ -139,13 +139,23 @@
   @endif
 
   {{-- Support CTA --}}
-  <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
-    <h3 class="font-semibold text-indigo-900 text-sm mb-1">نیاز به فضای بیشتر دارید؟</h3>
-    <p class="text-sm text-indigo-700">برای ارتقای پلن یا افزایش سقف منابع با تیم پشتیبانی تماس بگیرید.</p>
-    <a href="{{ url('/contact') }}"
-       class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
-      تماس با پشتیبانی
-    </a>
+  <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 flex items-start gap-4">
+    <div class="p-2.5 bg-indigo-100 rounded-xl flex-shrink-0">
+      <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a3 3 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/>
+      </svg>
+    </div>
+    <div class="flex-1">
+      <h3 class="font-semibold text-indigo-900 text-sm mb-1">نیاز به فضای بیشتر دارید؟</h3>
+      <p class="text-sm text-indigo-700 mb-3">برای ارتقای پلن یا افزایش سقف منابع یک تیکت پشتیبانی ارسال کنید.</p>
+      <a href="{{ route('admin.inbox.create') }}"
+         class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        ارسال تیکت پشتیبانی
+      </a>
+    </div>
   </div>
 
 </div>

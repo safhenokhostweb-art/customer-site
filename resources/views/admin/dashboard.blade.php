@@ -439,9 +439,9 @@ function dismissModuleUpdatesBanner() {
         <div class="cd-qaction__icon bg-rose-50">🧩</div>
         <span class="cd-qaction__label">ماژول‌ها</span>
     </a>
-    <a href="{{ route('admin.theme-design.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-pink-50">🎨</div>
-        <span class="cd-qaction__label">طراحی قالب</span>
+    <a href="{{ route('admin.theme-marketplace.my-licenses') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-pink-50">🖼️</div>
+        <span class="cd-qaction__label">قالب‌های من</span>
     </a>
     <a href="{{ url('/') }}" target="_blank" class="cd-qaction">
         <div class="cd-qaction__icon bg-slate-50">🌐</div>
