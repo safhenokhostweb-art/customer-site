@@ -5,8 +5,7 @@
 @push('head')
 <style>
 /* ═══════════════════════════════════════════════════
-   Customer Dashboard 2.0 — Compact SaaS Design
-   Inspired by: Stripe / Vercel / Cloudflare / Linear
+   Customer Dashboard 2.1 — Compact SaaS Design
    ═══════════════════════════════════════════════════ */
 
 /* ─── Welcome Bar ─── */
@@ -15,10 +14,10 @@
 .cd-welcome__name{font-size:0.875rem;font-weight:700;color:#0f172a;line-height:1.2}
 .cd-welcome__sub{font-size:0.7rem;color:#94a3b8;line-height:1.2}
 
-/* ─── Section heading ─── */
+/* ─── Section label ─── */
 .cd-section-label{font-size:0.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem;padding-right:0.125rem}
 
-/* ─── Section card container ─── */
+/* ─── Section card ─── */
 .cd-section{background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;box-shadow:0 1px 3px rgba(15,23,42,0.05);overflow:hidden;margin-bottom:0.875rem}
 .cd-section-header{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.875rem;border-bottom:1px solid #f1f5f9}
 .cd-section-icon{width:1.625rem;height:1.625rem;border-radius:0.375rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem}
@@ -27,7 +26,7 @@
 .cd-section-action:hover{text-decoration:underline;color:#4f46e5}
 .cd-section-body{padding:0.875rem}
 
-/* ─── Module Stat Chips (4-card row) ─── */
+/* ─── Module Stat Chips ─── */
 .cd-mstat{display:flex;align-items:center;gap:0.625rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.75rem;padding:0.625rem 0.75rem}
 .cd-mstat__dot{width:2.125rem;height:2.125rem;border-radius:0.375rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.875rem}
 .cd-mstat__val{font-size:1.25rem;font-weight:800;color:#0f172a;line-height:1}
@@ -42,65 +41,76 @@
 .cd-res__fill{height:100%;border-radius:9999px}
 .cd-res__meta{font-size:0.62rem;color:#94a3b8;margin-top:0.3rem}
 
-/* ─── KPI Stat Cards (content summary) ─── */
+/* ─── KPI Cards ─── */
 .cd-kpi{display:flex;flex-direction:column;gap:0.2rem;background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;padding:0.75rem 1rem;box-shadow:0 1px 3px rgba(15,23,42,0.05);text-decoration:none;transition:box-shadow .15s,border-color .15s}
 .cd-kpi:hover{box-shadow:0 4px 16px rgba(15,23,42,0.09);border-color:#c7d2fe;text-decoration:none}
 .cd-kpi__label{font-size:0.68rem;font-weight:600;color:#94a3b8;white-space:nowrap}
 .cd-kpi__value{font-size:1.375rem;font-weight:800;color:#0f172a;line-height:1.1}
 .cd-kpi__meta{font-size:0.63rem;color:#cbd5e1}
 
-/* ─── Quick Actions (chip bar) ─── */
-.cd-action{display:inline-flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:0.5rem;border:1px solid #e2e8f0;background:#fff;text-decoration:none;color:#374151;font-size:0.75rem;font-weight:600;transition:all .15s;white-space:nowrap;box-shadow:0 1px 2px rgba(15,23,42,0.04)}
-.cd-action:hover{border-color:#a5b4fc;color:#4f46e5;background:#eef2ff;text-decoration:none}
-.cd-action span{font-size:0.85rem}
+/* ─── Quick Actions Grid ─── */
+.cd-qaction{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:0.875rem 0.5rem;background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;text-decoration:none;transition:all .15s;box-shadow:0 1px 3px rgba(15,23,42,0.04)}
+.cd-qaction:hover{border-color:#a5b4fc;background:#fafafe;box-shadow:0 4px 12px rgba(99,102,241,0.1);transform:translateY(-2px);text-decoration:none}
+.cd-qaction__icon{width:2.5rem;height:2.5rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:transform .15s}
+.cd-qaction:hover .cd-qaction__icon{transform:scale(1.1)}
+.cd-qaction__label{font-size:0.7rem;font-weight:600;color:#374151;text-align:center;line-height:1.3}
 
-/* ─── Compact Data Grid ─── */
-.cd-grid{width:100%;border-collapse:collapse;font-size:0.78rem;text-align:right}
-.cd-grid thead th{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:0.4rem 0.75rem;font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;white-space:nowrap;position:sticky;top:0;z-index:1}
-.cd-grid tbody td{padding:0 0.75rem;height:42px;border-bottom:1px solid #f8fafc;vertical-align:middle}
-.cd-grid tbody tr:last-child td{border-bottom:none}
-.cd-grid tbody tr:hover{background:#f8fafc}
+/* ─── Module Feature Cards ─── */
+.cd-mod-card{background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;padding:0.875rem;box-shadow:0 1px 3px rgba(15,23,42,0.05);transition:all .2s;display:flex;flex-direction:column;gap:0.5rem;position:relative;overflow:hidden}
+.cd-mod-card:hover{box-shadow:0 6px 20px rgba(15,23,42,0.1);border-color:#c7d2fe;transform:translateY(-2px)}
+.cd-mod-card::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%;border-radius:0 3px 3px 0}
+.cd-mod-card.mod-active::before{background:linear-gradient(to bottom,#22c55e,#16a34a)}
+.cd-mod-card.mod-inactive::before{background:linear-gradient(to bottom,#f59e0b,#d97706)}
+.cd-mod-card.mod-platform-only::before{background:linear-gradient(to bottom,#6366f1,#4f46e5)}
 
-/* ─── Status Badges ─── */
-.cd-badge{display:inline-flex;align-items:center;gap:0.2rem;padding:0.15rem 0.5rem;border-radius:9999px;font-size:0.63rem;font-weight:700;white-space:nowrap;line-height:1.4}
+.cd-mod-icon{width:2.5rem;height:2.5rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.cd-mod-name{font-size:0.82rem;font-weight:700;color:#1e293b;line-height:1.2;margin-top:0.125rem}
+
+/* Scrolling description */
+.cd-mod-desc-wrap{overflow:hidden;white-space:nowrap;font-size:0.68rem;color:#64748b;line-height:1.4}
+.cd-mod-desc-inner{display:inline-block}
+.cd-mod-card:hover .cd-mod-desc-inner{animation:cd-marquee 6s linear 0.8s infinite}
+@keyframes cd-marquee{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(-50%)}
+}
+
+.cd-mod-badges{display:flex;align-items:center;gap:0.3rem;flex-wrap:wrap;margin-top:auto}
+
+/* ─── Badges ─── */
+.cd-badge{display:inline-flex;align-items:center;gap:0.2rem;padding:0.15rem 0.5rem;border-radius:9999px;font-size:0.62rem;font-weight:700;white-space:nowrap;line-height:1.4}
 .cd-badge-green{background:#dcfce7;color:#166534}
-.cd-badge-red{background:#fee2e2;color:#991b1b}
 .cd-badge-amber{background:#fef3c7;color:#92400e}
 .cd-badge-gray{background:#f1f5f9;color:#475569}
 .cd-badge-blue{background:#dbeafe;color:#1e40af}
 .cd-badge-violet{background:#ede9fe;color:#5b21b6}
-.cd-badge-indigo{background:#e0e7ff;color:#3730a3}
+.cd-badge-red{background:#fee2e2;color:#991b1b}
 
-/* ─── Search input ─── */
+/* ─── Compact grid ─── */
+.cd-grid{width:100%;border-collapse:collapse;font-size:0.78rem;text-align:right}
+.cd-grid thead th{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:0.4rem 0.75rem;font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;white-space:nowrap}
+.cd-grid tbody td{padding:0 0.75rem;height:40px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.cd-grid tbody tr:last-child td{border-bottom:none}
+.cd-grid tbody tr:hover{background:#f8fafc}
+
+/* ─── Search ─── */
 .cd-search{padding:0.3rem 0.625rem;border:1px solid #e2e8f0;border-radius:0.5rem;font-size:0.75rem;color:#374151;outline:none;transition:border .15s;min-width:160px}
 .cd-search:focus{border-color:#a5b4fc;box-shadow:0 0 0 2px rgba(99,102,241,0.1)}
 
-/* ─── Pagination ─── */
-.cd-page-btn{display:inline-flex;align-items:center;justify-content:center;width:1.625rem;height:1.625rem;border-radius:0.375rem;font-size:0.68rem;font-weight:600;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;transition:all .15s;line-height:1}
-.cd-page-btn:hover{background:#f1f5f9}
-.cd-page-btn.cd-active{background:#6366f1;border-color:#6366f1;color:#fff}
-.cd-page-btn:disabled{opacity:0.4;pointer-events:none}
-
-/* ─── Pulse dot ─── */
+/* ─── Pulse ─── */
 .pulse-dot{display:inline-block;width:7px;height:7px;border-radius:50%;animation:cdk-pulse 2s infinite;flex-shrink:0}
-@keyframes cdk-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(1.25)}}
+@keyframes cdk-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.25)}}
 
 /* ─── Alert pulse ─── */
 @keyframes cd-alert-pulse{0%,100%{background-color:#fef3c7}50%{background-color:#fde68a}}
 .cd-alert-pulse{animation:cd-alert-pulse 2s ease-in-out infinite}
 
-/* ─── Module status indicator dot ─── */
-.cd-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.cd-dot-green{background:#22c55e}
-.cd-dot-amber{background:#f59e0b}
-.cd-dot-gray{background:#cbd5e1}
-
 /* ─── Mobile ─── */
 @media(max-width:639px){
-  .cd-welcome{flex-wrap:wrap}
   .cd-kpi__value{font-size:1.125rem}
   .cd-mstat__val{font-size:1.1rem}
   .cd-welcome__name{font-size:0.8rem}
+  .cd-qaction{padding:0.625rem 0.375rem}
 }
 </style>
 @endpush
@@ -108,11 +118,11 @@
 @section('content')
 
 @php
-    $license            = $license ?? null;
-    $localModules       = $localModules ?? [];
+    $license             = $license ?? null;
+    $localModules        = $localModules ?? [];
     $modulesFromPlatform = $modulesFromPlatform ?? [];
 
-    // ─── Module stats ───
+    /* ── Module stats ── */
     $activeModules   = 0;
     $inactiveModules = 0;
     foreach ($localModules as $key => $info) {
@@ -122,39 +132,57 @@
         if ($fp && $ena)  $activeModules++;
         if ($fp && !$ena) $inactiveModules++;
     }
-    $premiumModules    = count($modulesFromPlatform);
-    $availableModules  = count($localModules);
+    $premiumModules   = count($modulesFromPlatform);
+    $availableModules = count($localModules);
 
-    // ─── Module list for Alpine.js grid ───
-    $moduleIcons = [
-        'blog'             => '✍️',  'shop'           => '🛒',
-        'forms'            => '📋',  'advertisements' => '📢',
-        'notifications'    => '🔔',  'messaging'      => '💬',
-        'whatsapp'         => '💬',  'menu'           => '☰',
-        'advanced_search'  => '🔍',  'currency_reform'=> '💰',
-        'coupon'           => '🎟️', 'reviews'         => '⭐',
-        'referral'         => '🤝',  'subscription'   => '💳',
-        'sms'              => '📱',  'courses'        => '🎓',
-        'invoice'          => '🧾',  'business_card'  => '🪪',
-        'social_links'     => '🔗',
+    /* ── Module descriptions & colors ── */
+    $moduleDescriptions = [
+        'blog'            => 'مدیریت مطالب، نوشته‌ها و مقالات وبلاگ سایت',
+        'shop'            => 'فروشگاه آنلاین با سبد خرید، پرداخت و مدیریت سفارش',
+        'coupon'          => 'کدهای تخفیف و پروموشن برای جذب مشتری',
+        'reviews'         => 'نظرات، امتیاز و بررسی محصولات توسط کاربران',
+        'referral'        => 'برنامه معرفی دوستان با پورسانت و پاداش',
+        'subscription'    => 'اشتراک و عضویت ویژه با مزایای بیشتر',
+        'whatsapp'        => 'پاسخگویی مشتریان از طریق شبکه‌های اجتماعی',
+        'messaging'       => 'مدیریت پیام‌ها و ارتباط با مشتریان',
+        'sms'             => 'ارسال پیامک تبلیغاتی و اطلاع‌رسانی به مخاطبان',
+        'courses'         => 'آموزش آنلاین با دوره‌های ویدیویی و آزمون',
+        'invoice'         => 'صدور فاکتور رسمی برای سفارشات و خدمات',
+        'business_card'   => 'کارت ویزیت دیجیتال حرفه‌ای برای معرفی',
+        'social_links'    => 'لینک تمام شبکه‌های اجتماعی در یک صفحه',
+        'advertisements'  => 'مدیریت بنرها و تبلیغات هدفمند در سایت',
+        'forms'           => 'ساخت فرم‌های پیشرفته با گردش کار خودکار',
+        'advanced_search' => 'جستجوی هوشمند با فیلترهای پیشرفته محصول',
+        'currency_reform' => 'نمایش قیمت‌ها با واحد جدید پول ملی',
+        'menu'            => 'مدیریت منوها و ساختار ناوبری سایت',
+        'notifications'   => 'اعلان‌های فوری درون‌برنامه‌ای برای کاربران',
     ];
-    $moduleList = [];
-    foreach ($localModules as $key => $info) {
-        $fp  = in_array($key, $modulesFromPlatform, true)
-            || ($key === 'whatsapp' && in_array('messaging', $modulesFromPlatform, true));
-        $ena = !empty($info['enabled']);
-        $moduleList[] = [
-            'key'         => $key,
-            'name'        => $info['name'] ?? $key,
-            'icon'        => $moduleIcons[$key] ?? '🧩',
-            'fromPlatform'=> $fp,
-            'enabled'     => $ena,
-            'ok'          => $fp && $ena,
-            'needEnable'  => $fp && !$ena,
-        ];
-    }
+    $moduleColors = [
+        'blog'            => '#6366f1', 'shop'           => '#059669',
+        'coupon'          => '#d97706', 'reviews'        => '#f59e0b',
+        'referral'        => '#10b981', 'subscription'   => '#8b5cf6',
+        'whatsapp'        => '#22c55e', 'messaging'      => '#22c55e',
+        'sms'             => '#3b82f6', 'courses'        => '#ec4899',
+        'invoice'         => '#64748b', 'business_card'  => '#0ea5e9',
+        'social_links'    => '#06b6d4', 'advertisements' => '#f97316',
+        'forms'           => '#7c3aed', 'advanced_search'=> '#0891b2',
+        'currency_reform' => '#dc2626', 'menu'           => '#374151',
+        'notifications'   => '#f59e0b',
+    ];
+    $moduleIcons = [
+        'blog'            => '✍️',  'shop'           => '🛒',
+        'coupon'          => '🎟️', 'reviews'         => '⭐',
+        'referral'        => '🤝',  'subscription'   => '💳',
+        'whatsapp'        => '💬',  'messaging'      => '💬',
+        'sms'             => '📱',  'courses'        => '🎓',
+        'invoice'         => '🧾',  'business_card'  => '🪪',
+        'social_links'    => '🔗',  'advertisements' => '📢',
+        'forms'           => '📋',  'advanced_search'=> '🔍',
+        'currency_reform' => '💰',  'menu'           => '☰',
+        'notifications'   => '🔔',
+    ];
 
-    // ─── Module updates banner ───
+    /* ── Module updates ── */
     $moduleUpdates = [];
     if ($license && $license->license_key && $license->isValid()) {
         $result = app(\App\Services\UpdateCheckService::class)->checkModuleUpdates();
@@ -162,31 +190,27 @@
             $moduleUpdates = $result['modules'];
         }
     }
-    $updateSlugs       = array_column($moduleUpdates, 'slug');
+    $updateSlugs        = array_column($moduleUpdates, 'slug');
     sort($updateSlugs);
-    $updateSignature      = implode(',', $updateSlugs);
-    $dismissedSignature   = \App\Models\Setting::get('module_updates_dismissed_sig', '');
+    $updateSignature    = implode(',', $updateSlugs);
+    $dismissedSignature = \App\Models\Setting::get('module_updates_dismissed_sig', '');
     $showModuleUpdatesBanner = !empty($moduleUpdates) && $updateSignature !== $dismissedSignature;
 
-    // ─── Resource usage ───
+    /* ── Resources ── */
     $summary      = \App\Models\Setting::get('site_resource_summary', null);
     $resourceData = $summary ? json_decode($summary, true) : null;
     $storagePct   = $resourceData ? (float)($resourceData['storage_pct'] ?? 0) : 0;
     $storageUsed  = $resourceData ? \App\Helpers\NumberHelper::formatBytes((int)($resourceData['storage_bytes'] ?? 0)) : '—';
     $storageLimit = $resourceData ? \App\Helpers\NumberHelper::formatBytes((int)($resourceData['storage_limit'] ?? 0)) : '—';
-    $dbBytes      = (int)($resourceData['db_bytes'] ?? 0);
-    $dbLimit      = (int)($resourceData['db_limit'] ?? 536870912); // 512 MB default
+    $dbBytes      = (int)($resourceData['db_bytes']  ?? 0);
+    $dbLimit      = (int)($resourceData['db_limit']  ?? 536870912);
     $dbPct        = $dbLimit > 0 ? min(100, round(($dbBytes / $dbLimit) * 100)) : 0;
     $dbUsed       = $resourceData ? \App\Helpers\NumberHelper::formatBytes($dbBytes) : '—';
     $resAvailable = $resourceData !== null;
 
-    // ─── License status ───
-    $licenseOk    = $license && $license->isValid();
-    $licenseLabel = !$license || empty($license->license_key)
-        ? 'تنظیم نشده'
-        : ($licenseOk ? 'فعال' : 'نامعتبر');
-
-    // ─── Lifecycle ───
+    /* ── License / lifecycle ── */
+    $licenseOk       = $license && $license->isValid();
+    $licenseLabel    = !$license || empty($license->license_key) ? 'تنظیم نشده' : ($licenseOk ? 'فعال' : 'نامعتبر');
     $lifecycleStatus = \App\Models\Setting::get('site_lifecycle_status', 'active');
     $siteIsActive    = in_array($lifecycleStatus, ['active', 'grace_period']);
     $statusLabel     = match($lifecycleStatus) {
@@ -198,53 +222,38 @@
     };
 @endphp
 
-<div class="admin-dashboard-page" x-data>
+<div class="admin-dashboard-page">
 
 {{-- ══════════════════════════════════════
-     WELCOME BAR — compact, always visible
+     WELCOME BAR
      ══════════════════════════════════════ --}}
 <div class="cd-welcome">
-    {{-- Avatar --}}
     <div class="cd-welcome__avatar">
         <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
         </svg>
     </div>
-
-    {{-- Name + site --}}
     <div class="flex-1 min-w-0">
         <div class="cd-welcome__name">{{ auth()->user()->name ?? 'مدیر' }}</div>
         <div class="cd-welcome__sub">{{ \App\Helpers\SiteHelper::siteName() }}</div>
     </div>
-
-    {{-- Status chips --}}
     <div class="flex items-center gap-2 flex-wrap justify-end">
         <div class="flex items-center gap-1.5">
             <span class="pulse-dot {{ $siteIsActive ? 'bg-green-500' : 'bg-red-500' }}"></span>
             <span class="text-xs font-semibold {{ $siteIsActive ? 'text-green-700' : 'text-red-600' }}">{{ $statusLabel }}</span>
         </div>
-        <span class="cd-badge {{ $licenseOk ? 'cd-badge-green' : 'cd-badge-amber' }}">
-            🔑 {{ $licenseLabel }}
-        </span>
-        <a href="{{ url('/') }}" target="_blank" class="cd-badge cd-badge-blue" style="text-decoration:none">
-            🌐 مشاهده سایت
-        </a>
+        <span class="cd-badge {{ $licenseOk ? 'cd-badge-green' : 'cd-badge-amber' }}">🔑 {{ $licenseLabel }}</span>
+        <a href="{{ url('/') }}" target="_blank" class="cd-badge cd-badge-blue" style="text-decoration:none">🌐 مشاهده سایت</a>
     </div>
 </div>
 
-{{-- ══════════════════════════════════════
-     LIFECYCLE WIDGET (only non-active)
-     ══════════════════════════════════════ --}}
+{{-- Lifecycle widget (non-active only) --}}
 @include('admin.partials.lifecycle-widget')
 
-{{-- ══════════════════════════════════════
-     IMPORTANT ALERTS
-     ══════════════════════════════════════ --}}
+{{-- Alerts --}}
 @if(isset($importantAlerts) && $importantAlerts->isNotEmpty())
 <div class="mb-3 rounded-xl overflow-hidden border border-amber-300" id="dashboard-important-alerts">
-    <div class="px-3 py-2 bg-amber-500 text-amber-950 font-bold text-xs flex items-center gap-2">
-        ⚠️ هشدارهای مهم
-    </div>
+    <div class="px-3 py-2 bg-amber-500 text-amber-950 font-bold text-xs">⚠️ هشدارهای مهم</div>
     <ul class="divide-y divide-amber-200">
         @foreach($importantAlerts as $alert)
         <li class="cd-alert-pulse px-4 py-2.5 bg-amber-50">
@@ -257,16 +266,11 @@
 </div>
 @endif
 
-{{-- ══════════════════════════════════════
-     MODULE UPDATES BANNER
-     ══════════════════════════════════════ --}}
 @if($showModuleUpdatesBanner)
 <div class="cd-section mb-3 border-r-4 border-r-indigo-500" id="module-updates-banner" style="border-radius:0.875rem">
     <div class="cd-section-body flex items-center gap-3 py-2.5 px-4">
         <span class="text-indigo-500 text-base">🔄</span>
-        <div class="flex-1 text-sm font-semibold text-indigo-900">
-            {{ count($moduleUpdates) }} ماژول آپدیت جدید دارد
-        </div>
+        <div class="flex-1 text-sm font-semibold text-indigo-900">{{ count($moduleUpdates) }} ماژول آپدیت جدید دارد</div>
         <a href="{{ route('admin.modules.index') }}" class="cd-badge cd-badge-violet" style="text-decoration:none" onclick="dismissModuleUpdatesBanner()">دریافت آپدیت</a>
         <button type="button" class="text-xs text-slate-400 hover:text-slate-600 font-bold px-1" onclick="dismissModuleUpdatesBanner()">✕</button>
     </div>
@@ -275,11 +279,7 @@
 function dismissModuleUpdatesBanner() {
     fetch('{{ route('admin.modules.dismiss-updates') }}', {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/json' },
     }).catch(() => {});
     document.getElementById('module-updates-banner')?.remove();
 }
@@ -288,11 +288,9 @@ function dismissModuleUpdatesBanner() {
 
 {{-- ══════════════════════════════════════
      ROW 1 — MODULE STATS + RESOURCES
-     (Above the fold, 2-column grid)
      ══════════════════════════════════════ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
-
-    {{-- ── Module Summary (4 stat chips) ── --}}
+    {{-- Module Stat Chips --}}
     <div class="cd-section" style="margin-bottom:0">
         <div class="cd-section-header">
             <div class="cd-section-icon bg-violet-100">🧩</div>
@@ -303,65 +301,51 @@ function dismissModuleUpdatesBanner() {
             <div class="grid grid-cols-4 gap-2">
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-green-100">✅</div>
-                    <div>
-                        <div class="cd-mstat__val">{{ $activeModules }}</div>
-                        <div class="cd-mstat__label">فعال</div>
-                    </div>
+                    <div><div class="cd-mstat__val">{{ $activeModules }}</div><div class="cd-mstat__label">فعال</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-slate-100">⏸</div>
-                    <div>
-                        <div class="cd-mstat__val">{{ $inactiveModules }}</div>
-                        <div class="cd-mstat__label">غیرفعال</div>
-                    </div>
+                    <div><div class="cd-mstat__val">{{ $inactiveModules }}</div><div class="cd-mstat__label">غیرفعال</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-violet-100">⭐</div>
-                    <div>
-                        <div class="cd-mstat__val">{{ $premiumModules }}</div>
-                        <div class="cd-mstat__label">پریمیوم</div>
-                    </div>
+                    <div><div class="cd-mstat__val">{{ $premiumModules }}</div><div class="cd-mstat__label">پریمیوم</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-sky-100">📦</div>
-                    <div>
-                        <div class="cd-mstat__val">{{ $availableModules }}</div>
-                        <div class="cd-mstat__label">در دسترس</div>
-                    </div>
+                    <div><div class="cd-mstat__val">{{ $availableModules }}</div><div class="cd-mstat__label">در دسترس</div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ── Resource Usage (horizontal progress bars) ── --}}
+    {{-- Resources --}}
     <div class="cd-section" style="margin-bottom:0">
         <div class="cd-section-header">
             <div class="cd-section-icon bg-sky-100">📊</div>
             <span class="cd-section-title">منابع سیستم</span>
-            <a href="{{ route('account.resources.index') }}" class="cd-section-action">جزئیات ←</a>
+            <a href="{{ url('/account/resources') }}" class="cd-section-action">جزئیات ←</a>
         </div>
         <div class="cd-section-body">
             @if($resAvailable)
             <div class="grid grid-cols-2 gap-2">
-                {{-- Storage --}}
                 <div class="cd-res">
                     <div class="cd-res__top">
                         <span class="cd-res__label">💾 فضای ذخیره‌سازی</span>
                         <span class="cd-res__pct {{ $storagePct >= 80 ? 'text-red-600' : ($storagePct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">{{ $storagePct }}٪</span>
                     </div>
                     <div class="cd-res__bar">
-                        <div class="cd-res__fill {{ $storagePct >= 80 ? 'bg-red-500' : ($storagePct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100, $storagePct) }}%"></div>
+                        <div class="cd-res__fill {{ $storagePct >= 80 ? 'bg-red-500' : ($storagePct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100,$storagePct) }}%"></div>
                     </div>
                     <div class="cd-res__meta">{{ $storageUsed }} از {{ $storageLimit }}</div>
                 </div>
-                {{-- Database --}}
                 <div class="cd-res">
                     <div class="cd-res__top">
                         <span class="cd-res__label">🗄️ دیتابیس</span>
                         <span class="cd-res__pct {{ $dbPct >= 80 ? 'text-red-600' : ($dbPct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">{{ $dbPct }}٪</span>
                     </div>
                     <div class="cd-res__bar">
-                        <div class="cd-res__fill {{ $dbPct >= 80 ? 'bg-red-500' : ($dbPct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100, $dbPct) }}%"></div>
+                        <div class="cd-res__fill {{ $dbPct >= 80 ? 'bg-red-500' : ($dbPct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100,$dbPct) }}%"></div>
                     </div>
                     <div class="cd-res__meta">{{ $dbUsed }} استفاده شده</div>
                 </div>
@@ -378,7 +362,6 @@ function dismissModuleUpdatesBanner() {
 
 {{-- ══════════════════════════════════════
      ROW 2 — CONTENT KPI CARDS
-     (Above the fold)
      ══════════════════════════════════════ --}}
 <div class="cd-section-label">آمار محتوا</div>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
@@ -418,123 +401,144 @@ function dismissModuleUpdatesBanner() {
 </div>
 
 {{-- ══════════════════════════════════════
-     ROW 3 — QUICK ACTIONS
-     (Above the fold — single chip row)
+     ROW 3 — QUICK ACTIONS (full-width grid)
      ══════════════════════════════════════ --}}
 <div class="cd-section-label">دسترسی سریع</div>
-<div class="flex flex-wrap gap-2 mb-4">
-    <a href="{{ route('admin.settings.index') }}" class="cd-action"><span>⚙️</span>تنظیمات</a>
-    <a href="{{ route('admin.pages.index') }}"    class="cd-action"><span>📄</span>صفحات</a>
-    <a href="{{ route('admin.posts.index') }}"    class="cd-action"><span>✍️</span>وبلاگ</a>
-    <a href="{{ route('admin.inbox.index') }}"    class="cd-action"><span>💬</span>پشتیبانی</a>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:0.5rem;margin-bottom:1rem">
+    <a href="{{ route('admin.settings.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-indigo-50">⚙️</div>
+        <span class="cd-qaction__label">تنظیمات</span>
+    </a>
+    <a href="{{ route('admin.pages.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-sky-50">📄</div>
+        <span class="cd-qaction__label">صفحات</span>
+    </a>
+    <a href="{{ route('admin.posts.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-teal-50">✍️</div>
+        <span class="cd-qaction__label">وبلاگ</span>
+    </a>
+    <a href="{{ route('admin.inbox.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-emerald-50">💬</div>
+        <span class="cd-qaction__label">پشتیبانی</span>
+    </a>
     @if(\App\Helpers\SiteHelper::shopEnabled())
-    <a href="{{ route('admin.orders.index') }}"   class="cd-action"><span>🛒</span>سفارشات</a>
+    <a href="{{ route('admin.orders.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-amber-50">🛒</div>
+        <span class="cd-qaction__label">سفارشات</span>
+    </a>
+    <a href="{{ route('admin.products.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-green-50">📦</div>
+        <span class="cd-qaction__label">محصولات</span>
+    </a>
     @endif
-    <a href="{{ route('admin.license.index') }}"  class="cd-action"><span>🔑</span>لایسنس</a>
-    <a href="{{ route('admin.modules.index') }}"  class="cd-action"><span>🧩</span>ماژول‌ها</a>
-    <a href="{{ url('/') }}" target="_blank"       class="cd-action"><span>🌐</span>مشاهده سایت</a>
+    <a href="{{ route('admin.license.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-violet-50">🔑</div>
+        <span class="cd-qaction__label">لایسنس</span>
+    </a>
+    <a href="{{ route('admin.modules.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-rose-50">🧩</div>
+        <span class="cd-qaction__label">ماژول‌ها</span>
+    </a>
+    <a href="{{ route('admin.theme-design.index') }}" class="cd-qaction">
+        <div class="cd-qaction__icon bg-pink-50">🎨</div>
+        <span class="cd-qaction__label">طراحی قالب</span>
+    </a>
+    <a href="{{ url('/') }}" target="_blank" class="cd-qaction">
+        <div class="cd-qaction__icon bg-slate-50">🌐</div>
+        <span class="cd-qaction__label">مشاهده سایت</span>
+    </a>
 </div>
 
 {{-- ══════════════════════════════════════
-     MODULE COMPACT DATA GRID
-     Alpine.js: search + pagination (10/page)
+     MODULE FEATURE SHOWCASE CARDS
+     PHP-rendered, Alpine.js search via data-name
      ══════════════════════════════════════ --}}
-<div
-    class="cd-section"
-    x-data="cdModuleGrid(@json($moduleList), '{{ route('admin.modules.index') }}', '{{ route('admin.license.index') }}')"
->
+<div class="cd-section" x-data="{ q: '' }">
     <div class="cd-section-header">
-        <div class="cd-section-icon bg-rose-100">🧩</div>
-        <span class="cd-section-title">لیست ماژول‌ها</span>
+        <div class="cd-section-icon bg-violet-100">🧩</div>
+        <span class="cd-section-title">امکانات سایت شما</span>
         <div class="mr-auto flex items-center gap-2">
             <input
                 type="text"
                 class="cd-search"
-                placeholder="🔍 جستجو..."
-                x-model="search"
-                x-on:input="page = 1"
+                placeholder="🔍 جستجو در ماژول‌ها..."
+                x-model="q"
                 dir="rtl"
             >
         </div>
     </div>
+    <div class="cd-section-body">
+        @if(count($localModules) > 0)
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            @foreach($localModules as $key => $info)
+            @php
+                $fp       = in_array($key, $modulesFromPlatform, true)
+                    || ($key === 'whatsapp' && in_array('messaging', $modulesFromPlatform, true));
+                $ena      = !empty($info['enabled']);
+                $ok       = $fp && $ena;
+                $needEnable = $fp && !$ena;
+                $name     = $info['name'] ?? $key;
+                $desc     = $moduleDescriptions[$key] ?? 'امکانات این ماژول برای سایت شما فعال است';
+                $icon     = $moduleIcons[$key] ?? '🧩';
+                $color    = $moduleColors[$key] ?? '#6366f1';
+                $cardClass = $ok ? 'mod-active' : ($needEnable ? 'mod-inactive' : 'mod-platform-only');
+                // Double the description for seamless marquee loop
+                $descDouble = $desc . '    •    ' . $desc;
+            @endphp
+            <div
+                class="cd-mod-card {{ $cardClass }}"
+                data-modname="{{ $name }}"
+                x-show="!q || $el.dataset.modname.toLowerCase().includes(q.toLowerCase())"
+            >
+                {{-- Icon --}}
+                <div class="flex items-center gap-2">
+                    <div class="cd-mod-icon" style="background-color:{{ $color }}18;">
+                        <span style="font-size:1.25rem">{{ $icon }}</span>
+                    </div>
+                    <div class="cd-mod-name">{{ $name }}</div>
+                </div>
 
-    <div class="overflow-x-auto">
-        <table class="cd-grid">
-            <thead>
-                <tr>
-                    <th style="width:32px"></th>
-                    <th style="width:28px"></th>
-                    <th>ماژول</th>
-                    <th>پلتفرم</th>
-                    <th>وضعیت</th>
-                    <th>پلن</th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-for="(row, i) in paged" x-bind:key="row.key">
-                    <tr>
-                        {{-- Status dot --}}
-                        <td class="text-center">
-                            <span
-                                class="cd-dot"
-                                x-bind:class="row.ok ? 'cd-dot-green' : (row.needEnable ? 'cd-dot-amber' : 'cd-dot-gray')"
-                            ></span>
-                        </td>
-                        {{-- Icon --}}
-                        <td class="text-center" style="font-size:1rem" x-text="row.icon"></td>
-                        {{-- Name --}}
-                        <td class="font-semibold text-gray-800" x-text="row.name"></td>
-                        {{-- Platform --}}
-                        <td>
-                            <span x-show="row.fromPlatform"  class="cd-badge cd-badge-green">✓ فعال</span>
-                            <span x-show="!row.fromPlatform" class="cd-badge cd-badge-gray">—</span>
-                        </td>
-                        {{-- Enabled --}}
-                        <td>
-                            <span x-show="row.enabled"  class="cd-badge cd-badge-green">فعال</span>
-                            <span x-show="!row.enabled" class="cd-badge cd-badge-gray">غیرفعال</span>
-                        </td>
-                        {{-- Plan --}}
-                        <td>
-                            <span x-show="row.fromPlatform"  class="cd-badge cd-badge-violet">پریمیوم</span>
-                            <span x-show="!row.fromPlatform" class="cd-badge cd-badge-gray">رایگان</span>
-                        </td>
-                        {{-- Action --}}
-                        <td>
-                            <a x-show="row.needEnable"              x-bind:href="routeModules" class="text-xs font-semibold text-indigo-600 hover:underline">فعال‌سازی</a>
-                            <span x-show="row.ok"                   class="text-xs text-green-600 font-semibold">هماهنگ ✓</span>
-                            <a x-show="!row.ok && !row.needEnable"  x-bind:href="routeLicense" class="text-xs text-slate-400 hover:underline hover:text-slate-600">دریافت لایسنس</a>
-                        </td>
-                    </tr>
-                </template>
-                <tr x-show="filtered.length === 0">
-                    <td colspan="7" class="text-center text-xs text-slate-400 py-6">ماژولی یافت نشد</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                {{-- Scrolling description --}}
+                <div class="cd-mod-desc-wrap" title="{{ $desc }}">
+                    <span class="cd-mod-desc-inner">{{ $descDouble }}</span>
+                </div>
 
-    {{-- Pagination --}}
-    <div class="flex items-center justify-between px-4 py-2 border-t border-slate-100 gap-3">
-        <span class="text-xs text-slate-400" x-text="`نمایش ${paged.length} از ${filtered.length} ماژول`"></span>
-        <div class="flex items-center gap-1">
-            <button class="cd-page-btn" x-bind:disabled="page <= 1" x-on:click="page--">‹</button>
-            <template x-for="p in totalPages" x-bind:key="p">
-                <button
-                    class="cd-page-btn"
-                    x-bind:class="p === page ? 'cd-active' : ''"
-                    x-on:click="page = p"
-                    x-text="p"
-                ></button>
-            </template>
-            <button class="cd-page-btn" x-bind:disabled="page >= totalPages" x-on:click="page++">›</button>
+                {{-- Badges --}}
+                <div class="cd-mod-badges">
+                    @if($ok)
+                        <span class="cd-badge cd-badge-green">✓ فعال</span>
+                    @elseif($needEnable)
+                        <span class="cd-badge cd-badge-amber">غیرفعال</span>
+                    @else
+                        <span class="cd-badge cd-badge-gray">—</span>
+                    @endif
+                    @if($fp)
+                        <span class="cd-badge cd-badge-violet">⭐ پریمیوم</span>
+                    @endif
+                </div>
+            </div>
+            @endforeach
         </div>
+
+        {{-- Empty search result --}}
+        <div
+            class="text-center py-8 text-slate-400 text-sm"
+            x-show="q && !document.querySelector('.cd-mod-card[x-show]:not([style*=\'display: none\'])') && false"
+        >
+            ماژولی با این نام یافت نشد
+        </div>
+        @else
+        <div class="text-center py-8">
+            <div class="text-3xl mb-2">🧩</div>
+            <p class="text-sm text-slate-500">ماژولی تعریف نشده است.</p>
+            <a href="{{ route('admin.modules.index') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block">دریافت ماژول‌ها ←</a>
+        </div>
+        @endif
     </div>
 </div>
 
 {{-- ══════════════════════════════════════
-     RECENT ORDERS (compact table)
+     RECENT ORDERS (compact)
      ══════════════════════════════════════ --}}
 @if(\App\Helpers\SiteHelper::shopEnabled() && $recentOrders->isNotEmpty())
 <div class="cd-section">
@@ -561,9 +565,7 @@ function dismissModuleUpdatesBanner() {
                     <td class="text-gray-600">{{ $order->customer_name }}</td>
                     <td class="font-medium text-gray-800">{{ number_format($order->total) }} ت</td>
                     <td><span class="cd-badge cd-badge-blue">{{ $order->status }}</span></td>
-                    <td>
-                        <a href="{{ route('admin.orders.show', $order) }}" class="text-xs font-semibold text-indigo-600 hover:underline">مشاهده</a>
-                    </td>
+                    <td><a href="{{ route('admin.orders.show', $order) }}" class="text-xs font-semibold text-indigo-600 hover:underline">مشاهده</a></td>
                 </tr>
                 @endforeach
             </tbody>
@@ -573,33 +575,5 @@ function dismissModuleUpdatesBanner() {
 @endif
 
 </div>{{-- /admin-dashboard-page --}}
-
-<script>
-function cdModuleGrid(modules, routeModules, routeLicense) {
-    return {
-        modules:       modules,
-        routeModules:  routeModules,
-        routeLicense:  routeLicense,
-        search:        '',
-        page:          1,
-        perPage:       10,
-        get filtered() {
-            if (!this.search) return this.modules;
-            const q = this.search.toLowerCase();
-            return this.modules.filter(function(m) {
-                return m.name.toLowerCase().indexOf(q) !== -1
-                    || m.key.toLowerCase().indexOf(q) !== -1;
-            });
-        },
-        get totalPages() {
-            return Math.max(1, Math.ceil(this.filtered.length / this.perPage));
-        },
-        get paged() {
-            const s = (this.page - 1) * this.perPage;
-            return this.filtered.slice(s, s + this.perPage);
-        },
-    };
-}
-</script>
 
 @endsection
