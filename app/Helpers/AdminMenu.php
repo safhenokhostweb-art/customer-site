@@ -40,7 +40,7 @@ class AdminMenu
         'theme_design' => 'ظاهر و تم',
         'theme_marketplace' => 'فروشگاه قالب‌ها',
         'theme_bundles' => 'باندل‌های قالب',
-        'builder_health' => 'سلامت المان‌های سازنده',
+        'builder_health' => 'سلامت سازنده',
         'settings' => 'تنظیمات',
         'currency_reform' => 'حذف ۴ صفر پول',
         'license' => 'لایسنس',
@@ -50,7 +50,7 @@ class AdminMenu
         'support'         => 'صندوق پشتیبانی',
         'support_history' => 'تاریخچه تیکت‌ها',
         'users_panel'     => 'پنل کاربران',
-        'activity_log' => 'لاگ فعالیت ادمین',
+        'activity_log' => 'لاگ فعالیت',
         'advanced_search' => 'جستجوی پیشرفته',
         'menu' => 'منو و ناوبری',
         'bank_gateway' => 'درگاه بانکی',
@@ -60,9 +60,13 @@ class AdminMenu
         'installments'    => 'خرید قسطی',
         'access_lists'    => 'لیست‌های دسترسی',
         'homepage_videos' => 'ویدیوهای صفحه اصلی',
-        'translations'    => 'ترجمه‌های هوش مصنوعی',
+        'translations'    => 'ترجمه‌های AI',
         'analytics_local' => 'آمار و تحلیل',
         'system_alerts'   => 'مرکز اعلان‌ها',
+        // Platform modules with real dedicated admin UI (moved from dynamic to static)
+        'crm'             => 'مخاطبین و CRM',
+        'inventory'       => 'انبار و موجودی',
+        'seo_advanced'    => 'سئو پیشرفته',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -100,6 +104,39 @@ class AdminMenu
         'messaging' => 'پاسخگویی شبکه‌ها',
         'bank_gateway' => 'درگاه بانکی',
         'advanced_search' => 'جستجوی پیشرفته',
+    ];
+
+    /**
+     * Platform modules that render a description-only "coming soon" page
+     * (PlatformModuleController::show). These must NOT appear in the sidebar
+     * because clicking them shows no actionable UI — only marketing text.
+     * They remain accessible via admin/modules catalog page.
+     */
+    protected const MODULE_DESCRIPTION_ONLY = [
+        'analytics',           // duplicate of analytics_local; description-only
+        'announcements',
+        'backup',
+        'brand',
+        'cloud',
+        'contract',
+        'discount_advanced',
+        'gallery',
+        'i18n',
+        'marketing_automation',
+        'marketplace_sync',
+        'multi_currency',
+        'omnichannel',
+        'podcast',
+        'portfolio',
+        'product_bundling',
+        'projects',
+        'qa',
+        'recruitment',
+        'services',
+        'shipping',
+        'tasks',
+        'video',              // homepage_videos is the real video management
+        'wallet',
     ];
 
     public const MENU_ROUTES = [
@@ -319,18 +356,38 @@ class AdminMenu
     protected static function getStaticGroups(): array
     {
         return [
-            'اصلی' => ['dashboard'],
-            // صفحات و منو نزدیک هم؛ سپس وبلاگ؛ جستجوی پیشرفته در انتهای بلوک محتوا
-            'محتوا و ساختار سایت' => ['pages', 'menu', 'categories', 'post_series', 'posts', 'advanced_search'],
-            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon', 'installments'],
-            'پشتیبانی و مدیریت کاربران' => ['support', 'users_panel'],
-            'فرم‌ها و ارتباط با مخاطب' => ['forms', 'forms_submissions', 'access_lists', 'reviews', 'referral', 'whatsapp', 'sms', 'sms_campaigns', 'notifications'],
-            'اشتراک و آموزش' => ['subscription', 'courses'],
-            'کسب‌وکار و نمایش' => ['invoice', 'accounting', 'analytics_local', 'system_alerts', 'bank_gateway', 'business_card', 'social_links', 'advertisements'],
-            'ظاهر، امنیت و تنظیمات' => ['captcha', 'theme_design', 'theme_marketplace', 'theme_bundles', 'builder_health', 'homepage_videos', 'translations', 'settings', 'currency_reform'],
-            'لایسنس، ماژول‌ها و لاگ' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log'],
-            'آموزش و راهنما' => ['education_center'],
-            'دستیار محتوا' => ['site_content'],
+            // 1 ─ داشبورد
+            'داشبورد' => ['dashboard'],
+
+            // 2 ─ ساختار سایت: صفحات، منو، محتوای ثابت، جستجو
+            'وبسایت' => ['pages', 'menu', 'site_content', 'advanced_search'],
+
+            // 3 ─ محتوای پویا: وبلاگ، دوره‌ها، ویدیو، ترجمه، مستندات
+            'محتوا' => ['categories', 'post_series', 'posts', 'courses', 'homepage_videos', 'translations', 'education_center'],
+
+            // 4 ─ ظاهر و قالب
+            'ظاهر' => ['theme_design', 'theme_marketplace', 'theme_bundles'],
+
+            // 5 ─ فروشگاه: محصولات، سفارشات، کوپن، قسطی، انبار (license-based)
+            'فروشگاه' => ['product_categories', 'products', 'product_attributes', 'shop_product_reviews', 'orders', 'coupon', 'installments', 'inventory'],
+
+            // 6 ─ مارکتینگ: فرم‌ها، کمپین‌ها، ارتباطات، تبلیغات
+            'مارکتینگ' => ['forms', 'forms_submissions', 'access_lists', 'referral', 'whatsapp', 'sms', 'sms_campaigns', 'notifications', 'advertisements'],
+
+            // 7 ─ کسب‌وکار: CRM، نظرات، آمار، سئو، شبکه‌های اجتماعی، کارت ویزیت
+            'کسب‌وکار' => ['crm', 'reviews', 'analytics_local', 'seo_advanced', 'social_links', 'business_card'],
+
+            // 8 ─ مالی: اشتراک، فاکتور، حسابداری، درگاه
+            'مالی' => ['subscription', 'invoice', 'accounting', 'bank_gateway'],
+
+            // 9 ─ تنظیمات و امنیت
+            'تنظیمات' => ['captcha', 'settings', 'currency_reform'],
+
+            // 10 ─ پشتیبانی و کاربران
+            'پشتیبانی' => ['support', 'users_panel'],
+
+            // 11 ─ سیستم: لایسنس، ماژول‌ها، لاگ، مانیتورینگ، سلامت
+            'سیستم' => ['license', 'modules', 'modules_changelog', 'module_store', 'activity_log', 'system_alerts', 'builder_health'],
         ];
     }
 
@@ -465,8 +522,12 @@ class AdminMenu
         $enabled = self::getEnabledPlatformModuleSlugs();
         $out = [];
         foreach ($enabled as $slug) {
-            // اگر قبلاً در گروه‌های ثابت آمده یا ماژول headless/embedded است، در گروه «ماژول‌های از پلتفرم» نیاید.
+            // Skip modules already placed in static groups (crm, inventory, seo_advanced, etc.)
             if (isset($staticKeys[$slug])) {
+                continue;
+            }
+            // Skip modules that render description-only "coming soon" pages — no real UI
+            if (in_array($slug, self::MODULE_DESCRIPTION_ONLY, true)) {
                 continue;
             }
             if (! self::hasStandalonePanel($slug)) {
@@ -558,10 +619,15 @@ class AdminMenu
             'subscription' => 'subscription',
             'whatsapp' => 'whatsapp',
             'sms' => 'sms',
+            'sms_campaigns' => 'sms', // SMS campaigns require sms module
             'courses' => 'courses',
             'invoice' => 'invoice',
             'business_card' => 'business_card',
             'social_links' => 'social_links',
+            // Platform modules with real dedicated UIs, placed in static groups
+            'crm'          => 'crm',
+            'inventory'    => 'inventory',
+            'seo_advanced' => 'seo_advanced',
         ];
         if (isset($moduleMap[$key])) {
             return SiteHelper::moduleEnabled($moduleMap[$key]);
