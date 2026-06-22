@@ -251,7 +251,7 @@
                 @include('admin.partials.license-transient-banner')
                 {{-- GAP-M07: Platform URL not configured notice (admin-only) --}}
                 @php
-                    $platformConfigured = !empty(env('PLATFORM_API_URL', env('PLATFORM_URL', '')));
+                    $platformConfigured = !empty(config('site.platform_url'));
                 @endphp
                 @if(!$platformConfigured && auth()->check() && optional(auth()->user())->is_admin)
                 <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px 16px;margin:12px 16px 0;display:flex;align-items:flex-start;gap:10px;font-size:13px;">
