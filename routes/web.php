@@ -424,6 +424,7 @@ Route::middleware('install.check')->group(function () {
                 Route::get('/{themeId}',               [AdminThemeMarketplaceController::class, 'show'])->name('show');
                 Route::post('/{themeId}/purchase',     [AdminThemeMarketplaceController::class, 'purchase'])->name('purchase');
                 Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
+                Route::post('/rollback',               [AdminThemeMarketplaceController::class, 'rollback'])->name('rollback');
             });
 
             // Theme Bundles (GAP-010)

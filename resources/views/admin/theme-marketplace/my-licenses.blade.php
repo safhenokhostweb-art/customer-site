@@ -138,5 +138,32 @@
     </div>
   @endif
 
+  {{-- BFA-H02: Rollback to previous theme --}}
+  @php $backupAt = \App\Models\Setting::get('canvas_theme_backup_at'); $backupName = \App\Models\Setting::get('canvas_theme_backup_name'); @endphp
+  @if($backupAt && $backupName)
+  <div class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+      </svg>
+      <div>
+        <p class="text-amber-800 text-sm font-semibold">نسخه پشتیبان قالب موجود است</p>
+        <p class="text-amber-700 text-xs mt-0.5">قالب «{{ $backupName }}» در {{ \Carbon\Carbon::parse($backupAt)->diffForHumans() }} ذخیره شد</p>
+      </div>
+    </div>
+    <form method="POST" action="{{ route('admin.theme-marketplace.rollback') }}"
+          onsubmit="return confirm('قالب قبلی «{{ $backupName }}» بازگردانی شود؟ قالب فعلی حذف خواهد شد.')">
+      @csrf
+      <button type="submit"
+        class="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+        </svg>
+        بازگردانی قالب قبلی
+      </button>
+    </form>
+  </div>
+  @endif
+
 </div>
 @endsection

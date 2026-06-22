@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Services\PlatformApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -102,11 +103,19 @@ class ThemeMarketplaceController extends Controller
             return back()->with('error', 'دانلود قالب ناموفق بود. لطفاً مطمئن شوید لایسنس معتبر است.');
         }
 
+        // BFA-H02: پشتیبان‌گیری از قالب فعلی قبل از نصب
+        $currentData = Setting::get('active_canvas_theme_data');
+        if ($currentData) {
+            Setting::set('canvas_theme_backup_data', $currentData, 'theme');
+            Setting::set('canvas_theme_backup_name', Setting::get('active_canvas_theme_name', 'قالب قبلی'), 'theme');
+            Setting::set('canvas_theme_backup_at', now()->toDateTimeString(), 'theme');
+        }
+
         // ذخیره داده قالب در تنظیمات سایت
-        \App\Models\Setting::set('active_canvas_theme_id', $themeId, 'theme');
-        \App\Models\Setting::set('active_canvas_theme_name', $themeData['theme_name'], 'theme');
-        \App\Models\Setting::set('active_canvas_theme_slug', $themeData['theme_slug'], 'theme');
-        \App\Models\Setting::set('active_canvas_theme_data', json_encode([
+        Setting::set('active_canvas_theme_id', $themeId, 'theme');
+        Setting::set('active_canvas_theme_name', $themeData['theme_name'], 'theme');
+        Setting::set('active_canvas_theme_slug', $themeData['theme_slug'], 'theme');
+        Setting::set('active_canvas_theme_data', json_encode([
             'header_blocks' => $themeData['header_blocks'] ?? [],
             'footer_blocks' => $themeData['footer_blocks'] ?? [],
             'pages'         => $themeData['pages'] ?? [],
@@ -114,11 +123,45 @@ class ThemeMarketplaceController extends Controller
             'settings'      => $themeData['settings'] ?? [],
         ]), 'theme');
 
+        // BFA-M05: پاک‌سازی draft قدیمی تا editor با قالب جدید شروع کند
+        Setting::where('key', 'canvas_draft_data')->delete();
+        Cache::forget('settings');
+
         // پاک‌سازی کش تم
-        if (class_exists(\App\Services\TenantThemeResolver::class)) {
-            app(\App\Services\TenantThemeResolver::class)->clearCache();
+        if (class_exists(\App\Services\ThemeEngine\TenantThemeResolver::class)) {
+            app(\App\Services\ThemeEngine\TenantThemeResolver::class)->clearCache();
         }
 
         return back()->with('success', "قالب «{$themeData['theme_name']}» نصب و فعال شد.");
+    }
+
+    public function rollback(Request $request)
+    {
+        $backupData = Setting::get('canvas_theme_backup_data');
+        if (!$backupData) {
+            return back()->with('error', 'هیچ نسخه پشتیبانی برای بازگردانی وجود ندارد.');
+        }
+
+        $backupName = Setting::get('canvas_theme_backup_name', 'قالب قبلی');
+        $backupAt   = Setting::get('canvas_theme_backup_at', '');
+
+        // بازگردانی قالب پشتیبان
+        Setting::set('active_canvas_theme_data', $backupData, 'theme');
+        Setting::set('active_canvas_theme_name', $backupName, 'theme');
+        Setting::where('key', 'active_canvas_theme_id')->delete();
+        Setting::where('key', 'active_canvas_theme_slug')->delete();
+
+        // حذف draft و backup پس از بازگردانی
+        Setting::where('key', 'canvas_draft_data')->delete();
+        Setting::where('key', 'canvas_theme_backup_data')->delete();
+        Setting::where('key', 'canvas_theme_backup_name')->delete();
+        Setting::where('key', 'canvas_theme_backup_at')->delete();
+        Cache::forget('settings');
+
+        if (class_exists(\App\Services\ThemeEngine\TenantThemeResolver::class)) {
+            app(\App\Services\ThemeEngine\TenantThemeResolver::class)->clearCache();
+        }
+
+        return back()->with('success', "قالب «{$backupName}» با موفقیت بازگردانی شد.");
     }
 }
