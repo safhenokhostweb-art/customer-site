@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -35,6 +37,9 @@ class SmartImageUploadService
 
     public function upload(UploadedFile $file, string $context = 'thumbnail'): array
     {
+        // GAP-H07 — Storage limit enforcement
+        $this->enforceStorageLimit($file->getSize());
+
         if (!array_key_exists($context, self::CONTEXTS)) {
             $context = self::DEFAULT_CONTEXT;
         }
@@ -107,6 +112,42 @@ class SmartImageUploadService
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
+
+    /**
+     * GAP-H07 — Reject upload if site storage limit would be exceeded.
+     * Limit is read from Settings (set by platform); defaults to 512 MB.
+     * Storage usage is calculated from the uploads disk and cached for 5 minutes.
+     *
+     * @throws \RuntimeException when storage limit would be exceeded
+     */
+    private function enforceStorageLimit(int $incomingBytes): void
+    {
+        $limitMb = (int) Setting::get('storage_limit_mb', 512);
+        if ($limitMb <= 0) {
+            return;
+        }
+
+        $limitBytes = $limitMb * 1024 * 1024;
+
+        $usedBytes = Cache::remember('storage_used_bytes', 300, function (): int {
+            $disk  = Storage::disk('uploads');
+            $total = 0;
+            foreach ($disk->allFiles() as $file) {
+                $total += $disk->size($file);
+            }
+            return $total;
+        });
+
+        if (($usedBytes + $incomingBytes) > $limitBytes) {
+            $usedMb    = round($usedBytes / 1024 / 1024, 1);
+            $incomingKb = round($incomingBytes / 1024, 0);
+            throw new \RuntimeException(
+                "محدودیت فضای ذخیره‌سازی ({$limitMb} MB) پر شده است. "
+                . "فضای استفاده‌شده: {$usedMb} MB. "
+                . "برای افزایش فضا با پشتیبانی تماس بگیرید."
+            );
+        }
+    }
 
     private function processImage(
         string $path,

@@ -388,6 +388,12 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'پیش‌نویسی برای انتشار وجود ندارد.'], 404);
         }
 
+        // GAP-M02 — Revision history: rotate before overwriting active (cap at 5 revisions)
+        $currentActive = Setting::get('active_canvas_theme_data');
+        if (! empty($currentActive)) {
+            $this->rotateRevisions($currentActive);
+        }
+
         Setting::set('active_canvas_theme_data', $draft, 'theme');
         Setting::set('canvas_draft_data', '', 'theme');
 
@@ -395,6 +401,31 @@ class ThemeDesignController extends Controller
         $this->resolver->clearCache();
 
         return response()->json(['success' => true, 'message' => 'قالب با موفقیت منتشر شد.']);
+    }
+
+    /**
+     * GAP-M02 — Rotate canvas revision history (keep last 5 published versions).
+     */
+    private function rotateRevisions(string $currentData): void
+    {
+        // Shift revisions down: 5→drop, 4→5, 3→4, 2→3, 1→2
+        for ($i = 5; $i >= 2; $i--) {
+            $older = Setting::get("canvas_revision_{$i}");
+            if ($i === 5) {
+                // Slot 5 drops off
+                if (! empty($older)) {
+                    Setting::where('key', "canvas_revision_{$i}")->delete();
+                }
+                continue;
+            }
+            $newer = Setting::get('canvas_revision_' . ($i - 1));
+            if (! empty($newer)) {
+                Setting::set("canvas_revision_{$i}", $newer, 'theme');
+            }
+        }
+        // Slot 1 = just-replaced active
+        Setting::set('canvas_revision_1', $currentData, 'theme');
+        Setting::set('canvas_revision_1_at', now()->toDateTimeString(), 'theme');
     }
 
     public function canvasDiscardDraft(): RedirectResponse

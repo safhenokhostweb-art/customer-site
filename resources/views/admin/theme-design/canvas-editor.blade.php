@@ -2045,6 +2045,13 @@ function canvasEditor() {
             });
 
             this.iframeLoading = true;
+
+            // GAP-M01 — Autosave every 60 seconds when there are unsaved changes
+            setInterval(() => {
+                if (this.isDirty && !this.quickSaving && !this.saving) {
+                    this.autoSave();
+                }
+            }, 60000);
         }
     };
 }

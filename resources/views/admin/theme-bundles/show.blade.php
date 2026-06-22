@@ -88,14 +88,28 @@
                                     </svg>
                                 </div>
                             @endif
-                            <div class="min-w-0">
+                            <div class="min-w-0 flex-1">
                                 <p class="font-semibold text-gray-800 text-sm">{{ $theme['name'] }}</p>
                                 <p class="text-xs text-gray-400">{{ number_format($theme['price'] ?? 0) }} ریال</p>
                             </div>
-                            <a href="{{ route('admin.theme-marketplace.show', $theme['id']) }}"
-                               class="mr-auto text-xs text-indigo-600 hover:text-indigo-800">
-                                مشاهده
-                            </a>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <a href="{{ route('admin.theme-marketplace.show', $theme['id']) }}"
+                                   class="text-xs text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
+                                    مشاهده
+                                </a>
+                                @if($bundle['has_purchased'] ?? false)
+                                {{-- GAP-M04: Install button per theme in purchased bundle --}}
+                                <form method="POST"
+                                      action="{{ route('admin.theme-marketplace.install', $theme['id']) }}"
+                                      onsubmit="return confirm('قالب «{{ $theme['name'] }}» نصب و فعال شود؟')">
+                                    @csrf
+                                    <button type="submit"
+                                            class="text-xs bg-indigo-600 text-white px-2 py-1 rounded-lg hover:bg-indigo-700 whitespace-nowrap">
+                                        نصب
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -147,8 +161,21 @@
 
                 @if($bundle['has_purchased'] ?? false)
                     <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 text-center font-medium">
-                        این باندل قبلاً خریداری شده است.
+                        این باندل خریداری شده — قالب مورد نظر را از لیست نصب کنید.
                     </div>
+                    @php $firstThemeId = $bundle['themes'][0]['id'] ?? null; @endphp
+                    @if($firstThemeId)
+                    {{-- GAP-M04: Install first theme in bundle --}}
+                    <form method="POST"
+                          action="{{ route('admin.theme-marketplace.install', $firstThemeId) }}"
+                          onsubmit="return confirm('اولین قالب باندل ({{ $bundle['themes'][0]['name'] ?? '' }}) نصب و فعال شود؟')">
+                        @csrf
+                        <button type="submit"
+                                class="block w-full text-center py-2.5 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700">
+                            نصب اولین قالب باندل
+                        </button>
+                    </form>
+                    @endif
                     <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
                        class="block w-full text-center py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700">
                         مشاهده لایسنس‌های من

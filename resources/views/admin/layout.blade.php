@@ -249,6 +249,25 @@
             <main class="admin-main">
                 @include('admin.partials.persian-date-admin-assets')
                 @include('admin.partials.license-transient-banner')
+                {{-- GAP-M07: Platform URL not configured notice (admin-only) --}}
+                @php
+                    $platformConfigured = !empty(env('PLATFORM_API_URL', env('PLATFORM_URL', '')));
+                @endphp
+                @if(!$platformConfigured && auth()->check() && optional(auth()->user())->is_admin)
+                <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px 16px;margin:12px 16px 0;display:flex;align-items:flex-start;gap:10px;font-size:13px;">
+                    <svg style="width:18px;height:18px;color:#d97706;shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                    <div>
+                        <strong style="color:#92400e;">اتصال به پلتفرم پیکربندی نشده است.</strong>
+                        برای فعال‌سازی مارکت‌پلیس، گزینه‌های زنده و اشتراک، باید متغیر
+                        <code style="background:#fde68a;border-radius:4px;padding:1px 5px;font-size:12px;">PLATFORM_API_URL</code>
+                        و
+                        <code style="background:#fde68a;border-radius:4px;padding:1px 5px;font-size:12px;">PLATFORM_API_TOKEN</code>
+                        را در فایل <code style="background:#fde68a;border-radius:4px;padding:1px 5px;font-size:12px;">.env</code> مقداردهی کنید.
+                    </div>
+                </div>
+                @endif
                 @if(session('success'))
                     <div class="admin-flash admin-flash--success" role="status"
                          x-data="{ show: true }" x-show="show" x-transition.duration.300ms
