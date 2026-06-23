@@ -121,7 +121,13 @@ class ThemeCanvasPageController extends Controller
 
     private function loadThemeData(): ?array
     {
-        $raw = Cache::remember('canvas_theme_data', 300, fn () => Setting::get('active_canvas_theme_data'));
+        // Read active_canvas_theme_data directly from DB (bypasses the 1-hour settings
+        // cache) so that a platform-admin install becomes visible within 60 seconds.
+        $raw = Cache::remember('canvas_theme_data', 60, function () {
+            return \Illuminate\Support\Facades\DB::table('settings')
+                ->where('key', 'active_canvas_theme_data')
+                ->value('value') ?? '';
+        });
 
         if (!$raw) {
             return null;

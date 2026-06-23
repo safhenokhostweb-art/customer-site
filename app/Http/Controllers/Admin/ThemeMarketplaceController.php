@@ -127,6 +127,7 @@ class ThemeMarketplaceController extends Controller
         // BFA-M05: پاک‌سازی draft قدیمی تا editor با قالب جدید شروع کند
         Setting::where('key', 'canvas_draft_data')->delete();
         Cache::forget('settings');
+        Cache::forget('canvas_theme_data');
 
         // پاک‌سازی کش تم
         if (class_exists(\App\Services\ThemeEngine\TenantThemeResolver::class)) {

@@ -46,8 +46,14 @@ class Page extends Model
     public function getBuilderContentForRender(): array
     {
         $v2 = $this->builder_content_v2;
-        if (is_array($v2) && !empty($v2['sections'] ?? [])) {
-            return $v2;
+        if (is_array($v2)) {
+            if (!empty($v2['sections'] ?? [])) {
+                return $v2;
+            }
+            // Canvas-provisioned pages store blocks under 'blocks' key — normalize to 'sections'
+            if (!empty($v2['blocks'] ?? [])) {
+                return ['sections' => $v2['blocks']];
+            }
         }
         $v1 = $this->builder_content;
         if (is_array($v1) && !empty($v1['sections'] ?? [])) {

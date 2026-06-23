@@ -30,7 +30,7 @@
 
 @if($page->usesBuilder())
     <article class="page-builder-content">
-        {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->setContext(['menu_html' => ''])->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []) !!}
+        {!! app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->setContext(['menu_html' => ''])->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []) !!}
     </article>
 @else
 <article style="max-width:48rem;">
