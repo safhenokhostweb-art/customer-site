@@ -370,7 +370,7 @@
             {{-- Device wrapper --}}
             <div class="flex-1 flex justify-center overflow-auto py-4 px-4" style="background:#0a0f1a">
                 <div class="relative transition-all duration-300 h-full"
-                     :style="device==='mobile'?'width:390px':'device==='tablet'?'width:768px':'width:100%'"
+                     :style="device==='mobile'?'width:390px':device==='tablet'?'width:768px':'width:100%'"
                      :class="device==='mobile'?'device-mobile':device==='tablet'?'device-tablet':''">
 
                     {{-- Mobile/Tablet frame --}}
