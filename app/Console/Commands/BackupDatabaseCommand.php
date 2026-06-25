@@ -215,7 +215,7 @@ class BackupDatabaseCommand extends Command
      */
     private function uploadToArvan(string $localPath, string $filename): void
     {
-        $siteId = (int) env('PLATFORM_SITE_ID', 0);
+        $siteId = (int) config('site.platform_site_id', 0);
 
         if ($siteId <= 0) {
             Log::warning('db:backup arvan skipped — PLATFORM_SITE_ID not set');
