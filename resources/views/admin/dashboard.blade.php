@@ -259,7 +259,14 @@
         <li class="cd-alert-pulse px-4 py-2.5 bg-amber-50">
             <div class="font-semibold text-amber-900 text-sm">{{ $alert['title'] ?? 'هشدار' }}</div>
             @if(!empty($alert['body']))<p class="text-xs text-amber-800 mt-0.5">{{ $alert['body'] }}</p>@endif
-            @if(!empty($alert['link']))<a href="{{ $alert['link'] }}" target="_blank" rel="noopener" class="text-xs font-medium text-amber-700 hover:underline mt-1 inline-block">{{ $alert['link_text'] ?? 'مشاهده' }} ←</a>@endif
+            @if(!empty($alert['link']))
+            @php $isExternalAlertLink = preg_match('#^https?://#i', (string)($alert['link'] ?? '')); @endphp
+            @if($isExternalAlertLink)
+            <a href="{{ $alert['link'] }}" target="_blank" rel="noopener" class="inline-block mt-2 px-3 py-1.5 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition">{{ $alert['link_text'] ?? 'مشاهده' }} ←</a>
+            @else
+            <a href="{{ $alert['link'] }}" class="inline-block mt-2 px-3 py-1.5 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition">{{ $alert['link_text'] ?? 'مشاهده' }} ←</a>
+            @endif
+            @endif
         </li>
         @endforeach
     </ul>
