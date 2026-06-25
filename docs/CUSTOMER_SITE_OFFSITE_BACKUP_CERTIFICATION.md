@@ -102,23 +102,23 @@ Upload failure:
 ## Verification Evidence
 
 ```
-# Config fix deployed 2026-06-25
-fix: BackupDatabaseCommand use config() instead of env() for PLATFORM_SITE_ID
-Commit: e4ccb12
+# Live run on production server — 2026-06-25 12:13 Tehran time
 
-# Code change:
-- $siteId = (int) env('PLATFORM_SITE_ID', 0);
-+ $siteId = (int) config('site.platform_site_id', 0);
+$ php artisan config:clear && php artisan config:cache && php artisan db:backup
 
-# ARVAN vars confirmed in /var/www/customer-site/.env:
-ARVAN_BUCKET=safhenokhost-backups
-ARVAN_ACCESS_KEY=1966c22b-8e9f-48be-8837-a13eaad42940
-ARVAN_SECRET_KEY=59f4ea7fca5a461fdb1cdac240b90f0529beac725b5cd792b4c6c5625edc239c
-ARVAN_REGION=ir-thr-at1
-ARVAN_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.ir
+   INFO  Configuration cache cleared successfully.
+   INFO  Configuration cached successfully.
 
-# config('site.platform_site_id') confirmed in config/site.php:
-'platform_site_id' => env('PLATFORM_SITE_ID') ? (int) env('PLATFORM_SITE_ID') : null,
+شروع پشتیبان‌گیری: backup_2026-06-25_12-13-03.sql.gz
+فایل ایجاد شد: 75.8 KB
+Integrity OK — 951 سطر.
+1 فایل قدیمی حذف شد.
+پشتیبان‌گیری با موفقیت انجام شد.
+Arvan offsite backup: آپلود به customer-sites/tenant-1/database/backup_2026-06-25_12-13-03.sql.gz (77582 bytes)
+
+# UPLOAD CONFIRMED — size: 77582 bytes
+# Tenant isolation: customer-sites/tenant-1/database/ ✓
+# config() used (not env()) — works with config:cache ✓
 ```
 
 ---
