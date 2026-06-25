@@ -7,6 +7,7 @@ use App\Models\InstallmentPayment;
 use App\Models\InstallmentPlan;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InstallmentService
 {
@@ -74,6 +75,25 @@ class InstallmentService
         }
 
         $order->markPaymentPaid($payment, $gateway, $ref);
+
+        // FINANCE_LEDGER: push installment payment event to platform ledger
+        try {
+            app(\App\Services\PlatformApiService::class)->pushLedgerEvent([
+                'event_type'     => 'installment_payment',
+                'amount'         => (int) $payment->amount,
+                'description'    => "قسط شماره {$payment->installment_number} از سفارش #{$order->id}",
+                'reference_type' => 'installment_payments',
+                'reference_id'   => $payment->id,
+                'gateway'        => $gateway,
+                'gateway_ref'    => $ref,
+                'invoice_number' => null,
+                'entry_date'     => now()->toDateString(),
+                'transaction_at' => now()->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('LedgerPush: installment_payment failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
+        }
+
         return true;
     }
 

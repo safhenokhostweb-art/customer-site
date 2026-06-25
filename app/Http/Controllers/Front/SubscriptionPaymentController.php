@@ -251,6 +251,24 @@ class SubscriptionPaymentController extends Controller
         // C02: پس از فعال‌سازی اشتراک، وضعیت lifecycle سایت را به active برگردان
         $this->triggerLifecycleReactivation();
 
+        // FINANCE_LEDGER: push subscription payment event to platform ledger
+        try {
+            app(\App\Services\PlatformApiService::class)->pushLedgerEvent([
+                'event_type'     => 'subscription_payment',
+                'amount'         => (int) $invoice->total_amount,
+                'description'    => "اشتراک «{$plan->name}»",
+                'reference_type' => 'invoices',
+                'reference_id'   => $invoice->id,
+                'gateway'        => config('payment.gateway', 'manual'),
+                'gateway_ref'    => $refId !== 'manual' ? $refId : null,
+                'invoice_number' => $invoice->invoice_number,
+                'entry_date'     => now()->toDateString(),
+                'transaction_at' => now()->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('LedgerPush: subscription_payment failed', ['invoice' => $invoice->invoice_number, 'error' => $e->getMessage()]);
+        }
+
         $successMsg = "اشتراک «{$plan->name}» با موفقیت فعال شد.";
         if ($refId && $refId !== 'manual') {
             $successMsg .= " شماره پیگیری: {$refId}";

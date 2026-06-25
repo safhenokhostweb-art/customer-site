@@ -175,6 +175,24 @@ class PlatformApiService
         }
     }
 
+    // ── Finance Ledger Push (CENTRAL_FINANCE_LEDGER_MODULE) ─────────────────
+
+    /**
+     * Push a payment event to the platform finance ledger.
+     * Fire-and-forget: failures are silently logged, never re-thrown.
+     */
+    public function pushLedgerEvent(array $data): void
+    {
+        try {
+            $this->tenantPost('/api/ledger/push-event', $data);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('LedgerPush: failed', [
+                'event_type' => $data['event_type'] ?? null,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+    }
+
     // ── HTTP helpers ─────────────────────────────────────────────────────────
 
     private function get(string $path, array $query = []): Response
