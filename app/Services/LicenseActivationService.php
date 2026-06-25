@@ -33,7 +33,18 @@ class LicenseActivationService
                 'license_id' => $license->id,
             ]);
 
+            // به‌روزرسانی last_validated_at حتی در خطای موقت تا EnsureLicenseValid
+            // تا رأس بعدی (revalidate_interval_minutes) منتظر بماند و هر request
+            // دوباره validate نکند (جلوگیری از retry storm).
+            try {
+                $license->update(['last_validated_at' => now()]);
+            } catch (\Throwable $e) {
+                // non-critical
+            }
+
             // P2-6: ثبت خطای موقت در cache تا banner در پنل ادمین قابل نمایش باشد.
+            // TTL = 2× revalidate interval تا در صورت بازیابی پلتفرم، banner سریع پاک شود.
+            $bannerTtlMinutes = max(10, (int) config('license.revalidate_interval_minutes', 5) * 2);
             try {
                 \Illuminate\Support\Facades\Cache::put(
                     self::transientErrorCacheKey($license->id),
@@ -43,7 +54,7 @@ class LicenseActivationService
                         'message' => $result['message'] ?? null,
                         'detected_at' => now()->toIso8601String(),
                     ],
-                    now()->addMinutes(30)
+                    now()->addMinutes($bannerTtlMinutes)
                 );
             } catch (\Throwable $e) {
                 // cache نباید validation را break کند
@@ -123,9 +134,13 @@ class LicenseActivationService
         $url = $baseUrl . '/api/license/validate';
         $domainNormalized = $this->normalizeDomain($domain);
         try {
-            $response = Http::timeout(10)
-                ->acceptJson()
-                ->post($url, [
+            $http = Http::timeout(15)->acceptJson();
+            // LICENSE_VERIFY_SSL=false برای پلتفرم‌هایی که از self-signed certificate استفاده می‌کنند.
+            // در محیط production با HTTPS داخلی یا HTTP، این مقدار false تنظیم می‌شود.
+            if (! filter_var(config('license.verify_ssl', true), FILTER_VALIDATE_BOOLEAN)) {
+                $http = $http->withoutVerifying();
+            }
+            $response = $http->post($url, [
                     'license_key' => $licenseKey,
                     'domain' => $domainNormalized,
                 ]);
