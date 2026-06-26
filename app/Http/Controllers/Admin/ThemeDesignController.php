@@ -638,9 +638,20 @@ class ThemeDesignController extends Controller
     /** ذخیره تنظیمات سفارشی رنگ / فونت سایت */
     public function update(Request $request): RedirectResponse
     {
+        $colorRule = 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/|max:32';
+
         $data = $request->validate([
-            'primary_color'       => 'nullable|string|max:32',
-            'secondary_color'     => 'nullable|string|max:32',
+            'primary_color'       => $colorRule,
+            'secondary_color'     => $colorRule,
+            'accent_color'        => $colorRule,
+            'background_color'    => $colorRule,
+            'surface_color'       => $colorRule,
+            'text_color'          => $colorRule,
+            'muted_color'         => $colorRule,
+            'border_color'        => $colorRule,
+            'link_color'          => $colorRule,
+            'header_bg'           => $colorRule,
+            'footer_bg'           => $colorRule,
             'font_family_heading' => 'nullable|string|max:128',
             'font_family_body'    => 'nullable|string|max:128',
             'base_font_size'      => 'nullable|string|max:24',
@@ -651,14 +662,19 @@ class ThemeDesignController extends Controller
         ]);
 
         $settings = ThemeSetting::firstOrNew(['site_id' => null]);
-        $settings->fill($data);
+        $settings->fill(array_filter($data, fn($v) => $v !== null));
         $settings->site_id = null;
         $settings->save();
+
+        // Ensure site_theme_preset_slug is set to 'custom' so TenantThemeResolver
+        // picks up these custom colors (not a named preset)
+        Setting::set('site_theme_preset_slug', 'custom', 'theme');
+        Setting::set('theme_preset_slug', '', 'theme');
 
         ThemeSetting::clearCache();
         $this->resolver->clearCache();
 
-        return back()->with('success', 'تنظیمات ظاهر ذخیره شد.');
+        return back()->with('success', 'تنظیمات سفارشی سایت ذخیره و اعمال شد.');
     }
 
     /** فعال‌سازی یکی از ۸ پریست Enterprise */

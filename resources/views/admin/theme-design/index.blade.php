@@ -189,7 +189,6 @@
                 @foreach($presets as $preset)
                 @php $isSiteActive = $activeSitePreset === $preset['slug']; @endphp
                 <div style="border-radius:0.875rem;border:2px solid {{ $isSiteActive ? $preset['accent'] : '#e5e7eb' }};overflow:hidden;box-shadow:{{ $isSiteActive ? '0 0 0 3px '.($preset['accent']).'33' : '0 1px 3px rgba(0,0,0,0.07)' }};transition:all .15s;">
-                    {{-- Site colors preview --}}
                     <div style="height:52px;background:linear-gradient(135deg,{{ $preset['primary'] }} 0%,{{ $preset['accent'] }} 100%);position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 10px;gap:5px;">
                         <span style="width:65%;height:5px;border-radius:3px;background:rgba(255,255,255,0.75);"></span>
                         <span style="width:45%;height:3px;border-radius:2px;background:rgba(255,255,255,0.45);"></span>
@@ -220,10 +219,48 @@
                     </div>
                 </div>
                 @endforeach
+
+                {{-- Custom preset card --}}
+                @php
+                    $isSiteCustom = (!$activeSitePreset || $activeSitePreset === 'custom');
+                    $customPrimary   = $settings->primary_color    ?? '#4f46e5';
+                    $customAccent    = $settings->accent_color     ?? '#7c3aed';
+                    $customBg        = $settings->background_color ?? '#f9fafb';
+                    $customHeaderBg  = $settings->header_bg        ?? '#1e293b';
+                @endphp
+                <div style="border-radius:0.875rem;border:2px solid {{ $isSiteCustom ? '#7c3aed' : '#e5e7eb' }};overflow:hidden;box-shadow:{{ $isSiteCustom ? '0 0 0 3px #7c3aed33' : '0 1px 3px rgba(0,0,0,0.07)' }};transition:all .15s;">
+                    <div style="height:52px;background:linear-gradient(135deg,{{ $customPrimary }} 0%,{{ $customAccent }} 100%);position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 10px;gap:5px;">
+                        <span style="width:65%;height:5px;border-radius:3px;background:rgba(255,255,255,0.75);"></span>
+                        <span style="width:45%;height:3px;border-radius:2px;background:rgba(255,255,255,0.45);"></span>
+                        @if($isSiteCustom)
+                        <div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.4);color:#fff;font-size:0.6rem;font-weight:700;padding:1px 7px;border-radius:99px;">فعال</div>
+                        @endif
+                        <div style="position:absolute;bottom:5px;left:8px;display:flex;gap:3px;">
+                            <span style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.9);"></span>
+                            <span style="width:22px;height:12px;border-radius:3px;background:rgba(255,255,255,0.4);"></span>
+                        </div>
+                    </div>
+                    <div style="padding:0.6rem 0.7rem 0.55rem;background:#fff;">
+                        <div style="font-weight:600;font-size:0.8rem;color:#111827;margin-bottom:0.15rem;">سفارشی</div>
+                        <div style="font-size:0.68rem;color:#6b7280;line-height:1.4;">رنگ‌های دلخواه شما</div>
+                    </div>
+                    <div style="padding:0 0.7rem 0.7rem;">
+                        @if(!$isSiteCustom)
+                        <form action="{{ route('admin.theme-design.reset-site-preset') }}" method="POST">
+                            @csrf
+                            <button type="submit" style="width:100%;padding:0.35rem 0;border-radius:0.5rem;border:none;background:#7c3aed;color:#fff;font-size:0.74rem;font-weight:600;cursor:pointer;">
+                                انتخاب
+                            </button>
+                        </form>
+                        @else
+                        <div style="width:100%;padding:0.35rem 0;border-radius:0.5rem;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.74rem;font-weight:600;text-align:center;">✓ انتخاب شده</div>
+                        @endif
+                    </div>
+                </div>
             </div>
 
-            {{-- Custom site settings --}}
-            <div x-data="{ open: {{ (!$activeSitePreset || $activeSitePreset === 'custom') ? 'true' : 'false' }} }">
+            {{-- Custom site settings (always visible when custom is active) --}}
+            <div x-data="{ open: {{ $isSiteCustom ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open"
                     style="display:flex;align-items:center;gap:0.5rem;font-size:0.83rem;font-weight:600;color:#7c3aed;background:none;border:none;cursor:pointer;padding:0;margin-bottom:0.75rem;">
                     <x-core-ui::icon name="settings" class="w-4 h-4" />
@@ -231,62 +268,123 @@
                     <x-core-ui::icon name="chevron-down" class="w-4 h-4" style="transition:transform .2s" x-bind:style="open ? 'transform:rotate(180deg)' : ''"/>
                 </button>
                 <div x-show="open" x-transition.duration.200ms>
-                    <form action="{{ route('admin.theme-design.update') }}" method="POST" style="max-width:560px;">
+                    <form action="{{ route('admin.theme-design.update') }}" method="POST">
                         @csrf
                         @method('PUT')
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+
+                        {{-- ─── رنگ‌های اصلی برند ─────────────────────── --}}
+                        <p style="font-size:0.78rem;font-weight:700;color:#374151;margin:0 0 0.625rem;text-transform:uppercase;letter-spacing:0.05em;">رنگ‌های اصلی برند</p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
+                            @php
+                            $siteColorFields = [
+                                'primary_color'    => ['label' => 'رنگ اصلی (Primary)',      'default' => $settings->primary_color    ?? '#4f46e5'],
+                                'secondary_color'  => ['label' => 'رنگ ثانویه (Secondary)',  'default' => $settings->secondary_color  ?? '#64748b'],
+                                'accent_color'     => ['label' => 'رنگ تاکیدی (Accent)',     'default' => $settings->accent_color     ?? '#7c3aed'],
+                                'link_color'       => ['label' => 'رنگ لینک‌ها',             'default' => $settings->link_color       ?? '#4f46e5'],
+                            ];
+                            @endphp
+                            @foreach($siteColorFields as $fname => $fconf)
+                            @php $fval = old($fname, $fconf['default']); @endphp
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">رنگ اصلی (Primary)</label>
+                                <label class="form-label" style="font-size:0.78rem;">{{ $fconf['label'] }}</label>
                                 <div style="display:flex;align-items:center;gap:0.5rem;">
-                                    <input type="color" value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" id="pc_primary"
-                                           oninput="document.getElementById('pt_primary').value=this.value"
+                                    <input type="color" value="{{ $fval }}" id="pc_{{ $fname }}"
+                                           oninput="document.getElementById('pt_{{ $fname }}').value=this.value"
                                            style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
-                                    <input type="text" name="primary_color" id="pt_primary"
-                                           value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" placeholder="#4f46e5"
-                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_primary').value=this.value"
+                                    <input type="text" name="{{ $fname }}" id="pt_{{ $fname }}"
+                                           value="{{ $fval }}" placeholder="{{ $fconf['default'] }}"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_{{ $fname }}').value=this.value"
                                            style="flex:1;font-family:monospace;font-size:0.82rem;">
                                 </div>
                             </div>
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">رنگ ثانویه (Secondary)</label>
-                                <div style="display:flex;align-items:center;gap:0.5rem;">
-                                    <input type="color" value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" id="pc_secondary"
-                                           oninput="document.getElementById('pt_secondary').value=this.value"
-                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
-                                    <input type="text" name="secondary_color" id="pt_secondary"
-                                           value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" placeholder="#64748b"
-                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_secondary').value=this.value"
-                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+
+                        {{-- ─── رنگ‌های پس‌زمینه و متن ──────────────────── --}}
+                        <p style="font-size:0.78rem;font-weight:700;color:#374151;margin:0 0 0.625rem;text-transform:uppercase;letter-spacing:0.05em;">پس‌زمینه و متن</p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
+                            @php
+                            $bgTextFields = [
+                                'background_color' => ['label' => 'پس‌زمینه صفحه',          'default' => $settings->background_color ?? '#f9fafb'],
+                                'surface_color'    => ['label' => 'پس‌زمینه کارت/پنل',      'default' => $settings->surface_color    ?? '#ffffff'],
+                                'text_color'       => ['label' => 'رنگ متن اصلی',           'default' => $settings->text_color       ?? '#111827'],
+                                'muted_color'      => ['label' => 'رنگ متن فرعی',           'default' => $settings->muted_color      ?? '#6b7280'],
+                                'border_color'     => ['label' => 'رنگ خطوط/حاشیه‌ها',      'default' => $settings->border_color     ?? '#e5e7eb'],
+                            ];
+                            @endphp
+                            @foreach($bgTextFields as $fname => $fconf)
+                            @php $fval = old($fname, $fconf['default']); @endphp
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">فونت عناوین</label>
+                                <label class="form-label" style="font-size:0.78rem;">{{ $fconf['label'] }}</label>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="color" value="{{ $fval }}" id="pc_{{ $fname }}"
+                                           oninput="document.getElementById('pt_{{ $fname }}').value=this.value"
+                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
+                                    <input type="text" name="{{ $fname }}" id="pt_{{ $fname }}"
+                                           value="{{ $fval }}" placeholder="{{ $fconf['default'] }}"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_{{ $fname }}').value=this.value"
+                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        {{-- ─── هدر و فوتر ────────────────────────────────── --}}
+                        <p style="font-size:0.78rem;font-weight:700;color:#374151;margin:0 0 0.625rem;text-transform:uppercase;letter-spacing:0.05em;">هدر و فوتر سایت</p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
+                            @php
+                            $layoutColorFields = [
+                                'header_bg' => ['label' => 'پس‌زمینه هدر سایت',  'default' => $settings->header_bg ?? '#1e293b'],
+                                'footer_bg' => ['label' => 'پس‌زمینه فوتر سایت', 'default' => $settings->footer_bg ?? '#1e293b'],
+                            ];
+                            @endphp
+                            @foreach($layoutColorFields as $fname => $fconf)
+                            @php $fval = old($fname, $fconf['default']); @endphp
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.78rem;">{{ $fconf['label'] }}</label>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="color" value="{{ $fval }}" id="pc_{{ $fname }}"
+                                           oninput="document.getElementById('pt_{{ $fname }}').value=this.value"
+                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
+                                    <input type="text" name="{{ $fname }}" id="pt_{{ $fname }}"
+                                           value="{{ $fval }}" placeholder="{{ $fconf['default'] }}"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_{{ $fname }}').value=this.value"
+                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        {{-- ─── تایپوگرافی ────────────────────────────────── --}}
+                        <p style="font-size:0.78rem;font-weight:700;color:#374151;margin:0 0 0.625rem;text-transform:uppercase;letter-spacing:0.05em;">تایپوگرافی</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.875rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.78rem;">فونت عناوین</label>
                                 <input type="text" name="font_family_heading" value="{{ old('font_family_heading', $settings->font_family_heading ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif" style="font-size:0.82rem;">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">فونت متن</label>
+                                <label class="form-label" style="font-size:0.78rem;">فونت متن</label>
                                 <input type="text" name="font_family_body" value="{{ old('font_family_body', $settings->font_family_body ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif" style="font-size:0.82rem;">
                             </div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+
+                        {{-- ─── ساختار ─────────────────────────────────────── --}}
+                        <p style="font-size:0.78rem;font-weight:700;color:#374151;margin:0 0 0.625rem;text-transform:uppercase;letter-spacing:0.05em;">ساختار</p>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:0.75rem;margin-bottom:0.875rem;">
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">اندازه پایه فونت</label>
+                                <label class="form-label" style="font-size:0.78rem;">اندازه پایه فونت</label>
                                 <input type="text" name="base_font_size" value="{{ old('base_font_size', $settings->base_font_size ?? '16px') }}" placeholder="16px" style="font-size:0.82rem;">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">عرض کانتینر</label>
+                                <label class="form-label" style="font-size:0.78rem;">عرض کانتینر</label>
                                 <input type="text" name="container_width" value="{{ old('container_width', $settings->container_width ?? '1200px') }}" placeholder="1200px" style="font-size:0.82rem;">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">گردی گوشه‌ها</label>
+                                <label class="form-label" style="font-size:0.78rem;">گردی گوشه‌ها</label>
                                 <input type="text" name="border_radius" value="{{ old('border_radius', $settings->border_radius ?? '8px') }}" placeholder="8px" style="font-size:0.82rem;">
                             </div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1rem;">
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">استایل دکمه</label>
+                                <label class="form-label" style="font-size:0.78rem;">استایل دکمه</label>
                                 <select name="button_style" style="font-size:0.82rem;">
                                     @foreach($buttonStyles as $value => $label)
                                     <option value="{{ $value }}" {{ old('button_style', $settings->button_style ?? 'solid') === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -294,7 +392,7 @@
                                 </select>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label" style="font-size:0.8rem;">فاصله سکشن‌ها</label>
+                                <label class="form-label" style="font-size:0.78rem;">فاصله سکشن‌ها</label>
                                 <select name="section_spacing" style="font-size:0.82rem;">
                                     @foreach(['xs'=>'خیلی کم','sm'=>'کم','md'=>'متوسط','lg'=>'زیاد','xl'=>'خیلی زیاد'] as $v => $l)
                                     <option value="{{ $v }}" {{ old('section_spacing', $settings->section_spacing ?? 'md') === $v ? 'selected' : '' }}>{{ $l }}</option>
@@ -302,9 +400,15 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="font-size:0.83rem;padding:0.45rem 1.25rem;">
-                            ذخیره تنظیمات سفارشی سایت
-                        </button>
+
+                        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                            <button type="submit" class="btn btn-primary" style="font-size:0.83rem;padding:0.45rem 1.25rem;">
+                                ذخیره تنظیمات سفارشی سایت
+                            </button>
+                            @if(!$isSiteCustom)
+                            <p style="font-size:0.78rem;color:#6b7280;margin:0;">ابتدا کارت «سفارشی» را انتخاب کنید تا تغییرات اعمال شود.</p>
+                            @endif
+                        </div>
                     </form>
                 </div>
             </div>

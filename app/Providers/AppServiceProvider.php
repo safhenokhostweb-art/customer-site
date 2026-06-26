@@ -94,6 +94,32 @@ $this->app->bind(
 
     public function boot(): void
     {
+        // ── PERSIAN LOCALIZATION GLOBAL STANDARD — Blade Directives ────────────
+        Blade::directive('numFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::num($expression); ?>";
+        });
+        Blade::directive('priceFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::currency($expression); ?>";
+        });
+        Blade::directive('dateFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::date($expression); ?>";
+        });
+        Blade::directive('dateFaLong', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::dateLong($expression); ?>";
+        });
+        Blade::directive('dateFaShort', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::dateShort($expression); ?>";
+        });
+        Blade::directive('datetimeFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::datetime($expression); ?>";
+        });
+        Blade::directive('agoFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::ago($expression); ?>";
+        });
+        Blade::directive('digitsFa', function ($expression) {
+            return "<?php echo \\App\\Services\\PersianFormatter::digits($expression); ?>";
+        });
+
         // Register local core-ui component path as a fallback for production
         // where saas-platform/core-utils package may not be installed.
         // On dev, the package's CoreUtilsServiceProvider registers first and its
