@@ -57,9 +57,9 @@
                         @foreach($invoice->items as $item)
                             <tr>
                                 <td>{{ $item->title }}</td>
-                                <td>{{ number_format($item->price) }} تومان</td>
+                                <td>@numFa($item->price) تومان</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td class="font-medium">{{ number_format($item->total) }} تومان</td>
+                                <td class="font-medium">@numFa($item->total) تومان</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -67,7 +67,7 @@
             </div>
             <div class="flex justify-between items-center pt-4 border-t border-slate-200">
                 <span class="font-semibold">جمع کل:</span>
-                <span class="text-xl font-bold text-indigo-600">{{ number_format($invoice->total) }} تومان</span>
+                <span class="text-xl font-bold text-indigo-600">@numFa($invoice->total) تومان</span>
             </div>
         </div>
     </div>

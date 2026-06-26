@@ -638,7 +638,24 @@ class ThemeDesignController extends Controller
     /** ذخیره تنظیمات سفارشی رنگ / فونت سایت */
     public function update(Request $request): RedirectResponse
     {
-        $colorRule = 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/|max:32';
+        // Normalize color values: trim whitespace, expand 3-digit hex (#FFF → #FFFFFF)
+        $colorFields = ['primary_color','secondary_color','accent_color','background_color',
+                        'surface_color','text_color','muted_color','border_color','link_color',
+                        'header_bg','footer_bg'];
+        $normalized = [];
+        foreach ($colorFields as $field) {
+            $val = trim((string) $request->input($field, ''));
+            if ($val === '') {
+                $normalized[$field] = null;
+            } elseif (preg_match('/^#([0-9A-Fa-f]{3})$/', $val, $m)) {
+                $normalized[$field] = '#'.$m[1][0].$m[1][0].$m[1][1].$m[1][1].$m[1][2].$m[1][2];
+            } else {
+                $normalized[$field] = $val;
+            }
+        }
+        $request->merge($normalized);
+
+        $colorRule = ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/', 'max:7'];
 
         $data = $request->validate([
             'primary_color'       => $colorRule,

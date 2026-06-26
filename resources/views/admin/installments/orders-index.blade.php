@@ -118,11 +118,11 @@
                             <div class="text-xs text-slate-400">{{ \App\Helpers\NumberHelper::formatFa($order->plan?->period_months ?? 0) }} ماهه</div>
                         </td>
                         <td class="text-sm font-semibold whitespace-nowrap">
-                            {{ \App\Helpers\NumberHelper::formatFa(number_format($order->total_amount)) }}
+                            @numFa($order->total_amount)
                             <small class="text-slate-400 font-normal">ت</small>
                         </td>
                         <td class="text-sm whitespace-nowrap">
-                            {{ \App\Helpers\NumberHelper::formatFa(number_format($order->monthly_installment)) }}
+                            @numFa($order->monthly_installment)
                             <small class="text-slate-400">ت</small>
                         </td>
                         <td style="min-width:120px">

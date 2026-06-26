@@ -64,7 +64,7 @@
             <span>• {{ $post->category->name }}</span>
         @endif
         <span>• حدود {{ $post->estimatedReadingMinutes() }} دقیقه مطالعه</span>
-        <span>• {{ number_format($post->view_count) }} بازدید</span>
+        <span>• @numFa($post->view_count) بازدید</span>
     </p>
     @if($post->tags->isNotEmpty())
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
@@ -110,7 +110,7 @@
     @endif
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
         <button type="button" id="blog-like-btn" data-url="{{ route('blog.like', $post->slug) }}" style="padding:0.4rem 0.85rem; border-radius:0.5rem; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-size:0.85rem;">
-            پسندیدم (<span id="blog-like-count">{{ number_format($post->likes_count) }}</span>)
+            پسندیدم (<span id="blog-like-count">{{ num_fa($post->likes_count) }}</span>)
         </button>
     </div>
 </article>

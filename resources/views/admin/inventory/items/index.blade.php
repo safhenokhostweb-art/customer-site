@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">موجودی کالاها</h1>
-            <p class="text-slate-500 text-sm">{{ number_format($items->total()) }} آیتم</p>
+            <p class="text-slate-500 text-sm">{{ num_fa($items->total()) }} آیتم</p>
         </div>
         <a href="{{ route('admin.inventory.index') }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition">
             ← داشبورد انبار

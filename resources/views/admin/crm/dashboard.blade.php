@@ -64,7 +64,7 @@
                 </div>
                 <span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">این ماه</span>
             </div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($wonValue) }}</div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($wonValue)</div>
             <div class="text-xs text-slate-500 mt-0.5">ارزش معاملات برنده (تومان)</div>
         </div>
     </div>
@@ -96,7 +96,7 @@
                 <span class="text-sm text-slate-700">{{ $label }}</span>
                 <div class="flex items-center gap-4">
                     <span class="text-sm font-medium text-slate-800">{{ $cnt }} معامله</span>
-                    <span class="text-xs text-slate-500">{{ number_format($val) }} ت</span>
+                    <span class="text-xs text-slate-500">{{ num_fa($val) }} ت</span>
                 </div>
             </div>
             @endforeach

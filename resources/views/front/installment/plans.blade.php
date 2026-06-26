@@ -8,7 +8,7 @@
         <h1 style="font-size:1.5rem;font-weight:800;color:#1e293b;margin:0 0 .5rem">انتخاب طرح اقساطی</h1>
         <p style="color:#64748b;font-size:.9rem">
             مبلغ قابل پرداخت:
-            <strong style="color:#6366f1">{{ \App\Helpers\NumberHelper::formatFa(number_format($amount)) }} تومان</strong>
+            <strong style="color:#6366f1">@numFa($amount) تومان</strong>
         </p>
     </div>
 
@@ -40,16 +40,16 @@
                 <dl style="display:grid;row-gap:.5rem;font-size:.875rem">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <dt style="color:#64748b">پیش‌پرداخت</dt>
-                        <dd style="font-weight:700;color:#1e293b">{{ \App\Helpers\NumberHelper::formatFa(number_format($calc['down_payment'])) }} تومان</dd>
+                        <dd style="font-weight:700;color:#1e293b">@numFa($calc['down_payment']) تومان</dd>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <dt style="color:#64748b">قسط ماهانه</dt>
-                        <dd style="font-weight:700;color:#6366f1">{{ \App\Helpers\NumberHelper::formatFa(number_format($calc['monthly_payment'])) }} تومان</dd>
+                        <dd style="font-weight:700;color:#6366f1">@numFa($calc['monthly_payment']) تومان</dd>
                     </div>
                     @if($calc['total_interest'] > 0)
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <dt style="color:#64748b">سود کل</dt>
-                        <dd style="font-weight:700;color:#c2410c">{{ \App\Helpers\NumberHelper::formatFa(number_format($calc['total_interest'])) }} تومان</dd>
+                        <dd style="font-weight:700;color:#c2410c">@numFa($calc['total_interest']) تومان</dd>
                     </div>
                     @else
                     <div style="padding:.375rem .625rem;background:#f0fdf4;border-radius:.5rem;text-align:center">
@@ -58,7 +58,7 @@
                     @endif
                     <div style="border-top:1px dashed #e2e8f0;padding-top:.5rem;display:flex;justify-content:space-between;align-items:center">
                         <dt style="color:#94a3b8;font-size:.8rem">جمع کل پرداختی</dt>
-                        <dd style="font-weight:800;color:#1e293b">{{ \App\Helpers\NumberHelper::formatFa(number_format($calc['total_payable'])) }} تومان</dd>
+                        <dd style="font-weight:800;color:#1e293b">@numFa($calc['total_payable']) تومان</dd>
                     </div>
                 </dl>
 

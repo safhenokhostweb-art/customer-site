@@ -49,7 +49,7 @@
                         @if($course->isFree())
                         <span style="background:#d1fae5; color:#065f46; font-weight:700; padding:.2rem .7rem; border-radius:999px; font-size:.75rem;">رایگان</span>
                         @else
-                        <span style="background:#fef3c7; color:#92400e; font-weight:700; padding:.2rem .7rem; border-radius:999px; font-size:.75rem;">{{ number_format($course->price) }} تومان</span>
+                        <span style="background:#fef3c7; color:#92400e; font-weight:700; padding:.2rem .7rem; border-radius:999px; font-size:.75rem;">@numFa($course->price) تومان</span>
                         @endif
                     </div>
                 </div>

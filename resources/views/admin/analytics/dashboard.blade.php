@@ -32,9 +32,9 @@
                 <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">+{{ number_format($kpis['new_users_month']) }} این ماه</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">+{{ num_fa($kpis['new_users_month']) }} این ماه</span>
             </div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($kpis['total_users']) }}</div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($kpis['total_users'])</div>
             <div class="text-xs text-slate-500 mt-0.5">کل کاربران</div>
         </div>
 
@@ -52,7 +52,7 @@
                     {{ $up ? '▲' : '▼' }} {{ abs($pct) }}%
                 </span>
             </div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($kpis['revenue_month']) }} <span class="text-sm font-normal text-slate-400">ت</span></div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($kpis['revenue_month']) <span class="text-sm font-normal text-slate-400">ت</span></div>
             <div class="text-xs text-slate-500 mt-0.5">درآمد این ماه</div>
         </div>
 
@@ -64,7 +64,7 @@
                 </div>
                 <span class="text-xs px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-medium">فعال</span>
             </div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($kpis['active_subscriptions']) }}</div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($kpis['active_subscriptions'])</div>
             <div class="text-xs text-slate-500 mt-0.5">اشتراک‌های فعال</div>
         </div>
 
@@ -74,9 +74,9 @@
                 <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </div>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">امروز: {{ number_format($kpis['page_views_today']) }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">امروز: {{ num_fa($kpis['page_views_today']) }}</span>
             </div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($kpis['page_views_month']) }}</div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($kpis['page_views_month'])</div>
             <div class="text-xs text-slate-500 mt-0.5">بازدید این ماه</div>
         </div>
     </div>
@@ -143,7 +143,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-bold text-slate-800">ثبت‌نام کاربران — ۳۰ روز</h3>
-                <span class="text-xs text-slate-400">{{ number_format($kpis['new_users_month']) }} کاربر این ماه</span>
+                <span class="text-xs text-slate-400">{{ num_fa($kpis['new_users_month']) }} کاربر این ماه</span>
             </div>
             <canvas id="usersChart" height="160"></canvas>
         </div>
@@ -170,7 +170,7 @@
                                 </div>
                             </div>
                             <div class="shrink-0 text-right">
-                                <div class="text-sm font-bold text-slate-800">{{ number_format($page['views']) }}</div>
+                                <div class="text-sm font-bold text-slate-800">@numFa($page['views'])</div>
                                 <div class="text-[10px] text-slate-400">{{ $page['sessions'] }} سشن</div>
                             </div>
                         </div>
@@ -224,9 +224,9 @@
                                 <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 shrink-0 mt-0.5">{{ $i+1 }}</div>
                                 <div class="flex-1 min-w-0">
                                     <div class="text-xs font-medium text-slate-700 truncate">{{ $p->title ?? ($p['title'] ?? '') }}</div>
-                                    <div class="text-[10px] text-slate-400">{{ number_format($p->qty ?? ($p['qty'] ?? 0)) }} فروش</div>
+                                    <div class="text-[10px] text-slate-400">{{ num_fa($p->qty ?? ($p['qty'] ?? 0)) }} فروش</div>
                                 </div>
-                                <div class="text-xs font-bold text-emerald-700 shrink-0">{{ number_format($p->revenue ?? ($p['revenue'] ?? 0)) }}ت</div>
+                                <div class="text-xs font-bold text-emerald-700 shrink-0">{{ num_fa($p->revenue ?? ($p['revenue'] ?? 0)) }}ت</div>
                             </div>
                         @endforeach
                     </div>

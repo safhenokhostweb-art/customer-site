@@ -4,7 +4,7 @@
 <main>
     <div class="main-inner">
         <h1>پرداخت فاکتور {{ $invoice->invoice_number }}</h1>
-        <p>مبلغ قابل پرداخت: <strong>{{ number_format($invoice->total) }} تومان</strong></p>
+        <p>مبلغ قابل پرداخت: <strong>@numFa($invoice->total) تومان</strong></p>
         <p>درگاه پرداخت اینجا یکپارچه می‌شود.</p>
     </div>
 </main>

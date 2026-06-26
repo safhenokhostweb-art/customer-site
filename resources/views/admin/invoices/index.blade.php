@@ -30,7 +30,7 @@
                     <tr>
                         <td><code class="px-2 py-1 bg-slate-100 rounded text-sm font-mono">{{ $i->invoice_number }}</code></td>
                         <td>{{ $i->customer_name }}</td>
-                        <td class="font-semibold">{{ number_format($i->total) }} تومان</td>
+                        <td class="font-semibold">@numFa($i->total) تومان</td>
                         <td>
                             @if($i->status === 'paid')
                                 <span class="badge badge-success">پرداخت شده</span>

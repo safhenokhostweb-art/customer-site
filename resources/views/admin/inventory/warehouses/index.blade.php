@@ -51,7 +51,7 @@
             <p class="text-xs text-slate-500 mb-3">مسئول: {{ $wh->manager_name }}{{ $wh->manager_mobile ? ' (' . $wh->manager_mobile . ')' : '' }}</p>
             @endif
             <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                <span class="text-sm font-semibold text-slate-700">{{ number_format($wh->inventory_items_count) }} آیتم</span>
+                <span class="text-sm font-semibold text-slate-700">@numFa($wh->inventory_items_count) آیتم</span>
                 <a href="{{ route('admin.inventory.items.index', ['warehouse_id' => $wh->id]) }}" class="text-xs text-indigo-500 hover:underline">مشاهده موجودی ←</a>
             </div>
         </div>

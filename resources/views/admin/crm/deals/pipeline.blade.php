@@ -58,7 +58,7 @@
                     <span class="text-xs bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full font-medium">{{ $deals->count() }}</span>
                 </div>
                 @if($total > 0)
-                <span class="text-xs text-slate-500">{{ number_format($total) }} ت</span>
+                <span class="text-xs text-slate-500">{{ num_fa($total) }} ت</span>
                 @endif
             </div>
 
@@ -74,7 +74,7 @@
                     <p class="text-xs text-slate-500 mb-2">{{ $deal->contact->name }}</p>
                     @endif
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-{{ $color }}-700">{{ number_format($deal->value) }} ت</span>
+                        <span class="text-xs font-semibold text-{{ $color }}-700">{{ num_fa($deal->value) }} ت</span>
                         @if($deal->expected_close_date)
                         <span class="text-xs text-slate-400">{{ \App\Helpers\Jalali::formatFa($deal->expected_close_date, 'Y/m/d') }}</span>
                         @endif

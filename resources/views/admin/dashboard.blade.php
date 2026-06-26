@@ -431,23 +431,23 @@ function dismissModuleUpdatesBanner() {
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
     <a href="{{ route('admin.pages.index') }}" class="cd-kpi">
         <span class="cd-kpi__label">📄 صفحات</span>
-        <span class="cd-kpi__value">{{ number_format($stats['pages']) }}</span>
+        <span class="cd-kpi__value">@numFa($stats['pages'])</span>
         <span class="cd-kpi__meta">صفحات ثابت</span>
     </a>
     <a href="{{ route('admin.posts.index') }}" class="cd-kpi">
         <span class="cd-kpi__label">✍️ مطالب</span>
-        <span class="cd-kpi__value">{{ number_format($stats['posts']) }}</span>
+        <span class="cd-kpi__value">@numFa($stats['posts'])</span>
         <span class="cd-kpi__meta">وبلاگ</span>
     </a>
     @if(\App\Helpers\SiteHelper::shopEnabled())
     <a href="{{ route('admin.products.index') }}" class="cd-kpi">
         <span class="cd-kpi__label">📦 محصولات</span>
-        <span class="cd-kpi__value">{{ number_format($stats['products']) }}</span>
+        <span class="cd-kpi__value">@numFa($stats['products'])</span>
         <span class="cd-kpi__meta">فروشگاه</span>
     </a>
     <a href="{{ route('admin.orders.index') }}" class="cd-kpi">
         <span class="cd-kpi__label">🛒 سفارشات</span>
-        <span class="cd-kpi__value">{{ number_format($stats['orders']) }}</span>
+        <span class="cd-kpi__value">@numFa($stats['orders'])</span>
         <span class="cd-kpi__meta">پیگیری</span>
     </a>
     @else
@@ -559,7 +559,7 @@ function dismissModuleUpdatesBanner() {
                 <tr>
                     <td class="font-semibold text-gray-700">{{ $order->number }}</td>
                     <td class="text-gray-600">{{ $order->customer_name }}</td>
-                    <td class="font-medium text-gray-800">{{ number_format($order->total) }} ت</td>
+                    <td class="font-medium text-gray-800">@numFa($order->total) ت</td>
                     <td><span class="cd-badge cd-badge-blue">{{ $order->status }}</span></td>
                     <td><a href="{{ route('admin.orders.show', $order) }}" class="text-xs font-semibold text-indigo-600 hover:underline">مشاهده</a></td>
                 </tr>

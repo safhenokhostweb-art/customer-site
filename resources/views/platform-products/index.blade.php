@@ -41,7 +41,7 @@
                                     @endif
                                     <div class="flex items-center justify-between flex-wrap gap-2">
                                         <span class="text-xl font-bold text-indigo-600">
-                                            {{ number_format($product['price_irr'] ?? 0) }} <span class="text-sm font-normal text-gray-500">ریال</span>
+                                            @numFa($product['price_irr'] ?? 0) <span class="text-sm font-normal text-gray-500">ریال</span>
                                         </span>
                                         <a href="{{ $storeUrl }}?add={{ $product['id'] }}"
                                            class="inline-flex items-center gap-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium"

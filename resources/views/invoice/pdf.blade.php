@@ -283,8 +283,8 @@
                 <tr>
                     <td>{{ $item->title }}</td>
                     <td style="text-align:center;">{{ $item->quantity }}</td>
-                    <td style="text-align:left; direction:ltr;">{{ number_format($item->price) }}</td>
-                    <td style="text-align:left; direction:ltr;">{{ number_format($item->total) }}</td>
+                    <td style="text-align:left; direction:ltr;">@numFa($item->price)</td>
+                    <td style="text-align:left; direction:ltr;">@numFa($item->total)</td>
                 </tr>
             @endforeach
         </tbody>
@@ -295,16 +295,16 @@
         @if($invoice->subtotal && $invoice->discount && $invoice->discount > 0)
             <div class="total-row">
                 <div class="total-row-label">جمع جزء</div>
-                <div class="total-row-value">{{ number_format($invoice->subtotal) }} تومان</div>
+                <div class="total-row-value">@numFa($invoice->subtotal) تومان</div>
             </div>
             <div class="total-row">
                 <div class="total-row-label">تخفیف</div>
-                <div class="total-row-value" style="color: #16a34a;">- {{ number_format($invoice->discount) }} تومان</div>
+                <div class="total-row-value" style="color: #16a34a;">- @numFa($invoice->discount) تومان</div>
             </div>
         @endif
         <div class="total-row grand">
             <div class="total-row-label">مبلغ قابل پرداخت</div>
-            <div class="total-row-value">{{ number_format($invoice->total) }} تومان</div>
+            <div class="total-row-value">@numFa($invoice->total) تومان</div>
         </div>
     </div>
 

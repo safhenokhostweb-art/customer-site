@@ -45,7 +45,7 @@ class TenantThemeResolver
         Cache::forget(PlatformUxService::CACHE_KEY);
     }
 
-    /** Render <style> block for injection into <head> */
+    /** Render <style> block for injection into <head> (site + dashboard tokens) */
     public function renderCssBlock(?int $siteId = null): string
     {
         $vars = $this->resolveTokens($siteId);
@@ -58,6 +58,21 @@ class TenantThemeResolver
         }
         $body = implode("\n", $lines);
         return "<style id=\"theme-engine-tokens\" data-source=\"tenant-theme-resolver\">\n:root {\n{$body}\n}\n</style>";
+    }
+
+    /** Render <style> block with ONLY dashboard tokens (--admin-sidebar-*) for admin layout */
+    public function renderDashboardCssBlock(?int $siteId = null): string
+    {
+        $allVars = $this->resolveTokens($siteId);
+        $vars = array_filter($allVars, fn($k) => str_starts_with($k, '--admin-sidebar-'), ARRAY_FILTER_USE_KEY);
+        if (empty($vars)) {
+            return '';
+        }
+        $lines = [];
+        foreach ($vars as $key => $value) {
+            $lines[] = "  {$key}: {$value};";
+        }
+        return "<style id=\"dashboard-theme-tokens\" data-source=\"tenant-theme-resolver\">\n:root {\n" . implode("\n", $lines) . "\n}\n</style>";
     }
 
     // ── Site tokens (UI / DS / TB) ────────────────────────────────────────────

@@ -66,19 +66,19 @@
             <dl style="display:grid;row-gap:.625rem">
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:.5rem">
                     <dt class="text-xs text-slate-400">مبلغ کل</dt>
-                    <dd class="text-sm font-semibold text-slate-800">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->total_amount)) }} تومان</dd>
+                    <dd class="text-sm font-semibold text-slate-800">@numFa($order->total_amount) تومان</dd>
                 </div>
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:.5rem">
                     <dt class="text-xs text-slate-400">پیش‌پرداخت</dt>
-                    <dd class="text-sm text-slate-700">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->down_payment)) }} تومان</dd>
+                    <dd class="text-sm text-slate-700">@numFa($order->down_payment) تومان</dd>
                 </div>
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:.5rem">
                     <dt class="text-xs text-slate-400">قسط ماهانه</dt>
-                    <dd class="text-sm font-semibold text-indigo-600">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->monthly_installment)) }} تومان</dd>
+                    <dd class="text-sm font-semibold text-indigo-600">@numFa($order->monthly_installment) تومان</dd>
                 </div>
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:.5rem">
                     <dt class="text-xs text-slate-400">پرداخت‌شده</dt>
-                    <dd class="text-sm font-semibold text-green-600">{{ \App\Helpers\NumberHelper::formatFa(number_format($totalPaid)) }} تومان</dd>
+                    <dd class="text-sm font-semibold text-green-600">@numFa($totalPaid) تومان</dd>
                 </div>
                 <div style="display:grid;grid-template-columns:120px 1fr;gap:.5rem">
                     <dt class="text-xs text-slate-400">تاریخ شروع</dt>
@@ -131,7 +131,7 @@
                     <tr style="{{ $p->status==='overdue'?'background:#fff1f2':'' }}">
                         <td class="text-center font-bold text-indigo-600">{{ \App\Helpers\NumberHelper::formatFa($p->installment_number) }}</td>
                         <td class="text-sm whitespace-nowrap">{{ \App\Helpers\Jalali::formatFa($p->due_date, 'Y/m/d') }}</td>
-                        <td class="text-sm font-semibold whitespace-nowrap">{{ \App\Helpers\NumberHelper::formatFa(number_format($p->amount)) }} <small class="text-slate-400 font-normal">ت</small></td>
+                        <td class="text-sm font-semibold whitespace-nowrap">@numFa($p->amount) <small class="text-slate-400 font-normal">ت</small></td>
                         <td><span class="badge {{ $pmCls[$p->status] ?? 'badge-secondary' }}">{{ $pmTxt[$p->status] ?? $p->status }}</span></td>
                         <td class="text-sm text-slate-500 whitespace-nowrap">{{ $p->paid_at ? \App\Helpers\Jalali::formatFa($p->paid_at, 'Y/m/d') : '—' }}</td>
                         <td class="text-xs text-slate-400 dir-ltr">{{ $p->gateway_ref ?? '—' }}</td>

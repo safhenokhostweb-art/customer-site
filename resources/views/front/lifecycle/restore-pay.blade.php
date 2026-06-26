@@ -67,7 +67,7 @@
     <div class="amount-box">
         <div class="amount-label">مبلغ قابل پرداخت</div>
         <div class="amount-value">
-            {{ number_format($amount) }}
+            @numFa($amount)
             <span class="amount-unit">تومان</span>
         </div>
     </div>
@@ -77,7 +77,7 @@
         @foreach($restoreData['line_items'] as $item)
         <li>
             <span>{{ $item['label'] }}</span>
-            <span>{{ number_format($item['amount']) }} تومان</span>
+            <span>@numFa($item['amount']) تومان</span>
         </li>
         @endforeach
     </ul>

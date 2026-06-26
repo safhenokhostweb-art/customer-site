@@ -85,7 +85,7 @@
                 @else
                     <span class="course-badge badge-paid">
                         <x-core-ui::icon name="price-tag" class="w-2.5 h-2.5" />
-                        {{ number_format($course->price) }} تومان
+                        @numFa($course->price) تومان
                     </span>
                 @endif
 

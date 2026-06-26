@@ -42,8 +42,8 @@
                         <tr style="border-top:1px solid #f1f5f9;">
                             <td style="padding:0.75rem 1rem;color:#334155;">{{ $item->title }}</td>
                             <td style="padding:0.75rem 1rem;text-align:center;color:#334155;">{{ $item->quantity }}</td>
-                            <td style="padding:0.75rem 1rem;text-align:left;direction:ltr;color:#334155;">{{ number_format($item->price) }}</td>
-                            <td style="padding:0.75rem 1rem;text-align:left;direction:ltr;font-weight:600;color:#1e293b;">{{ number_format($item->total) }}</td>
+                            <td style="padding:0.75rem 1rem;text-align:left;direction:ltr;color:#334155;">@numFa($item->price)</td>
+                            <td style="padding:0.75rem 1rem;text-align:left;direction:ltr;font-weight:600;color:#1e293b;">@numFa($item->total)</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -51,12 +51,12 @@
                         @if($invoice->discount && $invoice->discount > 0)
                         <tr style="border-top:1px solid #e2e8f0;background:#f8fafc;">
                             <td colspan="3" style="padding:0.6rem 1rem;text-align:left;font-size:0.875rem;color:#64748b;">تخفیف</td>
-                            <td style="padding:0.6rem 1rem;text-align:left;direction:ltr;color:#16a34a;font-weight:600;">- {{ number_format($invoice->discount) }}</td>
+                            <td style="padding:0.6rem 1rem;text-align:left;direction:ltr;color:#16a34a;font-weight:600;">- @numFa($invoice->discount)</td>
                         </tr>
                         @endif
                         <tr style="border-top:2px solid #e2e8f0;background:#ede9fe;">
                             <td colspan="3" style="padding:0.85rem 1rem;text-align:left;font-weight:700;color:#1e293b;">جمع کل</td>
-                            <td style="padding:0.85rem 1rem;text-align:left;direction:ltr;font-weight:800;color:#4f46e5;font-size:1.05rem;">{{ number_format($invoice->total) }} تومان</td>
+                            <td style="padding:0.85rem 1rem;text-align:left;direction:ltr;font-weight:800;color:#4f46e5;font-size:1.05rem;">@numFa($invoice->total) تومان</td>
                         </tr>
                     </tfoot>
                 </table>

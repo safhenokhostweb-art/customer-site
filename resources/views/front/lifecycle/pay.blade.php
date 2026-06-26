@@ -70,19 +70,19 @@
 
         <div class="amount-box">
             <div class="amount-label">مبلغ قابل پرداخت</div>
-            <div class="amount-value">{{ number_format($fee) }} <span class="amount-unit">تومان</span></div>
+            <div class="amount-value">@numFa($fee) <span class="amount-unit">تومان</span></div>
         </div>
 
         @if(!empty($breakdown))
         <ul class="breakdown">
             @if($breakdown['reactivation'] > 0)
-                <li><span>هزینه فعال‌سازی مجدد</span><span>{{ number_format($breakdown['reactivation']) }} تومان</span></li>
+                <li><span>هزینه فعال‌سازی مجدد</span><span>@numFa($breakdown['reactivation']) تومان</span></li>
             @endif
             @if($breakdown['restore'] > 0)
-                <li><span>هزینه بازگردانی آرشیو</span><span>{{ number_format($breakdown['restore']) }} تومان</span></li>
+                <li><span>هزینه بازگردانی آرشیو</span><span>@numFa($breakdown['restore']) تومان</span></li>
             @endif
             @if($breakdown['storage'] > 0)
-                <li><span>هزینه نگهداری</span><span>{{ number_format($breakdown['storage']) }} تومان</span></li>
+                <li><span>هزینه نگهداری</span><span>@numFa($breakdown['storage']) تومان</span></li>
             @endif
         </ul>
         @endif
