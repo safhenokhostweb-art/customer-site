@@ -396,6 +396,8 @@ Route::middleware('install.check')->group(function () {
             // Two-track theme: site vs dashboard
             Route::post('theme-design/site-preset',          [ThemeDesignController::class, 'activateSitePreset'])->name('theme-design.site-preset');
             Route::post('theme-design/reset-site-preset',    [ThemeDesignController::class, 'resetSitePreset'])->name('theme-design.reset-site-preset');
+            Route::post('theme-design/reset-site-preset-to/{slug}', [ThemeDesignController::class, 'resetSitePresetToDefault'])->name('theme-design.reset-site-preset-to');
+            Route::post('theme-design/reset-custom-colors',  [ThemeDesignController::class, 'resetCustomColors'])->name('theme-design.reset-custom-colors');
             Route::post('theme-design/dashboard-preset',     [ThemeDesignController::class, 'activateDashboardPreset'])->name('theme-design.dashboard-preset');
             Route::put('theme-design/dashboard-custom',      [ThemeDesignController::class, 'updateDashboardCustom'])->name('theme-design.dashboard-custom');
             Route::get('theme-design/canvas',              [ThemeDesignController::class, 'canvasTheme'])->name('theme-design.canvas');

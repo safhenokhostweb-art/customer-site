@@ -59,22 +59,36 @@ if (Test-Path $hotFile) {
     Write-Host "     Removed public/hot before archive" -ForegroundColor DarkGray
 }
 
-# Stage to temp dir — robocopy excludes locked vendor assets (tinymce) which never change between deploys
-$STAGING = "$env:TEMP\deploy_customer_stage_$(Get-Date -Format 'yyyyMMddHHmmss')"
-Write-Host "     Staging files..." -ForegroundColor DarkGray
-robocopy $DIR $STAGING /E /R:0 /W:0 /XD ".git" "node_modules" "tests" "storage" /XF ".env" ".env.local" ".env.testing" /NFL /NDL /NJH /NJS /NC /NS /NP | Out-Null
+# Archive application files only — vendor stays on server (server syncs local packages via deploy.sh)
+# Excludes: .git, node_modules, tests, storage, vendor, public/vendor (all static/server-managed)
+$appDirs = @('app','bootstrap','config','database','resources','routes','public','lang','packages') |
+    Where-Object { Test-Path (Join-Path $DIR $_) } |
+    ForEach-Object { Join-Path $DIR $_ }
 
-# Remove local cache files from staging to avoid overwriting server's runtime cache
-$localCache = @('bootstrap\cache\config.php', 'bootstrap\cache\routes-v7.php', 'bootstrap\cache\events.php', 'bootstrap\cache\services.php')
+# Exclude public/vendor (static JS/CSS vendor assets already on server)
+$pubVendorPath = Join-Path $DIR 'public\vendor'
+if (Test-Path $pubVendorPath) {
+    # Archive public sub-items except vendor
+    $publicSubItems = Get-ChildItem -Path (Join-Path $DIR 'public') |
+        Where-Object { $_.Name -ne 'vendor' } |
+        ForEach-Object { $_.FullName }
+    $appDirs = @($appDirs | Where-Object { $_ -notmatch '\\public$' }) + $publicSubItems
+}
+
+$rootFiles = Get-ChildItem -Path $DIR -File |
+    Where-Object { $_.Name -notin @('.env','.env.local','.env.testing') } |
+    ForEach-Object { $_.FullName }
+
+# Remove local bootstrap cache files so server cache is not overwritten
+$localCache = @('bootstrap\cache\config.php','bootstrap\cache\routes-v7.php','bootstrap\cache\events.php','bootstrap\cache\services.php')
 foreach ($cf in $localCache) {
-    $cfPath = Join-Path $STAGING $cf
+    $cfPath = Join-Path $DIR $cf
     if (Test-Path $cfPath) { Remove-Item $cfPath -Force }
 }
 
 if (Test-Path $ZIPFILE) { Remove-Item $ZIPFILE }
-$stageItems = Get-ChildItem -Path $STAGING | ForEach-Object { $_.FullName }
-Compress-Archive -Path $stageItems -DestinationPath $ZIPFILE -Force
-Remove-Item $STAGING -Recurse -Force -ErrorAction SilentlyContinue
+$archiveItems = ($appDirs + $rootFiles) | Where-Object { $_ }
+Compress-Archive -Path $archiveItems -DestinationPath $ZIPFILE -Force
 
 Write-Host "     Archive: $ZIPFILE ($('{0:N1}' -f ((Get-Item $ZIPFILE).Length / 1MB)) MB)" -ForegroundColor Green
 

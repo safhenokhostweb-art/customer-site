@@ -589,13 +589,48 @@ class ThemeDesignController extends Controller
         return back()->with('success', 'تم سایت «' . $this->presetName($slug) . '» فعال شد.');
     }
 
-    /** بازنشانی پریست تم سایت به حالت سفارشی */
+    /** بازنشانی پریست تم سایت به حالت سفارشی (رنگ‌های پریست فعلی را به ThemeSetting منتقل می‌کند) */
     public function resetSitePreset(): RedirectResponse
     {
+        $currentSlug = Setting::get('site_theme_preset_slug') ?? Setting::get('theme_preset_slug');
+
+        // If a named preset is currently active, seed ThemeSetting with its colors
+        if ($currentSlug && $currentSlug !== 'custom') {
+            $presetDef = $this->presetList();
+            $found     = collect($presetDef)->firstWhere('slug', $currentSlug);
+            if ($found) {
+                $ts = ThemeSetting::firstOrNew(['site_id' => null]);
+                if (!$ts->exists || !$ts->primary_color || $ts->primary_color === '#FFF') {
+                    $ts->primary_color   = $found['primary'];
+                    $ts->accent_color    = $found['accent'];
+                    $ts->header_bg       = $found['sidebar'];
+                    $ts->footer_bg       = $found['sidebar'];
+                    $ts->site_id         = null;
+                    $ts->save();
+                    ThemeSetting::clearCache();
+                }
+            }
+        }
+
         Setting::set('site_theme_preset_slug', 'custom', 'theme');
         Setting::set('theme_preset_slug', '', 'theme');
         $this->resolver->clearCache();
-        return back()->with('success', 'تم سایت به حالت سفارشی تغییر یافت.');
+        return back()->with('success', 'تم سایت به حالت سفارشی تغییر یافت. رنگ‌های پریست قبلی آماده ویرایش هستند.');
+    }
+
+    /** بازنشانی رنگ‌های سفارشی به مقادیر پیش‌فرض سیستم */
+    public function resetCustomColors(): RedirectResponse
+    {
+        $defaults = ThemeSetting::defaults();
+        $ts = ThemeSetting::firstOrNew(['site_id' => null]);
+        $ts->fill($defaults);
+        $ts->site_id = null;
+        $ts->save();
+
+        ThemeSetting::clearCache();
+        $this->resolver->clearCache();
+
+        return back()->with('success', 'رنگ‌های سفارشی به مقادیر پیش‌فرض بازنشانی شدند.');
     }
 
     /** فعال‌سازی پریست داشبورد */
@@ -770,6 +805,7 @@ class ThemeDesignController extends Controller
     private function presetList(): array
     {
         return [
+            // ── 8 پریست اولیه ─────────────────────────────────────────────
             ['slug' => 'enterprise-blue',  'name' => 'Enterprise Blue',  'primary' => '#3b82f6', 'accent' => '#4f46e5', 'sidebar' => '#1e293b', 'sidebar_end' => '#0f172a', 'desc' => 'آبی کلاسیک شرکتی — پیش‌فرض'],
             ['slug' => 'modern-indigo',    'name' => 'Modern Indigo',    'primary' => '#6366f1', 'accent' => '#6366f1', 'sidebar' => '#312e81', 'sidebar_end' => '#1e1b4b', 'desc' => 'ایندیگو مدرن و جسورانه'],
             ['slug' => 'emerald-pro',      'name' => 'Emerald Pro',      'primary' => '#22c55e', 'accent' => '#059669', 'sidebar' => '#065f46', 'sidebar_end' => '#022c22', 'desc' => 'سبز زمردی برای فین‌تک و سلامت'],
@@ -778,6 +814,19 @@ class ThemeDesignController extends Controller
             ['slug' => 'graphite',         'name' => 'Graphite',         'primary' => '#6b7280', 'accent' => '#374151', 'sidebar' => '#1f2937', 'sidebar_end' => '#111827', 'desc' => 'خاکستری خنثی و زمان‌پایدار'],
             ['slug' => 'ocean-teal',       'name' => 'Ocean Teal',       'primary' => '#14b8a6', 'accent' => '#0d9488', 'sidebar' => '#134e4a', 'sidebar_end' => '#042f2e', 'desc' => 'فیروزه‌ای برای بهداشت و بهره‌وری'],
             ['slug' => 'executive-gold',   'name' => 'Executive Gold',   'primary' => '#f59e0b', 'accent' => '#b45309', 'sidebar' => '#292524', 'sidebar_end' => '#1c1917', 'desc' => 'طلایی گرم برای داشبوردهای اجرایی'],
+            // ── 12 پریست جدید ──────────────────────────────────────────────
+            ['slug' => 'coral-sunset',     'name' => 'Coral Sunset',     'primary' => '#f97316', 'accent' => '#ea580c', 'sidebar' => '#7c2d12', 'sidebar_end' => '#431407', 'desc' => 'نارنجی مرجانی — انرژی و خلاقیت'],
+            ['slug' => 'cherry-blossom',   'name' => 'Cherry Blossom',   'primary' => '#ec4899', 'accent' => '#db2777', 'sidebar' => '#831843', 'sidebar_end' => '#500724', 'desc' => 'صورتی شکوفه برای فشن و زیبایی'],
+            ['slug' => 'forest-green',     'name' => 'Forest Green',     'primary' => '#16a34a', 'accent' => '#15803d', 'sidebar' => '#14532d', 'sidebar_end' => '#052e16', 'desc' => 'سبز جنگلی برای محیط‌زیست و کشاورزی'],
+            ['slug' => 'arctic-blue',      'name' => 'Arctic Blue',      'primary' => '#38bdf8', 'accent' => '#0284c7', 'sidebar' => '#0c4a6e', 'sidebar_end' => '#082f49', 'desc' => 'آبی قطبی — خنک، شفاف، فناوری'],
+            ['slug' => 'lavender-dream',   'name' => 'Lavender Dream',   'primary' => '#8b5cf6', 'accent' => '#7c3aed', 'sidebar' => '#4c1d95', 'sidebar_end' => '#2e1065', 'desc' => 'اسطوخودوس آرام‌بخش برای آموزش و رفاه'],
+            ['slug' => 'ruby-red',         'name' => 'Ruby Red',         'primary' => '#dc2626', 'accent' => '#b91c1c', 'sidebar' => '#7f1d1d', 'sidebar_end' => '#450a0a', 'desc' => 'قرمز یاقوتی برای برندهای جسور'],
+            ['slug' => 'sage-green',       'name' => 'Sage Green',       'primary' => '#65a30d', 'accent' => '#4d7c0f', 'sidebar' => '#365314', 'sidebar_end' => '#1a2e05', 'desc' => 'سبز مریم‌گلی — طبیعی و آرام'],
+            ['slug' => 'terracotta',       'name' => 'Terracotta',       'primary' => '#c2410c', 'accent' => '#9a3412', 'sidebar' => '#7c2d12', 'sidebar_end' => '#431407', 'desc' => 'سفال قرمز — گرم، زمینی، هنری'],
+            ['slug' => 'rose-gold',        'name' => 'Rose Gold',        'primary' => '#e11d48', 'accent' => '#be123c', 'sidebar' => '#881337', 'sidebar_end' => '#4c0519', 'desc' => 'رز طلایی برای لوکس و ویژه'],
+            ['slug' => 'deep-space',       'name' => 'Deep Space',       'primary' => '#4338ca', 'accent' => '#3730a3', 'sidebar' => '#1e1b4b', 'sidebar_end' => '#0d0b2c', 'desc' => 'فضای عمیق — رمزآلود و فناورانه'],
+            ['slug' => 'amber-glow',       'name' => 'Amber Glow',       'primary' => '#d97706', 'accent' => '#b45309', 'sidebar' => '#78350f', 'sidebar_end' => '#451a03', 'desc' => 'کهربایی درخشان برای فروشگاه و رستوران'],
+            ['slug' => 'steel-blue',       'name' => 'Steel Blue',       'primary' => '#2563eb', 'accent' => '#1d4ed8', 'sidebar' => '#1e3a5f', 'sidebar_end' => '#0f2035', 'desc' => 'آبی فولادی — اعتماد و حرفه‌ای بودن'],
         ];
     }
 
