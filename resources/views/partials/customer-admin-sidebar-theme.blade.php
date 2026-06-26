@@ -1,17 +1,4 @@
-@php
-    $sb = \App\Helpers\AdminSidebarTheme::all();
-@endphp
 <style id="customer-admin-sidebar-theme">
-:root {
-    --admin-sidebar-bg1: {{ $sb['admin_sidebar_bg1'] }};
-    --admin-sidebar-bg2: {{ $sb['admin_sidebar_bg2'] }};
-    --admin-sidebar-text: {{ $sb['admin_sidebar_text'] }};
-    --admin-sidebar-muted: {{ $sb['admin_sidebar_muted'] }};
-    --admin-sidebar-accent: {{ $sb['admin_sidebar_accent'] }};
-    --admin-sidebar-border: {{ $sb['admin_sidebar_border'] }};
-    --admin-sidebar-hover: color-mix(in srgb, {{ $sb['admin_sidebar_accent'] }} 20%, transparent);
-    --admin-sidebar-active: color-mix(in srgb, {{ $sb['admin_sidebar_accent'] }} 32%, transparent);
-}
 #admin-sidebar {
     box-shadow: -4px 0 24px color-mix(in srgb, var(--admin-sidebar-bg2) 50%, transparent) !important;
     border-left-color: color-mix(in srgb, var(--admin-sidebar-border) 55%, transparent) !important;
@@ -252,5 +239,55 @@
 }
 #admin-sidebar .sidebar-group-toggle[aria-expanded="true"] .sidebar-group-icon {
     opacity: 1;
+}
+
+/* margin اضافه روی آیکن آیتم‌ها حذف می‌شود (gap در flexbox کافی است) */
+#admin-sidebar .sidebar-link > svg.inline-block,
+#admin-sidebar .sidebar-link > .inline-block.shrink-0 {
+    margin: 0 !important;
+}
+
+/* ══════════════════════════════════════
+   حالت جمع‌شده (collapsed sidebar)
+   ══════════════════════════════════════ */
+
+/* گروه toggle در حالت collapse: فقط آیکن، مرکزچین */
+#admin-sidebar[data-collapsed="true"] .sidebar-group-toggle {
+    justify-content: center !important;
+    padding: 0.45rem !important;
+    border-right: none !important;
+    background: transparent !important;
+    border-radius: 0.5rem !important;
+    margin: 0.15rem 0 !important;
+}
+#admin-sidebar[data-collapsed="true"] .sidebar-group-toggle:hover {
+    background: color-mix(in srgb, var(--grp-color) 18%, transparent) !important;
+    border-right: none !important;
+}
+#admin-sidebar[data-collapsed="true"] .sidebar-group-icon {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    min-width: 1.2rem !important;
+    opacity: 1 !important;
+    color: var(--grp-color) !important;
+}
+/* آیتم‌های داخل گروه باز — icon-only */
+#admin-sidebar[data-collapsed="true"] .sidebar-group-items:not(.is-collapsed) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 0.1rem 0 0.15rem !important;
+}
+#admin-sidebar[data-collapsed="true"] a.sidebar-link,
+#admin-sidebar[data-collapsed="true"] .sidebar-link {
+    justify-content: center !important;
+    padding: 0.45rem !important;
+    gap: 0 !important;
+}
+#admin-sidebar[data-collapsed="true"] .sidebar-link svg {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    min-width: 1.2rem !important;
+    margin: 0 !important;
 }
 </style>

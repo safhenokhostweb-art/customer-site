@@ -17,7 +17,7 @@
             </div>
         </div>
         <a href="{{ route('admin.theme-design.canvas') }}"
-           style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.15);hover:background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border-radius:0.75rem;text-decoration:none;transition:background .15s;">
+           style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border-radius:0.75rem;text-decoration:none;">
             <x-core-ui::icon name="eye" class="w-4 h-4" />
             مدیریت قالب Canvas
         </a>
@@ -41,143 +41,273 @@
     </div>
     @endif
 
-    {{-- ═══ Enterprise Theme Presets ═══ --}}
-    <div class="card mb-6" style="margin-bottom:1.5rem;">
-        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>پریست‌های Enterprise Theme Engine</span>
-            @if($activePreset)
-            <form action="{{ route('admin.theme-design.reset-preset') }}" method="POST" style="display:inline;">
+    {{-- ══════════════════════════════════════════════════════════════════════
+         SECTION 1 — ظاهر پنل مدیریت (Dashboard)
+         ══════════════════════════════════════════════════════════════════════ --}}
+    <div class="card" style="margin-bottom:1.75rem;">
+        <div class="card-header" style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <x-core-ui::icon name="server" class="w-4 h-4" style="color:#60a5fa;" />
+            </div>
+            <div style="flex:1;">
+                <span style="font-weight:700;font-size:1rem;display:block;">ظاهر پنل مدیریت</span>
+                <span style="font-size:0.78rem;color:#6b7280;">رنگ نوار کناری و داشبورد ادمین — مستقل از تم سایت</span>
+            </div>
+            @if($activeDashPreset && $activeDashPreset !== 'enterprise-blue')
+            <form action="{{ route('admin.theme-design.dashboard-preset') }}" method="POST" style="display:inline;">
                 @csrf
-                <button type="submit" class="btn btn-sm" style="font-size:0.75rem;padding:0.3rem 0.75rem;background:transparent;border:1px solid #d1d5db;color:#6b7280;border-radius:0.5rem;">
+                <input type="hidden" name="preset_slug" value="enterprise-blue">
+                <button type="submit" class="btn btn-sm" style="font-size:0.73rem;padding:0.3rem 0.75rem;background:transparent;border:1px solid #d1d5db;color:#6b7280;border-radius:0.5rem;">
+                    بازگشت به پیش‌فرض
+                </button>
+            </form>
+            @endif
+        </div>
+        <div class="card-body">
+            <p style="font-size:0.83rem;color:#6b7280;margin:0 0 1.25rem;">یکی از تم‌های آماده را انتخاب کنید یا رنگ‌ها را به صورت دستی تنظیم نمایید.</p>
+
+            {{-- Preset grid --}}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:0.875rem;margin-bottom:1.5rem;">
+                @foreach($presets as $preset)
+                @php $isDashActive = $activeDashPreset === $preset['slug']; @endphp
+                <div style="border-radius:0.875rem;border:2px solid {{ $isDashActive ? $preset['accent'] : '#e5e7eb' }};overflow:hidden;box-shadow:{{ $isDashActive ? '0 0 0 3px '.($preset['accent']).'33' : '0 1px 3px rgba(0,0,0,0.07)' }};transition:all .15s;">
+                    {{-- Sidebar gradient preview --}}
+                    <div style="height:52px;background:linear-gradient(160deg,{{ $preset['sidebar'] }} 0%,{{ $preset['sidebar_end'] }} 100%);position:relative;display:flex;align-items:flex-end;padding:0 8px 7px;">
+                        <div style="display:flex;gap:4px;align-items:center;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:{{ $preset['accent'] }};"></span>
+                            <span style="width:28px;height:3px;border-radius:2px;background:rgba(255,255,255,0.5);"></span>
+                        </div>
+                        <div style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 8px;">
+                            <span style="width:55%;height:4px;border-radius:2px;background:rgba(255,255,255,0.25);"></span>
+                            <span style="width:40%;height:4px;border-radius:2px;background:rgba(255,255,255,0.18);"></span>
+                            <span style="width:50%;height:4px;border-radius:2px;background:rgba(255,255,255,0.14);"></span>
+                        </div>
+                        @if($isDashActive)
+                        <div style="position:absolute;top:5px;left:5px;background:{{ $preset['accent'] }};color:#fff;font-size:0.6rem;font-weight:700;padding:1px 7px;border-radius:99px;">فعال</div>
+                        @endif
+                        <div style="position:absolute;bottom:5px;left:8px;display:flex;gap:3px;">
+                            <span style="width:12px;height:12px;border-radius:50%;background:{{ $preset['accent'] }};border:1.5px solid rgba(255,255,255,0.4);"></span>
+                            <span style="width:12px;height:12px;border-radius:50%;background:{{ $preset['primary'] }};border:1.5px solid rgba(255,255,255,0.4);"></span>
+                        </div>
+                    </div>
+                    <div style="padding:0.6rem 0.7rem 0.55rem;background:#fff;">
+                        <div style="font-weight:600;font-size:0.8rem;color:#111827;margin-bottom:0.15rem;">{{ $preset['name'] }}</div>
+                        <div style="font-size:0.68rem;color:#6b7280;line-height:1.4;">{{ $preset['desc'] }}</div>
+                    </div>
+                    <div style="padding:0 0.7rem 0.7rem;">
+                        @if(!$isDashActive)
+                        <form action="{{ route('admin.theme-design.dashboard-preset') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="preset_slug" value="{{ $preset['slug'] }}">
+                            <button type="submit" style="width:100%;padding:0.35rem 0;border-radius:0.5rem;border:none;background:{{ $preset['accent'] }};color:#fff;font-size:0.74rem;font-weight:600;cursor:pointer;">
+                                انتخاب
+                            </button>
+                        </form>
+                        @else
+                        <div style="width:100%;padding:0.35rem 0;border-radius:0.5rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:0.74rem;font-weight:600;text-align:center;">✓ انتخاب شده</div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Custom colors for dashboard --}}
+            <div x-data="{ open: {{ $activeDashPreset === 'custom' ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open"
+                    style="display:flex;align-items:center;gap:0.5rem;font-size:0.83rem;font-weight:600;color:#4f46e5;background:none;border:none;cursor:pointer;padding:0;margin-bottom:0.75rem;">
+                    <x-core-ui::icon name="settings" class="w-4 h-4" />
+                    <span x-text="open ? 'بستن رنگ‌های سفارشی داشبورد' : 'تنظیم رنگ‌های سفارشی داشبورد'"></span>
+                    <x-core-ui::icon name="chevron-down" class="w-4 h-4" style="transition:transform .2s" x-bind:style="open ? 'transform:rotate(180deg)' : ''"/>
+                </button>
+                <div x-show="open" x-transition.duration.200ms>
+                    <form action="{{ route('admin.theme-design.dashboard-custom') }}" method="POST" style="max-width:640px;">
+                        @csrf
+                        @method('PUT')
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.875rem;margin-bottom:1rem;">
+                            @php
+                            $dashLabels = [
+                                'admin_sidebar_bg1'    => 'پس‌زمینه اصلی نوار کناری',
+                                'admin_sidebar_bg2'    => 'پس‌زمینه ثانویه (گرادیان)',
+                                'admin_sidebar_text'   => 'رنگ متن',
+                                'admin_sidebar_muted'  => 'رنگ متن محو',
+                                'admin_sidebar_accent' => 'رنگ تاکیدی (Accent)',
+                                'admin_sidebar_border' => 'رنگ خطوط جداکننده',
+                            ];
+                            @endphp
+                            @foreach($dashLabels as $key => $label)
+                            @php $val = $dashCustomColors[$key] ?? '#1e293b'; @endphp
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">{{ $label }}</label>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="color" value="{{ old($key, $val) }}" id="dc_color_{{ $key }}"
+                                           oninput="document.getElementById('dc_text_{{ $key }}').value=this.value"
+                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
+                                    <input type="text" name="{{ $key }}" id="dc_text_{{ $key }}"
+                                           value="{{ old($key, $val) }}" placeholder="{{ $val }}"
+                                           pattern="#[0-9A-Fa-f]{6}" maxlength="7"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('dc_color_{{ $key }}').value=this.value"
+                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="font-size:0.83rem;padding:0.45rem 1.25rem;">
+                            ذخیره رنگ‌های سفارشی داشبورد
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════════════════════
+         SECTION 2 — تم سایت
+         ══════════════════════════════════════════════════════════════════════ --}}
+    <div class="card" style="margin-bottom:1.75rem;">
+        <div class="card-header" style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <x-core-ui::icon name="sun" class="w-4 h-4" style="color:#fff;" />
+            </div>
+            <div style="flex:1;">
+                <span style="font-weight:700;font-size:1rem;display:block;">تم سایت مشتری</span>
+                <span style="font-size:0.78rem;color:#6b7280;">رنگ‌ها و ظاهر صفحات عمومی سایت — مستقل از داشبورد</span>
+            </div>
+            @if($activeSitePreset)
+            <form action="{{ route('admin.theme-design.reset-site-preset') }}" method="POST" style="display:inline;">
+                @csrf
+                <button type="submit" class="btn btn-sm" style="font-size:0.73rem;padding:0.3rem 0.75rem;background:transparent;border:1px solid #d1d5db;color:#6b7280;border-radius:0.5rem;">
                     بازنشانی به سفارشی
                 </button>
             </form>
             @endif
         </div>
         <div class="card-body">
-            <p class="admin-muted-note" style="margin-bottom:1rem;font-size:0.85rem;">
-                یکی از ۸ پریست حرفه‌ای را انتخاب کنید. تم بلافاصله بر کل پنل اعمال می‌شود.
-            </p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
+            <p style="font-size:0.83rem;color:#6b7280;margin:0 0 1.25rem;">یکی از پریست‌های آماده را انتخاب کنید یا رنگ‌ها و فونت را به صورت دستی تنظیم نمایید.</p>
+
+            {{-- Preset grid --}}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:0.875rem;margin-bottom:1.5rem;">
                 @foreach($presets as $preset)
-                @php $isActive = $activePreset === $preset['slug']; @endphp
-                <div style="border-radius:0.875rem;border:2px solid {{ $isActive ? $preset['accent'] : '#e5e7eb' }};overflow:hidden;box-shadow:{{ $isActive ? '0 0 0 3px '.($preset['accent']).'33' : '0 1px 3px rgba(0,0,0,0.07)' }};transition:box-shadow .15s,border-color .15s;">
-                    {{-- Color strip --}}
-                    <div style="height:56px;background:linear-gradient(135deg,{{ $preset['sidebar'] }} 0%,{{ $preset['sidebar_end'] }} 50%,{{ $preset['primary'] }} 100%);position:relative;">
-                        <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:5px;">
-                            <span style="width:18px;height:18px;border-radius:50%;background:{{ $preset['accent'] }};border:2px solid rgba(255,255,255,0.4);"></span>
-                            <span style="width:18px;height:18px;border-radius:50%;background:{{ $preset['primary'] }};border:2px solid rgba(255,255,255,0.4);"></span>
-                        </div>
-                        @if($isActive)
-                        <div style="position:absolute;top:6px;right:6px;background:{{ $preset['accent'] }};color:#fff;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;">
-                            فعال
-                        </div>
+                @php $isSiteActive = $activeSitePreset === $preset['slug']; @endphp
+                <div style="border-radius:0.875rem;border:2px solid {{ $isSiteActive ? $preset['accent'] : '#e5e7eb' }};overflow:hidden;box-shadow:{{ $isSiteActive ? '0 0 0 3px '.($preset['accent']).'33' : '0 1px 3px rgba(0,0,0,0.07)' }};transition:all .15s;">
+                    {{-- Site colors preview --}}
+                    <div style="height:52px;background:linear-gradient(135deg,{{ $preset['primary'] }} 0%,{{ $preset['accent'] }} 100%);position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 10px;gap:5px;">
+                        <span style="width:65%;height:5px;border-radius:3px;background:rgba(255,255,255,0.75);"></span>
+                        <span style="width:45%;height:3px;border-radius:2px;background:rgba(255,255,255,0.45);"></span>
+                        @if($isSiteActive)
+                        <div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.4);color:#fff;font-size:0.6rem;font-weight:700;padding:1px 7px;border-radius:99px;">فعال</div>
                         @endif
+                        <div style="position:absolute;bottom:5px;left:8px;display:flex;gap:3px;">
+                            <span style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.9);"></span>
+                            <span style="width:22px;height:12px;border-radius:3px;background:rgba(255,255,255,0.4);"></span>
+                        </div>
                     </div>
-                    {{-- Info --}}
-                    <div style="padding:0.75rem;background:#fff;">
-                        <div style="font-weight:600;font-size:0.85rem;color:#111827;margin-bottom:0.2rem;">{{ $preset['name'] }}</div>
-                        <div style="font-size:0.72rem;color:#6b7280;line-height:1.4;">{{ $preset['desc'] }}</div>
+                    <div style="padding:0.6rem 0.7rem 0.55rem;background:#fff;">
+                        <div style="font-weight:600;font-size:0.8rem;color:#111827;margin-bottom:0.15rem;">{{ $preset['name'] }}</div>
+                        <div style="font-size:0.68rem;color:#6b7280;line-height:1.4;">{{ $preset['desc'] }}</div>
                     </div>
-                    {{-- Action --}}
-                    <div style="padding:0 0.75rem 0.75rem;">
-                        @if(!$isActive)
-                        <form action="{{ route('admin.theme-design.preset') }}" method="POST">
+                    <div style="padding:0 0.7rem 0.7rem;">
+                        @if(!$isSiteActive)
+                        <form action="{{ route('admin.theme-design.site-preset') }}" method="POST">
                             @csrf
                             <input type="hidden" name="preset_slug" value="{{ $preset['slug'] }}">
-                            <button type="submit"
-                                style="width:100%;padding:0.4rem 0;border-radius:0.5rem;border:none;background:{{ $preset['accent'] }};color:#fff;font-size:0.78rem;font-weight:600;cursor:pointer;">
-                                فعال‌سازی
+                            <button type="submit" style="width:100%;padding:0.35rem 0;border-radius:0.5rem;border:none;background:{{ $preset['accent'] }};color:#fff;font-size:0.74rem;font-weight:600;cursor:pointer;">
+                                انتخاب
                             </button>
                         </form>
                         @else
-                        <div style="width:100%;padding:0.4rem 0;border-radius:0.5rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:0.78rem;font-weight:600;text-align:center;">
-                            ✓ در حال استفاده
-                        </div>
+                        <div style="width:100%;padding:0.35rem 0;border-radius:0.5rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:0.74rem;font-weight:600;text-align:center;">✓ انتخاب شده</div>
                         @endif
                     </div>
                 </div>
                 @endforeach
             </div>
-        </div>
-    </div>
 
-    {{-- ═══ Custom Settings ═══ --}}
-    <div class="card">
-        <div class="card-header">تنظیمات سفارشی رنگ و فونت</div>
-        <div class="card-body">
-            <p class="admin-muted-note" style="margin-bottom:1rem;font-size:0.85rem;">
-                اگر پریستی انتخاب نشده باشد، این مقادیر به‌عنوان تم سفارشی اعمال می‌شوند.
-            </p>
-            <form action="{{ route('admin.theme-design.update') }}" method="post" class="admin-form-stack" style="max-width:560px;">
-                @csrf
-                @method('PUT')
-
-                <div class="form-group">
-                    <label class="form-label">رنگ اصلی (Primary)</label>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                        <input type="color" value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" id="pc_primary"
-                               oninput="document.getElementById('pt_primary').value=this.value"
-                               style="width:40px;height:36px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;">
-                        <input type="text" name="primary_color" id="pt_primary"
-                               value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" placeholder="#4f46e5"
-                               oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_primary').value=this.value"
-                               style="flex:1;">
-                    </div>
+            {{-- Custom site settings --}}
+            <div x-data="{ open: {{ (!$activeSitePreset || $activeSitePreset === 'custom') ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open"
+                    style="display:flex;align-items:center;gap:0.5rem;font-size:0.83rem;font-weight:600;color:#7c3aed;background:none;border:none;cursor:pointer;padding:0;margin-bottom:0.75rem;">
+                    <x-core-ui::icon name="settings" class="w-4 h-4" />
+                    <span x-text="open ? 'بستن تنظیمات سفارشی سایت' : 'تنظیمات سفارشی رنگ و فونت سایت'"></span>
+                    <x-core-ui::icon name="chevron-down" class="w-4 h-4" style="transition:transform .2s" x-bind:style="open ? 'transform:rotate(180deg)' : ''"/>
+                </button>
+                <div x-show="open" x-transition.duration.200ms>
+                    <form action="{{ route('admin.theme-design.update') }}" method="POST" style="max-width:560px;">
+                        @csrf
+                        @method('PUT')
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">رنگ اصلی (Primary)</label>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="color" value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" id="pc_primary"
+                                           oninput="document.getElementById('pt_primary').value=this.value"
+                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
+                                    <input type="text" name="primary_color" id="pt_primary"
+                                           value="{{ old('primary_color', $settings->primary_color ?? '#4f46e5') }}" placeholder="#4f46e5"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_primary').value=this.value"
+                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">رنگ ثانویه (Secondary)</label>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="color" value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" id="pc_secondary"
+                                           oninput="document.getElementById('pt_secondary').value=this.value"
+                                           style="width:36px;height:34px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;flex-shrink:0;">
+                                    <input type="text" name="secondary_color" id="pt_secondary"
+                                           value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" placeholder="#64748b"
+                                           oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_secondary').value=this.value"
+                                           style="flex:1;font-family:monospace;font-size:0.82rem;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">فونت عناوین</label>
+                                <input type="text" name="font_family_heading" value="{{ old('font_family_heading', $settings->font_family_heading ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif" style="font-size:0.82rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">فونت متن</label>
+                                <input type="text" name="font_family_body" value="{{ old('font_family_body', $settings->font_family_body ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif" style="font-size:0.82rem;">
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.875rem;margin-bottom:0.875rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">اندازه پایه فونت</label>
+                                <input type="text" name="base_font_size" value="{{ old('base_font_size', $settings->base_font_size ?? '16px') }}" placeholder="16px" style="font-size:0.82rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">عرض کانتینر</label>
+                                <input type="text" name="container_width" value="{{ old('container_width', $settings->container_width ?? '1200px') }}" placeholder="1200px" style="font-size:0.82rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">گردی گوشه‌ها</label>
+                                <input type="text" name="border_radius" value="{{ old('border_radius', $settings->border_radius ?? '8px') }}" placeholder="8px" style="font-size:0.82rem;">
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">استایل دکمه</label>
+                                <select name="button_style" style="font-size:0.82rem;">
+                                    @foreach($buttonStyles as $value => $label)
+                                    <option value="{{ $value }}" {{ old('button_style', $settings->button_style ?? 'solid') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:0.8rem;">فاصله سکشن‌ها</label>
+                                <select name="section_spacing" style="font-size:0.82rem;">
+                                    @foreach(['xs'=>'خیلی کم','sm'=>'کم','md'=>'متوسط','lg'=>'زیاد','xl'=>'خیلی زیاد'] as $v => $l)
+                                    <option value="{{ $v }}" {{ old('section_spacing', $settings->section_spacing ?? 'md') === $v ? 'selected' : '' }}>{{ $l }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="font-size:0.83rem;padding:0.45rem 1.25rem;">
+                            ذخیره تنظیمات سفارشی سایت
+                        </button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">رنگ ثانویه (Secondary)</label>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                        <input type="color" value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" id="pc_secondary"
-                               oninput="document.getElementById('pt_secondary').value=this.value"
-                               style="width:40px;height:36px;border-radius:6px;border:1px solid #d1d5db;padding:2px;cursor:pointer;">
-                        <input type="text" name="secondary_color" id="pt_secondary"
-                               value="{{ old('secondary_color', $settings->secondary_color ?? '#64748b') }}" placeholder="#64748b"
-                               oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('pc_secondary').value=this.value"
-                               style="flex:1;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">فونت عناوین</label>
-                    <input type="text" name="font_family_heading" value="{{ old('font_family_heading', $settings->font_family_heading ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">فونت متن</label>
-                    <input type="text" name="font_family_body" value="{{ old('font_family_body', $settings->font_family_body ?? 'Vazirmatn, Tahoma, sans-serif') }}" placeholder="Vazirmatn, Tahoma, sans-serif">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">اندازه پایه فونت</label>
-                    <input type="text" name="base_font_size" value="{{ old('base_font_size', $settings->base_font_size ?? '16px') }}" placeholder="16px یا 1rem">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">عرض کانتینر</label>
-                    <input type="text" name="container_width" value="{{ old('container_width', $settings->container_width ?? '1200px') }}" placeholder="1200px">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">گردی گوشه‌ها (Border radius)</label>
-                    <input type="text" name="border_radius" value="{{ old('border_radius', $settings->border_radius ?? '8px') }}" placeholder="8px">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">استایل دکمه</label>
-                    <select name="button_style">
-                        @foreach($buttonStyles as $value => $label)
-                        <option value="{{ $value }}" {{ old('button_style', $settings->button_style ?? 'solid') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">فاصله سکشن‌ها</label>
-                    <select name="section_spacing">
-                        @foreach(['xs'=>'خیلی کم','sm'=>'کم','md'=>'متوسط','lg'=>'زیاد','xl'=>'خیلی زیاد'] as $v => $l)
-                        <option value="{{ $v }}" {{ old('section_spacing', $settings->section_spacing ?? 'md') === $v ? 'selected' : '' }}>{{ $l }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <button type="submit" class="btn btn-primary">ذخیره تنظیمات سفارشی</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 

@@ -24,34 +24,6 @@
                 </div>
 
                 <hr>
-                <h3 class="admin-page-title">رنگ نوار کناری پنل ادمین و حساب کاربری</h3>
-                <p style="font-size:0.9rem;color:#64748b;margin:0 0 1rem;">پس‌زمینهٔ آبی ملایم و متن خوانا؛ مقدار هر فیلد به صورت هگز شش‌رقمی (مثلاً <code>#5a7fa8</code>).</p>
-                @php $sbSwatches = ['#5a7fa8','#456f94','#7dd3fc','#93c5fd','#38bdf8','#2563eb','#64748b','#f1f6fb','#e8f4fc','#8aa9c4']; @endphp
-                <div class="admin-form-grid-2" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
-                    @foreach($adminSidebarThemeLabels ?? [] as $key => $sbLabel)
-                        @php
-                            $sbDef = \App\Helpers\AdminSidebarTheme::KEYS[$key] ?? '#000000';
-                            $sbVal = old($key, $adminSidebarTheme[$key] ?? $sbDef);
-                            $sbHex = is_string($sbVal) && preg_match('/^#[0-9A-Fa-f]{6}$/', $sbVal);
-                        @endphp
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label class="form-label">{{ $sbLabel }}</label>
-                            <div style="display:flex;align-items:center;gap:0.5rem;">
-                                @if($sbHex)
-                                    <input type="color" id="sb_color_{{ $key }}" value="{{ $sbVal }}" style="width:3rem;height:2.5rem;padding:0;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;" title="{{ $key }}">
-                                @endif
-                                <input type="text" name="{{ $key }}" value="{{ $sbVal }}" placeholder="{{ $sbDef }}" pattern="#[0-9A-Fa-f]{6}" maxlength="7" style="flex:1;" class="font-mono">
-                            </div>
-                            <div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-top:0.35rem;">
-                                @foreach($sbSwatches as $c)
-                                    <button type="button" style="width:1.25rem;height:1.25rem;border:1px solid #e2e8f0;border-radius:4px;padding:0;cursor:pointer;background:{{ $c }}" title="{{ $c }}" aria-label="{{ $c }}" onclick="var w=this.closest('div').previousElementSibling;var col=w.querySelector('input[type=color]');var t=w.querySelector('input[type=text]');if(col)col.value='{{ $c }}';if(t)t.value='{{ $c }}';"></button>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <hr>
                 <h3 class="admin-page-title">هدر و فوتر سایت (سازنده بصری)</h3>
 
                 <div class="form-group">
