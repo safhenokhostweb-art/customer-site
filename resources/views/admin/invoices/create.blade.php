@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-secondary mt-4" onclick="addItem()">
-                    <x-core-ui::icon name="invoice" class="w- />
+                    <x-core-ui::icon name="invoice" class="w-4 h-4" />
                     افزودن آیتم
                 </button>
                 <hr class="my-6 border-slate-200">

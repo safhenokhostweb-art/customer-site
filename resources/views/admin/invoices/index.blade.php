@@ -7,7 +7,7 @@
         <p class="text-slate-600 text-sm">مدیریت فاکتورها و لینک پرداخت آنلاین.</p>
         <div class="admin-page-tools">
             <a href="{{ route('admin.invoices.create') }}" class="btn btn-primary">
-                <x-core-ui::icon name="invoice" class="w- />
+                <x-core-ui::icon name="invoice" class="w-4 h-4" />
                 فاکتور جدید
             </a>
         </div>
