@@ -55,13 +55,13 @@
     <div class="card">
         <div class="card-body">
             <div class="text-xs text-slate-500 mb-1">تعداد کل اعلان‌های تولبار</div>
-            <div class="text-2xl font-bold text-slate-800">{{ number_format($stats['total'] ?? 0) }}</div>
+            <div class="text-2xl font-bold text-slate-800">@numFa($stats['total'] ?? 0)</div>
         </div>
     </div>
     <div class="card">
         <div class="card-body">
             <div class="text-xs text-slate-500 mb-1">اعلان‌های فعال</div>
-            <div class="text-2xl font-bold text-emerald-700">{{ number_format($stats['active'] ?? 0) }}</div>
+            <div class="text-2xl font-bold text-emerald-700">@numFa($stats['active'] ?? 0)</div>
         </div>
     </div>
     <div class="card">

@@ -68,9 +68,9 @@
     {{-- Stats --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         @foreach([
-            ['label'=>'کل مخاطبین', 'value'=>number_format($stats['total']), 'color'=>'indigo'],
-            ['label'=>'ارسال موفق', 'value'=>number_format($stats['sent']), 'color'=>'emerald'],
-            ['label'=>'ارسال ناموفق', 'value'=>number_format($stats['failed']), 'color'=>'red'],
+            ['label'=>'کل مخاطبین', 'value'=>num_fa($stats['total']), 'color'=>'indigo'],
+            ['label'=>'ارسال موفق', 'value'=>num_fa($stats['sent']), 'color'=>'emerald'],
+            ['label'=>'ارسال ناموفق', 'value'=>num_fa($stats['failed']), 'color'=>'red'],
             ['label'=>'نرخ تحویل', 'value'=>$stats['delivery'].'%', 'color'=>'blue'],
         ] as $stat)
         <div class="bg-white rounded-xl border border-gray-100 p-4 text-center">
@@ -85,7 +85,7 @@
     <div class="bg-white rounded-xl border border-gray-100 p-5">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-700">پیشرفت ارسال</span>
-            <span class="text-sm text-gray-500">{{ number_format($campaign->sent_count) }} از {{ number_format($campaign->total_recipients) }}</span>
+            <span class="text-sm text-gray-500">{{ num_fa($campaign->sent_count) }} از {{ num_fa($campaign->total_recipients) }}</span>
         </div>
         <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div class="h-2 bg-emerald-500 rounded-full transition-all" style="width: {{ $campaign->deliveryRate() }}%"></div>
@@ -157,7 +157,7 @@
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-semibold text-gray-800">لیست مخاطبین</h2>
             <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-500">{{ number_format($campaign->total_recipients) }} نفر</span>
+                <span class="text-sm text-gray-500">{{ num_fa($campaign->total_recipients) }} نفر</span>
                 {{-- GAP-L03: CSV export button --}}
                 <a href="{{ route('admin.sms.campaigns.export-csv', $campaign) }}"
                    class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition">
