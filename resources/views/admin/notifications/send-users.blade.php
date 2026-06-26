@@ -20,7 +20,7 @@
                     <div class="form-group">
                         <label class="form-label">ارسال به *</label>
                         <select name="recipient_type" id="recipient_type" class="form-control" required>
-                            <option value="all" {{ old('recipient_type', 'all') === 'all' ? 'selected' : '' }}>همهٔ کاربران ({{ number_format($userCount) }})</option>
+                            <option value="all" {{ old('recipient_type', 'all') === 'all' ? 'selected' : '' }}>همهٔ کاربران (@numFa($userCount))</option>
                             <option value="selected" {{ old('recipient_type') === 'selected' ? 'selected' : '' }}>کاربران انتخاب‌شده</option>
                             <option value="date_range" {{ old('recipient_type') === 'date_range' ? 'selected' : '' }}>کاربران بر اساس تاریخ ثبت‌نام</option>
                         </select>

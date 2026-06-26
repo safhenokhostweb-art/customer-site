@@ -59,15 +59,15 @@
     <div class="admin-kpi-grid">
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">تعداد کل</p>
-            <p class="admin-kpi-card__value">{{ method_exists($products, 'total') ? number_format($products->total()) : number_format($products->count()) }}</p>
+            <p class="admin-kpi-card__value">{{ method_exists($products, 'total') ? num_fa($products->total()) : num_fa($products->count()) }}</p>
         </div>
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">منتشر شده</p>
-            <p class="admin-kpi-card__value">{{ number_format($products->where('status', \App\Models\Product::STATUS_PUBLISHED)->count()) }}</p>
+            <p class="admin-kpi-card__value">{{ num_fa($products->where('status', \App\Models\Product::STATUS_PUBLISHED)->count()) }}</p>
         </div>
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">پیش‌نویس</p>
-            <p class="admin-kpi-card__value">{{ number_format($products->where('status', '!=', \App\Models\Product::STATUS_PUBLISHED)->count()) }}</p>
+            <p class="admin-kpi-card__value">{{ num_fa($products->where('status', '!=', \App\Models\Product::STATUS_PUBLISHED)->count()) }}</p>
         </div>
     </div>
 

@@ -23,19 +23,19 @@
     {{-- Stats cards --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
-            <p class="text-3xl font-bold text-green-600">{{ number_format($stats['done']) }}</p>
+            <p class="text-3xl font-bold text-green-600">@numFa($stats['done'])</p>
             <p class="text-sm text-slate-500 mt-1">ترجمه‌شده</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
-            <p class="text-3xl font-bold text-blue-600">{{ number_format($stats['pending']) }}</p>
+            <p class="text-3xl font-bold text-blue-600">@numFa($stats['pending'])</p>
             <p class="text-sm text-slate-500 mt-1">در صف</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
-            <p class="text-3xl font-bold text-amber-600">{{ number_format($stats['processing']) }}</p>
+            <p class="text-3xl font-bold text-amber-600">@numFa($stats['processing'])</p>
             <p class="text-sm text-slate-500 mt-1">در حال پردازش</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center shadow-sm">
-            <p class="text-3xl font-bold text-red-600">{{ number_format($stats['failed']) }}</p>
+            <p class="text-3xl font-bold text-red-600">@numFa($stats['failed'])</p>
             <p class="text-sm text-slate-500 mt-1">ناموفق</p>
         </div>
     </div>

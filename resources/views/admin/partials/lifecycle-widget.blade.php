@@ -59,7 +59,7 @@
                     <div class="text-gray-600">
                         <span>شماره: {{ $pendingInvoice->invoice_number }}</span>
                         <span class="mx-2">|</span>
-                        <span class="font-bold text-lg text-gray-900">{{ number_format($pendingInvoice->amount) }} ریال</span>
+                        <span class="font-bold text-lg text-gray-900">{{ num_fa($pendingInvoice->amount) }} ریال</span>
                     </div>
                     <a href="/admin/subscription" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
                         پرداخت و تمدید

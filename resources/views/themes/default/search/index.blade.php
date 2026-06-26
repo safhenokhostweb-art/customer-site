@@ -114,7 +114,7 @@
             @endif
             @if($minPrice || $maxPrice)
                 <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 0.875rem;">
-                    قیمت: {{ $minPrice ? number_format($minPrice) : '۰' }} – {{ $maxPrice ? number_format($maxPrice) : '∞' }} تومان
+                    قیمت: {{ $minPrice ? num_fa($minPrice) : '۰' }} – {{ $maxPrice ? num_fa($maxPrice) : '∞' }} تومان
                 </span>
             @endif
             <a href="{{ route('search.index') }}" style="font-size: 0.875rem; color: #6b7280; text-decoration: none;">پاک کردن همه</a>

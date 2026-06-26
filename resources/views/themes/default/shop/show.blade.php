@@ -143,9 +143,9 @@
                                 <span style="font-size:0.75rem; color:#6b7280; margin-right:0.4rem;">{{ $plan['period_months'] }} ماهه</span>
                             </div>
                             <div style="text-align:left;">
-                                <span style="font-size:0.8rem; font-weight:700; color:#4f46e5;">{{ number_format($calc['monthly_payment']) }} ت/ماه</span>
+                                <span style="font-size:0.8rem; font-weight:700; color:#4f46e5;">{{ num_fa($calc['monthly_payment']) }} ت/ماه</span>
                                 @if($calc['down_payment'] > 0)
-                                <span style="font-size:0.7rem; color:#9ca3af; display:block;">پیش‌پرداخت: {{ number_format($calc['down_payment']) }} ت</span>
+                                <span style="font-size:0.7rem; color:#9ca3af; display:block;">پیش‌پرداخت: {{ num_fa($calc['down_payment']) }} ت</span>
                                 @endif
                             </div>
                         </a>
@@ -242,7 +242,7 @@
     </div>
 
     <section style="margin-bottom: 2.5rem;" class="card p-4">
-        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">نظر خریداران @if($reviewAvg)<span style="font-size:0.9rem;color:#6b7280;">(میانگین {{ number_format($reviewAvg, 1) }}/۵)</span>@endif</h2>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">نظر خریداران @if($reviewAvg)<span style="font-size:0.9rem;color:#6b7280;">(میانگین {{ num_fa($reviewAvg, 1) }}/۵)</span>@endif</h2>
         @foreach($reviews as $rev)
             <div style="border-bottom:1px solid #e5e7eb; padding:0.75rem 0;">
                 <div style="font-weight:600;">امتیاز {{ $rev->rating }}/۵</div>

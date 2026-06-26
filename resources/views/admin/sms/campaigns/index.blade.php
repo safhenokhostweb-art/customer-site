@@ -45,7 +45,7 @@
                 <svg class="w-5 h-5 text-{{ $card['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $card['icon'] }}"/></svg>
             </div>
             <div>
-                <p class="text-2xl font-bold text-gray-900">{{ number_format($card['value']) }}</p>
+                <p class="text-2xl font-bold text-gray-900">@numFa($card['value'])</p>
                 <p class="text-xs text-gray-500">{{ $card['label'] }}</p>
             </div>
         </div>
@@ -94,7 +94,7 @@
                         <p class="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{{ mb_substr($campaign->message, 0, 50) }}...</p>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="text-gray-700">{{ number_format($campaign->total_recipients) }}</span>
+                        <span class="text-gray-700">@numFa($campaign->total_recipients)</span>
                         <span class="text-xs text-gray-400 block">{{ $campaign->audienceLabel() }}</span>
                     </td>
                     <td class="px-4 py-3">
@@ -105,7 +105,7 @@
                             </div>
                             <span class="text-xs text-gray-600">{{ $campaign->deliveryRate() }}%</span>
                         </div>
-                        <span class="text-xs text-gray-400">{{ number_format($campaign->sent_count) }} / {{ number_format($campaign->total_recipients) }}</span>
+                        <span class="text-xs text-gray-400">{{ num_fa($campaign->sent_count) }} / {{ num_fa($campaign->total_recipients) }}</span>
                         @else
                         <span class="text-xs text-gray-400">—</span>
                         @endif

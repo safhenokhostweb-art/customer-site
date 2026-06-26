@@ -56,10 +56,10 @@
         {{-- Stats --}}
         <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
           @if(($theme['installs_count'] ?? 0) > 0)
-            <span>⬇ {{ number_format($theme['installs_count']) }} نصب</span>
+            <span>⬇ @numFa($theme['installs_count']) نصب</span>
           @endif
           @if(($theme['sales_count'] ?? 0) > 0)
-            <span>🛒 {{ number_format($theme['sales_count']) }} فروش</span>
+            <span>🛒 @numFa($theme['sales_count']) فروش</span>
           @endif
           @if(($theme['quality_score'] ?? 0) > 0)
             @php $qc = ($theme['quality_score'] >= 90) ? 'emerald' : (($theme['quality_score'] >= 75) ? 'green' : (($theme['quality_score'] >= 60) ? 'amber' : 'rose')); @endphp
@@ -85,18 +85,18 @@
             <div class="space-y-2">
               <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2">
                 <span class="text-xs text-gray-500">یک‌بار خرید</span>
-                <span class="font-bold text-gray-800">{{ number_format($theme['price_rial']) }} <span class="text-xs font-normal text-gray-400">ریال</span></span>
+                <span class="font-bold text-gray-800">{{ num_fa($theme['price_rial']) }} <span class="text-xs font-normal text-gray-400">ریال</span></span>
               </div>
               @if($theme['annual_price'] ?? null)
               <div class="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
                 <span class="text-xs text-indigo-500">سالانه</span>
-                <span class="font-bold text-indigo-700">{{ number_format($theme['annual_price']) }} <span class="text-xs font-normal text-indigo-400">ریال/سال</span></span>
+                <span class="font-bold text-indigo-700">{{ num_fa($theme['annual_price']) }} <span class="text-xs font-normal text-indigo-400">ریال/سال</span></span>
               </div>
               @endif
               @if($theme['lifetime_price'] ?? null)
               <div class="flex items-center justify-between bg-violet-50 border border-violet-100 rounded-lg px-3 py-2">
                 <span class="text-xs text-violet-500">مادام‌العمر</span>
-                <span class="font-bold text-violet-700">{{ number_format($theme['lifetime_price']) }} <span class="text-xs font-normal text-violet-400">ریال</span></span>
+                <span class="font-bold text-violet-700">{{ num_fa($theme['lifetime_price']) }} <span class="text-xs font-normal text-violet-400">ریال</span></span>
               </div>
               @endif
             </div>

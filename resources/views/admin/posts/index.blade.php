@@ -82,8 +82,8 @@
                             <td class="text-xs text-slate-600">{{ \App\Helpers\Jalali::formatFa($p->created_at, 'Y/m/d H:i') }}</td>
                             <td class="text-xs text-slate-600">@if($p->updated_at && $p->updated_at->ne($p->created_at)){{ \App\Helpers\Jalali::formatFa($p->updated_at, 'Y/m/d H:i') }}@else—@endif</td>
                             <td class="text-xs">
-                                <div>بازدید: {{ number_format($p->view_count) }}</div>
-                                <div>لایک: {{ number_format($p->likes_count) }}</div>
+                                <div>بازدید: @numFa($p->view_count)</div>
+                                <div>لایک: @numFa($p->likes_count)</div>
                             </td>
                             <td class="text-xs">
                                 <div>{{ $p->estimatedReadingMinutes() }} دقیقه مطالعه</div>

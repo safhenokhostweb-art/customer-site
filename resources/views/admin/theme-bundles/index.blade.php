@@ -79,7 +79,7 @@
                                 @if($featured['is_free'] ?? false)
                                     رایگان
                                 @else
-                                    {{ number_format($featured['price']) }} ریال
+                                    {{ num_fa($featured['price']) }} ریال
                                 @endif
                             </span>
                             @if(($featured['discount_pct'] ?? 0) > 0)
@@ -154,9 +154,9 @@
                                 @if($bundle['is_free'] ?? false)
                                     <p class="text-xl font-bold text-emerald-600">رایگان</p>
                                 @else
-                                    <p class="text-xl font-bold text-violet-700">{{ number_format($bundle['price']) }} ریال</p>
+                                    <p class="text-xl font-bold text-violet-700">{{ num_fa($bundle['price']) }} ریال</p>
                                     @if(($bundle['original_total'] ?? 0) > ($bundle['price'] ?? 0))
-                                        <p class="text-xs text-gray-400 line-through">{{ number_format($bundle['original_total']) }} ریال</p>
+                                        <p class="text-xs text-gray-400 line-through">{{ num_fa($bundle['original_total']) }} ریال</p>
                                     @endif
                                 @endif
                                 @if(($bundle['discount_pct'] ?? 0) > 0)

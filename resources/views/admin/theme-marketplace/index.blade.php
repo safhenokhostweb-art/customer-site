@@ -78,7 +78,7 @@
               @if($theme['is_free'] ?? false)
                 <span class="bg-green-400 text-green-900 text-xs px-2 py-0.5 rounded-full font-bold">رایگان</span>
               @else
-                <span class="text-xs font-bold">{{ number_format($theme['price_rial']) }} ریال</span>
+                <span class="text-xs font-bold">{{ num_fa($theme['price_rial']) }} ریال</span>
               @endif
             </div>
             @if($theme['has_license'] ?? false)
@@ -177,10 +177,10 @@
             {{-- Stats row --}}
             <div class="flex items-center gap-3 text-xs text-gray-400 mb-3">
               @if(($theme['installs_count'] ?? 0) > 0)
-                <span>⬇ {{ number_format($theme['installs_count']) }} نصب</span>
+                <span>⬇ @numFa($theme['installs_count']) نصب</span>
               @endif
               @if(($theme['sales_count'] ?? 0) > 0)
-                <span>🛒 {{ number_format($theme['sales_count']) }} فروش</span>
+                <span>🛒 @numFa($theme['sales_count']) فروش</span>
               @endif
             </div>
 
@@ -201,18 +201,18 @@
                 <div class="flex flex-wrap gap-2 mb-3">
                   <div class="bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 text-center">
                     <p class="text-xs text-gray-400">یک‌بار</p>
-                    <p class="text-sm font-bold text-gray-800">{{ number_format($theme['price_rial']) }}</p>
+                    <p class="text-sm font-bold text-gray-800">@numFa($theme['price_rial'])</p>
                   </div>
                   @if($theme['annual_price'] ?? null)
                   <div class="bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1 text-center">
                     <p class="text-xs text-indigo-400">سالانه</p>
-                    <p class="text-sm font-bold text-indigo-700">{{ number_format($theme['annual_price']) }}</p>
+                    <p class="text-sm font-bold text-indigo-700">@numFa($theme['annual_price'])</p>
                   </div>
                   @endif
                   @if($theme['lifetime_price'] ?? null)
                   <div class="bg-violet-50 border border-violet-100 rounded-lg px-2.5 py-1 text-center">
                     <p class="text-xs text-violet-400">مادام‌العمر</p>
-                    <p class="text-sm font-bold text-violet-700">{{ number_format($theme['lifetime_price']) }}</p>
+                    <p class="text-sm font-bold text-violet-700">@numFa($theme['lifetime_price'])</p>
                   </div>
                   @endif
                 </div>

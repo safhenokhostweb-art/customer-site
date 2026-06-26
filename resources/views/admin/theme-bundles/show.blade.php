@@ -90,7 +90,7 @@
                             @endif
                             <div class="min-w-0 flex-1">
                                 <p class="font-semibold text-gray-800 text-sm">{{ $theme['name'] }}</p>
-                                <p class="text-xs text-gray-400">{{ number_format($theme['price'] ?? 0) }} ریال</p>
+                                <p class="text-xs text-gray-400">{{ num_fa($theme['price'] ?? 0) }} ریال</p>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <a href="{{ route('admin.theme-marketplace.show', $theme['id']) }}"
@@ -126,9 +126,9 @@
                     @if($bundle['is_free'] ?? false)
                         <p class="text-3xl font-bold text-emerald-600">رایگان</p>
                     @else
-                        <p class="text-3xl font-bold text-violet-700">{{ number_format($bundle['price']) }} ریال</p>
+                        <p class="text-3xl font-bold text-violet-700">{{ num_fa($bundle['price']) }} ریال</p>
                         @if(($bundle['original_total'] ?? 0) > ($bundle['price'] ?? 0))
-                            <p class="text-sm text-gray-400 line-through mt-0.5">{{ number_format($bundle['original_total']) }} ریال</p>
+                            <p class="text-sm text-gray-400 line-through mt-0.5">{{ num_fa($bundle['original_total']) }} ریال</p>
                         @endif
                     @endif
                     @if(($bundle['discount_pct'] ?? 0) > 0)
