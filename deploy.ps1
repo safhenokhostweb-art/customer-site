@@ -50,8 +50,6 @@ foreach ($pkg in $localPackages) {
     }
 }
 
-if (Test-Path $ZIPFILE) { Remove-Item $ZIPFILE }
-
 # Remove Vite dev-server hot file before packaging — it must NEVER reach production
 $hotFile = Join-Path $DIR "public\hot"
 $hotBackup = $null
@@ -61,17 +59,23 @@ if (Test-Path $hotFile) {
     Write-Host "     Removed public/hot before archive" -ForegroundColor DarkGray
 }
 
-$exclude = @('.git', 'node_modules', 'tests', 'storage', '.env', '.env.local', '.env.testing')
-$items   = Get-ChildItem -Path $DIR | Where-Object { $_.Name -notin $exclude }
+# Stage to temp dir — robocopy excludes locked vendor assets (tinymce) which never change between deploys
+$STAGING = "$env:TEMP\deploy_customer_stage_$(Get-Date -Format 'yyyyMMddHHmmss')"
+Write-Host "     Staging files..." -ForegroundColor DarkGray
+robocopy $DIR $STAGING /E /R:0 /W:0 /XD ".git" "node_modules" "tests" "storage" /XF ".env" ".env.local" ".env.testing" /NFL /NDL /NJH /NJS /NC /NS /NP | Out-Null
 
-# حذف فایل‌های کش لوکال قبل از آرشیو تا کانفیگ سرور بازنویسی نشود
+# Remove local cache files from staging to avoid overwriting server's runtime cache
 $localCache = @('bootstrap\cache\config.php', 'bootstrap\cache\routes-v7.php', 'bootstrap\cache\events.php', 'bootstrap\cache\services.php')
 foreach ($cf in $localCache) {
-    $cfPath = Join-Path $DIR $cf
+    $cfPath = Join-Path $STAGING $cf
     if (Test-Path $cfPath) { Remove-Item $cfPath -Force }
 }
 
-Compress-Archive -Path ($items | ForEach-Object { $_.FullName }) -DestinationPath $ZIPFILE -Force
+if (Test-Path $ZIPFILE) { Remove-Item $ZIPFILE }
+$stageItems = Get-ChildItem -Path $STAGING | ForEach-Object { $_.FullName }
+Compress-Archive -Path $stageItems -DestinationPath $ZIPFILE -Force
+Remove-Item $STAGING -Recurse -Force -ErrorAction SilentlyContinue
+
 Write-Host "     Archive: $ZIPFILE ($('{0:N1}' -f ((Get-Item $ZIPFILE).Length / 1MB)) MB)" -ForegroundColor Green
 
 # Restore hot file for local dev if it existed
