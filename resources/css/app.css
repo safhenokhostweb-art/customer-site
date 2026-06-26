@@ -158,6 +158,6 @@
 .bg-indigo-600.text-white, .bg-indigo-700.text-white, .bg-indigo-500.text-white,
 .from-indigo-600.text-white, .from-indigo-500.text-white, .from-purple-600.text-white,
 .bg-emerald-600.text-white, .bg-amber-400.text-white, .bg-amber-500.text-white { color: #ffffff; }
-button.text-white, a.text-white, [type="submit"].text-white { color: #ffffff; }
+button.text-white, a.text-white, [type="submit"].text-white { color: #ffffff !important; }
 .bg-gray-200.text-white, .bg-gray-300.text-white { color: #374151; }
 

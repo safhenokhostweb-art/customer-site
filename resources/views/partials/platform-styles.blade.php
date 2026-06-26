@@ -21,6 +21,27 @@ h1, h2, h3, h4, h5, h6, .font-title { font-family: var(--ds-font-title); font-si
 .btn-primary { background: var(--ds-button-primary-bg) !important; color: var(--ds-button-primary-text) !important; }
 a { color: var(--ds-link-color); }
 a:hover { color: var(--ds-link-hover); }
+/* هر لینک/دکمه‌ای که کلاس text-* صریح دارد نباید از رنگ لینک پلتفرم استفاده کند */
+a.text-white { color: #ffffff !important; }
+a.text-gray-100 { color: #f3f4f6 !important; }
+a.text-gray-200 { color: #e5e7eb !important; }
+a.text-gray-300 { color: #d1d5db !important; }
+a.text-gray-400 { color: #9ca3af !important; }
+a.text-gray-500 { color: #6b7280 !important; }
+a.text-gray-600 { color: #4b5563 !important; }
+a.text-gray-700 { color: #374151 !important; }
+a.text-gray-800 { color: #1f2937 !important; }
+a.text-gray-900 { color: #111827 !important; }
+a.text-slate-400 { color: #94a3b8 !important; }
+a.text-slate-500 { color: #64748b !important; }
+a.text-slate-600 { color: #475569 !important; }
+a.text-slate-700 { color: #334155 !important; }
+a.text-slate-800 { color: #1e293b !important; }
+a.text-slate-900 { color: #0f172a !important; }
+a.text-red-600 { color: #dc2626 !important; }
+a.text-emerald-600 { color: #059669 !important; }
+a.text-indigo-600 { color: #4f46e5 !important; }
+a.text-indigo-700 { color: #4338ca !important; }
 .sidebar-link { color: var(--ds-sidebar-text); }
 .sidebar-link:hover, .sidebar-link.active { background: var(--ds-sidebar-active-bg); color: var(--ds-sidebar-active-text); }
 </style>
@@ -64,6 +85,27 @@ h1, h2, h3, h4, h5, h6, .font-title { font-family: var(--ds-font-title); font-si
 .btn-primary { background: var(--ds-button-primary-bg) !important; color: var(--ds-button-primary-text) !important; }
 a { color: var(--ds-link-color); }
 a:hover { color: var(--ds-link-hover); }
+/* هر لینک/دکمه‌ای که کلاس text-* صریح دارد نباید از رنگ لینک پلتفرم استفاده کند */
+a.text-white { color: #ffffff !important; }
+a.text-gray-100 { color: #f3f4f6 !important; }
+a.text-gray-200 { color: #e5e7eb !important; }
+a.text-gray-300 { color: #d1d5db !important; }
+a.text-gray-400 { color: #9ca3af !important; }
+a.text-gray-500 { color: #6b7280 !important; }
+a.text-gray-600 { color: #4b5563 !important; }
+a.text-gray-700 { color: #374151 !important; }
+a.text-gray-800 { color: #1f2937 !important; }
+a.text-gray-900 { color: #111827 !important; }
+a.text-slate-400 { color: #94a3b8 !important; }
+a.text-slate-500 { color: #64748b !important; }
+a.text-slate-600 { color: #475569 !important; }
+a.text-slate-700 { color: #334155 !important; }
+a.text-slate-800 { color: #1e293b !important; }
+a.text-slate-900 { color: #0f172a !important; }
+a.text-red-600 { color: #dc2626 !important; }
+a.text-emerald-600 { color: #059669 !important; }
+a.text-indigo-600 { color: #4f46e5 !important; }
+a.text-indigo-700 { color: #4338ca !important; }
 .sidebar-link { color: var(--ds-sidebar-text); }
 .sidebar-link:hover, .sidebar-link.active { background: var(--ds-sidebar-active-bg); color: var(--ds-sidebar-active-text); }
 </style>

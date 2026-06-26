@@ -352,6 +352,25 @@ class AdminMenu
         return array_keys($keys);
     }
 
+    /** آیکن نماینده هر گروه برای نمایش در toggle سایدبار. */
+    public static function getGroupIcon(string $groupLabel): string
+    {
+        return match($groupLabel) {
+            'داشبورد'    => 'dashboard',
+            'وبسایت'     => 'globe',
+            'فروشگاه'    => 'shopping-bag',
+            'مالی'       => 'wallet',
+            'محتوا'      => 'file-text',
+            'پشتیبانی'   => 'message',
+            'مارکتینگ'   => 'megaphone',
+            'کسب‌وکار'   => 'analytics',
+            'ظاهر'       => 'sun',
+            'تنظیمات'    => 'settings',
+            'سیستم'      => 'cpu',
+            default      => 'grid',
+        };
+    }
+
     /** گروه‌های ثابت منو (بدون گروه پویا). */
     protected static function getStaticGroups(): array
     {

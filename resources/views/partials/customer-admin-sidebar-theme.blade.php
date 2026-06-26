@@ -154,4 +154,103 @@
     color: var(--admin-sidebar-text) !important;
     box-shadow: inset -3px 0 0 var(--grp-color) !important;
 }
+
+/* ═══════════════════════════════════════════════════════
+   هم‌ترازی کامل با منوی کناری پلتفرم اصلی
+   ═══════════════════════════════════════════════════════ */
+
+/* گروه‌ها: بدون فاصله زیرین اضافی */
+#admin-sidebar .admin-sidebar-group {
+    margin-bottom: 0 !important;
+}
+
+/* دکمه گروه — طراحی مشابه پلتفرم: border-right رنگی + تینت */
+#admin-sidebar .sidebar-group-toggle {
+    border: none !important;
+    border-right: 3px solid color-mix(in srgb, var(--grp-color) 60%, transparent) !important;
+    background: color-mix(in srgb, var(--grp-color) 8%, transparent) !important;
+    padding: 0.35rem 0.75rem 0.35rem 0.625rem !important;
+    margin: 0.3rem 0 0.08rem 0 !important;
+    border-radius: 0 0.5rem 0.5rem 0 !important;
+    transition: background 0.18s ease, border-color 0.18s ease !important;
+}
+#admin-sidebar .sidebar-group-toggle:hover {
+    background: color-mix(in srgb, var(--grp-color) 16%, transparent) !important;
+    border-right-color: var(--grp-color) !important;
+}
+#admin-sidebar .sidebar-group-toggle[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--grp-color) 12%, transparent) !important;
+    border-right-color: var(--grp-color) !important;
+}
+
+/* لیبل گروه — 0.82rem، بدون uppercase، رنگ grp-color */
+#admin-sidebar .sidebar-group-label {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* فلش گروه — 0.9rem مشابه پلتفرم */
+#admin-sidebar .sidebar-group-caret {
+    width: 0.9rem !important;
+    height: 0.9rem !important;
+    min-width: 0.9rem !important;
+    color: color-mix(in srgb, var(--grp-color) 70%, transparent) !important;
+}
+#admin-sidebar .sidebar-group-caret.is-open {
+    color: var(--grp-color) !important;
+}
+
+/* لیست آیتم‌ها — gap و padding مشابه پلتفرم */
+#admin-sidebar .admin-sidebar-item-list {
+    gap: 1px !important;
+    padding: 0.15rem 0 0.3rem 0 !important;
+    padding-right: 0 !important;
+}
+
+/* لینک‌های منو — padding و border-radius مشابه پلتفرم */
+#admin-sidebar a.sidebar-link,
+#admin-sidebar .sidebar-link {
+    padding: 0.42rem 0.875rem !important;
+    gap: 0.6rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+}
+#admin-sidebar a.sidebar-link:hover,
+#admin-sidebar .sidebar-link:hover {
+    transform: none !important;
+}
+
+/* آیکن SVG لینک‌ها — 1.1rem مشابه پلتفرم */
+#admin-sidebar .sidebar-link svg {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+    min-width: 1.1rem !important;
+    transform: none !important;
+    transition: color 0.15s ease !important;
+}
+#admin-sidebar .sidebar-link:hover svg {
+    transform: none !important;
+}
+
+/* آیکن گروه‌های منو */
+#admin-sidebar .sidebar-group-icon {
+    width: 1rem !important;
+    height: 1rem !important;
+    min-width: 1rem !important;
+    flex-shrink: 0 !important;
+    color: var(--grp-color) !important;
+    opacity: 0.85;
+    margin-left: 0.125rem;
+}
+#admin-sidebar .sidebar-group-toggle[aria-expanded="true"] .sidebar-group-icon {
+    opacity: 1;
+}
 </style>

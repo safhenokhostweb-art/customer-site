@@ -391,8 +391,13 @@ Route::middleware('install.check')->group(function () {
             Route::post('menus/{menu}/reorder', [AdminMenuController::class, 'reorder'])->name('menus.reorder');
             Route::get('theme-design',               [ThemeDesignController::class, 'index'])->name('theme-design.index');
             Route::put('theme-design',               [ThemeDesignController::class, 'update'])->name('theme-design.update');
-            Route::post('theme-design/preset',       [ThemeDesignController::class, 'activatePreset'])->name('theme-design.preset');
-            Route::post('theme-design/reset-preset', [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
+            Route::post('theme-design/preset',              [ThemeDesignController::class, 'activatePreset'])->name('theme-design.preset');
+            Route::post('theme-design/reset-preset',         [ThemeDesignController::class, 'resetPreset'])->name('theme-design.reset-preset');
+            // Two-track theme: site vs dashboard
+            Route::post('theme-design/site-preset',          [ThemeDesignController::class, 'activateSitePreset'])->name('theme-design.site-preset');
+            Route::post('theme-design/reset-site-preset',    [ThemeDesignController::class, 'resetSitePreset'])->name('theme-design.reset-site-preset');
+            Route::post('theme-design/dashboard-preset',     [ThemeDesignController::class, 'activateDashboardPreset'])->name('theme-design.dashboard-preset');
+            Route::put('theme-design/dashboard-custom',      [ThemeDesignController::class, 'updateDashboardCustom'])->name('theme-design.dashboard-custom');
             Route::get('theme-design/canvas',              [ThemeDesignController::class, 'canvasTheme'])->name('theme-design.canvas');
             Route::post('theme-design/canvas/deactivate',  [ThemeDesignController::class, 'canvasDeactivate'])->name('theme-design.canvas-deactivate');
             Route::get('theme-design/canvas/export',        [ThemeDesignController::class, 'canvasExport'])->name('theme-design.canvas-export');

@@ -49,11 +49,16 @@
 .cd-kpi__meta{font-size:0.63rem;color:#cbd5e1}
 
 /* ─── Quick Actions Grid ─── */
-.cd-qaction{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:0.875rem 0.5rem;background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;text-decoration:none;transition:all .15s;box-shadow:0 1px 3px rgba(15,23,42,0.04)}
-.cd-qaction:hover{border-color:#a5b4fc;background:#fafafe;box-shadow:0 4px 12px rgba(99,102,241,0.1);transform:translateY(-2px);text-decoration:none}
-.cd-qaction__icon{width:2.5rem;height:2.5rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:transform .15s}
-.cd-qaction:hover .cd-qaction__icon{transform:scale(1.1)}
-.cd-qaction__label{font-size:0.7rem;font-weight:600;color:#374151;text-align:center;line-height:1.3}
+.cd-qaction{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:1rem 0.5rem;background:var(--qa-bg,#6366f1);border:none;border-radius:1rem;text-decoration:none;transition:all .2s;box-shadow:0 3px 10px rgba(0,0,0,0.13)}
+.cd-qaction:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,0.2);text-decoration:none;filter:brightness(1.1)}
+.cd-qaction__icon{width:2.75rem;height:2.75rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(255,255,255,0.22);transition:transform .2s}
+.cd-qaction:hover .cd-qaction__icon{transform:scale(1.12)}
+.cd-qaction__label{font-size:0.7rem;font-weight:700;color:#fff;text-align:center;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,0.12)}
+
+/* ─── Collapsible section toggle ─── */
+.cd-section-toggle{background:none;border:none;cursor:pointer;padding:0.125rem;color:#94a3b8;transition:color .15s}
+.cd-section-toggle:hover{color:#475569}
+.cd-section-toggle svg{transition:transform .25s;display:block}
 
 /* ─── Module Feature Cards ─── */
 .cd-mod-card{background:#fff;border:1px solid #e2e8f0;border-radius:0.875rem;padding:0.875rem;box-shadow:0 1px 3px rgba(15,23,42,0.05);transition:all .2s;display:flex;flex-direction:column;gap:0.5rem;position:relative;overflow:hidden}
@@ -294,6 +299,55 @@ function dismissModuleUpdatesBanner() {
 @endif
 
 {{-- ══════════════════════════════════════
+     QUICK ACTIONS — colorful tiles (moved to top)
+     ══════════════════════════════════════ --}}
+<div class="cd-section-label">دسترسی سریع</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0.625rem;margin-bottom:1rem">
+    <a href="{{ route('admin.settings.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#6366f1,#4f46e5)">
+        <div class="cd-qaction__icon">⚙️</div>
+        <span class="cd-qaction__label">تنظیمات</span>
+    </a>
+    <a href="{{ route('admin.pages.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#0ea5e9,#0284c7)">
+        <div class="cd-qaction__icon">📄</div>
+        <span class="cd-qaction__label">صفحات</span>
+    </a>
+    <a href="{{ route('admin.posts.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#14b8a6,#0d9488)">
+        <div class="cd-qaction__icon">✍️</div>
+        <span class="cd-qaction__label">وبلاگ</span>
+    </a>
+    <a href="{{ route('admin.inbox.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#10b981,#059669)">
+        <div class="cd-qaction__icon">💬</div>
+        <span class="cd-qaction__label">پشتیبانی</span>
+    </a>
+    @if(\App\Helpers\SiteHelper::shopEnabled())
+    <a href="{{ route('admin.orders.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#f59e0b,#d97706)">
+        <div class="cd-qaction__icon">🛒</div>
+        <span class="cd-qaction__label">سفارشات</span>
+    </a>
+    <a href="{{ route('admin.products.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#22c55e,#16a34a)">
+        <div class="cd-qaction__icon">📦</div>
+        <span class="cd-qaction__label">محصولات</span>
+    </a>
+    @endif
+    <a href="{{ route('admin.license.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+        <div class="cd-qaction__icon">🔑</div>
+        <span class="cd-qaction__label">لایسنس</span>
+    </a>
+    <a href="{{ route('admin.modules.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#f43f5e,#e11d48)">
+        <div class="cd-qaction__icon">🧩</div>
+        <span class="cd-qaction__label">ماژول‌ها</span>
+    </a>
+    <a href="{{ route('admin.theme-marketplace.my-licenses') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#ec4899,#db2777)">
+        <div class="cd-qaction__icon">🖼️</div>
+        <span class="cd-qaction__label">قالب‌های من</span>
+    </a>
+    <a href="{{ url('/') }}" target="_blank" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#64748b,#475569)">
+        <div class="cd-qaction__icon">🌐</div>
+        <span class="cd-qaction__label">مشاهده سایت</span>
+    </a>
+</div>
+
+{{-- ══════════════════════════════════════
      ROW 1 — MODULE STATS + RESOURCES
      ══════════════════════════════════════ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
@@ -408,139 +462,71 @@ function dismissModuleUpdatesBanner() {
 </div>
 
 {{-- ══════════════════════════════════════
-     ROW 3 — QUICK ACTIONS (full-width grid)
-     ══════════════════════════════════════ --}}
-<div class="cd-section-label">دسترسی سریع</div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:0.5rem;margin-bottom:1rem">
-    <a href="{{ route('admin.settings.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-indigo-50">⚙️</div>
-        <span class="cd-qaction__label">تنظیمات</span>
-    </a>
-    <a href="{{ route('admin.pages.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-sky-50">📄</div>
-        <span class="cd-qaction__label">صفحات</span>
-    </a>
-    <a href="{{ route('admin.posts.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-teal-50">✍️</div>
-        <span class="cd-qaction__label">وبلاگ</span>
-    </a>
-    <a href="{{ route('admin.inbox.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-emerald-50">💬</div>
-        <span class="cd-qaction__label">پشتیبانی</span>
-    </a>
-    @if(\App\Helpers\SiteHelper::shopEnabled())
-    <a href="{{ route('admin.orders.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-amber-50">🛒</div>
-        <span class="cd-qaction__label">سفارشات</span>
-    </a>
-    <a href="{{ route('admin.products.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-green-50">📦</div>
-        <span class="cd-qaction__label">محصولات</span>
-    </a>
-    @endif
-    <a href="{{ route('admin.license.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-violet-50">🔑</div>
-        <span class="cd-qaction__label">لایسنس</span>
-    </a>
-    <a href="{{ route('admin.modules.index') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-rose-50">🧩</div>
-        <span class="cd-qaction__label">ماژول‌ها</span>
-    </a>
-    <a href="{{ route('admin.theme-marketplace.my-licenses') }}" class="cd-qaction">
-        <div class="cd-qaction__icon bg-pink-50">🖼️</div>
-        <span class="cd-qaction__label">قالب‌های من</span>
-    </a>
-    <a href="{{ url('/') }}" target="_blank" class="cd-qaction">
-        <div class="cd-qaction__icon bg-slate-50">🌐</div>
-        <span class="cd-qaction__label">مشاهده سایت</span>
-    </a>
-</div>
-
-{{-- ══════════════════════════════════════
      MODULE FEATURE SHOWCASE CARDS
-     PHP-rendered, Alpine.js search via data-name
+     Collapsible — closed by default
      ══════════════════════════════════════ --}}
-<div class="cd-section" x-data="{ q: '' }">
-    <div class="cd-section-header">
+<div class="cd-section" x-data="{ open: false }">
+    <div class="cd-section-header" @click="open = !open" style="cursor:pointer;user-select:none">
         <div class="cd-section-icon bg-violet-100">🧩</div>
         <span class="cd-section-title">امکانات سایت شما</span>
         <div class="mr-auto flex items-center gap-2">
-            <input
-                type="text"
-                class="cd-search"
-                placeholder="🔍 جستجو در ماژول‌ها..."
-                x-model="q"
-                dir="rtl"
-            >
+            <span class="text-xs text-slate-400 font-medium" x-text="open ? 'بستن' : 'نمایش امکانات'"></span>
+            <button type="button" class="cd-section-toggle">
+                <svg x-bind:style="open ? 'transform:rotate(180deg)' : ''" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
         </div>
     </div>
-    <div class="cd-section-body">
-        @if(count($localModules) > 0)
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            @foreach($localModules as $key => $info)
-            @php
-                $fp       = in_array($key, $modulesFromPlatform, true)
-                    || ($key === 'whatsapp' && in_array('messaging', $modulesFromPlatform, true));
-                $ena      = !empty($info['enabled']);
-                $ok       = $fp && $ena;
-                $needEnable = $fp && !$ena;
-                $name     = $info['name'] ?? $key;
-                $desc     = $moduleDescriptions[$key] ?? 'امکانات این ماژول برای سایت شما فعال است';
-                $icon     = $moduleIcons[$key] ?? '🧩';
-                $color    = $moduleColors[$key] ?? '#6366f1';
-                $cardClass = $ok ? 'mod-active' : ($needEnable ? 'mod-inactive' : 'mod-platform-only');
-                // Double the description for seamless marquee loop
-                $descDouble = $desc . '    •    ' . $desc;
-            @endphp
-            <div
-                class="cd-mod-card {{ $cardClass }}"
-                data-modname="{{ $name }}"
-                x-show="!q || $el.dataset.modname.toLowerCase().includes(q.toLowerCase())"
-            >
-                {{-- Icon --}}
-                <div class="flex items-center gap-2">
-                    <div class="cd-mod-icon" style="background-color:{{ $color }}18;">
-                        <span style="font-size:1.25rem">{{ $icon }}</span>
+    <div x-show="open" x-transition.duration.200ms>
+        <div class="cd-section-body">
+            @if(count($localModules) > 0)
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                @foreach($localModules as $key => $info)
+                @php
+                    $fp       = in_array($key, $modulesFromPlatform, true)
+                        || ($key === 'whatsapp' && in_array('messaging', $modulesFromPlatform, true));
+                    $ena      = !empty($info['enabled']);
+                    $ok       = $fp && $ena;
+                    $needEnable = $fp && !$ena;
+                    $name     = $info['name'] ?? $key;
+                    $desc     = $moduleDescriptions[$key] ?? 'امکانات این ماژول برای سایت شما فعال است';
+                    $icon     = $moduleIcons[$key] ?? '🧩';
+                    $color    = $moduleColors[$key] ?? '#6366f1';
+                    $cardClass = $ok ? 'mod-active' : ($needEnable ? 'mod-inactive' : 'mod-platform-only');
+                    $descDouble = $desc . '    •    ' . $desc;
+                @endphp
+                <div class="cd-mod-card {{ $cardClass }}">
+                    <div class="flex items-center gap-2">
+                        <div class="cd-mod-icon" style="background-color:{{ $color }}18;">
+                            <span style="font-size:1.25rem">{{ $icon }}</span>
+                        </div>
+                        <div class="cd-mod-name">{{ $name }}</div>
                     </div>
-                    <div class="cd-mod-name">{{ $name }}</div>
+                    <div class="cd-mod-desc-wrap" title="{{ $desc }}">
+                        <span class="cd-mod-desc-inner">{{ $descDouble }}</span>
+                    </div>
+                    <div class="cd-mod-badges">
+                        @if($ok)
+                            <span class="cd-badge cd-badge-green">✓ فعال</span>
+                        @elseif($needEnable)
+                            <span class="cd-badge cd-badge-amber">غیرفعال</span>
+                        @else
+                            <span class="cd-badge cd-badge-gray">—</span>
+                        @endif
+                        @if($fp)
+                            <span class="cd-badge cd-badge-violet">⭐ پریمیوم</span>
+                        @endif
+                    </div>
                 </div>
-
-                {{-- Scrolling description --}}
-                <div class="cd-mod-desc-wrap" title="{{ $desc }}">
-                    <span class="cd-mod-desc-inner">{{ $descDouble }}</span>
-                </div>
-
-                {{-- Badges --}}
-                <div class="cd-mod-badges">
-                    @if($ok)
-                        <span class="cd-badge cd-badge-green">✓ فعال</span>
-                    @elseif($needEnable)
-                        <span class="cd-badge cd-badge-amber">غیرفعال</span>
-                    @else
-                        <span class="cd-badge cd-badge-gray">—</span>
-                    @endif
-                    @if($fp)
-                        <span class="cd-badge cd-badge-violet">⭐ پریمیوم</span>
-                    @endif
-                </div>
+                @endforeach
             </div>
-            @endforeach
+            @else
+            <div class="text-center py-8">
+                <div class="text-3xl mb-2">🧩</div>
+                <p class="text-sm text-slate-500">ماژولی تعریف نشده است.</p>
+                <a href="{{ route('admin.modules.index') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block">دریافت ماژول‌ها ←</a>
+            </div>
+            @endif
         </div>
-
-        {{-- Empty search result --}}
-        <div
-            class="text-center py-8 text-slate-400 text-sm"
-            x-show="q && !document.querySelector('.cd-mod-card[x-show]:not([style*=\'display: none\'])') && false"
-        >
-            ماژولی با این نام یافت نشد
-        </div>
-        @else
-        <div class="text-center py-8">
-            <div class="text-3xl mb-2">🧩</div>
-            <p class="text-sm text-slate-500">ماژولی تعریف نشده است.</p>
-            <a href="{{ route('admin.modules.index') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block">دریافت ماژول‌ها ←</a>
-        </div>
-        @endif
     </div>
 </div>
 

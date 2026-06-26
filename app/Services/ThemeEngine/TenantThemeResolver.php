@@ -8,26 +8,33 @@ use App\Services\PlatformUxService;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Resolves the active theme for the current customer-site tenant.
+ * Resolves theme tokens for the current customer-site tenant.
  *
- * Resolution order:
- * 1. ThemeSetting.preset_slug → one of the 8 enterprise presets (full token set)
- * 2. ThemeSetting custom colors → minimal override (primary, accent, surfaces)
- * 3. No override → empty (design-tokens.css defaults apply)
+ * Two independent tracks:
+ *
+ * SITE TRACK (--ui-*, --ds-*, --tb-* tokens):
+ *   1. PlatformUxService assigned preset (platform admin overrides)
+ *   2. `site_theme_preset_slug` setting
+ *   3. `theme_preset_slug` setting (backward-compat alias)
+ *   4. ThemeSetting custom colors
+ *
+ * DASHBOARD TRACK (--admin-sidebar-* tokens only):
+ *   1. `dashboard_preset_slug` setting (default: 'enterprise-blue')
+ *   2. 'custom' → individual `admin_sidebar_*` settings
  */
 class TenantThemeResolver
 {
     private const CACHE_TTL = 3600;
 
-    /**
-     * Resolve CSS custom properties for the given site.
-     * Returns associative array: ['--ui-primary-500' => '#value', ...]
-     */
+    /** Resolve all CSS custom properties (site + dashboard) */
     public function resolveTokens(?int $siteId = null): array
     {
         $cacheKey = 'tenant_theme_tokens_' . ($siteId ?? 'default');
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($siteId) {
-            return $this->buildTokens($siteId);
+            return array_merge(
+                $this->resolveSiteTokens($siteId),
+                $this->resolveDashboardTokens()
+            );
         });
     }
 
@@ -38,9 +45,7 @@ class TenantThemeResolver
         Cache::forget(PlatformUxService::CACHE_KEY);
     }
 
-    /**
-     * Render a full <style id="theme-engine-tokens"> block for injection into <head>.
-     */
+    /** Render <style> block for injection into <head> */
     public function renderCssBlock(?int $siteId = null): string
     {
         $vars = $this->resolveTokens($siteId);
@@ -55,49 +60,96 @@ class TenantThemeResolver
         return "<style id=\"theme-engine-tokens\" data-source=\"tenant-theme-resolver\">\n:root {\n{$body}\n}\n</style>";
     }
 
-    // ── Private ───────────────────────────────────────────────────────────────
+    // ── Site tokens (UI / DS / TB) ────────────────────────────────────────────
 
-    private function buildTokens(?int $siteId): array
+    private function resolveSiteTokens(?int $siteId): array
     {
         $setting = ThemeSetting::current($siteId);
 
-        // Priority 1: preset assigned by platform admin (via API site-config response)
-        // Priority 2: local Setting key
-        // Priority 3: ThemeSetting.preset_slug column
         try {
             $platformSlug = app(PlatformUxService::class)->getAssignedThemePresetSlug();
         } catch (\Throwable) {
             $platformSlug = null;
         }
-        $presetSlug = $platformSlug ?? Setting::get('theme_preset_slug') ?? ($setting->preset_slug ?? null);
-        if ($presetSlug) {
+
+        $presetSlug = $platformSlug
+            ?? Setting::get('site_theme_preset_slug')
+            ?? Setting::get('theme_preset_slug')      // backward-compat
+            ?? ($setting->preset_slug ?? null);
+
+        if ($presetSlug && $presetSlug !== 'custom') {
             $preset = $this->loadPreset($presetSlug);
             if ($preset) {
-                return $preset;
+                return $this->extractSiteTokens($preset);
             }
         }
 
-        // Otherwise map ThemeSetting's custom colors to --ui-* / --ds-* vars
         return $this->fromThemeSetting($setting);
     }
 
-    /**
-     * Load a preset's full token set by slug.
-     * Presets mirror the ThemePresetRegistry — defined here without cross-project import.
-     */
-    private function loadPreset(string $slug): ?array
+    // ── Dashboard tokens (--admin-sidebar-*) ─────────────────────────────────
+
+    private function resolveDashboardTokens(): array
     {
-        $presets = $this->presets();
-        return $presets[$slug] ?? null;
+        $presetSlug = Setting::get('dashboard_preset_slug', 'enterprise-blue');
+
+        if ($presetSlug === 'custom') {
+            return $this->dashboardTokensFromSettings();
+        }
+
+        $preset = $this->loadPreset($presetSlug ?: 'enterprise-blue');
+        if ($preset) {
+            return $this->extractDashboardTokens($preset);
+        }
+
+        // Hard fallback: enterprise-blue dashboard colors
+        return [
+            '--admin-sidebar-bg1'    => '#1e293b',
+            '--admin-sidebar-bg2'    => '#0f172a',
+            '--admin-sidebar-text'   => '#f1f5f9',
+            '--admin-sidebar-muted'  => '#94a3b8',
+            '--admin-sidebar-accent' => '#60a5fa',
+            '--admin-sidebar-border' => '#334155',
+        ];
     }
 
-    /**
-     * Map ThemeSetting columns → CSS custom properties.
-     * Only overrides the tokens that ThemeSetting actually stores.
-     */
+    private function dashboardTokensFromSettings(): array
+    {
+        return [
+            '--admin-sidebar-bg1'    => Setting::get('admin_sidebar_bg1',    '#1e293b'),
+            '--admin-sidebar-bg2'    => Setting::get('admin_sidebar_bg2',    '#0f172a'),
+            '--admin-sidebar-text'   => Setting::get('admin_sidebar_text',   '#f1f5f9'),
+            '--admin-sidebar-muted'  => Setting::get('admin_sidebar_muted',  '#94a3b8'),
+            '--admin-sidebar-accent' => Setting::get('admin_sidebar_accent', '#60a5fa'),
+            '--admin-sidebar-border' => Setting::get('admin_sidebar_border', '#334155'),
+        ];
+    }
+
+    // ── Token filters ─────────────────────────────────────────────────────────
+
+    private function extractSiteTokens(array $preset): array
+    {
+        return array_filter(
+            $preset,
+            fn($k) => !str_starts_with($k, '--admin-sidebar-'),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    private function extractDashboardTokens(array $preset): array
+    {
+        return array_filter(
+            $preset,
+            fn($k) => str_starts_with($k, '--admin-sidebar-'),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    // ── Custom ThemeSetting → CSS vars ────────────────────────────────────────
+
     private function fromThemeSetting(ThemeSetting $s): array
     {
-        $defaults = ThemeSetting::defaults();
+        $defaults  = ThemeSetting::defaults();
         $primary   = $s->primary_color   ?? $defaults['primary_color'];
         $secondary = $s->secondary_color ?? $defaults['secondary_color'];
         $radius    = $s->border_radius   ?? $defaults['border_radius'];
@@ -117,7 +169,6 @@ class TenantThemeResolver
             '--tb-radius'               => $radius,
         ];
 
-        // Derive interactive state colors from primary hex
         if (preg_match('/^#([0-9a-f]{6})$/i', $primary, $m)) {
             [$r, $g, $b] = array_map('hexdec', str_split($m[1], 2));
             $vars['--ui-hover-overlay']  = "rgba($r,$g,$b,0.04)";
@@ -130,12 +181,12 @@ class TenantThemeResolver
         }
 
         if (!empty($s->font_family_body)) {
-            $vars['--ds-font-body']   = $s->font_family_body;
-            $vars['--tb-font-body']   = $s->font_family_body;
+            $vars['--ds-font-body']    = $s->font_family_body;
+            $vars['--tb-font-body']    = $s->font_family_body;
         }
         if (!empty($s->font_family_heading)) {
-            $vars['--ds-font-title']  = $s->font_family_heading;
-            $vars['--tb-font-heading']= $s->font_family_heading;
+            $vars['--ds-font-title']   = $s->font_family_heading;
+            $vars['--tb-font-heading'] = $s->font_family_heading;
         }
         if (!empty($s->base_font_size)) {
             $vars['--ds-font-size-base'] = $s->base_font_size;
@@ -145,48 +196,51 @@ class TenantThemeResolver
         return $vars;
     }
 
-    /**
-     * Full preset token maps including --admin-sidebar-* vars used by customer-site layout.
-     * Mirrors ThemePresetRegistry from saas-platform.
-     * All presets include: button-primary-text, hover/active/selected bg, border, text-secondary/muted.
-     */
+    // ── Preset registry ───────────────────────────────────────────────────────
+
+    private function loadPreset(string $slug): ?array
+    {
+        return $this->presets()[$slug] ?? null;
+    }
+
+    /** Returns slugs of all available presets (for validation) */
+    public static function presetSlugs(): array
+    {
+        return [
+            'enterprise-blue', 'modern-indigo', 'emerald-pro', 'royal-purple',
+            'midnight-dark', 'graphite', 'ocean-teal', 'executive-gold',
+        ];
+    }
+
     private function presets(): array
     {
         return [
             'enterprise-blue' => [
-                // Accent
                 '--ui-indigo'               => '#4f46e5',
                 '--ui-indigo-hover'         => '#4338ca',
                 '--ui-indigo-light'         => '#eef2ff',
                 '--ui-indigo-ring'          => 'rgb(79 70 229 / 0.25)',
                 '--ui-focus-ring'           => '0 0 0 3px rgb(79 70 229 / 0.25)',
-                // Interactive state
                 '--ui-hover-overlay'        => 'rgba(79,70,229,0.04)',
                 '--ui-hover-bg'             => 'rgba(79,70,229,0.06)',
                 '--ui-active-overlay'       => 'rgba(79,70,229,0.08)',
                 '--ui-active-bg'            => 'rgba(79,70,229,0.10)',
                 '--ui-selected-bg'          => 'rgba(79,70,229,0.08)',
-                // Palette
                 '--ui-primary-500'          => '#3b82f6',
                 '--ui-primary-600'          => '#2563eb',
-                // Surfaces
                 '--ui-bg'                   => '#f1f5f9',
                 '--ui-surface'              => '#ffffff',
                 '--ui-surface-soft'         => '#f8fafc',
-                // Typography
                 '--ui-text-primary'         => '#0f172a',
                 '--ui-text-secondary'       => '#334155',
                 '--ui-text-muted'           => '#64748b',
-                // Borders
                 '--ui-border'               => '#e2e8f0',
                 '--ui-border-strong'        => '#cbd5e1',
-                // Design system
                 '--ds-primary'              => '#4f46e5',
                 '--ds-button-primary-bg'    => '#4f46e5',
                 '--ds-button-primary-text'  => '#ffffff',
                 '--ds-link-color'           => '#4f46e5',
                 '--ds-menu-bg'              => '#ffffff',
-                // Admin sidebar
                 '--admin-sidebar-bg1'       => '#1e293b',
                 '--admin-sidebar-bg2'       => '#0f172a',
                 '--admin-sidebar-text'      => '#f1f5f9',
@@ -359,7 +413,6 @@ class TenantThemeResolver
                 '--admin-sidebar-border'    => '#374151',
             ],
             'ocean-teal' => [
-                // FIX: --ui-indigo-light was #f0fdfa (= page bg) → now #ccfbf1 (distinct)
                 '--ui-indigo'               => '#0d9488',
                 '--ui-indigo-hover'         => '#0f766e',
                 '--ui-indigo-light'         => '#ccfbf1',
@@ -378,7 +431,6 @@ class TenantThemeResolver
                 '--ui-text-primary'         => '#042f2e',
                 '--ui-text-secondary'       => '#134e4a',
                 '--ui-text-muted'           => '#0f766e',
-                // FIX: border was #99f6e4 (contrast 1.13:1 on white) → now #5eead4
                 '--ui-border'               => '#5eead4',
                 '--ui-border-strong'        => '#2dd4bf',
                 '--ds-primary'              => '#0d9488',
@@ -394,7 +446,6 @@ class TenantThemeResolver
                 '--admin-sidebar-border'    => '#0f766e',
             ],
             'executive-gold' => [
-                // FIX: --ui-indigo-light was #fffbeb (= page bg) → now #fde68a (distinct)
                 '--ui-indigo'               => '#b45309',
                 '--ui-indigo-hover'         => '#92400e',
                 '--ui-indigo-light'         => '#fde68a',
@@ -413,7 +464,6 @@ class TenantThemeResolver
                 '--ui-text-primary'         => '#1c1917',
                 '--ui-text-secondary'       => '#44403c',
                 '--ui-text-muted'           => '#78716c',
-                // FIX: border was #fde68a (contrast ~1.15:1 on white) → now #fcd34d
                 '--ui-border'               => '#fcd34d',
                 '--ui-border-strong'        => '#fbbf24',
                 '--ds-primary'              => '#b45309',

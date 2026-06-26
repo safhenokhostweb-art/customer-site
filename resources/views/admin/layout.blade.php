@@ -59,14 +59,16 @@
                                         class="sidebar-group-toggle"
                                         data-group-toggle="{{ $loop->index }}"
                                         aria-expanded="false"
+                                        title="{{ $groupLabel }}"
                                     >
+                                        <x-core-ui::icon name="{{ \App\Helpers\AdminMenu::getGroupIcon($groupLabel) }}" class="sidebar-group-icon" aria-hidden="true" />
                                         <span class="sidebar-group-label sidebar-text">{{ $groupLabel }}</span>
-                                        <x-core-ui::icon name="chevron-down" class="sidebar-group-caret" aria-hidden="true" />
+                                        <x-core-ui::icon name="chevron-down" class="sidebar-group-caret sidebar-text" aria-hidden="true" />
                                     </button>
                                     <div class="admin-sidebar-item-list sidebar-group-items is-collapsed" data-group-items="{{ $loop->index }}">
                                         @foreach($visibleKeys as $key)
                                             @php $routeName = \App\Helpers\AdminMenu::getRoute($key); $routeParams = \App\Helpers\AdminMenu::getRouteParams($key); @endphp
-                                            <a href="{{ route($routeName, $routeParams) }}" class="sidebar-link {{ \App\Helpers\AdminMenu::isActive($key) ? 'active' : '' }}" style="position:relative">
+                                            <a href="{{ route($routeName, $routeParams) }}" class="sidebar-link {{ \App\Helpers\AdminMenu::isActive($key) ? 'active' : '' }}" title="{{ \App\Helpers\AdminMenu::getTitle($key) }}" style="position:relative">
                                                 @include('admin.partials.sidebar-icon', ['key' => $key])
                                                 <span class="sidebar-text">{{ \App\Helpers\AdminMenu::getTitle($key) }}</span>
                                                 @if($key === 'support')

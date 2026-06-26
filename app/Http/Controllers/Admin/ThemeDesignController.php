@@ -25,14 +25,30 @@ class ThemeDesignController extends Controller
 
     public function index(): View
     {
-        $settings     = ThemeSetting::current();
-        $buttonStyles = ThemeSetting::buttonStyles();
-        $activePreset = Setting::get('theme_preset_slug', '');
-        $presets      = $this->presetList();
-        $canvasActive = !empty(Setting::get('active_canvas_theme_data'));
-        $canvasName   = Setting::get('active_canvas_theme_name', '');
+        $settings              = ThemeSetting::current();
+        $buttonStyles          = ThemeSetting::buttonStyles();
+        $activeSitePreset      = Setting::get('site_theme_preset_slug') ?? Setting::get('theme_preset_slug', '');
+        $activeDashPreset      = Setting::get('dashboard_preset_slug', 'enterprise-blue');
+        $presets               = $this->presetList();
+        $canvasActive          = !empty(Setting::get('active_canvas_theme_data'));
+        $canvasName            = Setting::get('active_canvas_theme_name', '');
 
-        return view('admin.theme-design.index', compact('settings', 'buttonStyles', 'activePreset', 'presets', 'canvasActive', 'canvasName'));
+        // Custom dashboard colors (for editable custom mode)
+        $dashCustomColors = [
+            'admin_sidebar_bg1'    => Setting::get('admin_sidebar_bg1',    '#1e293b'),
+            'admin_sidebar_bg2'    => Setting::get('admin_sidebar_bg2',    '#0f172a'),
+            'admin_sidebar_text'   => Setting::get('admin_sidebar_text',   '#f1f5f9'),
+            'admin_sidebar_muted'  => Setting::get('admin_sidebar_muted',  '#94a3b8'),
+            'admin_sidebar_accent' => Setting::get('admin_sidebar_accent', '#60a5fa'),
+            'admin_sidebar_border' => Setting::get('admin_sidebar_border', '#334155'),
+        ];
+
+        return view('admin.theme-design.index', compact(
+            'settings', 'buttonStyles',
+            'activeSitePreset', 'activeDashPreset',
+            'presets', 'canvasActive', 'canvasName',
+            'dashCustomColors'
+        ));
     }
 
     // ── Canvas Theme Management ───────────────────────────────────────────────
@@ -558,7 +574,68 @@ class ThemeDesignController extends Controller
         ));
     }
 
-    /** ذخیره تنظیمات سفارشی رنگ / فونت */
+    /** فعال‌سازی پریست تم سایت */
+    public function activateSitePreset(Request $request): RedirectResponse
+    {
+        $validSlugs = array_column($this->presetList(), 'slug');
+        $slug = $request->validate([
+            'preset_slug' => 'required|string|in:' . implode(',', $validSlugs),
+        ])['preset_slug'];
+
+        Setting::set('site_theme_preset_slug', $slug, 'theme');
+        Setting::set('theme_preset_slug', $slug, 'theme'); // backward-compat
+        $this->resolver->clearCache();
+
+        return back()->with('success', 'تم سایت «' . $this->presetName($slug) . '» فعال شد.');
+    }
+
+    /** بازنشانی پریست تم سایت به حالت سفارشی */
+    public function resetSitePreset(): RedirectResponse
+    {
+        Setting::set('site_theme_preset_slug', 'custom', 'theme');
+        Setting::set('theme_preset_slug', '', 'theme');
+        $this->resolver->clearCache();
+        return back()->with('success', 'تم سایت به حالت سفارشی تغییر یافت.');
+    }
+
+    /** فعال‌سازی پریست داشبورد */
+    public function activateDashboardPreset(Request $request): RedirectResponse
+    {
+        $validSlugs = array_column($this->presetList(), 'slug');
+        $slug = $request->validate([
+            'preset_slug' => 'required|string|in:' . implode(',', $validSlugs),
+        ])['preset_slug'];
+
+        Setting::set('dashboard_preset_slug', $slug, 'theme');
+        $this->resolver->clearCache();
+
+        return back()->with('success', 'تم داشبورد «' . $this->presetName($slug) . '» فعال شد.');
+    }
+
+    /** تنظیم داشبورد به حالت سفارشی و ذخیره رنگ‌های دستی */
+    public function updateDashboardCustom(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'admin_sidebar_bg1'    => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'admin_sidebar_bg2'    => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'admin_sidebar_text'   => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'admin_sidebar_muted'  => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'admin_sidebar_accent' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'admin_sidebar_border' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+        ]);
+
+        Setting::set('dashboard_preset_slug', 'custom', 'theme');
+        foreach ($data as $key => $value) {
+            if ($value) {
+                Setting::set($key, $value, 'theme');
+            }
+        }
+        $this->resolver->clearCache();
+
+        return back()->with('success', 'رنگ‌های داشبورد ذخیره شد.');
+    }
+
+    /** ذخیره تنظیمات سفارشی رنگ / فونت سایت */
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
