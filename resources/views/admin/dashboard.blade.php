@@ -49,11 +49,12 @@
 .cd-kpi__meta{font-size:0.63rem;color:#cbd5e1}
 
 /* ─── Quick Actions Grid ─── */
-.cd-qaction{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:1rem 0.5rem;background:var(--qa-bg,#6366f1);border:none;border-radius:1rem;text-decoration:none;transition:all .2s;box-shadow:0 3px 10px rgba(0,0,0,0.13)}
-.cd-qaction:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,0.2);text-decoration:none;filter:brightness(1.1)}
-.cd-qaction__icon{width:2.75rem;height:2.75rem;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(255,255,255,0.22);transition:transform .2s}
+.cd-qactions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:0.5rem}
+.cd-qaction{display:flex;flex-direction:column;align-items:center;gap:0.375rem;padding:0.75rem 0.35rem;background:var(--qa-bg,#6366f1);border:none;border-radius:0.875rem;text-decoration:none;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.cd-qaction:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,0.18);text-decoration:none;filter:brightness(1.1)}
+.cd-qaction__icon{width:2.25rem;height:2.25rem;border-radius:0.6rem;display:flex;align-items:center;justify-content:center;font-size:1.15rem;background:rgba(255,255,255,0.22);transition:transform .18s}
 .cd-qaction:hover .cd-qaction__icon{transform:scale(1.12)}
-.cd-qaction__label{font-size:0.7rem;font-weight:700;color:#fff;text-align:center;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,0.12)}
+.cd-qaction__label{font-size:0.65rem;font-weight:700;color:#fff;text-align:center;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,0.12)}
 
 /* ─── Collapsible section toggle ─── */
 .cd-section-toggle{background:none;border:none;cursor:pointer;padding:0.125rem;color:#94a3b8;transition:color .15s}
@@ -115,7 +116,9 @@
   .cd-kpi__value{font-size:1.125rem}
   .cd-mstat__val{font-size:1.1rem}
   .cd-welcome__name{font-size:0.8rem}
-  .cd-qaction{padding:0.625rem 0.375rem}
+  .cd-qactions-grid{gap:0.375rem}
+  .cd-qaction{padding:0.55rem 0.25rem}
+  .cd-qaction__icon{width:1.9rem;height:1.9rem;font-size:1rem}
 }
 </style>
 @endpush
@@ -302,7 +305,7 @@ function dismissModuleUpdatesBanner() {
      QUICK ACTIONS — colorful tiles (moved to top)
      ══════════════════════════════════════ --}}
 <div class="cd-section-label">دسترسی سریع</div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0.625rem;margin-bottom:1rem">
+<div class="cd-qactions-grid" style="margin-bottom:1rem">
     <a href="{{ route('admin.settings.index') }}" class="cd-qaction" style="--qa-bg:linear-gradient(135deg,#6366f1,#4f46e5)">
         <div class="cd-qaction__icon">⚙️</div>
         <span class="cd-qaction__label">تنظیمات</span>
