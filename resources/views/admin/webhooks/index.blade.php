@@ -62,7 +62,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="text-slate-500 text-sm">{{ number_format($endpoint->webhook_events_count) }}</span>
+                                <span class="text-slate-500 text-sm">@numFa($endpoint->webhook_events_count)</span>
                             </td>
                             <td>
                                 <div class="flex flex-wrap gap-1">

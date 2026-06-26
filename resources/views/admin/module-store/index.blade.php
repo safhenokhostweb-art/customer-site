@@ -30,9 +30,9 @@
                     @endif
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         @if(isset($module['display_price']) && (int) $module['display_price'] > 0)
-                            <span class="font-bold text-indigo-600">{{ number_format((int) $module['display_price']) }} ریال</span>
+                            <span class="font-bold text-indigo-600">@numFa((int) $module['display_price']) ریال</span>
                             @if(!empty($module['price_promo_irr']) && (int) $module['price_promo_irr'] < (int) ($module['price_irr'] ?? 0))
-                                <span class="text-sm text-gray-400 line-through">{{ number_format((int) ($module['price_irr'] ?? 0)) }}</span>
+                                <span class="text-sm text-gray-400 line-through">{{ num_fa((int) ($module['price_irr'] ?? 0)) }}</span>
                             @endif
                         @else
                             <span class="text-gray-500">رایگان</span>

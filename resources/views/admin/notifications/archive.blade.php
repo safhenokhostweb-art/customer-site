@@ -50,7 +50,7 @@
                             @php $types = ['info'=>'اطلاع','success'=>'موفق','warning'=>'هشدار','danger'=>'مهم','promo'=>'تبلیغاتی','ad'=>'تبلیغات']; @endphp
                             {{ $types[$b->type] ?? $b->type }}
                         </td>
-                        <td class="p-3">{{ number_format($b->recipient_count) }}</td>
+                        <td class="p-3">@numFa($b->recipient_count)</td>
                         <td class="p-3 text-slate-600">{{ \App\Helpers\Jalali::formatFa($b->sent_at, 'Y/m/d H:i') }}</td>
                     </tr>
                     @empty

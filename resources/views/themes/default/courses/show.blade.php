@@ -78,7 +78,7 @@
                         </form>
                         @else
                         <div style="text-align:center; padding:1rem; background:#fef3c7; border-radius:.75rem; border:1px solid #fde68a;">
-                            <div style="font-weight:700; color:#92400e; font-size:.875rem; margin-bottom:.5rem;">{{ number_format($course->price) }} تومان</div>
+                            <div style="font-weight:700; color:#92400e; font-size:.875rem; margin-bottom:.5rem;">@numFa($course->price) تومان</div>
                             <a href="{{ route('pricing.index') }}" style="font-size:.78rem; color:#92400e; text-decoration:underline;">خرید اشتراک</a>
                         </div>
                         @endif
