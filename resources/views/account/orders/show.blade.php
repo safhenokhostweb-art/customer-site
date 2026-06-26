@@ -16,7 +16,7 @@
                 @endphp
                 <span class="badge {{ $statusClass }}">{{ $statusLabels[$order->status] ?? $order->status }}</span>
             </div>
-            <div><span class="text-slate-500">جمع کل:</span> <strong>{{ number_format($order->total) }} تومان</strong></div>
+            <div><span class="text-slate-500">جمع کل:</span> <strong>@numFa($order->total) تومان</strong></div>
         </div>
     </div>
 
@@ -36,16 +36,16 @@
                     @foreach($order->items as $item)
                         <tr class="border-b border-slate-100">
                             <td class="py-3 px-4">{{ $item->product_title }}</td>
-                            <td class="py-3 px-4">{{ number_format($item->price) }} تومان</td>
+                            <td class="py-3 px-4">@numFa($item->price) تومان</td>
                             <td class="py-3 px-4">{{ $item->quantity }}</td>
-                            <td class="py-3 px-4">{{ number_format($item->total) }} تومان</td>
+                            <td class="py-3 px-4">@numFa($item->total) تومان</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
             <div class="mt-4 flex justify-between items-center">
                 <span class="text-slate-500">جمع کل:</span>
-                <strong class="text-lg">{{ number_format($order->total) }} تومان</strong>
+                <strong class="text-lg">@numFa($order->total) تومان</strong>
             </div>
         </div>
     </div>

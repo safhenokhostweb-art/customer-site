@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\Jalali;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
@@ -46,10 +47,12 @@ class UserPanelController extends Controller
 
         // فیلتر بازه تاریخ
         if ($from = $request->input('from_date')) {
-            $query->whereDate('created_at', '>=', $from);
+            $c = Jalali::toCarbon($from);
+            $query->whereDate('created_at', '>=', $c ? $c->toDateString() : $from);
         }
         if ($to = $request->input('to_date')) {
-            $query->whereDate('created_at', '<=', $to);
+            $c = Jalali::toCarbon($to);
+            $query->whereDate('created_at', '<=', $c ? $c->toDateString() : $to);
         }
 
         // مرتب‌سازی

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\Jalali;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderStatusService;
@@ -21,8 +22,14 @@ class OrderController extends Controller
                     ->orWhere('customer_name', 'like', '%' . $request->q . '%')
                     ->orWhere('customer_mobile', 'like', '%' . $request->q . '%');
             }))
-            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to,   fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->date_from, function ($q) use ($request) {
+                $c = Jalali::toCarbon($request->date_from);
+                $q->whereDate('created_at', '>=', $c ? $c->toDateString() : $request->date_from);
+            })
+            ->when($request->date_to, function ($q) use ($request) {
+                $c = Jalali::toCarbon($request->date_to);
+                $q->whereDate('created_at', '<=', $c ? $c->toDateString() : $request->date_to);
+            })
             ->latest();
 
         $orders = $query->paginate(20)->withQueryString();

@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">مخاطبین</h1>
-            <p class="text-slate-500 text-sm mt-0.5">{{ number_format($contacts->total()) }} مخاطب</p>
+            <p class="text-slate-500 text-sm mt-0.5">{{ num_fa($contacts->total()) }} مخاطب</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
             <form method="POST" action="{{ route('admin.crm.contacts.import') }}" class="inline">

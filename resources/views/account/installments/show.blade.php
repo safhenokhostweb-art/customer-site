@@ -67,20 +67,20 @@
 <div class="inst-show__stats">
     <div class="inst-show__stat">
         <span class="inst-show__stat-lbl">مبلغ کل خرید</span>
-        <span class="inst-show__stat-num">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->total_amount)) }} <small>تومان</small></span>
+        <span class="inst-show__stat-num">@numFa($order->total_amount) <small>تومان</small></span>
     </div>
     <div class="inst-show__stat">
         <span class="inst-show__stat-lbl">پیش‌پرداخت</span>
-        <span class="inst-show__stat-num">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->down_payment)) }} <small>تومان</small></span>
+        <span class="inst-show__stat-num">@numFa($order->down_payment) <small>تومان</small></span>
     </div>
     <div class="inst-show__stat">
         <span class="inst-show__stat-lbl">قسط ماهانه</span>
-        <span class="inst-show__stat-num">{{ \App\Helpers\NumberHelper::formatFa(number_format($order->monthly_installment)) }} <small>تومان</small></span>
+        <span class="inst-show__stat-num">@numFa($order->monthly_installment) <small>تومان</small></span>
     </div>
     <div class="inst-show__stat">
         <span class="inst-show__stat-lbl">مانده پرداخت‌نشده</span>
         <span class="inst-show__stat-num" style="color:{{ $remaining > 0 ? '#c2410c' : '#15803d' }}">
-            {{ \App\Helpers\NumberHelper::formatFa(number_format(max(0, $remaining))) }} <small>تومان</small>
+            @numFa(max(0, $remaining)) <small>تومان</small>
         </span>
     </div>
 </div>
@@ -156,7 +156,7 @@
                         {{ \App\Helpers\Jalali::formatFa($payment->due_date, 'Y/m/d') }}
                     </td>
                     <td style="white-space:nowrap;font-weight:600">
-                        {{ \App\Helpers\NumberHelper::formatFa(number_format($payment->amount)) }}
+                        @numFa($payment->amount)
                         <span style="font-size:.72rem;color:#94a3b8">تومان</span>
                     </td>
                     <td>

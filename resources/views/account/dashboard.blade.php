@@ -120,13 +120,13 @@
         <a href="{{ route('account.orders.index') }}" class="ua-tile ua-tile--indigo">
             <span class="ua-tile__icon"><x-core-ui::icon name="cart" class="w-5 h-5" /></span>
             <span class="ua-tile__label">سفارشات</span>
-            <span class="ua-tile__value">{{ number_format($ordersCount) }}</span>
+            <span class="ua-tile__value">@numFa($ordersCount)</span>
             <span class="ua-tile__hint">مشاهده همه ←</span>
         </a>
         <div class="ua-tile ua-tile--teal" style="cursor:default">
             <span class="ua-tile__icon"><x-core-ui::icon name="receipt" class="w-5 h-5" /></span>
             <span class="ua-tile__label">مجموع خریدها</span>
-            <span class="ua-tile__value" style="font-size:1.1rem">{{ number_format($ordersTotal) }}</span>
+            <span class="ua-tile__value" style="font-size:1.1rem">@numFa($ordersTotal)</span>
             <span class="ua-tile__hint">تومان</span>
         </div>
     @endif
@@ -134,7 +134,7 @@
         <a href="{{ route('account.subscriptions.index') }}" class="ua-tile ua-tile--orange">
             <span class="ua-tile__icon"><x-core-ui::icon name="subscription" class="w-5 h-5" /></span>
             <span class="ua-tile__label">اشتراک‌های فعال</span>
-            <span class="ua-tile__value">{{ number_format($activeSubscriptionsCount) }}</span>
+            <span class="ua-tile__value">@numFa($activeSubscriptionsCount)</span>
             <span class="ua-tile__hint">مدیریت اشتراک ←</span>
         </a>
     @endif
@@ -142,14 +142,14 @@
         <div class="ua-tile ua-tile--pink" style="cursor:default">
             <span class="ua-tile__icon"><x-core-ui::icon name="wallet" class="w-5 h-5" /></span>
             <span class="ua-tile__label">موجودی کیف پول</span>
-            <span class="ua-tile__value" style="font-size:1.1rem">{{ number_format($walletBalance) }}</span>
+            <span class="ua-tile__value" style="font-size:1.1rem">@numFa($walletBalance)</span>
             <span class="ua-tile__hint">تومان</span>
         </div>
     @endif
     <a href="{{ route('account.notifications.index') }}" class="ua-tile ua-tile--blue">
         <span class="ua-tile__icon"><x-core-ui::icon name="bell" class="w-5 h-5" /></span>
         <span class="ua-tile__label">اعلان‌ها</span>
-        <span class="ua-tile__value">{{ number_format($unreadNotificationsCount) }}</span>
+        <span class="ua-tile__value">@numFa($unreadNotificationsCount)</span>
         <span class="ua-tile__hint">خوانده‌نشده ←</span>
     </a>
     @if(isset($pointsBalance))
@@ -227,7 +227,7 @@
                                 <div class="text-xs text-slate-500">{{ \App\Helpers\Jalali::formatFa($order->created_at, 'Y/m/d') }}</div>
                             </div>
                             <span class="badge badge-{{ $order->status === 'completed' || $order->status === 'paid' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $order->status }}</span>
-                            <span class="text-slate-600 text-sm">{{ number_format($order->total) }} تومان</span>
+                            <span class="text-slate-600 text-sm">@numFa($order->total) تومان</span>
                         </div>
                     @endforeach
                 </div>
@@ -251,7 +251,7 @@
                                 <div class="text-xs text-slate-500">{{ \App\Helpers\Jalali::formatFa($inv->created_at, 'Y/m/d') }}</div>
                             </div>
                             <span class="badge badge-{{ $inv->status === 'paid' ? 'success' : ($inv->status === 'cancelled' ? 'danger' : 'warning') }}">{{ $inv->status }}</span>
-                            <span class="text-slate-600 text-sm">{{ number_format($inv->total) }} تومان</span>
+                            <span class="text-slate-600 text-sm">@numFa($inv->total) تومان</span>
                         </div>
                     @endforeach
                 </div>
@@ -341,7 +341,7 @@
             <div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
                 <div>
                     <p class="text-sm font-medium text-slate-800">{{ $inst->plan?->title ?? 'طرح قسطی' }}</p>
-                    <p class="text-xs text-slate-500 mt-0.5">{{ number_format($inst->monthly_installment ?? 0) }} تومان / ماه</p>
+                    <p class="text-xs text-slate-500 mt-0.5">@numFa($inst->monthly_installment ?? 0) تومان / ماه</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-xs px-2 py-0.5 rounded-full {{ $inst->status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700' }}">

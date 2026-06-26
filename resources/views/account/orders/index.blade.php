@@ -23,7 +23,7 @@
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
                         <td class="py-3 px-4"><a href="{{ route('account.orders.show', $order) }}" class="font-medium text-indigo-600">{{ $order->number }}</a></td>
                         <td class="py-3 px-4">{{ \App\Helpers\Jalali::formatFa($order->created_at, 'Y/m/d H:i') }}</td>
-                        <td class="py-3 px-4">{{ number_format($order->total) }} تومان</td>
+                        <td class="py-3 px-4">@numFa($order->total) تومان</td>
                         <td class="py-3 px-4"><span class="badge badge-warning">{{ $order->status }}</span></td>
                         <td class="py-3 px-4"><a href="{{ route('account.orders.show', $order) }}" class="btn btn-secondary btn-sm">مشاهده</a></td>
                     </tr>

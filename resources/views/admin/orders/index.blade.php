@@ -86,11 +86,11 @@
             </div>
             <div style="min-width:130px">
                 <label class="form-label" style="font-size:.75rem">از تاریخ</label>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control" style="height:2.25rem;font-size:.85rem">
+                <input type="text" name="date_from" value="{{ request('date_from') }}" placeholder="۱۴۰۵/۰۱/۰۱" class="form-control persian-date-input" style="height:2.25rem;font-size:.85rem">
             </div>
             <div style="min-width:130px">
                 <label class="form-label" style="font-size:.75rem">تا تاریخ</label>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" style="height:2.25rem;font-size:.85rem">
+                <input type="text" name="date_to" value="{{ request('date_to') }}" placeholder="۱۴۰۵/۱۲/۲۹" class="form-control persian-date-input" style="height:2.25rem;font-size:.85rem">
             </div>
             <div style="display:flex;gap:.5rem">
                 <button type="submit" class="btn btn-primary" style="height:2.25rem;padding:0 1rem;font-size:.85rem">

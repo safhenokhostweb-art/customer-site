@@ -16,15 +16,15 @@
     <div class="admin-kpi-grid mb-4">
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">همهٔ رکوردها</p>
-            <p class="admin-kpi-card__value">{{ number_format($stats['total'] ?? 0) }}</p>
+            <p class="admin-kpi-card__value">@numFa($stats['total'] ?? 0)</p>
         </div>
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">فعال</p>
-            <p class="admin-kpi-card__value text-emerald-700">{{ number_format($stats['active'] ?? 0) }}</p>
+            <p class="admin-kpi-card__value text-emerald-700">@numFa($stats['active'] ?? 0)</p>
         </div>
         <div class="admin-kpi-card">
             <p class="admin-kpi-card__label">غیرفعال</p>
-            <p class="admin-kpi-card__value text-slate-600">{{ number_format($stats['inactive'] ?? 0) }}</p>
+            <p class="admin-kpi-card__value text-slate-600">@numFa($stats['inactive'] ?? 0)</p>
         </div>
     </div>
 

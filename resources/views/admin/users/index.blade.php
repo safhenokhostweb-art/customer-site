@@ -246,7 +246,7 @@
                    class="tkt-form-input pr-9 text-sm w-full">
         </div>
 
-        <button @click="showFilters = !showFilters"
+        <button @click="showFilters = !showFilters; if(showFilters) $nextTick(() => { window.promoteDeferredPersianInputs && promoteDeferredPersianInputs($el.closest('.glass-card')); window.initPersianDateInputs && initPersianDateInputs($el.closest('.glass-card')); })"
                 class="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl border transition-all"
                 :class="showFilters
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
@@ -298,13 +298,13 @@
             {{-- از تاریخ --}}
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">از تاریخ عضویت</label>
-                <input type="date" x-model="from_date" class="tkt-form-input text-sm">
+                <input type="text" x-model="from_date" @change="from_date = $event.target.value" placeholder="۱۴۰۵/۰۱/۰۱" class="tkt-form-input text-sm persian-date-defer">
             </div>
 
             {{-- تا تاریخ --}}
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">تا تاریخ عضویت</label>
-                <input type="date" x-model="to_date" class="tkt-form-input text-sm">
+                <input type="text" x-model="to_date" @change="to_date = $event.target.value" placeholder="۱۴۰۵/۱۲/۲۹" class="tkt-form-input text-sm persian-date-defer">
             </div>
         </div>
 

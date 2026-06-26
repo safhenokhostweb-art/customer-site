@@ -104,11 +104,11 @@
                         <div style="font-size:.72rem;color:#94a3b8;margin-top:.15rem">{{ \App\Helpers\NumberHelper::formatFa($order->plan?->period_months ?? 0) }} ماهه</div>
                     </td>
                     <td style="font-weight:600;color:#334155;white-space:nowrap">
-                        {{ \App\Helpers\NumberHelper::formatFa(number_format($order->total_amount)) }}
+                        @numFa($order->total_amount)
                         <span style="font-size:.72rem;color:#94a3b8">تومان</span>
                     </td>
                     <td style="white-space:nowrap">
-                        {{ \App\Helpers\NumberHelper::formatFa(number_format($order->monthly_installment)) }}
+                        @numFa($order->monthly_installment)
                         <span style="font-size:.72rem;color:#94a3b8">تومان</span>
                     </td>
                     <td style="min-width:120px">

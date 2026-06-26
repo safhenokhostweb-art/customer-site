@@ -126,7 +126,7 @@
                     <div class="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition">
                         <div>
                             <p class="text-sm font-medium text-slate-800">{{ $deal->title }}</p>
-                            <p class="text-xs text-slate-500">{{ number_format($deal->value) }} تومان · {{ \App\Models\CrmDeal::stages()[$deal->stage] ?? $deal->stage }}</p>
+                            <p class="text-xs text-slate-500">{{ num_fa($deal->value) }} تومان · {{ \App\Models\CrmDeal::stages()[$deal->stage] ?? $deal->stage }}</p>
                         </div>
                         @php $dc = \App\Models\CrmDeal::stageColor($deal->stage); @endphp
                         <span class="text-xs px-2 py-0.5 rounded-full bg-{{ $dc }}-50 text-{{ $dc }}-700 border border-{{ $dc }}-200">
