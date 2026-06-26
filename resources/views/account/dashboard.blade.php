@@ -9,13 +9,16 @@
 .ug-card:hover{box-shadow:0 10px 40px rgba(15,23,42,0.11)}
 
 /* ─── Account Tiles ─── */
-.ua-tile{position:relative;display:flex;flex-direction:column;gap:0.4rem;overflow:hidden;border-radius:1rem;padding:1.25rem 1.25rem;box-shadow:0 8px 24px rgba(15,23,42,0.1);transition:all .3s;color:#fff!important;text-decoration:none;border:1px solid rgba(255,255,255,0.15)}
-.ua-tile:hover{transform:translateY(-5px) scale(1.02);box-shadow:0 18px 40px rgba(15,23,42,0.18);text-decoration:none}
-.ua-tile::before{content:'';position:absolute;top:-25%;right:-15%;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none}
-.ua-tile__icon{font-size:1.6rem;line-height:1;opacity:0.9}
-.ua-tile__label{font-size:0.75rem;font-weight:600;opacity:0.82;text-transform:uppercase;letter-spacing:0.04em}
-.ua-tile__value{font-size:1.9rem;font-weight:800;line-height:1.1}
-.ua-tile__hint{font-size:0.7rem;opacity:0.75}
+.ua-tiles-row{display:flex;gap:0.65rem;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ua-tiles-row::-webkit-scrollbar{display:none}
+.ua-tiles-row .ua-tile{flex:1 1 0;min-width:0}
+.ua-tile{position:relative;display:flex;flex-direction:column;gap:0.25rem;overflow:hidden;border-radius:0.875rem;padding:0.9rem 1rem;box-shadow:0 6px 18px rgba(15,23,42,0.1);transition:all .3s;color:#fff!important;text-decoration:none;border:1px solid rgba(255,255,255,0.15)}
+.ua-tile:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 14px 32px rgba(15,23,42,0.16);text-decoration:none}
+.ua-tile::before{content:'';position:absolute;top:-25%;right:-15%;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none}
+.ua-tile__icon{font-size:1.3rem;line-height:1;opacity:0.9}
+.ua-tile__label{font-size:0.65rem;font-weight:600;opacity:0.82;letter-spacing:0.02em}
+.ua-tile__value{font-size:1.5rem;font-weight:800;line-height:1.1}
+.ua-tile__hint{font-size:0.65rem;opacity:0.75}
 .ua-tile--indigo{background:linear-gradient(135deg,#6366f1,#1e1b4b)}
 .ua-tile--teal{background:linear-gradient(135deg,#0d9488,#042f2e)}
 .ua-tile--orange{background:linear-gradient(135deg,#ea580c,#431407)}
@@ -36,7 +39,8 @@
 
 /* ─── Mobile Layout Fixes ─── */
 @media(max-width:639px){
-  .ua-tile__value{font-size:1.5rem}
+  .ua-tile{padding:0.75rem 0.75rem}
+  .ua-tile__value{font-size:1.2rem}
   .ua-action{padding:0.6rem 0.75rem}
   .ua-action__icon{width:2rem;height:2rem}
 }
@@ -111,24 +115,24 @@
 @endif
 
 {{-- ═══ کاشی‌های آمار ═══ --}}
-<div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="ua-tiles-row mb-7">
     @if(\App\Helpers\SiteHelper::shopEnabled())
         <a href="{{ route('account.orders.index') }}" class="ua-tile ua-tile--indigo">
-            <span class="ua-tile__icon"><x-core-ui::icon name="cart" class="w-7 h-7" /></span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="cart" class="w-5 h-5" /></span>
             <span class="ua-tile__label">سفارشات</span>
             <span class="ua-tile__value">{{ number_format($ordersCount) }}</span>
             <span class="ua-tile__hint">مشاهده همه ←</span>
         </a>
         <div class="ua-tile ua-tile--teal" style="cursor:default">
-            <span class="ua-tile__icon"><x-core-ui::icon name="receipt" class="w-7 h-7" /></span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="receipt" class="w-5 h-5" /></span>
             <span class="ua-tile__label">مجموع خریدها</span>
-            <span class="ua-tile__value" style="font-size:1.3rem">{{ number_format($ordersTotal) }}</span>
+            <span class="ua-tile__value" style="font-size:1.1rem">{{ number_format($ordersTotal) }}</span>
             <span class="ua-tile__hint">تومان</span>
         </div>
     @endif
     @if(\App\Helpers\SiteHelper::moduleEnabled('subscription'))
         <a href="{{ route('account.subscriptions.index') }}" class="ua-tile ua-tile--orange">
-            <span class="ua-tile__icon"><x-core-ui::icon name="subscription" class="w-7 h-7" /></span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="subscription" class="w-5 h-5" /></span>
             <span class="ua-tile__label">اشتراک‌های فعال</span>
             <span class="ua-tile__value">{{ number_format($activeSubscriptionsCount) }}</span>
             <span class="ua-tile__hint">مدیریت اشتراک ←</span>
@@ -136,21 +140,21 @@
     @endif
     @if(config('account.wallet_enabled', false))
         <div class="ua-tile ua-tile--pink" style="cursor:default">
-            <span class="ua-tile__icon"><x-core-ui::icon name="wallet" class="w-7 h-7" /></span>
+            <span class="ua-tile__icon"><x-core-ui::icon name="wallet" class="w-5 h-5" /></span>
             <span class="ua-tile__label">موجودی کیف پول</span>
-            <span class="ua-tile__value" style="font-size:1.3rem">{{ number_format($walletBalance) }}</span>
+            <span class="ua-tile__value" style="font-size:1.1rem">{{ number_format($walletBalance) }}</span>
             <span class="ua-tile__hint">تومان</span>
         </div>
     @endif
     <a href="{{ route('account.notifications.index') }}" class="ua-tile ua-tile--blue">
-        <span class="ua-tile__icon"><x-core-ui::icon name="bell" class="w-7 h-7" /></span>
+        <span class="ua-tile__icon"><x-core-ui::icon name="bell" class="w-5 h-5" /></span>
         <span class="ua-tile__label">اعلان‌ها</span>
         <span class="ua-tile__value">{{ number_format($unreadNotificationsCount) }}</span>
         <span class="ua-tile__hint">خوانده‌نشده ←</span>
     </a>
     @if(isset($pointsBalance))
     <a href="{{ route('account.points.index') }}" class="ua-tile ua-tile--violet">
-        <span class="ua-tile__icon"><x-core-ui::icon name="spark" class="w-7 h-7" /></span>
+        <span class="ua-tile__icon"><x-core-ui::icon name="spark" class="w-5 h-5" /></span>
         <span class="ua-tile__label">امتیاز من</span>
         <span class="ua-tile__value">{{ \App\Helpers\NumberHelper::formatFa($pointsBalance) }}</span>
         <span class="ua-tile__hint">تاریخچه و مصرف ←</span>
@@ -158,7 +162,7 @@
     @endif
     @if(\App\Helpers\SiteHelper::moduleEnabled('courses') && isset($enrolledCoursesCount) && $enrolledCoursesCount > 0)
     <a href="{{ route('courses.my-learning') }}" class="ua-tile ua-tile--emerald">
-        <span class="ua-tile__icon"><x-core-ui::icon name="education" class="w-7 h-7" /></span>
+        <span class="ua-tile__icon"><x-core-ui::icon name="education" class="w-5 h-5" /></span>
         <span class="ua-tile__label">دوره‌های من</span>
         <span class="ua-tile__value">{{ \App\Helpers\NumberHelper::formatFa($enrolledCoursesCount) }}</span>
         <span class="ua-tile__hint">ادامه یادگیری ←</span>

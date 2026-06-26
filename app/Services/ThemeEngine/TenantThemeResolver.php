@@ -129,11 +129,18 @@ class TenantThemeResolver
 
     private function extractSiteTokens(array $preset): array
     {
-        return array_filter(
+        $tokens = array_filter(
             $preset,
             fn($k) => !str_starts_with($k, '--admin-sidebar-'),
             ARRAY_FILTER_USE_KEY
         );
+
+        // Always expose --platform-primary so default layout CSS rules work
+        if (!isset($tokens['--platform-primary']) && isset($tokens['--ds-primary'])) {
+            $tokens['--platform-primary'] = $tokens['--ds-primary'];
+        }
+
+        return $tokens;
     }
 
     private function extractDashboardTokens(array $preset): array
@@ -149,24 +156,53 @@ class TenantThemeResolver
 
     private function fromThemeSetting(ThemeSetting $s): array
     {
-        $defaults  = ThemeSetting::defaults();
-        $primary   = $s->primary_color   ?? $defaults['primary_color'];
-        $secondary = $s->secondary_color ?? $defaults['secondary_color'];
-        $radius    = $s->border_radius   ?? $defaults['border_radius'];
+        $d         = ThemeSetting::defaults();
+        $primary   = $s->primary_color    ?? $d['primary_color'];
+        $secondary = $s->secondary_color  ?? $d['secondary_color'];
+        $accent    = $s->accent_color     ?? $d['accent_color']     ?? '#7c3aed';
+        $bg        = $s->background_color ?? $d['background_color'] ?? '#f9fafb';
+        $surface   = $s->surface_color    ?? $d['surface_color']    ?? '#ffffff';
+        $textColor = $s->text_color       ?? $d['text_color']       ?? '#111827';
+        $muted     = $s->muted_color      ?? $d['muted_color']      ?? '#6b7280';
+        $border    = $s->border_color     ?? $d['border_color']     ?? '#e5e7eb';
+        $link      = $s->link_color       ?? $d['link_color']       ?? $primary;
+        $headerBg  = $s->header_bg        ?? $d['header_bg']        ?? '#1e293b';
+        $radius    = $s->border_radius    ?? $d['border_radius'];
+        $container = $s->container_width  ?? $d['container_width']  ?? '1200px';
 
         $vars = [
             '--ui-indigo'               => $primary,
-            '--ui-indigo-hover'         => $primary,
+            '--ui-indigo-hover'         => $accent,
+            '--ui-indigo-light'         => $bg,
+            '--ui-primary-500'          => $primary,
+            '--ui-primary-600'          => $accent,
+            '--ui-bg'                   => $bg,
+            '--ui-surface'              => $surface,
+            '--ui-surface-soft'         => $surface,
+            '--ui-text-primary'         => $textColor,
+            '--ui-text-secondary'       => $muted,
+            '--ui-text-muted'           => $muted,
+            '--ui-border'               => $border,
+            '--ui-border-strong'        => $border,
+            '--ui-radius-md'            => $radius,
+            '--ui-radius-lg'            => $radius,
             '--ds-primary'              => $primary,
             '--ds-secondary'            => $secondary,
             '--ds-button-primary-bg'    => $primary,
             '--ds-button-primary-text'  => '#ffffff',
-            '--ds-link-color'           => $primary,
-            '--ui-radius-md'            => $radius,
-            '--ui-radius-lg'            => $radius,
+            '--ds-link-color'           => $link,
+            '--ds-link-hover'           => $accent,
+            '--ds-menu-bg'              => $headerBg,
+            '--ds-menu-text'            => '#f1f5f9',
             '--tb-primary'              => $primary,
             '--tb-secondary'            => $secondary,
+            '--tb-background'           => $bg,
+            '--tb-surface'              => $surface,
+            '--tb-text'                 => $textColor,
+            '--tb-text-muted'           => $muted,
             '--tb-radius'               => $radius,
+            '--tb-container'            => $container,
+            '--platform-primary'        => $primary,
         ];
 
         if (preg_match('/^#([0-9a-f]{6})$/i', $primary, $m)) {
@@ -181,12 +217,12 @@ class TenantThemeResolver
         }
 
         if (!empty($s->font_family_body)) {
-            $vars['--ds-font-body']    = $s->font_family_body;
-            $vars['--tb-font-body']    = $s->font_family_body;
+            $vars['--ds-font-body']      = $s->font_family_body;
+            $vars['--tb-font-body']      = $s->font_family_body;
         }
         if (!empty($s->font_family_heading)) {
-            $vars['--ds-font-title']   = $s->font_family_heading;
-            $vars['--tb-font-heading'] = $s->font_family_heading;
+            $vars['--ds-font-title']     = $s->font_family_heading;
+            $vars['--tb-font-heading']   = $s->font_family_heading;
         }
         if (!empty($s->base_font_size)) {
             $vars['--ds-font-size-base'] = $s->base_font_size;

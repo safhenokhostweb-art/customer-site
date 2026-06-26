@@ -73,6 +73,8 @@
         }
     </style>
     @endif
+    {{-- Site preset / custom theme tokens (overrides ThemeSetting defaults above) --}}
+    @include('partials.theme-engine-tokens')
     @if(!empty($themeBuilder['css_block'] ?? ''))
         <style>{!! $themeBuilder['css_block'] !!}</style>
     @endif

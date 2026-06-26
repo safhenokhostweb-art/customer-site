@@ -34,7 +34,9 @@
         <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @endif
 
-    {{-- CSS متغیرهای قالب canvas --}}
+    {{-- Site preset / custom theme base tokens --}}
+    @include('partials.theme-engine-tokens')
+    {{-- CSS متغیرهای قالب canvas (اولویت بالاتر از preset) --}}
     <style>
         :root {
             --tb-primary:    {{ $primary }};

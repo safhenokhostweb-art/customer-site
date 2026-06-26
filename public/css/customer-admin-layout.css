@@ -788,6 +788,19 @@ select {
     appearance: none;
 }
 
+/* ── Select / Option: cross-browser visibility guarantee ────────────
+   Native <option> elements don't inherit CSS custom-property colors.
+   color-scheme:light forces the browser dropdown into light mode so
+   options are always readable regardless of the active theme preset.  */
+select {
+    color-scheme: light;
+}
+select option {
+    background-color: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+}
+
 .form-check-input {
     width: 1rem;
     height: 1rem;
