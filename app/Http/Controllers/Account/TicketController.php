@@ -188,6 +188,8 @@ class TicketController extends Controller
             'attachments'   => $attachments ?: null,
         ]);
 
+        $ticket->touch();
+
         $this->bridge->syncReply(
             reply: $reply,
             ticket: $ticket,
