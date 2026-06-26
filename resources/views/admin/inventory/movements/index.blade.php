@@ -56,9 +56,9 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 font-bold {{ $mv->quantity_change > 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                        {{ $mv->quantity_change > 0 ? '+' : '' }}{{ $mv->quantity_change }}
+                        {{ $mv->quantity_change > 0 ? '+' : '' }}@numFa($mv->quantity_change)
                     </td>
-                    <td class="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell">{{ $mv->quantity_before }} → {{ $mv->quantity_after }}</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell">@numFa($mv->quantity_before) → @numFa($mv->quantity_after)</td>
                     <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{{ $mv->notes ?? '—' }}</td>
                 </tr>
                 @empty

@@ -285,7 +285,7 @@
 <div class="cd-section mb-3 border-r-4 border-r-indigo-500" id="module-updates-banner" style="border-radius:0.875rem">
     <div class="cd-section-body flex items-center gap-3 py-2.5 px-4">
         <span class="text-indigo-500 text-base">🔄</span>
-        <div class="flex-1 text-sm font-semibold text-indigo-900">{{ count($moduleUpdates) }} ماژول آپدیت جدید دارد</div>
+        <div class="flex-1 text-sm font-semibold text-indigo-900">@numFa(count($moduleUpdates)) ماژول آپدیت جدید دارد</div>
         <a href="{{ route('admin.modules.index') }}" class="cd-badge cd-badge-violet" style="text-decoration:none" onclick="dismissModuleUpdatesBanner()">دریافت آپدیت</a>
         <button type="button" class="text-xs text-slate-400 hover:text-slate-600 font-bold px-1" onclick="dismissModuleUpdatesBanner()">✕</button>
     </div>
@@ -365,19 +365,19 @@ function dismissModuleUpdatesBanner() {
             <div class="grid grid-cols-4 gap-2">
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-green-100">✅</div>
-                    <div><div class="cd-mstat__val">{{ $activeModules }}</div><div class="cd-mstat__label">فعال</div></div>
+                    <div><div class="cd-mstat__val">@numFa($activeModules)</div><div class="cd-mstat__label">فعال</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-slate-100">⏸</div>
-                    <div><div class="cd-mstat__val">{{ $inactiveModules }}</div><div class="cd-mstat__label">غیرفعال</div></div>
+                    <div><div class="cd-mstat__val">@numFa($inactiveModules)</div><div class="cd-mstat__label">غیرفعال</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-violet-100">⭐</div>
-                    <div><div class="cd-mstat__val">{{ $premiumModules }}</div><div class="cd-mstat__label">پریمیوم</div></div>
+                    <div><div class="cd-mstat__val">@numFa($premiumModules)</div><div class="cd-mstat__label">پریمیوم</div></div>
                 </div>
                 <div class="cd-mstat">
                     <div class="cd-mstat__dot bg-sky-100">📦</div>
-                    <div><div class="cd-mstat__val">{{ $availableModules }}</div><div class="cd-mstat__label">در دسترس</div></div>
+                    <div><div class="cd-mstat__val">@numFa($availableModules)</div><div class="cd-mstat__label">در دسترس</div></div>
                 </div>
             </div>
         </div>
@@ -396,7 +396,7 @@ function dismissModuleUpdatesBanner() {
                 <div class="cd-res">
                     <div class="cd-res__top">
                         <span class="cd-res__label">💾 فضای ذخیره‌سازی</span>
-                        <span class="cd-res__pct {{ $storagePct >= 80 ? 'text-red-600' : ($storagePct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">{{ $storagePct }}٪</span>
+                        <span class="cd-res__pct {{ $storagePct >= 80 ? 'text-red-600' : ($storagePct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">@numFa($storagePct)٪</span>
                     </div>
                     <div class="cd-res__bar">
                         <div class="cd-res__fill {{ $storagePct >= 80 ? 'bg-red-500' : ($storagePct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100,$storagePct) }}%"></div>
@@ -406,7 +406,7 @@ function dismissModuleUpdatesBanner() {
                 <div class="cd-res">
                     <div class="cd-res__top">
                         <span class="cd-res__label">🗄️ دیتابیس</span>
-                        <span class="cd-res__pct {{ $dbPct >= 80 ? 'text-red-600' : ($dbPct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">{{ $dbPct }}٪</span>
+                        <span class="cd-res__pct {{ $dbPct >= 80 ? 'text-red-600' : ($dbPct >= 60 ? 'text-amber-600' : 'text-emerald-600') }}">@numFa($dbPct)٪</span>
                     </div>
                     <div class="cd-res__bar">
                         <div class="cd-res__fill {{ $dbPct >= 80 ? 'bg-red-500' : ($dbPct >= 60 ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width:{{ min(100,$dbPct) }}%"></div>

@@ -180,7 +180,7 @@ class TenantThemeResolver
         $textColor = $s->text_color       ?? $d['text_color']       ?? '#111827';
         $muted     = $s->muted_color      ?? $d['muted_color']      ?? '#6b7280';
         $border    = $s->border_color     ?? $d['border_color']     ?? '#e5e7eb';
-        $link      = $s->link_color       ?? $d['link_color']       ?? $primary;
+        $link      = $s->link_color       ?? $primary;   // always inherit primary, never hardcoded blue
         $headerBg  = $s->header_bg        ?? $d['header_bg']        ?? '#1e293b';
         $radius    = $s->border_radius    ?? $d['border_radius'];
         $container = $s->container_width  ?? $d['container_width']  ?? '1200px';

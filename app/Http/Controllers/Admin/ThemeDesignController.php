@@ -594,21 +594,26 @@ class ThemeDesignController extends Controller
     {
         $currentSlug = Setting::get('site_theme_preset_slug') ?? Setting::get('theme_preset_slug');
 
-        // If a named preset is currently active, seed ThemeSetting with its colors
+        // Seed ThemeSetting from current preset so custom mode starts from preset's colors
         if ($currentSlug && $currentSlug !== 'custom') {
             $presetDef = $this->presetList();
             $found     = collect($presetDef)->firstWhere('slug', $currentSlug);
             if ($found) {
                 $ts = ThemeSetting::firstOrNew(['site_id' => null]);
-                if (!$ts->exists || !$ts->primary_color || $ts->primary_color === '#FFF') {
-                    $ts->primary_color   = $found['primary'];
-                    $ts->accent_color    = $found['accent'];
-                    $ts->header_bg       = $found['sidebar'];
-                    $ts->footer_bg       = $found['sidebar'];
-                    $ts->site_id         = null;
-                    $ts->save();
-                    ThemeSetting::clearCache();
-                }
+                $ts->primary_color    = $found['primary'];
+                $ts->accent_color     = $found['accent'];
+                $ts->link_color       = $found['primary'];
+                $ts->secondary_color  = '#64748b';
+                $ts->background_color = '#f9fafb';
+                $ts->surface_color    = '#ffffff';
+                $ts->text_color       = '#111827';
+                $ts->muted_color      = '#6b7280';
+                $ts->border_color     = '#e5e7eb';
+                $ts->header_bg        = $found['sidebar'];
+                $ts->footer_bg        = $found['sidebar'];
+                $ts->site_id          = null;
+                $ts->save();
+                ThemeSetting::clearCache();
             }
         }
 
@@ -631,6 +636,24 @@ class ThemeDesignController extends Controller
         $this->resolver->clearCache();
 
         return back()->with('success', 'رنگ‌های سفارشی به مقادیر پیش‌فرض بازنشانی شدند.');
+    }
+
+    /** بازگردانی یک پریست سایت به رنگ‌های کارخانه‌ای خودش */
+    public function resetSitePresetToDefault(string $slug): RedirectResponse
+    {
+        $presetDef = $this->presetList();
+        $found = collect($presetDef)->firstWhere('slug', $slug);
+
+        if (!$found) {
+            return back()->with('error', 'پریست مورد نظر یافت نشد.');
+        }
+
+        Setting::set('site_theme_preset_slug', $slug, 'theme');
+        Setting::set('theme_preset_slug', '', 'theme');
+        ThemeSetting::clearCache();
+        $this->resolver->clearCache();
+
+        return back()->with('success', "تم «{$found['name']}» به رنگ‌های پیش‌فرض بازگردانی شد.");
     }
 
     /** فعال‌سازی پریست داشبورد */

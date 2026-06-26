@@ -204,7 +204,7 @@
                         <div style="font-weight:600;font-size:0.8rem;color:#111827;margin-bottom:0.15rem;">{{ $preset['name'] }}</div>
                         <div style="font-size:0.68rem;color:#6b7280;line-height:1.4;">{{ $preset['desc'] }}</div>
                     </div>
-                    <div style="padding:0 0.7rem 0.7rem;">
+                    <div style="padding:0 0.7rem 0.7rem;display:flex;flex-direction:column;gap:0.35rem;">
                         @if(!$isSiteActive)
                         <form action="{{ route('admin.theme-design.site-preset') }}" method="POST">
                             @csrf
@@ -215,6 +215,12 @@
                         </form>
                         @else
                         <div style="width:100%;padding:0.35rem 0;border-radius:0.5rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:0.74rem;font-weight:600;text-align:center;">✓ انتخاب شده</div>
+                        <form action="{{ route('admin.theme-design.reset-site-preset-to', $preset['slug']) }}" method="POST">
+                            @csrf
+                            <button type="submit" style="width:100%;padding:0.25rem 0;border-radius:0.5rem;border:1px solid #d1d5db;background:#fff;color:#6b7280;font-size:0.68rem;font-weight:600;cursor:pointer;">
+                                بازگردانی به رنگ پیش‌فرض
+                            </button>
+                        </form>
                         @endif
                     </div>
                 </div>
@@ -410,6 +416,15 @@
                             @endif
                         </div>
                     </form>
+                    <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #f3f4f6;">
+                        <form action="{{ route('admin.theme-design.reset-custom-colors') }}" method="POST" style="display:inline;">
+                            @csrf
+                            <button type="submit" onclick="return confirm('آیا می‌خواهید همه رنگ‌های سفارشی سایت به مقادیر پیش‌فرض سیستم بازگردانی شوند؟')"
+                                style="font-size:0.75rem;padding:0.35rem 0.875rem;border-radius:0.5rem;border:1px solid #fca5a5;background:#fef2f2;color:#991b1b;cursor:pointer;font-weight:600;">
+                                بازگردانی رنگ‌ها به پیش‌فرض سیستم
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

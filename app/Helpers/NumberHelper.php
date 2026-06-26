@@ -59,9 +59,9 @@ class NumberHelper
 
     public static function formatBytes(int $bytes): string
     {
-        if ($bytes >= 1073741824) return round($bytes / 1073741824, 1) . ' GB';
-        if ($bytes >= 1048576)    return round($bytes / 1048576, 1) . ' MB';
-        if ($bytes >= 1024)       return round($bytes / 1024, 1) . ' KB';
-        return $bytes . ' B';
+        if ($bytes >= 1073741824) return self::toPersianNumbers(round($bytes / 1073741824, 1)) . ' GB';
+        if ($bytes >= 1048576)    return self::toPersianNumbers(round($bytes / 1048576, 1)) . ' MB';
+        if ($bytes >= 1024)       return self::toPersianNumbers(round($bytes / 1024, 1)) . ' KB';
+        return self::toPersianNumbers($bytes) . ' B';
     }
 }

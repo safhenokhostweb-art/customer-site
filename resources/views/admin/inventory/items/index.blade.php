@@ -55,7 +55,7 @@
                     <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $item->warehouse?->name ?? '—' }}</td>
                     <td class="px-4 py-3">
                         <span class="font-bold text-lg {{ $item->isOutOfStock() ? 'text-red-600' : ($item->isLowStock() ? 'text-amber-600' : 'text-slate-800') }}">
-                            {{ $item->quantity }}
+                            @numFa($item->quantity)
                         </span>
                         @if($item->isOutOfStock())
                         <span class="mr-1 text-xs bg-red-100 text-red-700 px-1 py-0.5 rounded">اتمام</span>
@@ -63,8 +63,8 @@
                         <span class="mr-1 text-xs bg-amber-100 text-amber-700 px-1 py-0.5 rounded">کم</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3 text-slate-600 hidden sm:table-cell">{{ $item->availableQuantity() }}</td>
-                    <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">اخطار ≤ {{ $item->low_stock_threshold }}</td>
+                    <td class="px-4 py-3 text-slate-600 hidden sm:table-cell">@numFa($item->availableQuantity())</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">اخطار ≤ @numFa($item->low_stock_threshold)</td>
                     <td class="px-4 py-3">
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs hover:bg-slate-50 transition">

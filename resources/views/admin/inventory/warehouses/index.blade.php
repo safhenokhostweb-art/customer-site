@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">انبارها</h1>
-            <p class="text-slate-500 text-sm">{{ $warehouses->count() }} انبار ثبت شده</p>
+            <p class="text-slate-500 text-sm">@numFa($warehouses->count()) انبار ثبت شده</p>
         </div>
         <a href="{{ route('admin.inventory.warehouses.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

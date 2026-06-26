@@ -29,11 +29,11 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="font-semibold text-slate-800">{{ $item->product?->title ?? 'محصول نامشخص' }}</p>
-                <p class="text-sm text-slate-500">انبار: {{ $item->warehouse?->name ?? '—' }} · حد اخطار: {{ $item->low_stock_threshold }}</p>
+                <p class="text-sm text-slate-500">انبار: {{ $item->warehouse?->name ?? '—' }} · حد اخطار: @numFa($item->low_stock_threshold)</p>
             </div>
             <div class="flex items-center gap-4 shrink-0">
                 <div class="text-center">
-                    <p class="text-2xl font-bold {{ $item->isOutOfStock() ? 'text-red-600' : 'text-amber-600' }}">{{ $item->quantity }}</p>
+                    <p class="text-2xl font-bold {{ $item->isOutOfStock() ? 'text-red-600' : 'text-amber-600' }}">@numFa($item->quantity)</p>
                     <p class="text-xs text-slate-400">موجودی فعلی</p>
                 </div>
                 <a href="{{ route('admin.inventory.items.index', ['warehouse_id' => $item->warehouse_id]) }}" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition whitespace-nowrap">
