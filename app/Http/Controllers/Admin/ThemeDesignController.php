@@ -33,6 +33,17 @@ class ThemeDesignController extends Controller
         $canvasActive          = !empty(Setting::get('active_canvas_theme_data'));
         $canvasName            = Setting::get('active_canvas_theme_name', '');
 
+        // When a preset is active, override the settings display with that preset's colors
+        // so the user can see exactly what each field of the preset is.
+        if ($activeSitePreset && $activeSitePreset !== 'custom') {
+            $presetColors = $this->presetToSettingsFields($activeSitePreset);
+            if (!empty($presetColors)) {
+                foreach ($presetColors as $field => $value) {
+                    $settings->$field = $value;
+                }
+            }
+        }
+
         // Custom dashboard colors (for editable custom mode)
         $dashCustomColors = [
             'admin_sidebar_bg1'    => Setting::get('admin_sidebar_bg1',    '#1e293b'),
@@ -49,6 +60,43 @@ class ThemeDesignController extends Controller
             'presets', 'canvasActive', 'canvasName',
             'dashCustomColors'
         ));
+    }
+
+    /** نگاشت CSS vars یک پریست به فیلدهای ThemeSetting برای نمایش در فرم */
+    private function presetToSettingsFields(string $slug): array
+    {
+        $presets = $this->presetList();
+        $found = collect($presets)->firstWhere('slug', $slug);
+        if (!$found) {
+            return [];
+        }
+
+        // Map from TenantThemeResolver's full preset tokens
+        $resolverPresets = app(\App\Services\ThemeEngine\TenantThemeResolver::class)->getPresetTokens($slug);
+        if (empty($resolverPresets)) {
+            // Fallback to simple presetList data
+            return [
+                'primary_color'   => $found['primary'],
+                'accent_color'    => $found['accent'],
+                'link_color'      => $found['primary'],
+                'header_bg'       => $found['sidebar'],
+                'footer_bg'       => $found['sidebar'],
+            ];
+        }
+
+        return [
+            'primary_color'    => $resolverPresets['--ds-primary']              ?? $found['primary'],
+            'secondary_color'  => $resolverPresets['--ui-text-secondary']       ?? '#64748b',
+            'accent_color'     => $resolverPresets['--ui-indigo-hover']          ?? $found['accent'],
+            'background_color' => $resolverPresets['--ui-bg']                   ?? '#f9fafb',
+            'surface_color'    => $resolverPresets['--ui-surface']              ?? '#ffffff',
+            'text_color'       => $resolverPresets['--ui-text-primary']         ?? '#111827',
+            'muted_color'      => $resolverPresets['--ui-text-muted']           ?? '#6b7280',
+            'border_color'     => $resolverPresets['--ui-border']               ?? '#e5e7eb',
+            'link_color'       => $resolverPresets['--ds-link-color']           ?? $found['primary'],
+            'header_bg'        => $resolverPresets['--admin-sidebar-bg1']       ?? $found['sidebar'],
+            'footer_bg'        => $resolverPresets['--admin-sidebar-bg1']       ?? $found['sidebar'],
+        ];
     }
 
     // ── Canvas Theme Management ───────────────────────────────────────────────

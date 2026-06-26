@@ -249,6 +249,12 @@ class TenantThemeResolver
 
     // ── Preset registry ───────────────────────────────────────────────────────
 
+    /** Get all CSS tokens for a preset (public for display/seeding purposes) */
+    public function getPresetTokens(string $slug): array
+    {
+        return $this->presets()[$slug] ?? [];
+    }
+
     private function loadPreset(string $slug): ?array
     {
         return $this->presets()[$slug] ?? null;

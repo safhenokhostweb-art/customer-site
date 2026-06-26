@@ -409,10 +409,12 @@
 
                         <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
                             <button type="submit" class="btn btn-primary" style="font-size:0.83rem;padding:0.45rem 1.25rem;">
-                                ذخیره تنظیمات سفارشی سایت
+                                ذخیره و اعمال رنگ‌های سفارشی
                             </button>
                             @if(!$isSiteCustom)
-                            <p style="font-size:0.78rem;color:#6b7280;margin:0;">ابتدا کارت «سفارشی» را انتخاب کنید تا تغییرات اعمال شود.</p>
+                            <p style="font-size:0.78rem;color:#7c3aed;margin:0;background:#f5f3ff;padding:0.3rem 0.7rem;border-radius:0.4rem;border:1px solid #ddd6fe;">
+                                رنگ‌های پریست «{{ $activeSitePreset }}» نمایش داده می‌شوند. پس از ذخیره، سایت به حالت سفارشی می‌رود.
+                            </p>
                             @endif
                         </div>
                     </form>

@@ -73,16 +73,15 @@
         }
     </style>
     @endif
-    {{-- Site preset / custom theme tokens (overrides ThemeSetting defaults above) --}}
-    @include('partials.theme-engine-tokens')
-    @if(!empty($themeBuilder['css_block'] ?? ''))
-        <style>{!! $themeBuilder['css_block'] !!}</style>
-    @endif
     @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
-        {{-- بدون CDN: لطفاً قبل از انتشار، `npm run build` را اجرا کنید تا public/build ساخته شود --}}
         <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
+    @endif
+    {{-- Site preset / custom theme tokens — MUST come after Vite/app.css to override design-tokens.css defaults --}}
+    @include('partials.theme-engine-tokens')
+    @if(!empty($themeBuilder['css_block'] ?? ''))
+        <style>{!! $themeBuilder['css_block'] !!}</style>
     @endif
     <style>
         * { box-sizing: border-box; }
