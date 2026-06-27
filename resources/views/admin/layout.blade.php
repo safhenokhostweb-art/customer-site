@@ -18,6 +18,22 @@
         @keyframes badge-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(239,68,68,0)}}
         .badge-blink{animation:badge-blink 1.5s infinite}
     </style>
+    {{-- ── Select / Combobox: Definitive inline fix (highest priority) ──────────
+         Inline <style> loads after ALL external CSS files and Vite bundle, so it
+         ALWAYS wins the cascade without depending on file deployment or caching.
+         Forces light-mode native popup on every OS/browser/dark-mode combination.  --}}
+    <style id="admin-select-fix">
+        body.admin-body { color-scheme: light !important; }
+        select {
+            color-scheme: light !important;
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        select option, select optgroup {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+    </style>
     @stack('head')
     @php
         $siteFavicon = \App\Models\Setting::get('site_favicon', '');

@@ -150,22 +150,30 @@ class TenantThemeResolver
             ARRAY_FILTER_USE_KEY
         );
 
-        // Always expose --platform-primary so default layout CSS rules work
-        if (!isset($tokens['--platform-primary']) && isset($tokens['--ds-primary'])) {
-            $tokens['--platform-primary'] = $tokens['--ds-primary'];
+        // Map all --platform-* vars so they override PlatformUx blue defaults
+        $map = [
+            '--platform-primary'             => '--ds-primary',
+            '--platform-link-color'          => '--ds-link-color',
+            '--platform-link-hover'          => '--ui-indigo-hover',
+            '--platform-button-primary-bg'   => '--ds-button-primary-bg',
+            '--platform-menu-bg'             => '--ds-menu-bg',
+            '--platform-menu-link-active'    => '--ui-indigo-hover',
+            '--platform-title-color'         => '--ui-text-primary',
+            '--platform-primary-light'       => '--ui-bg',
+            '--tb-primary'                   => '--ds-primary',
+            '--tb-secondary'                 => '--ui-indigo-hover',
+        ];
+        foreach ($map as $target => $source) {
+            if (!isset($tokens[$target]) && isset($tokens[$source])) {
+                $tokens[$target] = $tokens[$source];
+            }
         }
-
-        // Expose --platform-link-hover (used in hero gradients) from ui-indigo-hover
-        if (!isset($tokens['--platform-link-hover']) && isset($tokens['--ui-indigo-hover'])) {
-            $tokens['--platform-link-hover'] = $tokens['--ui-indigo-hover'];
+        // platform-button-primary-text and platform-menu-text are always white/light
+        if (!isset($tokens['--platform-button-primary-text'])) {
+            $tokens['--platform-button-primary-text'] = '#ffffff';
         }
-
-        // Expose --tb-primary / --tb-secondary for canvas-theme CSS var chain
-        if (!isset($tokens['--tb-primary']) && isset($tokens['--ds-primary'])) {
-            $tokens['--tb-primary'] = $tokens['--ds-primary'];
-        }
-        if (!isset($tokens['--tb-secondary']) && isset($tokens['--ui-indigo-hover'])) {
-            $tokens['--tb-secondary'] = $tokens['--ui-indigo-hover'];
+        if (!isset($tokens['--platform-menu-text'])) {
+            $tokens['--platform-menu-text'] = '#f1f5f9';
         }
 
         return $tokens;
@@ -230,8 +238,16 @@ class TenantThemeResolver
             '--tb-text-muted'           => $muted,
             '--tb-radius'               => $radius,
             '--tb-container'            => $container,
-            '--platform-primary'        => $primary,
-            '--platform-link-hover'     => $accent,
+            '--platform-primary'             => $primary,
+            '--platform-link-color'          => $link,
+            '--platform-link-hover'          => $accent,
+            '--platform-button-primary-bg'   => $primary,
+            '--platform-button-primary-text' => '#ffffff',
+            '--platform-menu-bg'             => $headerBg,
+            '--platform-menu-text'           => '#f1f5f9',
+            '--platform-menu-link-active'    => $accent,
+            '--platform-title-color'         => $textColor,
+            '--platform-primary-light'       => $bg,
         ];
 
         if (preg_match('/^#([0-9a-f]{6})$/i', $primary, $m)) {
