@@ -56,7 +56,7 @@
 .content-body ul,.content-body ol{padding-right:1.5rem;margin-bottom:1rem;}
 .content-body li{margin-bottom:0.35rem;line-height:1.7;}
 .content-body strong{color:#111827;font-weight:600;}
-.content-body a{color:#4f46e5;text-decoration:underline;}
+.content-body a{color:var(--platform-link-color,#4f46e5);text-decoration:underline;}
 </style>
 @endif
 @endsection

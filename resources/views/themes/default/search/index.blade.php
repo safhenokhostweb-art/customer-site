@@ -15,7 +15,7 @@
 @section('content')
 <div class="search-page" style="max-width: 72rem; margin: 0 auto;">
     {{-- جستجوی اصلی — مشابه دیجی‌کالا --}}
-    <div class="search-hero" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, #6366f1 100%); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; color: white;">
+    <div class="search-hero" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, var(--ui-indigo-hover, #6366f1) 100%); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; color: white;">
         <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">جستجوی پیشرفته</h1>
         <div class="search-box-wrap" style="position: relative; max-width: 36rem; margin: 0 auto;">
             <form method="get" action="{{ route('search.index') }}" id="search-form" role="search">
@@ -102,7 +102,7 @@
     @if($q || $category || $minPrice || $maxPrice)
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             @if($q)
-                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: #e0e7ff; color: #3730a3; border-radius: 9999px; font-size: 0.875rem;">جستجو: {{ e($q) }}</span>
+                <span class="filter-chip" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; background: var(--platform-primary-light,#e0e7ff); color: var(--platform-primary,#3730a3); border-radius: 9999px; font-size: 0.875rem;">جستجو: {{ e($q) }}</span>
             @endif
             @if($category)
                 @php

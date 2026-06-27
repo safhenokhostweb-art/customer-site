@@ -26,14 +26,14 @@
     <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.5rem; align-items:center;">
         <a href="{{ route('content.index') }}"
            style="padding:0.35rem 0.85rem; border-radius:9999px; font-size:0.82rem; font-weight:600; text-decoration:none;
-                  {{ !$type ? 'background:#4f46e5; color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
+                  {{ !$type ? 'background:var(--platform-primary,#4f46e5); color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
             همه
         </a>
         @foreach($typeLabels as $key => $label)
             @if(($typeCounts[$key] ?? 0) > 0)
             <a href="{{ route('content.index', ['type' => $key]) }}"
                style="padding:0.35rem 0.85rem; border-radius:9999px; font-size:0.82rem; font-weight:600; text-decoration:none;
-                      {{ $type === $key ? 'background:#4f46e5; color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
+                      {{ $type === $key ? 'background:var(--platform-primary,#4f46e5); color:#fff;' : 'background:#f3f4f6; color:#374151;' }}">
                 {{ $label }}
                 <span style="font-size:0.72rem; opacity:0.7;">({{ $typeCounts[$key] }})</span>
             </a>
@@ -88,7 +88,7 @@
                         {{ $item->typeName() }}
                     </span>
                     @if($item->ai_generated)
-                    <span style="font-size:0.68rem; color:#818cf8; margin-right:0.3rem;">✨ AI</span>
+                    <span style="font-size:0.68rem; color:var(--platform-primary,#818cf8); margin-right:0.3rem;">✨ AI</span>
                     @endif
                 </div>
 
@@ -112,7 +112,7 @@
                     <span style="font-size:0.75rem; color:#9ca3af;">
                         {{ $item->published_at ? \App\Helpers\Jalali::formatFa($item->published_at, 'Y/m/d') : '' }}
                     </span>
-                    <span style="font-size:0.78rem; color:#4f46e5; font-weight:600;">مطالعه ←</span>
+                    <span style="font-size:0.78rem; color:var(--platform-primary,#4f46e5); font-weight:600;">مطالعه ←</span>
                 </div>
             </a>
             @endforeach
@@ -130,7 +130,7 @@
                         <a href="{{ $url }}"
                            style="padding:0.4rem 0.75rem; border-radius:0.5rem; font-size:0.85rem; text-decoration:none;
                                   {{ $contents->currentPage() == $page
-                                     ? 'background:#4f46e5;color:#fff;'
+                                     ? 'background:var(--platform-primary,#4f46e5);color:#fff;'
                                      : 'background:#f3f4f6;color:#374151;' }}">
                             {{ $page }}
                         </a>

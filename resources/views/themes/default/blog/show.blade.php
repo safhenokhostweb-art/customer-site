@@ -69,7 +69,7 @@
     @if($post->tags->isNotEmpty())
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
             @foreach($post->tags as $tag)
-                <a href="{{ route('blog.index', ['tag' => $tag->slug]) }}" style="font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:9999px; background:#eef2ff; color:#4338ca; text-decoration:none;">{{ $tag->name }}</a>
+                <a href="{{ route('blog.index', ['tag' => $tag->slug]) }}" style="font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:9999px; background:var(--platform-primary-light,#eef2ff); color:var(--platform-primary,#4338ca); text-decoration:none;">{{ $tag->name }}</a>
             @endforeach
         </div>
     @endif

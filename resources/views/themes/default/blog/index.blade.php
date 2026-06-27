@@ -14,7 +14,7 @@
 @push('head')
 <style>
 .module-blog-page .module-filter-card { border:1px solid #e5e7eb; border-radius:.75rem; padding:.85rem; margin-bottom:1rem; background:#fff; }
-.module-blog-page a:focus-visible, .module-blog-page button:focus-visible, .module-blog-page input:focus-visible { outline:2px solid #4f46e5; outline-offset:2px; }
+.module-blog-page a:focus-visible, .module-blog-page button:focus-visible, .module-blog-page input:focus-visible { outline:2px solid var(--platform-primary,#4f46e5); outline-offset:2px; }
 @media (max-width: 768px){ .module-blog-page .module-search-row { flex-direction:column; } }
 </style>
 @endpush

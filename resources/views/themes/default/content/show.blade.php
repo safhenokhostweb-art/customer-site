@@ -34,7 +34,7 @@
                 {{ $content->typeName() }}
             </span>
             @if($content->ai_generated)
-            <span style="font-size:0.75rem; color:#818cf8;">✨ تولید شده با AI</span>
+            <span style="font-size:0.75rem; color:var(--platform-primary,#818cf8);">✨ تولید شده با AI</span>
             @endif
             @if($content->published_at)
             <span style="font-size:0.78rem; color:#9ca3af;">
@@ -43,7 +43,7 @@
             @endif
             @if($content->category)
             <a href="{{ route('content.index', ['type' => $content->type]) }}"
-               style="font-size:0.78rem; color:#4f46e5; text-decoration:none;">
+               style="font-size:0.78rem; color:var(--platform-link-color,#4f46e5); text-decoration:none;">
                 {{ $content->category->name }}
             </a>
             @endif
@@ -57,7 +57,7 @@
         {{-- خلاصه --}}
         @if($content->excerpt)
         <p style="font-size:1.05rem; color:#374151; line-height:1.8; margin-bottom:1.5rem;
-                  padding:1rem; background:#f8faff; border-right:4px solid #4f46e5; border-radius:0 0.5rem 0.5rem 0;">
+                  padding:1rem; background:var(--platform-primary-light,#f8faff); border-right:4px solid var(--platform-primary,#4f46e5); border-radius:0 0.5rem 0.5rem 0;">
             {{ $content->excerpt }}
         </p>
         @endif
@@ -68,7 +68,7 @@
             @foreach($content->tags as $tag)
             <a href="{{ route('content.index', ['q' => $tag]) }}"
                style="font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:9999px;
-                      background:#eef2ff; color:#4338ca; text-decoration:none;">
+                      background:var(--platform-primary-light,#eef2ff); color:var(--platform-primary,#4338ca); text-decoration:none;">
                 {{ $tag }}
             </a>
             @endforeach
@@ -81,7 +81,7 @@
             <div style="margin-bottom:2rem;">
                 @foreach($content->steps as $step)
                 <div style="display:flex; gap:1rem; margin-bottom:1.5rem; align-items:flex-start;">
-                    <div style="flex-shrink:0; width:2rem; height:2rem; background:#4f46e5; color:#fff;
+                    <div style="flex-shrink:0; width:2rem; height:2rem; background:var(--platform-primary,#4f46e5); color:#fff;
                                 border-radius:50%; display:flex; align-items:center; justify-content:center;
                                 font-weight:700; font-size:0.9rem; margin-top:0.15rem;">
                         {{ $loop->iteration }}
@@ -145,7 +145,7 @@
                 <a href="{{ route('content.show', $rel->slug) }}"
                    style="display:block; text-decoration:none; color:#111827; font-size:0.82rem;
                           line-height:1.5; padding-bottom:0.65rem; border-bottom:1px solid #f3f4f6;"
-                   onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#111827'">
+                   onmouseover="this.style.color=(getComputedStyle(document.documentElement).getPropertyValue('--platform-primary').trim()||'#4f46e5')" onmouseout="this.style.color='#111827'">
                     {{ \Illuminate\Support\Str::limit($rel->title, 55) }}
                 </a>
                 @endforeach
@@ -159,7 +159,7 @@
 {{-- بازگشت --}}
 <div style="max-width:72rem; margin:2rem auto 0;">
     <a href="{{ route('content.index') }}"
-       style="color:#4f46e5; font-weight:600; text-decoration:none; font-size:0.9rem;">
+       style="color:var(--platform-link-color,#4f46e5); font-weight:600; text-decoration:none; font-size:0.9rem;">
         ← بازگشت به مرکز محتوا
     </a>
 </div>
@@ -171,6 +171,6 @@
 .content-body ul, .content-body ol { padding-right:1.5rem; margin-bottom:1rem; }
 .content-body li { margin-bottom:0.35rem; line-height:1.7; }
 .content-body strong { color:#111827; }
-.content-body a { color:#4f46e5; }
+.content-body a { color:var(--platform-link-color,#4f46e5); }
 </style>
 @endsection

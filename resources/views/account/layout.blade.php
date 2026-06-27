@@ -16,6 +16,11 @@
     @include('partials.platform-styles')
     {{-- Theme Engine: same colors as admin panel for consistent UX --}}
     @include('partials.theme-engine-tokens')
+    <style id="account-select-fix">
+        html, :root { color-scheme: light !important; }
+        select { color-scheme: light !important; background-color: #ffffff !important; color: #1e293b !important; }
+        select option, select optgroup { background-color: #ffffff !important; color: #1e293b !important; }
+    </style>
     <style>
         body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; font-feature-settings: "ss01" on; }
 

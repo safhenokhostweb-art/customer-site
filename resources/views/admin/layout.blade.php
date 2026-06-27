@@ -23,7 +23,11 @@
          ALWAYS wins the cascade without depending on file deployment or caching.
          Forces light-mode native popup on every OS/browser/dark-mode combination.  --}}
     <style id="admin-select-fix">
-        body.admin-body { color-scheme: light !important; }
+        /* Tailwind v4 sets :root{color-scheme:light dark} which makes Chrome
+           render native select popups in OS dark-mode. We must override at
+           the :root/html level so the native Win32 popup uses light theme.
+           On mobile, OS pickers ignore CSS entirely so this has no side-effect. */
+        html, :root, body.admin-body { color-scheme: light !important; }
         select {
             color-scheme: light !important;
             background-color: #ffffff !important;
