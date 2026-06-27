@@ -44,14 +44,58 @@
             select {
                 -moz-appearance: none !important;
                 appearance: none !important;
+                background-color: #ffffff !important;
+                color: #1e293b !important;
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%231e293b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
                 background-repeat: no-repeat !important;
                 background-position: left 8px center !important;
                 background-size: 16px 16px !important;
                 padding-left: 30px !important;
             }
+            select option, select optgroup {
+                background-color: #ffffff !important;
+                color: #1e293b !important;
+            }
+            select option:hover, select option:focus,
+            select option:checked, select option[selected] {
+                background-color: #4f46e5 !important;
+                color: #ffffff !important;
+            }
         }
     </style>
+    {{-- ── Select dark-mode JS patch ──────────────────────────────────────────
+         CSS cannot reliably override Firefox's popup text colour in dark OS
+         mode. Inline styles set via setProperty(...,'important') have the
+         highest possible author-level specificity and reach the popup render. --}}
+    <script>
+    (function () {
+        function patchSel(s) {
+            s.style.setProperty('background-color', '#ffffff', 'important');
+            s.style.setProperty('color', '#1e293b', 'important');
+            for (var i = 0; i < s.options.length; i++) {
+                s.options[i].style.setProperty('background-color', '#ffffff', 'important');
+                s.options[i].style.setProperty('color', '#1e293b', 'important');
+            }
+        }
+        function patchAll() {
+            document.querySelectorAll('select').forEach(patchSel);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', patchAll);
+        } else { patchAll(); }
+        document.addEventListener('DOMContentLoaded', function () {
+            new MutationObserver(function (ms) {
+                ms.forEach(function (m) {
+                    m.addedNodes.forEach(function (n) {
+                        if (!n || n.nodeType !== 1) return;
+                        var sels = n.tagName === 'SELECT' ? [n] : (n.querySelectorAll ? n.querySelectorAll('select') : []);
+                        Array.prototype.forEach.call(sels, patchSel);
+                    });
+                });
+            }).observe(document.body, {childList: true, subtree: true});
+        });
+    }());
+    </script>
     @stack('head')
     @php
         $siteFavicon = \App\Models\Setting::get('site_favicon', '');
