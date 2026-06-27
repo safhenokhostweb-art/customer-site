@@ -24,10 +24,8 @@
          ALWAYS wins the cascade without depending on file deployment or caching.
          Forces light-mode native popup on every OS/browser/dark-mode combination.  --}}
     <style id="admin-select-fix">
-        /* Tailwind v4 sets :root{color-scheme:light dark} which makes Chrome
-           render native select popups in OS dark-mode. We must override at
-           the :root/html level so the native Win32 popup uses light theme.
-           On mobile, OS pickers ignore CSS entirely so this has no side-effect. */
+        /* ── Chrome/Edge: color-scheme:light on :root overrides Tailwind v4's
+           "light dark" preflight so the native Win32 popup uses light theme. ── */
         html, :root, body.admin-body { color-scheme: light !important; }
         select {
             color-scheme: light !important;
@@ -37,6 +35,21 @@
         select option, select optgroup {
             background-color: #ffffff !important;
             color: #1e293b !important;
+        }
+        /* ── Firefox: appearance:none exits the native Win32 COMBOBOX widget
+           and uses Gecko's own CSS renderer for the dropdown popup — which
+           fully respects background-color and color on <option> elements.
+           Chevron arrow replaces the native indicator (RTL: arrow on left). ── */
+        @supports (-moz-appearance: none) {
+            select {
+                -moz-appearance: none !important;
+                appearance: none !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%231e293b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: left 8px center !important;
+                background-size: 16px 16px !important;
+                padding-left: 30px !important;
+            }
         }
     </style>
     @stack('head')

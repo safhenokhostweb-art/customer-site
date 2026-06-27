@@ -21,6 +21,17 @@
         html, :root { color-scheme: light !important; }
         select { color-scheme: light !important; background-color: #ffffff !important; color: #1e293b !important; }
         select option, select optgroup { background-color: #ffffff !important; color: #1e293b !important; }
+        @supports (-moz-appearance: none) {
+            select {
+                -moz-appearance: none !important;
+                appearance: none !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%231e293b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: left 8px center !important;
+                background-size: 16px 16px !important;
+                padding-left: 30px !important;
+            }
+        }
     </style>
     <style>
         body { font-family: Vazirmatn, Tahoma, sans-serif; direction: rtl; font-feature-settings: "ss01" on; }
