@@ -18,7 +18,7 @@ class SmsCampaignController extends Controller
 
     public function index(Request $request)
     {
-        $siteId = app('site_id');
+        $siteId = (int) config('site.platform_site_id');
         $campaigns = SmsCampaign::where('site_id', $siteId)
             ->when($request->status, fn($q, $s) => $q->where('status', $s))
             ->latest()
@@ -54,7 +54,7 @@ class SmsCampaignController extends Controller
             'scheduled_at'    => 'nullable|date|after:now',
         ]);
 
-        $siteId = app('site_id');
+        $siteId = (int) config('site.platform_site_id');
         $campaign = $this->campaignService->create($data, $siteId, Auth::id());
 
         return redirect()
@@ -197,6 +197,6 @@ class SmsCampaignController extends Controller
 
     private function authorizeCampaign(SmsCampaign $campaign): void
     {
-        abort_if($campaign->site_id !== app('site_id'), 404);
+        abort_if($campaign->site_id !== (int) config('site.platform_site_id'), 404);
     }
 }

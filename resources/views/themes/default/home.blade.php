@@ -20,7 +20,7 @@
 @if(is_array($homeLayoutBlocks) && !empty($homeLayoutBlocks))
     {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->renderBlocks($homeLayoutBlocks) !!}
 @else
-<section class="hero-section" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, var(--platform-link-hover, #4338ca) 100%); color: white;">
+<section class="hero-section" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, var(--ui-indigo-hover, #4338ca) 100%); color: white;">
     <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 1rem;">به {{ \App\Helpers\SiteHelper::siteName() }} خوش آمدید</h1>
     <p style="font-size: 1.125rem; opacity: 0.9; max-width: 42rem; margin: 0 auto 1.5rem;">سایت شرکتی و فروشگاهی شما با امکانات وبلاگ، فروشگاه و صفحات ثابت</p>
     <div class="hero-buttons">

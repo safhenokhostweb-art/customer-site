@@ -164,9 +164,7 @@ class SmsCampaignService
 
     private function allCustomerMobiles(int $siteId): Collection
     {
-        // Unique mobiles from orders placed on this site
-        return Order::where('site_id', $siteId)
-            ->whereNotNull('customer_mobile')
+        return Order::whereNotNull('customer_mobile')
             ->distinct()
             ->get(['customer_mobile as mobile', 'customer_name as name']);
     }
@@ -186,9 +184,7 @@ class SmsCampaignService
 
     private function userMobiles(int $siteId): Collection
     {
-        return User::where('site_id', $siteId)
-            ->whereNotNull('mobile')
-            ->where('is_active', true)
+        return User::whereNotNull('mobile')
             ->get(['mobile', 'name']);
     }
 

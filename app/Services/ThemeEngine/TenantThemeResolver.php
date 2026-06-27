@@ -155,6 +155,19 @@ class TenantThemeResolver
             $tokens['--platform-primary'] = $tokens['--ds-primary'];
         }
 
+        // Expose --platform-link-hover (used in hero gradients) from ui-indigo-hover
+        if (!isset($tokens['--platform-link-hover']) && isset($tokens['--ui-indigo-hover'])) {
+            $tokens['--platform-link-hover'] = $tokens['--ui-indigo-hover'];
+        }
+
+        // Expose --tb-primary / --tb-secondary for canvas-theme CSS var chain
+        if (!isset($tokens['--tb-primary']) && isset($tokens['--ds-primary'])) {
+            $tokens['--tb-primary'] = $tokens['--ds-primary'];
+        }
+        if (!isset($tokens['--tb-secondary']) && isset($tokens['--ui-indigo-hover'])) {
+            $tokens['--tb-secondary'] = $tokens['--ui-indigo-hover'];
+        }
+
         return $tokens;
     }
 
@@ -218,6 +231,7 @@ class TenantThemeResolver
             '--tb-radius'               => $radius,
             '--tb-container'            => $container,
             '--platform-primary'        => $primary,
+            '--platform-link-hover'     => $accent,
         ];
 
         if (preg_match('/^#([0-9a-f]{6})$/i', $primary, $m)) {
