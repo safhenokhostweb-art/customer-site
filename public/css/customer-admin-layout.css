@@ -808,6 +808,13 @@ select optgroup {
     font-family: inherit;
 }
 
+/* Force the ENTIRE admin body to light color-scheme so all native controls
+   (select popup, scrollbars, checkboxes) use light-mode OS theme regardless
+   of the user's system dark-mode preference. */
+body.admin-body {
+    color-scheme: light !important;
+}
+
 .form-check-input {
     width: 1rem;
     height: 1rem;

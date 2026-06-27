@@ -328,6 +328,34 @@
     @include('admin.partials.floating-search-widget')
 
     <script>
+    /* ── Select Focus Guard ─────────────────────────────────────────────
+       Native <select> popups close in Chrome/Windows when JavaScript
+       moves DOM focus to another element via element.focus(). This guard
+       intercepts all HTMLElement.focus() calls during the 600 ms window
+       that starts on mousedown of a <select> element. It prevents any
+       script (TinyMCE, Alpine, libraries) from stealing focus while the
+       native popup is open. Resets immediately on any non-select click.  */
+    (function () {
+        var _on = false, _t;
+        document.addEventListener('mousedown', function (e) {
+            var n = e.target;
+            for (var i = 0; i < 6 && n; i++, n = n.parentElement) {
+                if (n.tagName === 'SELECT') {
+                    _on = true;
+                    clearTimeout(_t);
+                    _t = setTimeout(function () { _on = false; }, 600);
+                    return;
+                }
+            }
+            _on = false; clearTimeout(_t);
+        }, true);
+        var _origFocus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function (opts) {
+            if (!_on || this.tagName === 'SELECT') _origFocus.call(this, opts);
+        };
+    }());
+    </script>
+    <script>
     (function(){
         var sidebar = document.getElementById('admin-sidebar');
         var toggle = document.getElementById('admin-sidebar-toggle');
