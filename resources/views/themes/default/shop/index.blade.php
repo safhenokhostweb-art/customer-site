@@ -13,7 +13,7 @@
 <style>
 .module-shop-page .module-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem; }
 .module-shop-page .module-filter-card { border:1px solid #e5e7eb; border-radius:.75rem; padding:.85rem; margin-bottom:1rem; background:#fff; }
-.module-shop-page a:focus-visible, .module-shop-page button:focus-visible, .module-shop-page input:focus-visible, .module-shop-page select:focus-visible { outline:2px solid #4f46e5; outline-offset:2px; }
+.module-shop-page a:focus-visible, .module-shop-page button:focus-visible, .module-shop-page input:focus-visible, .module-shop-page select:focus-visible { outline:2px solid var(--platform-primary,#4f46e5); outline-offset:2px; }
 @media (max-width: 768px){ .module-shop-page .module-filter-grid { grid-template-columns: 1fr !important; } }
 </style>
 @endpush

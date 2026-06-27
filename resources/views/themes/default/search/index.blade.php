@@ -215,7 +215,7 @@
                 }
                 suggest.innerHTML = items.map(function(it) {
                     var img = it.image ? '<img src="' + it.image + '" alt="" style="width: 3rem; height: 3rem; object-fit: cover; border-radius: 0.375rem;">' : '<div style="width: 3rem; height: 3rem; background: #e5e7eb; border-radius: 0.375rem;"></div>';
-                    var price = it.price ? '<span style="font-weight: 600; color: #4f46e5;">' + new Intl.NumberFormat('fa-IR').format(it.price) + ' تومان</span>' : '';
+                    var price = it.price ? '<span style="font-weight: 600; color: var(--platform-primary,#4f46e5);">' + new Intl.NumberFormat('fa-IR').format(it.price) + ' تومان</span>' : '';
                     return '<a href="' + it.url + '" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: #1f2937; border-bottom: 1px solid #f3f4f6;">' + img + '<div style="flex: 1;"><div style="font-weight: 500;">' + it.title + '</div>' + price + '</div></a>';
                 }).join('');
                 suggest.style.display = 'block';
