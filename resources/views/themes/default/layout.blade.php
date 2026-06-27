@@ -78,11 +78,12 @@
     @else
         <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @endif
-    {{-- Site preset / custom theme tokens — MUST come after Vite/app.css to override design-tokens.css defaults --}}
-    @include('partials.theme-engine-tokens')
+    {{-- css_block از PlatformUx (design system defaults — آبی) --}}
     @if(!empty($themeBuilder['css_block'] ?? ''))
         <style>{!! $themeBuilder['css_block'] !!}</style>
     @endif
+    {{-- Site preset / custom theme tokens — MUST come LAST to override css_block blue defaults --}}
+    @include('partials.theme-engine-tokens')
     <style>
         * { box-sizing: border-box; }
         body { font-family: var(--tb-font-body, Vazirmatn, Tahoma, sans-serif); margin: 0; background: #f9fafb; color: #1f2937; min-height: 100vh; font-size: var(--tb-base-font-size, 16px); }
