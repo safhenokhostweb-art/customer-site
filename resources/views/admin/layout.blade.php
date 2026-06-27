@@ -63,36 +63,141 @@
             }
         }
     </style>
-    {{-- ── Select dark-mode JS patch ──────────────────────────────────────────
-         CSS cannot reliably override Firefox's popup text colour in dark OS
-         mode. Inline styles set via setProperty(...,'important') have the
-         highest possible author-level specificity and reach the popup render. --}}
+    {{-- ── Custom Select for Firefox (dark OS mode) ───────────────────────────
+         Firefox ignores ALL CSS/inline-styles on <option> popup in dark mode.
+         We replace each select with a div-based dropdown (fully CSS-controlled)
+         and keep the native <select> hidden for form submission.
+         Only activates in Firefox via CSS.supports('-moz-appearance','none'). --}}
     <script>
     (function () {
-        function patchSel(s) {
-            s.style.setProperty('background-color', '#ffffff', 'important');
-            s.style.setProperty('color', '#1e293b', 'important');
-            for (var i = 0; i < s.options.length; i++) {
-                s.options[i].style.setProperty('background-color', '#ffffff', 'important');
-                s.options[i].style.setProperty('color', '#1e293b', 'important');
+        if (!window.CSS || !CSS.supports('-moz-appearance', 'none')) return;
+
+        /* ── inject styles ── */
+        var s = document.createElement('style');
+        s.textContent =
+            '.cxw{position:relative;display:block;width:100%;box-sizing:border-box}' +
+            '.cxb{display:flex;align-items:center;justify-content:space-between;gap:.4rem;' +
+            'width:100%;padding:.5rem .75rem;background:#fff;color:#1e293b;' +
+            'border:1.5px solid #e2e8f0;border-radius:.5rem;cursor:pointer;' +
+            'font-family:inherit;font-size:inherit;text-align:right;direction:rtl;' +
+            '-moz-appearance:none;appearance:none;box-sizing:border-box}' +
+            '.cxb:focus{outline:2px solid #4f46e5;outline-offset:1px}' +
+            '.cxb .cxa{flex-shrink:0;transition:transform .18s;color:#64748b}' +
+            '.cxb.cxopen .cxa{transform:rotate(180deg)}' +
+            '.cxd{display:none;position:absolute;inset-inline-start:0;inset-inline-end:0;' +
+            'top:calc(100% + 3px);background:#fff;border:1.5px solid #e2e8f0;' +
+            'border-radius:.5rem;max-height:220px;overflow-y:auto;z-index:9999;' +
+            'box-shadow:0 8px 24px rgba(0,0,0,.14)}' +
+            '.cxd.cxopen{display:block}' +
+            '.cxo{padding:.45rem .75rem;color:#1e293b;background:#fff;cursor:pointer;' +
+            'text-align:right;direction:rtl;font-family:inherit;font-size:inherit;' +
+            'line-height:1.5;user-select:none}' +
+            '.cxo:hover{background:#f1f5f9}' +
+            '.cxo.cxsel{background:#eef2ff;color:#4f46e5;font-weight:600}' +
+            '.cxo.cxdis{color:#94a3b8;cursor:default;pointer-events:none}' +
+            '.cxhide{position:absolute!important;opacity:0!important;pointer-events:none!important;' +
+            'width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}';
+        document.head.appendChild(s);
+
+        var SVG = '<svg class="cxa" width="14" height="14" viewBox="0 0 14 14" fill="none">' +
+                  '<path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" ' +
+                  'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+        function buildSelect(sel) {
+            if (sel._cxDone || sel.multiple || sel.size > 1) return;
+            sel._cxDone = true;
+
+            var wrap = document.createElement('div');
+            wrap.className = 'cxw';
+
+            var btn  = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'cxb';
+            btn.setAttribute('aria-haspopup', 'listbox');
+            btn.setAttribute('aria-expanded', 'false');
+
+            var lbl = document.createElement('span');
+            btn.appendChild(lbl);
+            btn.insertAdjacentHTML('beforeend', SVG);
+
+            var drop = document.createElement('div');
+            drop.className = 'cxd';
+            drop.setAttribute('role', 'listbox');
+
+            /* ── helpers ── */
+            function label() {
+                var o = sel.options[sel.selectedIndex];
+                lbl.textContent = o ? o.text : '';
             }
+            function markSel() {
+                drop.querySelectorAll('.cxo').forEach(function(o) {
+                    o.classList.toggle('cxsel', o.dataset.v === sel.value);
+                });
+            }
+            function buildDrop() {
+                drop.innerHTML = '';
+                Array.from(sel.options).forEach(function(o) {
+                    var d = document.createElement('div');
+                    d.className = 'cxo' + (o.disabled ? ' cxdis' : '');
+                    d.textContent = o.text;
+                    d.dataset.v  = o.value;
+                    d.setAttribute('role', 'option');
+                    if (o.selected) d.classList.add('cxsel');
+                    if (!o.disabled) {
+                        d.addEventListener('mousedown', function(e) { e.preventDefault(); });
+                        d.addEventListener('click', function() {
+                            sel.value = o.value;
+                            sel.dispatchEvent(new Event('change', {bubbles:true}));
+                            label(); markSel(); close();
+                        });
+                    }
+                    drop.appendChild(d);
+                });
+            }
+            function open()  { btn.classList.add('cxopen');  drop.classList.add('cxopen');  btn.setAttribute('aria-expanded','true'); }
+            function close() { btn.classList.remove('cxopen');drop.classList.remove('cxopen');btn.setAttribute('aria-expanded','false'); }
+
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (drop.classList.contains('cxopen')) { close(); }
+                else { buildDrop(); label(); markSel(); open(); }
+            });
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') close();
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+            });
+            document.addEventListener('click', function(e) {
+                if (!wrap.contains(e.target)) close();
+            });
+
+            /* ── assemble ── */
+            sel.parentNode.insertBefore(wrap, sel);
+            wrap.appendChild(btn);
+            wrap.appendChild(drop);
+            sel.classList.add('cxhide');
+            wrap.appendChild(sel);
+
+            label();
         }
-        function patchAll() {
-            document.querySelectorAll('select').forEach(patchSel);
+
+        function patchAll(root) {
+            (root || document).querySelectorAll('select').forEach(buildSelect);
         }
+
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', patchAll);
+            document.addEventListener('DOMContentLoaded', function() { patchAll(); });
         } else { patchAll(); }
-        document.addEventListener('DOMContentLoaded', function () {
-            new MutationObserver(function (ms) {
-                ms.forEach(function (m) {
-                    m.addedNodes.forEach(function (n) {
+
+        document.addEventListener('DOMContentLoaded', function() {
+            new MutationObserver(function(ms) {
+                ms.forEach(function(m) {
+                    m.addedNodes.forEach(function(n) {
                         if (!n || n.nodeType !== 1) return;
-                        var sels = n.tagName === 'SELECT' ? [n] : (n.querySelectorAll ? n.querySelectorAll('select') : []);
-                        Array.prototype.forEach.call(sels, patchSel);
+                        if (n.tagName === 'SELECT') buildSelect(n);
+                        else if (n.querySelectorAll) n.querySelectorAll('select').forEach(buildSelect);
                     });
                 });
-            }).observe(document.body, {childList: true, subtree: true});
+            }).observe(document.body, {childList:true, subtree:true});
         });
     }());
     </script>
