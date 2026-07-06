@@ -34,6 +34,11 @@ class EnsureLicenseValid
         'admin.license.refresh-config.get',
         'admin.license.test-config',
         'admin.license.refresh-modules',
+        // Profile page must be accessible before license is confirmed so that
+        // ForcePasswordChange middleware can redirect there without creating a
+        // circular redirect (license blocks profile → force-change blocks license).
+        'admin.profile.index',
+        'admin.profile.update',
         'install.welcome',
         'install.database',
         'install.store-database',

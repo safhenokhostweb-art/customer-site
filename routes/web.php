@@ -328,7 +328,7 @@ Route::middleware('install.check')->group(function () {
     });
 
     // Admin panel (Persian)
-    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'license.valid', 'permission:dashboard'])->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'license.valid', 'permission:dashboard', 'force.password.change'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::post('image/upload', [ImageUploadController::class, 'store'])->name('image.upload');
         Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('profile.index');

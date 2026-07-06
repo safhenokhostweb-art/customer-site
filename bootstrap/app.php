@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'support.license' => \App\Http\Middleware\SupportModuleLicenseCheck::class,
             // Mobile end-user auth
             'mobile.auth' => \App\Http\Middleware\AuthenticateMobileUser::class,
+            'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
             // Theme provisioning from saas-platform
             'provision.secret' => \App\Http\Middleware\ProvisionSecretMiddleware::class,
             'locale' => \App\Http\Middleware\SetLocale::class,

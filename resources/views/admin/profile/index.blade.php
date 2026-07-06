@@ -37,6 +37,14 @@
     }
 }" class="max-w-3xl mx-auto space-y-5">
 
+    {{-- Force password change notice --}}
+    @if(session('force_password_change_notice') || auth()->user()->force_password_change)
+    <div class="flex items-start gap-3 bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-2xl text-sm font-medium">
+        <x-core-ui::icon name="exclamation-triangle" class="w-5 h-5 shrink-0 mt-0.5" />
+        <span>برای ادامه استفاده از پنل، ابتدا باید رمز عبور خود را تغییر دهید. پس از تغییر رمز، دسترسی کامل به پنل برقرار می‌شود.</span>
+    </div>
+    @endif
+
     {{-- Success --}}
     <div x-show="showSuccess" x-transition
          class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl text-sm font-medium"

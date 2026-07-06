@@ -31,6 +31,7 @@ class AdminProfileController extends Controller
 
         if (!empty($data['password'])) {
             $update['password'] = Hash::make($data['password']);
+            $update['force_password_change'] = false;
         }
 
         if ($request->hasFile('avatar')) {

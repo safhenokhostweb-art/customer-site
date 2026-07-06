@@ -31,6 +31,7 @@ class User extends Authenticatable
         'is_admin',
         'is_platform_agent',
         'api_token',
+        'force_password_change',
     ];
 
     protected $hidden = [
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'is_platform_agent'         => 'boolean',
             'notification_preferences'  => 'array',
             'privacy_settings'          => 'array',
+            'force_password_change'     => 'boolean',
         ];
     }
 
