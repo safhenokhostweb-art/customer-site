@@ -27,3 +27,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /public/uploads/
+echo /public/uploads/admin-avatars/>> C:\laragon\www\customer-site\.gitignore
+echo /public/uploads/avatar/>> C:\laragon\www\customer-site\.gitignore
+echo /public/uploads/featured/>> C:\laragon\www\customer-site\.gitignore
+echo /public/uploads/notifications/>> C:\laragon\www\customer-site\.gitignore
+echo /public/uploads/product/>> C:\laragon\www\customer-site\.gitignore
+echo /public/uploads/tickets/>> C:\laragon\www\customer-site\.gitignore
