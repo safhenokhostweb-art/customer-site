@@ -50,6 +50,24 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\NullModuleLicenseAdapter::class
         );
 
+        // Phase 18-B — generic SEO extension point default. Any module
+        // that wants to contribute meta/JSON-LD rebinds this in its own
+        // ServiceProvider; Core never references a specific module here.
+        $this->app->bind(
+            \SaaSPlatform\CoreUtils\Contracts\Services\SeoOverrideProviderInterface::class,
+            \App\Services\Seo\NullSeoOverrideProvider::class
+        );
+
+        // Phase 18-C — Part 3: Core is the only side that knows its own
+        // content models, so (unlike SeoOverrideProviderInterface) this is
+        // bound directly to the real implementation, not a Null default —
+        // any sitemap-producing module consumes it without ever
+        // referencing Page/Post/Product itself.
+        $this->app->bind(
+            \SaaSPlatform\CoreUtils\Contracts\Services\SitemapUrlProviderInterface::class,
+            \App\Services\Seo\CoreSitemapUrlProvider::class
+        );
+
         $this->app->bind(
             DateFormatterInterface::class,
             \App\Services\JalaliDateFormatterAdapter::class
@@ -139,7 +157,11 @@ $this->app->bind(
             \App\Models\Subscription::observe(\App\Observers\SubscriptionObserver::class);
         }
 
-        View::composer('themes.default.layout', function ($view) {
+        // Phase 18-B — registered on the wildcard theme pattern (not just
+        // 'themes.default.layout') so a future second theme automatically
+        // gets the same behavior without any further Core change, as long
+        // as its layout also has a @stack('json-ld').
+        View::composer('themes.*.layout', function ($view) {
             $data = $view->getData();
             if (!isset($data['pages']) && \Illuminate\Support\Facades\Schema::hasTable('pages')) {
                 $view->with('pages', Page::published()->menu()->get());
@@ -154,7 +176,39 @@ $this->app->bind(
                 }
                 $view->with('currentPage', $currentPage);
             }
+
+            $this->pushExtraJsonLd($view);
         });
+    }
+
+    /**
+     * Phase 18-B: pushes any module-contributed JSON-LD (via
+     * SeoOverrideProviderInterface::extraJsonLd(), default Null Object —
+     * see NullSeoOverrideProvider) onto the theme layout's EXISTING
+     * @stack('json-ld') — no Blade file was edited to add this stack, it
+     * was already there. Defensive: any failure here must never break
+     * page rendering.
+     */
+    protected function pushExtraJsonLd($view): void
+    {
+        try {
+            $extra = $this->app->make(\SaaSPlatform\CoreUtils\Contracts\Services\SeoOverrideProviderInterface::class)->extraJsonLd();
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        if (empty($extra)) {
+            return;
+        }
+
+        $factory = $view->getFactory();
+        $factory->startPush('json-ld');
+        foreach ($extra as $schema) {
+            if (!empty($schema)) {
+                echo '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+            }
+        }
+        $factory->stopPush();
     }
 
     /**
