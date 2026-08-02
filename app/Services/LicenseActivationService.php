@@ -135,6 +135,10 @@ class LicenseActivationService
         $domainNormalized = $this->normalizeDomain($domain);
         try {
             $http = Http::timeout(15)->acceptJson();
+            // 'strict' => true: در صورت redirect (مثلاً پلتفرم HTTP→HTTPS را 301 می‌کند)،
+            // متد POST حفظ شود. رفتار پیش‌فرض Guzzle در ریدایرکت 301/302، POST را به GET
+            // تنزل می‌دهد که چون route مقصد فقط POST می‌پذیرد باعث HTTP 405 کاذب می‌شود.
+            $http = $http->withOptions(['allow_redirects' => ['max' => 5, 'strict' => true]]);
             // LICENSE_VERIFY_SSL=false برای پلتفرم‌هایی که از self-signed certificate استفاده می‌کنند.
             // در محیط production با HTTPS داخلی یا HTTP، این مقدار false تنظیم می‌شود.
             if (! filter_var(config('license.verify_ssl', true), FILTER_VALIDATE_BOOLEAN)) {

@@ -286,4 +286,104 @@ class Wave4MarketplaceAndBannerTest extends TestCase
         $reloaded = License::find($license->id);
         $this->assertFalse((bool) $reloaded->platform_valid);
     }
+
+    // =====================================================================
+    // Regression — production HTTP 405 banner despite a valid local license.
+    //
+    // Root cause: PLATFORM_URL pointed at an HTTP endpoint that issues a
+    // 301 redirect to HTTPS; Guzzle's default (non-strict) redirect
+    // handling downgrades POST → GET on 301/302, and GET does not match
+    // the platform's `Route::post('validate', ...)`, producing a 405.
+    // These tests confirm: (1) a bare 405 response is still treated as a
+    // transient/skip-worthy error — never a license invalidation — so the
+    // fix at the transport layer (forcing `strict` redirects) is purely
+    // defensive and this fallback behavior stays correct either way; and
+    // (2) the banner's "retry" action actually re-attempts the sync.
+    // =====================================================================
+
+    public function test_sync_with_platform_caches_transient_error_on_405_method_not_allowed(): void
+    {
+        Cache::flush();
+
+        $license = License::create([
+            'license_key' => 'TEST-KEY5-XXXX-YYYY',
+            'domain' => 'p26-405.test',
+            'platform_valid' => true,
+        ]);
+
+        Http::fake([
+            'platform.example/api/license/validate' => Http::response(['message' => 'Method Not Allowed'], 405),
+        ]);
+
+        $result = app(LicenseActivationService::class)->syncWithPlatform($license, 'p26-405.test');
+
+        $this->assertTrue($result['valid'], 'a 405 must NOT invalidate an otherwise-valid local license');
+        $this->assertTrue($result['sync_skipped'] ?? false);
+
+        $cached = Cache::get(LicenseActivationService::transientErrorCacheKey($license->id));
+        $this->assertNotNull($cached, 'transient banner cache key must be set on 405');
+        $this->assertSame(405, $cached['http_status']);
+
+        $reloaded = License::find($license->id);
+        $this->assertTrue((bool) $reloaded->platform_valid, 'license must remain platform_valid=true on 405');
+    }
+
+    public function test_sync_with_platform_marks_invalid_on_expired(): void
+    {
+        Cache::flush();
+
+        $license = License::create([
+            'license_key' => 'TEST-KEY6-XXXX-YYYY',
+            'domain' => 'p26-exp.test',
+            'platform_valid' => true,
+        ]);
+
+        Http::fake([
+            'platform.example/api/license/validate' => Http::response([
+                'valid' => false,
+                'error' => 'expired',
+            ], 200),
+        ]);
+
+        $result = app(LicenseActivationService::class)->syncWithPlatform($license, 'p26-exp.test');
+
+        $this->assertFalse($result['valid']);
+        $this->assertNull(
+            Cache::get(LicenseActivationService::transientErrorCacheKey($license->id)),
+            'a definite "expired" rejection must NOT populate the transient banner cache'
+        );
+
+        $reloaded = License::find($license->id);
+        $this->assertFalse((bool) $reloaded->platform_valid);
+    }
+
+    public function test_retry_link_reattempts_sync_and_clears_transient_banner(): void
+    {
+        Cache::flush();
+        $admin = $this->setupLicensedAdmin();
+        $license = License::current();
+
+        Cache::put(
+            LicenseActivationService::transientErrorCacheKey($license->id),
+            ['error' => 'api_error', 'http_status' => 405, 'detected_at' => now()->toIso8601String()],
+            now()->addMinutes(30)
+        );
+
+        Http::fake([
+            'platform.example/api/license/validate' => Http::response([
+                'valid' => true,
+                'modules' => ['shop', 'blog'],
+                'support_level' => 'basic',
+                'expires_at' => now()->addYear()->toIso8601String(),
+            ], 200),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.license.refresh-config.get'));
+        $response->assertRedirect(route('admin.license.index'));
+
+        $this->assertNull(
+            Cache::get(LicenseActivationService::transientErrorCacheKey($license->id)),
+            'clicking retry must actually re-sync and clear the banner once the platform responds successfully'
+        );
+    }
 }

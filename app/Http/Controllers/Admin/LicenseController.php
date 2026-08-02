@@ -91,10 +91,17 @@ class LicenseController extends Controller
     }
 
     /**
-     * نسخهٔ GET برای لینک مستقیم (مثلاً از ویجت اعلان).
+     * نسخهٔ GET برای لینک مستقیم (مثلاً از ویجت اعلان یا لینک «تلاش مجدد» در banner خطای موقت لایسنس).
+     * در صورت وجود لایسنس، یک تلاش مجدد برای sync با پلتفرم هم انجام می‌شود تا اگر مشکل موقت
+     * برطرف شده باشد، banner بلافاصله پاک شود (به‌جای انتظار تا رأس بعدی revalidate).
      */
-    public function refreshConfigGet()
+    public function refreshConfigGet(LicenseActivationService $activationService)
     {
+        $license = License::current();
+        if ($license && $license->id) {
+            $activationService->syncWithPlatform($license, $license->domain ?: request()->getHost());
+        }
+
         PlatformUx::clearCache();
         session()->put('platform_config_just_refreshed', true);
         AdminActivityLogger::log('license.refreshed_config', 'بازخوانی تنظیمات و اعلان‌ها از پلتفرم (GET)');
