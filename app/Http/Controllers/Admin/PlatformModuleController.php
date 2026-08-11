@@ -41,10 +41,10 @@ class PlatformModuleController extends Controller
             'title' => 'قرارداد',
             'description' => 'مدیریت قراردادهای خدمات و مستندات مرتبط با مشتریان.',
         ],
-        'crm' => [
-            'title' => 'مخاطبین و CRM',
-            'description' => 'ابزارهای مدیریت ارتباط با مشتری (مخاطبین، سگمنت‌ها، تعاملات).',
-        ],
+        // 'crm' removed (Phase X): superseded by the real crm-suite package's
+        // own tenant route (crm.site.dashboard) — see AdminMenu::MENU_ROUTES['crm'].
+        // The old generic guide page here was gated on the dead placeholder
+        // Module id=46, not the real crm-suite (id=58) module.
         'discount_advanced' => [
             'title' => 'تخفیف پیشرفته',
             'description' => 'قوانین تخفیف پیچیده و ترکیبی فراتر از کوپن‌های معمولی.',

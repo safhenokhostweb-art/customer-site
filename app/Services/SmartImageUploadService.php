@@ -35,6 +35,10 @@ class SmartImageUploadService
 
     private const DEFAULT_CONTEXT = 'thumbnail';
 
+    public function __construct(private readonly MediaStorage $media)
+    {
+    }
+
     public function upload(UploadedFile $file, string $context = 'thumbnail'): array
     {
         // GAP-H07 — Storage limit enforcement
@@ -90,7 +94,7 @@ class SmartImageUploadService
         $filename = Str::random(22) . '.' . $outputExt;
         $fullPath = $dir . '/' . $filename;
 
-        $disk = Storage::disk('uploads');
+        $disk = $this->media->disk('uploads');
         $disk->makeDirectory($dir);
         $disk->put($fullPath, $imageData['data']);
 
@@ -99,7 +103,7 @@ class SmartImageUploadService
 
         return [
             'path'          => $fullPath,
-            'url'           => asset('uploads/' . $fullPath),
+            'url'           => $this->media->url($fullPath, 'uploads'),
             'original_size' => $originalSize,
             'final_size'    => $finalSize,
             'size_reduction'=> max(0, $reduction) . '%',
@@ -130,7 +134,7 @@ class SmartImageUploadService
         $limitBytes = $limitMb * 1024 * 1024;
 
         $usedBytes = Cache::remember('storage_used_bytes', 300, function (): int {
-            $disk  = Storage::disk('uploads');
+            $disk  = $this->media->disk('uploads');
             $total = 0;
             foreach ($disk->allFiles() as $file) {
                 $total += $disk->size($file);
@@ -296,13 +300,14 @@ class SmartImageUploadService
         $filename = Str::random(22) . '.' . $ext;
         $fullPath = $dir . '/' . $filename;
 
-        $disk = Storage::disk('uploads');
+        $uploadDisk = $this->media->diskNameFor('uploads');
+        $disk       = Storage::disk($uploadDisk);
         $disk->makeDirectory($dir);
-        $file->storeAs($dir, $filename, 'uploads');
+        $file->storeAs($dir, $filename, $uploadDisk);
 
         return [
             'path'          => $fullPath,
-            'url'           => asset('uploads/' . $fullPath),
+            'url'           => $this->media->url($fullPath, 'uploads'),
             'original_size' => $originalSize,
             'final_size'    => $originalSize,
             'size_reduction'=> '0%',

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f2cbee53e4e0e92723da290bb8a075f",
+    "content-hash": "c3163c36a374dd1a482ba94301ae25e2",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -5435,6 +5435,41 @@
             }
         },
         {
+            "name": "saas-platform/modules-crm",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../saas-platform/packages/saas-platform/modules/crm",
+                "reference": "450abe4488ba0b160577a0ca6d45859e0e2d039e"
+            },
+            "require": {
+                "laravel/framework": "^10.0|^11.0|^12.0",
+                "php": "^8.1",
+                "saas-platform/core-utils": "@dev"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SaaSPlatform\\Modules\\Crm\\Providers\\CrmServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SaaSPlatform\\Modules\\Crm\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "crm module for SaaS Platform",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "saas-platform/modules-forms",
             "version": "dev-main",
             "dist": {
@@ -5464,6 +5499,41 @@
                 "MIT"
             ],
             "description": "Shared Forms Module for SaaS Platform",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "saas-platform/modules-seo-advanced",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../saas-platform/packages/saas-platform/modules/seo-advanced",
+                "reference": "ca03fac2a14e00ccefe17643299e1a597e7306a7"
+            },
+            "require": {
+                "laravel/framework": "^10.0|^11.0|^12.0",
+                "php": "^8.1",
+                "saas-platform/core-utils": "@dev"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SaaSPlatform\\Modules\\SeoAdvanced\\Providers\\SeoAdvancedServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SaaSPlatform\\Modules\\SeoAdvanced\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "seo-advanced module for SaaS Platform",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -11164,7 +11234,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "saas-platform/core-utils": 20,
+        "saas-platform/modules-crm": 20,
         "saas-platform/modules-forms": 20,
+        "saas-platform/modules-seo-advanced": 20,
         "saas-platform/modules-tickets": 20
     },
     "prefer-stable": true,

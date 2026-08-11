@@ -7,9 +7,11 @@ use App\Http\Requests\Admin\ReplySupportRequest;
 use App\Http\Requests\Admin\StoreSupportRequest;
 use App\Models\License;
 use App\Models\User;
+use App\Services\MediaStorage;
 use App\Services\SupportApiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use SaaSPlatform\Modules\Tickets\Dto\TicketProxyData;
 
 /**
@@ -27,7 +29,8 @@ use SaaSPlatform\Modules\Tickets\Dto\TicketProxyData;
 class SupportController extends Controller
 {
     public function __construct(
-        protected SupportApiClient $supportApiClient
+        protected SupportApiClient $supportApiClient,
+        protected MediaStorage $media,
     ) {}
 
     public function index()
@@ -255,10 +258,12 @@ class SupportController extends Controller
             abort(403);
         }
 
-        if (! \Illuminate\Support\Facades\Storage::disk('private')->exists($path)) {
+        $disk = $this->media->diskNameFor('private');
+
+        if (! Storage::disk($disk)->exists($path)) {
             abort(404);
         }
 
-        return \Illuminate\Support\Facades\Storage::disk('private')->response($path);
+        return Storage::disk($disk)->response($path);
     }
 }

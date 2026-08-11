@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\MediaStorage;
 use App\Services\SmartImageUploadService;
 use Illuminate\Http\Request;
 
 class ImageUploadController extends Controller
 {
-    public function __construct(private SmartImageUploadService $imageService)
-    {
+    public function __construct(
+        private SmartImageUploadService $imageService,
+        private MediaStorage $media,
+    ) {
     }
 
     public function store(Request $request)
@@ -24,9 +27,9 @@ class ImageUploadController extends Controller
             return response()->json(['message' => 'فایل تصویر معتبر ارسال نشده است.'], 422);
         }
 
-        $root = (string) config('filesystems.disks.uploads.root', '');
-        if ($root === '') {
-            return response()->json(['message' => 'دیسک uploads در filesystems.php تنظیم نشده.'], 500);
+        $disk = $this->media->diskNameFor('uploads');
+        if (!config("filesystems.disks.{$disk}")) {
+            return response()->json(['message' => "دیسک {$disk} در filesystems.php تنظیم نشده."], 500);
         }
 
         try {

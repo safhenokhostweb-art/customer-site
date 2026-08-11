@@ -25,6 +25,20 @@
         },
         {
             "type": "path",
+            "url": "../saas-platform/packages/saas-platform/modules/crm",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../saas-platform/packages/saas-platform/modules/seo-advanced",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "../saas-platform/packages/saas-platform/core-utils",
             "options": {
                 "symlink": true
@@ -43,7 +57,9 @@
         "phpoffice/phpspreadsheet": "^5.8",
         "pusher/pusher-php-server": "*",
         "saas-platform/core-utils": "@dev",
+        "saas-platform/modules-crm": "@dev",
         "saas-platform/modules-forms": "@dev",
+        "saas-platform/modules-seo-advanced": "@dev",
         "saas-platform/modules-tickets": "@dev"
     },
     "require-dev": {

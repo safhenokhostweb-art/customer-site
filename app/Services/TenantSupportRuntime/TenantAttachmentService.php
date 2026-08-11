@@ -3,6 +3,7 @@
 namespace App\Services\TenantSupportRuntime;
 
 use App\Models\SupportMessageAttachment;
+use App\Services\MediaStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -23,9 +24,9 @@ class TenantAttachmentService
         'video/mp4', 'audio/mpeg', 'audio/ogg',
     ];
 
-    public function __construct()
+    public function __construct(MediaStorage $media)
     {
-        $this->disk    = config('filesystems.support_disk', 'local');
+        $this->disk    = $media->diskNameFor('private');
         $this->baseDir = 'support-attachments/' . config('app.tenant_slug', 'tenant');
     }
 

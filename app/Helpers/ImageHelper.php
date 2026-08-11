@@ -2,12 +2,16 @@
 
 namespace App\Helpers;
 
+use App\Services\MediaStorage;
+
 class ImageHelper
 {
     /**
-     * آدرس کامل تصویر برای نمایش.
-     * مسیرهای قدیمی (storage): uploads/... → asset('storage/...')
-     * مسیرهای جدید (public/uploads): thumbnail/... → asset('uploads/...')
+     * آدرس کامل تصویر برای نمایش، از طریق MediaStorage (نه asset() خام) —
+     * تا وقتی MEDIA_DISK به Object Storage اشاره کند، لینک تصویر همچنان
+     * درست تولید شود. در حالت محلی (پیش‌فرض) خروجی دقیقاً همان قبلی است:
+     * مسیرهای قدیمی (storage): uploads/... → دیسک 'public'
+     * مسیرهای جدید (public/uploads): thumbnail/... → دیسک 'uploads'
      */
     public static function url(?string $path): ?string
     {
@@ -18,9 +22,13 @@ class ImageHelper
         if (str_starts_with($path, 'http')) {
             return $path;
         }
+
+        $media = app(MediaStorage::class);
+
         if (str_starts_with($path, 'uploads/')) {
-            return asset('storage/' . $path);
+            return $media->url($path, 'legacy');
         }
-        return asset('uploads/' . $path);
+
+        return $media->url($path, 'uploads');
     }
 }

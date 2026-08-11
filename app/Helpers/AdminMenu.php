@@ -192,14 +192,24 @@ class AdminMenu
         'accounting' => 'admin.accounting.index',
         'education_center' => 'admin.education-center.index',
         'site_content'    => 'admin.site-content.index',
-        'seo_advanced' => 'admin.seo-advanced.index',
+        // seo-advanced (Module id=57): real tenant route (site.php, no
+        // {siteId} — resolved from the authenticated user). The old
+        // admin.seo-advanced.index legacy route/controller is retired.
+        'seo_advanced' => 'seo-advanced.site.report',
         'analytics' => 'admin.analytics.index',
         'announcements' => 'admin.announcements.index',
         'backup' => 'admin.backup.index',
         'brand' => 'admin.brand.index',
         'cloud' => 'admin.cloud.index',
         'contract' => 'admin.contract.index',
-        'crm' => 'admin.crm.index',
+        // crm-suite (Module id=58): real tenant route (site.php, no
+        // {siteId}). NOTE: 'admin.crm.index' (App\Http\Controllers\Admin\CrmController)
+        // is a SEPARATE, pre-existing, fully-built local CRM feature
+        // (contacts/deals/activities — routes/web.php:598-613), left
+        // deliberately un-menu'd — it currently has no module: middleware
+        // gate at all (unlike its neighboring route groups), a pre-existing
+        // issue independent of this change; see audit notes.
+        'crm' => 'crm.site.dashboard',
         'discount_advanced' => 'admin.discount-advanced.index',
         'gallery' => 'admin.gallery.index',
         'i18n' => 'admin.i18n.index',
@@ -299,14 +309,14 @@ class AdminMenu
         'translations'    => 'admin.translations.*',
         'analytics_local' => 'admin.analytics.*',
         'system_alerts'   => 'admin.notification-center.*',
-        'seo_advanced' => 'admin.seo-advanced.*',
+        'seo_advanced' => 'seo-advanced.site.*',
         'analytics' => 'admin.analytics.*',
         'announcements' => 'admin.announcements.*',
         'backup' => 'admin.backup.*',
         'brand' => 'admin.brand.*',
         'cloud' => 'admin.cloud.*',
         'contract' => 'admin.contract.*',
-        'crm' => 'admin.crm.*',
+        'crm' => 'crm.site.*',
         'discount_advanced' => 'admin.discount-advanced.*',
         'gallery' => 'admin.gallery.*',
         'i18n' => 'admin.i18n.*',
@@ -538,11 +548,16 @@ class AdminMenu
     protected static function getDynamicPlatformMenuKeys(): array
     {
         $staticKeys = array_fill_keys(self::getStaticMenuKeys(), true);
+        // Real slugs already reachable via a static AdminMenu key (e.g.
+        // 'crm' → 'crm-suite') — must be skipped here too, or the same
+        // module would render twice (once via its static entry, once via
+        // the manifest-fallback below).
+        $claimedSlugs = array_fill_keys(array_values(self::getStaticModuleSlugMap()), true);
         $enabled = self::getEnabledPlatformModuleSlugs();
         $out = [];
         foreach ($enabled as $slug) {
             // Skip modules already placed in static groups (crm, inventory, seo_advanced, etc.)
-            if (isset($staticKeys[$slug])) {
+            if (isset($staticKeys[$slug]) || isset($claimedSlugs[$slug])) {
                 continue;
             }
             // Skip modules that render description-only "coming soon" pages — no real UI
@@ -557,7 +572,17 @@ class AdminMenu
             // surface through static groups or have no sidebar UI at all.
             $route = self::MENU_ROUTES[$slug] ?? null;
             if ($route === null || $route === 'admin.modules.show') {
-                continue;
+                // Phase X: no static route — fall back to the module's own
+                // manifest menu[] (self-registered via
+                // config('module-manifests.installed')) instead of skipping
+                // outright. This is what lets a brand-new module surface in
+                // the sidebar with zero AdminMenu.php edits.
+                $manifest = config('module-manifest-' . $slug);
+                $hasManifestRoute = is_array($manifest)
+                    && collect($manifest['menu'] ?? [])->contains(fn ($item) => !empty($item['route']));
+                if (! $hasManifestRoute) {
+                    continue;
+                }
             }
             $out[] = $slug;
         }
@@ -638,7 +663,24 @@ class AdminMenu
         if ($key === 'bank_gateway') {
             return true; // درگاه پرداخت همیشه در منو نمایش داده می‌شود
         }
-        $moduleMap = [
+        $moduleMap = self::getStaticModuleSlugMap();
+        if (isset($moduleMap[$key])) {
+            return SiteHelper::moduleEnabled($moduleMap[$key]);
+        }
+        return false;
+    }
+
+    /**
+     * AdminMenu key → real marketplace/license module slug, for the static
+     * (non-manifest-driven) menu entries. Extracted out of isVisible() so
+     * getDynamicPlatformMenuKeys() can also know which real slugs are
+     * already claimed by a static entry — otherwise a module reachable via
+     * both a static key alias (like 'crm' → 'crm-suite') and the dynamic
+     * manifest-fallback pathway would render twice.
+     */
+    protected static function getStaticModuleSlugMap(): array
+    {
+        return [
             'coupon' => 'coupon',
             'reviews' => 'reviews',
             'referral' => 'referral',
@@ -650,15 +692,16 @@ class AdminMenu
             'invoice' => 'invoice',
             'business_card' => 'business_card',
             'social_links' => 'social_links',
-            // Platform modules with real dedicated UIs, placed in static groups
-            'crm'          => 'crm',
+            // Platform modules with real dedicated UIs, placed in static groups.
+            // Phase X: the entitlement check must use the REAL marketplace
+            // slug (site_modules/License::modules), not the AdminMenu's own
+            // internal key — 'crm' matched only the dead placeholder Module
+            // id=46, and 'seo_advanced' (underscore) never matched the real
+            // 'seo-advanced' (hyphen) module at all.
+            'crm'          => 'crm-suite',
             'inventory'    => 'inventory',
-            'seo_advanced' => 'seo_advanced',
+            'seo_advanced' => 'seo-advanced',
         ];
-        if (isset($moduleMap[$key])) {
-            return SiteHelper::moduleEnabled($moduleMap[$key]);
-        }
-        return false;
     }
 
     /**
@@ -685,6 +728,19 @@ class AdminMenu
         if (isset(self::MENU_ROUTES[$key])) {
             return self::MENU_ROUTES[$key];
         }
+
+        // Phase X: $key here may be a raw manifest-fallback slug reached
+        // via getDynamicPlatformMenuKeys() rather than a MENU_ROUTES-backed
+        // AdminMenu key — resolve straight from that module's own manifest.
+        $manifest = config('module-manifest-' . $key);
+        if (is_array($manifest)) {
+            foreach ($manifest['menu'] ?? [] as $item) {
+                if (!empty($item['route'])) {
+                    return $item['route'];
+                }
+            }
+        }
+
         return 'admin.modules.show';
     }
 
@@ -700,9 +756,20 @@ class AdminMenu
 
     public static function isActive(string $key): bool
     {
-        $pattern = self::MENU_ROUTE_PATTERNS[$key] ?? 'admin.modules.*';
-        if (!$pattern) {
-            return false;
+        $pattern = self::MENU_ROUTE_PATTERNS[$key] ?? null;
+        if ($pattern === null) {
+            // Phase X: manifest-fallback slug — derive a route pattern from
+            // its own resolved route name (e.g. 'crm.site.dashboard' →
+            // 'crm.site.*') rather than defaulting to the generic
+            // admin.modules.* pattern, which would never match.
+            $route = self::getRoute($key);
+            if ($route === 'admin.modules.show') {
+                $pattern = 'admin.modules.*';
+            } else {
+                $segments = explode('.', $route);
+                array_pop($segments);
+                $pattern = $segments ? implode('.', $segments) . '.*' : $route;
+            }
         }
         if ($pattern === 'admin.modules.show') {
             return request()->routeIs($pattern) && request()->route('slug') === $key;
@@ -730,19 +797,84 @@ class AdminMenu
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Manifest key → AdminMenu key mapping.
-     * Maps manifest menu item keys to the AdminMenu keys used in getStaticGroups().
+     * List of installed modules' manifest config namespaces (the suffix
+     * after 'module-manifest-'). 'forms'/'tickets' are the historical
+     * default — kept as a fallback so nothing regresses if a package
+     * doesn't self-register. Every other package registers itself here via
+     * its own ServiceProvider (see CrmServiceProvider::registerModuleManifest(),
+     * SeoAdvancedServiceProvider::registerModuleManifest()) — AdminMenu never
+     * hardcodes a third module's slug to discover it.
+     *
+     * @return array<int, string>
+     */
+    protected static function getInstalledManifestSlugs(): array
+    {
+        return array_values(array_unique(array_merge(
+            ['forms', 'tickets'],
+            config('module-manifests.installed', [])
+        )));
+    }
+
+    /**
+     * Manifest item key → AdminMenu key mapping.
+     * $curated holds legacy aliases where the AdminMenu key predates the
+     * manifest system and doesn't match the module's own menu item key
+     * (e.g. tickets' 'tickets' item key maps to AdminMenu's 'support' key).
+     * Any other installed module's manifest menu item is auto-discovered:
+     * its own key is used as the AdminMenu key directly, so a new module
+     * needs zero edits here as long as it doesn't collide with an existing
+     * AdminMenu key.
      */
     protected static function getManifestKeyMap(): array
     {
-        return [
-            // forms manifest menu items → AdminMenu keys
+        $curated = [
             'forms'             => 'forms',
             'forms-submissions' => 'forms_submissions',
-            // tickets manifest menu items → AdminMenu keys
             'tickets'           => 'support',
             'tickets-sla'       => 'support_history',
+            // seo-advanced's manifest key is hyphenated (matches the real
+            // marketplace slug); AdminMenu's own internal key for it
+            // predates the manifest system and stayed underscored.
+            'seo-advanced'      => 'seo_advanced',
         ];
+
+        foreach (self::getInstalledManifestSlugs() as $slug) {
+            $manifest = config('module-manifest-' . $slug);
+            if (!is_array($manifest)) {
+                continue;
+            }
+            foreach ($manifest['menu'] ?? [] as $item) {
+                $itemKey = $item['key'] ?? null;
+                if ($itemKey !== null && !isset($curated[$itemKey])) {
+                    $curated[$itemKey] = $itemKey;
+                }
+            }
+        }
+
+        return $curated;
+    }
+
+    /**
+     * Which installed manifest a given manifest item key actually belongs
+     * to — discovered by scanning every installed manifest's menu[],
+     * instead of guessing from the key string (the old code assumed any
+     * non-'forms'-prefixed key must be tickets', which broke the moment a
+     * third module existed).
+     */
+    protected static function findManifestSlugForItemKey(string $manifestItemKey): ?string
+    {
+        foreach (self::getInstalledManifestSlugs() as $slug) {
+            $manifest = config('module-manifest-' . $slug);
+            if (!is_array($manifest)) {
+                continue;
+            }
+            foreach ($manifest['menu'] ?? [] as $item) {
+                if (($item['key'] ?? '') === $manifestItemKey) {
+                    return $slug;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -758,14 +890,12 @@ class AdminMenu
             return null;
         }
 
-        // Determine which manifest to read from
-        $manifestSlug = str_starts_with($manifestItemKey, 'forms') ? 'forms' : 'tickets';
-
-        $manifest = config('module-manifest-' . $manifestSlug);
-        if (!is_array($manifest)) {
+        $manifestSlug = self::findManifestSlugForItemKey($manifestItemKey);
+        if ($manifestSlug === null) {
             return null;
         }
 
+        $manifest = config('module-manifest-' . $manifestSlug);
         foreach ($manifest['menu'] ?? [] as $item) {
             if (($item['key'] ?? '') === $manifestItemKey) {
                 return $item['label'] ?? null;
@@ -787,13 +917,12 @@ class AdminMenu
             return null;
         }
 
-        $manifestSlug = str_starts_with($manifestItemKey, 'forms') ? 'forms' : 'tickets';
-
-        $manifest = config('module-manifest-' . $manifestSlug);
-        if (!is_array($manifest)) {
+        $manifestSlug = self::findManifestSlugForItemKey($manifestItemKey);
+        if ($manifestSlug === null) {
             return null;
         }
 
+        $manifest = config('module-manifest-' . $manifestSlug);
         foreach ($manifest['menu'] ?? [] as $item) {
             if (($item['key'] ?? '') === $manifestItemKey) {
                 return $item['route'] ?? null;
@@ -812,7 +941,7 @@ class AdminMenu
     public static function getAllManifestMenuItems(): array
     {
         $items = [];
-        foreach (['forms', 'tickets'] as $slug) {
+        foreach (self::getInstalledManifestSlugs() as $slug) {
             $manifest = config('module-manifest-' . $slug);
             if (!is_array($manifest)) {
                 continue;

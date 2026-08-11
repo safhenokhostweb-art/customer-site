@@ -49,7 +49,6 @@ use App\Http\Controllers\Admin\BusinessCardController;
 use App\Http\Controllers\Admin\SocialLinkController;
 use App\Http\Controllers\Admin\AdvertisementController;
 use App\Http\Controllers\Admin\AccountingController;
-use App\Http\Controllers\Admin\SeoAdvancedController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use SaaSPlatform\Modules\Forms\Http\Controllers\FormController;
 use SaaSPlatform\Modules\Forms\Http\Controllers\FormSubmissionController;
@@ -568,9 +567,9 @@ Route::middleware('install.check')->group(function () {
         Route::middleware('module:accounting')->group(function () {
             Route::get('accounting', [AccountingController::class, 'index'])->name('accounting.index');
         });
-        Route::middleware('module:seo_advanced')->group(function () {
-            Route::get('seo-advanced', [SeoAdvancedController::class, 'index'])->name('seo-advanced.index');
-        });
+        // seo-advanced (Module id=57): superseded by the real package's own
+        // tenant route, loaded via SeoAdvancedServiceProvider's routes/site.php
+        // (seo-advanced.site.report) — see AdminMenu::MENU_ROUTES['seo_advanced'].
         Route::middleware('module:analytics')->group(function () {
             Route::get('analytics', [PlatformModuleController::class, 'show'])
                 ->name('analytics.index')->defaults('slug', 'analytics');
