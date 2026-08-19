@@ -27,10 +27,18 @@ class ProfileAvatarController extends Controller
         $filename = Str::random(20) . '.' . $ext;
         $relDir = 'avatar/' . date('Y/m');
         $absDir = public_path('uploads' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relDir));
-        if (!is_dir($absDir)) {
-            mkdir($absDir, 0755, true);
+
+        try {
+            if (!is_dir($absDir)) {
+                mkdir($absDir, 0755, true);
+            }
+            $file->move($absDir, $filename);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Profile avatar upload: ' . $e->getMessage());
+
+            return back()->withErrors(['avatar' => 'آپلود تصویر پروفایل ناموفق بود. لطفاً دوباره تلاش کنید.']);
         }
-        $file->move($absDir, $filename);
+
         $path = $relDir . '/' . $filename;
 
         $user->update(['avatar' => $path]);

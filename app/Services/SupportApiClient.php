@@ -115,16 +115,13 @@ class SupportApiClient
             return ['success' => false, 'message' => 'PLATFORM_URL تنظیم نشده است.'];
         }
 
-        $basePayload = [
-            'license_key' => $license->license_key,
-            'domain' => $license->domain,
-        ];
-
         try {
-            $client = Http::timeout(15)->acceptJson();
+            $client = Http::timeout(15)->acceptJson()
+                ->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $license->domain]);
             $response = $method === 'get'
-                ? $client->get($platformUrl . $path, array_merge($basePayload, $payload))
-                : $client->post($platformUrl . $path, array_merge($basePayload, $payload));
+                ? $client->get($platformUrl . $path, $payload)
+                : $client->post($platformUrl . $path, $payload);
 
             $data = $response->json();
             if (!is_array($data)) {

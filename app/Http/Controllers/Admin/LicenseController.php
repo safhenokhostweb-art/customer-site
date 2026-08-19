@@ -122,13 +122,11 @@ class LicenseController extends Controller
             return response()->json(['error' => 'PLATFORM_URL تنظیم نشده است.'], 400);
         }
         $url = $baseUrl . '/api/site-config';
-        $params = [
-            'license_key' => $license->license_key,
-            'domain' => $license->domain ?: request()->getHost(),
-            'debug' => 1,
-        ];
         try {
-            $response = \Illuminate\Support\Facades\Http::timeout(10)->get($url, $params);
+            $response = \Illuminate\Support\Facades\Http::timeout(10)
+                ->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $license->domain ?: request()->getHost()])
+                ->get($url, ['debug' => 1]);
             $data = $response->json();
             $out = [
                 'http_status' => $response->status(),

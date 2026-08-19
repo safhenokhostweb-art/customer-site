@@ -25,10 +25,10 @@ class ModuleStoreController extends Controller
 
         if ($license && $license->isValid()) {
             try {
-                $response = Http::timeout(10)->get($platformUrl . '/api/tenant-marketplace/modules', [
-                    'license_key' => $license->license_key,
-                    'domain' => request()->getHost(),
-                ]);
+            $response = Http::timeout(10)
+                ->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => request()->getHost()])
+                ->get($platformUrl . '/api/tenant-marketplace/modules');
                 if ($response->successful()) {
                     $data = $response->json();
                     if (! empty($data['allowed'])) {

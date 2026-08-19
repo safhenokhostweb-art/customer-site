@@ -30,11 +30,9 @@ class UpdateCheckService
 
         $url = $baseUrl . '/api/updates/module-history';
         try {
-            $response = Http::timeout(12)->get($url, [
-                'license_key' => $license->license_key,
-                'domain' => $this->licenseRequestDomain($license),
-                'limit' => $limit,
-            ]);
+            $response = Http::timeout(12)->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $this->licenseRequestDomain($license)])
+                ->get($url, ['limit' => $limit]);
 
             if (!$response->successful()) {
                 return ['success' => false, 'message' => 'خطا در دریافت تاریخچه ماژول‌ها.'];
@@ -93,11 +91,9 @@ class UpdateCheckService
 
         $url = $baseUrl . '/api/updates/report-versions';
         try {
-            $response = Http::timeout(10)->post($url, [
-                'license_key' => $license->license_key,
-                'domain' => $this->licenseRequestDomain($license),
-                'versions' => $versions,
-            ]);
+            $response = Http::timeout(10)->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $this->licenseRequestDomain($license)])
+                ->post($url, ['versions' => $versions]);
 
             if (!$response->successful()) {
                 return ['success' => false, 'message' => 'خطا در گزارش نسخه‌ها.'];
@@ -132,10 +128,9 @@ class UpdateCheckService
 
         $url = $baseUrl . '/api/updates/modules';
         try {
-            $response = Http::timeout(10)->get($url, [
-                'license_key' => $license->license_key,
-                'domain' => $this->licenseRequestDomain($license),
-            ]);
+            $response = Http::timeout(10)->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $this->licenseRequestDomain($license)])
+                ->get($url);
 
             if (!$response->successful()) {
                 return [
@@ -182,15 +177,15 @@ class UpdateCheckService
         $url = $baseUrl . '/api/updates/check';
         $params = [
             'product' => 'site_template',
-            'license_key' => $license->license_key,
-            'domain' => $this->licenseRequestDomain($license),
         ];
         if ($currentVersion !== null) {
             $params['current_version'] = $currentVersion;
         }
 
         try {
-            $response = Http::timeout(10)->get($url, $params);
+            $response = Http::timeout(10)->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $this->licenseRequestDomain($license)])
+                ->get($url, $params);
 
             if (!$response->successful()) {
                 return ['success' => false, 'message' => 'خطا در ارتباط با سرور بروزرسانی.'];

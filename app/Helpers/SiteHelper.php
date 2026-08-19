@@ -62,6 +62,21 @@ class SiteHelper
      */
     protected static function moduleEnabledFromLicenseOrConfig(string $key): bool
     {
+        // Customer installations rely on the platform-issued cached
+        // projection. Local module configuration is not an entitlement source.
+        if (! self::isOwnerSite()) {
+            return self::moduleEnabledFromProjection($key);
+        }
+
+        return self::moduleEnabledFromProjection($key) || Module::enabled($key);
+    }
+
+    /**
+     * An explicit platform rejection clears platform_valid and modules in the
+     * sync service, so a known revocation always overrides an older cache.
+     */
+    protected static function moduleEnabledFromProjection(string $key): bool
+    {
         // blog و shop: فقط از لایسنس؛ بدون لایسنس معتبر همیشه غیرفعال
         if (in_array($key, ['blog', 'shop'], true)) {
             $license = License::current();
@@ -88,7 +103,7 @@ class SiteHelper
                 }
             }
         }
-        return Module::enabled($key);
+        return false;
     }
 
     /**

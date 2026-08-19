@@ -34,17 +34,25 @@ class AdminProfileController extends Controller
             $update['force_password_change'] = false;
         }
 
+        $avatarError = null;
         if ($request->hasFile('avatar')) {
-            $file    = $request->file('avatar');
+            $file = $request->file('avatar');
             if ($file->isValid()) {
-                $destDir = public_path('uploads/admin-avatars');
-                if (!is_dir($destDir)) {
-                    mkdir($destDir, 0775, true);
+                try {
+                    $destDir = public_path('uploads/admin-avatars');
+                    if (!is_dir($destDir)) {
+                        mkdir($destDir, 0775, true);
+                    }
+                    $ext      = $file->guessExtension() ?: 'jpg';
+                    $filename = 'admin_' . $user->id . '_' . time() . '.' . $ext;
+                    $file->move($destDir, $filename);
+                    $update['avatar'] = 'uploads/admin-avatars/' . $filename;
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Admin avatar upload: ' . $e->getMessage());
+                    $avatarError = 'آپلود تصویر پروفایل ناموفق بود. سایر تغییرات ذخیره شد.';
                 }
-                $ext      = $file->guessExtension() ?: 'jpg';
-                $filename = 'admin_' . $user->id . '_' . time() . '.' . $ext;
-                $file->move($destDir, $filename);
-                $update['avatar'] = 'uploads/admin-avatars/' . $filename;
+            } else {
+                $avatarError = 'فایل تصویر ارسال‌شده معتبر نیست.';
             }
         }
 
@@ -54,10 +62,16 @@ class AdminProfileController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'پروفایل با موفقیت به‌روزرسانی شد.',
-                'avatar_url' => $user->fresh()->avatar ? url($user->fresh()->avatar) : null,
+                'success'      => true,
+                'message'      => 'پروفایل با موفقیت به‌روزرسانی شد.',
+                'avatar_url'   => $user->fresh()->avatar ? url($user->fresh()->avatar) : null,
+                'avatar_error' => $avatarError,
             ]);
+        }
+
+        if ($avatarError) {
+            return back()->withErrors(['avatar' => $avatarError])
+                ->with('success', 'پروفایل با موفقیت به‌روزرسانی شد.');
         }
 
         return back()->with('success', 'پروفایل با موفقیت به‌روزرسانی شد.');

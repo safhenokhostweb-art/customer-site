@@ -380,13 +380,10 @@ class PlatformUxService
         }
 
         $url = $baseUrl . '/api/site-config';
-        $params = [
-            'license_key' => $license->license_key,
-            'domain' => $license->domain ?: request()->getHost(),
-        ];
-
         try {
-            $response = Http::timeout(10)->get($url, $params);
+            $response = Http::timeout(10)->withToken($license->license_key)
+                ->withHeaders(['X-Tenant-Domain' => $license->domain ?: request()->getHost()])
+                ->get($url);
             if (!$response->successful()) {
                 return null;
             }

@@ -5,6 +5,7 @@
 <div x-data="{
     isSaving: false,
     showSuccess: false,
+    errorMessage: null,
     avatarPreview: null,
     previewAvatar(e) {
         const f = e.target.files[0];
@@ -15,6 +16,7 @@
     },
     async save(form) {
         this.isSaving = true;
+        this.errorMessage = null;
         try {
             const fd = new FormData(form);
             fd.append('_method', 'PUT');
@@ -30,9 +32,18 @@
                     document.querySelectorAll('.admin-avatar-initials').forEach(el => el.style.display = 'none');
                     document.querySelectorAll('.admin-avatar-img').forEach(el => el.style.display = '');
                 }
-                this.showSuccess = true;
-                setTimeout(() => this.showSuccess = false, 3500);
+                if (data.avatar_error) {
+                    this.avatarPreview = null;
+                    this.errorMessage = data.avatar_error;
+                } else {
+                    this.showSuccess = true;
+                    setTimeout(() => this.showSuccess = false, 3500);
+                }
+            } else {
+                this.errorMessage = data.message || 'ذخیره تغییرات ناموفق بود.';
             }
+        } catch (e) {
+            this.errorMessage = 'خطای شبکه رخ داد. لطفاً دوباره تلاش کنید.';
         } finally { this.isSaving = false; }
     }
 }" class="max-w-3xl mx-auto space-y-5">
@@ -51,6 +62,14 @@
          style="display:none">
         <x-core-ui::icon name="check-circle" class="w-5 h-5 shrink-0" />
         پروفایل با موفقیت به‌روزرسانی شد.
+    </div>
+
+    {{-- Async error (e.g. avatar upload failure) --}}
+    <div x-show="errorMessage" x-transition
+         class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm font-medium"
+         style="display:none">
+        <x-core-ui::icon name="exclamation-triangle" class="w-5 h-5 shrink-0" />
+        <span x-text="errorMessage"></span>
     </div>
 
 

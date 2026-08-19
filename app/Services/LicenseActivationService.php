@@ -144,10 +144,9 @@ class LicenseActivationService
             if (! filter_var(config('license.verify_ssl', true), FILTER_VALIDATE_BOOLEAN)) {
                 $http = $http->withoutVerifying();
             }
-            $response = $http->post($url, [
-                    'license_key' => $licenseKey,
-                    'domain' => $domainNormalized,
-                ]);
+            $response = $http->withToken($licenseKey)->post($url, [
+                'domain' => $domainNormalized,
+            ]);
 
             if (!$response->successful()) {
                 $status = $response->status();

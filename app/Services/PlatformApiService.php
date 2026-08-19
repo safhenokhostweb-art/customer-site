@@ -222,7 +222,8 @@ class PlatformApiService
         [$licenseKey, $domain] = $this->resolveTenantCredentials();
         return Http::withToken($licenseKey)
             ->acceptJson()
-            ->get($this->baseUrl . $path, array_merge(['domain' => $domain], $query));
+            ->withHeaders(['X-Tenant-Domain' => $domain])
+            ->get($this->baseUrl . $path, $query);
     }
 
     private function tenantPost(string $path, array $data = []): Response
@@ -230,7 +231,8 @@ class PlatformApiService
         [$licenseKey, $domain] = $this->resolveTenantCredentials();
         return Http::withToken($licenseKey)
             ->acceptJson()
-            ->post($this->baseUrl . $path . '?domain=' . urlencode($domain), $data);
+            ->withHeaders(['X-Tenant-Domain' => $domain])
+            ->post($this->baseUrl . $path, $data);
     }
 
     private function resolveTenantCredentials(): array
