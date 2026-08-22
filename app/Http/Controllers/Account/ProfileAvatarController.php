@@ -5,41 +5,46 @@ namespace App\Http\Controllers\Account;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileAvatarRequest;
 use App\Models\UserActivityLog;
+use App\Services\MediaStorage;
+use App\Services\SmartImageUploadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class ProfileAvatarController extends Controller
 {
+    public function __construct(
+        private readonly SmartImageUploadService $imageService,
+        private readonly MediaStorage $media,
+    ) {
+    }
+
     public function update(ProfileAvatarRequest $request)
     {
         $user = $request->user();
-
-        if ($user->avatar) {
-            Storage::disk('uploads')->delete($user->avatar);
-        }
 
         $file = $request->file('avatar');
         $ext = $file->extension() ?: $file->getClientOriginalExtension();
         if (empty($ext)) {
             return back()->withErrors(['avatar' => 'نوع فایل تصویر شناسایی نشد. لطفاً یک فایل JPEG، PNG، GIF یا WEBP آپلود کنید.']);
         }
-        $filename = Str::random(20) . '.' . $ext;
-        $relDir = 'avatar/' . date('Y/m');
-        $absDir = public_path('uploads' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relDir));
-
         try {
-            if (!is_dir($absDir)) {
-                mkdir($absDir, 0755, true);
+            $result = $this->imageService->upload($file, 'avatar');
+            $path = $result['path'];
+
+            if ($user->avatar && ! $this->deleteStoredAvatar($user->avatar)) {
+                Log::warning('account.profile.previous_avatar_delete_failed', [
+                    'user_id' => $user->id,
+                ]);
             }
-            $file->move($absDir, $filename);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Profile avatar upload: ' . $e->getMessage());
+            Log::error('account.profile.avatar_upload_failed', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
 
             return back()->withErrors(['avatar' => 'آپلود تصویر پروفایل ناموفق بود. لطفاً دوباره تلاش کنید.']);
         }
-
-        $path = $relDir . '/' . $filename;
 
         $user->update(['avatar' => $path]);
 
@@ -53,11 +58,24 @@ class ProfileAvatarController extends Controller
         $user = $request->user();
 
         if ($user->avatar) {
-            Storage::disk('uploads')->delete($user->avatar);
+            $this->deleteStoredAvatar($user->avatar);
             $user->update(['avatar' => null]);
             UserActivityLog::log('avatar_removed', 'حذف تصویر پروفایل');
         }
 
         return back()->with('success', 'تصویر پروفایل حذف شد.');
+    }
+
+    private function deleteStoredAvatar(string $path): bool
+    {
+        if (str_starts_with($path, 'uploads/admin-avatars/')) {
+            return $this->media->delete(substr($path, strlen('uploads/')), 'uploads');
+        }
+
+        if (str_starts_with($path, 'uploads/')) {
+            return $this->media->delete($path, 'legacy');
+        }
+
+        return $this->media->delete($path, 'uploads');
     }
 }

@@ -25,6 +25,13 @@ class ImageHelper
 
         $media = app(MediaStorage::class);
 
+        // Admin avatars written before the MediaStorage migration used the
+        // public/uploads root but persisted the literal "uploads/" prefix.
+        // Keep those records readable while new uploads use canonical paths.
+        if (str_starts_with($path, 'uploads/admin-avatars/')) {
+            return $media->url(substr($path, strlen('uploads/')), 'uploads');
+        }
+
         if (str_starts_with($path, 'uploads/')) {
             return $media->url($path, 'legacy');
         }

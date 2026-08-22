@@ -134,7 +134,9 @@ class LicenseActivationService
         $url = $baseUrl . '/api/license/validate';
         $domainNormalized = $this->normalizeDomain($domain);
         try {
-            $http = Http::timeout(15)->acceptJson();
+            $http = Http::connectTimeout((int) config('license.connect_timeout_seconds', 2))
+                ->timeout((int) config('license.sync_timeout_seconds', 5))
+                ->acceptJson();
             // 'strict' => true: در صورت redirect (مثلاً پلتفرم HTTP→HTTPS را 301 می‌کند)،
             // متد POST حفظ شود. رفتار پیش‌فرض Guzzle در ریدایرکت 301/302، POST را به GET
             // تنزل می‌دهد که چون route مقصد فقط POST می‌پذیرد باعث HTTP 405 کاذب می‌شود.
@@ -145,6 +147,11 @@ class LicenseActivationService
                 $http = $http->withoutVerifying();
             }
             $response = $http->withToken($licenseKey)->post($url, [
+                // Compatibility fallback for an HTTP -> HTTPS redirect. Some
+                // clients/proxies intentionally strip Authorization across a
+                // scheme change; the platform accepts the same credential in
+                // the body and rejects only conflicting values.
+                'license_key' => $licenseKey,
                 'domain' => $domainNormalized,
             ]);
 
@@ -166,6 +173,12 @@ class LicenseActivationService
                     $message = 'خطا در ارتباط با سرور لایسنس. بعداً تلاش کنید.';
                 }
                 $bodyError = is_array($body) && isset($body['error']) && is_string($body['error']) ? $body['error'] : null;
+                if ($status === 401) {
+                    Log::warning('license.sync.authentication_failed', [
+                        'error' => $bodyError,
+                        'url' => $url,
+                    ]);
+                }
                 $error = ($bodyError !== null && $this->isDefinitePlatformRejection(['error' => $bodyError]))
                     ? $bodyError
                     : 'api_error';

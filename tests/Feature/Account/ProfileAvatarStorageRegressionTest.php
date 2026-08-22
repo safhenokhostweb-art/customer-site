@@ -49,15 +49,9 @@ class ProfileAvatarStorageRegressionTest extends TestCase
         $user->refresh();
         $this->assertStringStartsWith('avatar/', $user->avatar);
 
-        // ProfileAvatarController writes via raw $file->move() (a deliberate
-        // PHP-8.4/Flysystem workaround, see STORAGE_REGRESSION_REPORT.md),
-        // bypassing the Storage facade entirely — so it lands on the real
-        // public/uploads tree rather than Storage::fake('uploads').
-        $absolutePath = public_path('uploads/' . $user->avatar);
-        $this->assertFileExists($absolutePath);
+        Storage::disk('uploads')->assertExists($user->avatar);
         $this->assertStringEndsWith($user->avatar, $user->avatar_url);
 
-        @unlink($absolutePath);
     }
 
     public function test_customer_avatar_upload_rejects_invalid_file_with_a_visible_error(): void

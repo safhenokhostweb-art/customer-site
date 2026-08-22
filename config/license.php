@@ -8,6 +8,11 @@ return [
     */
     'revalidate_interval_minutes' => (int) env('LICENSE_REVALIDATE_MINUTES', 5),
 
+    // License revalidation runs in interactive middleware. Keep its network
+    // budget bounded so a platform outage cannot occupy all PHP-FPM workers.
+    'connect_timeout_seconds' => (int) env('LICENSE_CONNECT_TIMEOUT_SECONDS', 2),
+    'sync_timeout_seconds' => (int) env('LICENSE_SYNC_TIMEOUT_SECONDS', 5),
+
     /*
     | LICENSE_VERIFY_SSL=false زمانی که PLATFORM_URL از self-signed certificate استفاده می‌کند.
     | برای محیط‌هایی که customer-site و saas-platform روی یک سرور هستند و HTTPS داخلی

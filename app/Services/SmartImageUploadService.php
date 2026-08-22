@@ -96,7 +96,9 @@ class SmartImageUploadService
 
         $disk = $this->media->disk('uploads');
         $disk->makeDirectory($dir);
-        $disk->put($fullPath, $imageData['data']);
+        if (! $disk->put($fullPath, $imageData['data'])) {
+            throw new \RuntimeException('Image storage write failed.');
+        }
 
         $finalSize   = strlen($imageData['data']);
         $reduction   = $originalSize > 0 ? round((1 - $finalSize / $originalSize) * 100) : 0;
@@ -303,7 +305,9 @@ class SmartImageUploadService
         $uploadDisk = $this->media->diskNameFor('uploads');
         $disk       = Storage::disk($uploadDisk);
         $disk->makeDirectory($dir);
-        $file->storeAs($dir, $filename, $uploadDisk);
+        if ($file->storeAs($dir, $filename, $uploadDisk) === false) {
+            throw new \RuntimeException('Image storage write failed.');
+        }
 
         return [
             'path'          => $fullPath,

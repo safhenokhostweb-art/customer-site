@@ -363,7 +363,7 @@
 
                 @php
                     $adminUser = auth()->user();
-                    $adminAvatarUrl = $adminUser->avatar ? url($adminUser->avatar) : null;
+                    $adminAvatarUrl = $adminUser->avatar_url;
                     $adminInitial   = mb_substr($adminUser->name ?? $adminUser->mobile, 0, 1);
                 @endphp
                 <div id="admin-profile-menu" class="relative" style="z-index:50">

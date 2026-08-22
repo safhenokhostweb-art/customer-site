@@ -85,7 +85,7 @@
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-4">
                     {{-- Avatar preview --}}
                     <div class="relative group">
-                        @php $avatarUrl = $user->avatar ? url($user->avatar) : null; @endphp
+                        @php $avatarUrl = $user->avatar_url; @endphp
                         <template x-if="avatarPreview">
                             <img :src="avatarPreview" class="w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-lg admin-avatar-img">
                         </template>

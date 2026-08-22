@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\SmartImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AdminProfileController extends Controller
 {
+    public function __construct(
+        private readonly SmartImageUploadService $imageService,
+    ) {
+    }
+
     public function index()
     {
         return view('admin.profile.index', ['user' => auth()->user()]);
@@ -39,16 +46,14 @@ class AdminProfileController extends Controller
             $file = $request->file('avatar');
             if ($file->isValid()) {
                 try {
-                    $destDir = public_path('uploads/admin-avatars');
-                    if (!is_dir($destDir)) {
-                        mkdir($destDir, 0775, true);
-                    }
-                    $ext      = $file->guessExtension() ?: 'jpg';
-                    $filename = 'admin_' . $user->id . '_' . time() . '.' . $ext;
-                    $file->move($destDir, $filename);
-                    $update['avatar'] = 'uploads/admin-avatars/' . $filename;
+                    $result = $this->imageService->upload($file, 'avatar');
+                    $update['avatar'] = $result['path'];
                 } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Admin avatar upload: ' . $e->getMessage());
+                    Log::error('admin.profile.avatar_upload_failed', [
+                        'user_id' => $user->id,
+                        'exception' => $e::class,
+                        'message' => $e->getMessage(),
+                    ]);
                     $avatarError = 'آپلود تصویر پروفایل ناموفق بود. سایر تغییرات ذخیره شد.';
                 }
             } else {
@@ -64,7 +69,7 @@ class AdminProfileController extends Controller
             return response()->json([
                 'success'      => true,
                 'message'      => 'پروفایل با موفقیت به‌روزرسانی شد.',
-                'avatar_url'   => $user->fresh()->avatar ? url($user->fresh()->avatar) : null,
+                'avatar_url'   => $user->fresh()->avatar_url,
                 'avatar_error' => $avatarError,
             ]);
         }
