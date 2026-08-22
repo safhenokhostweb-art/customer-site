@@ -19,7 +19,7 @@ class BackupDatabaseCommand extends Command
     public function handle(): int
     {
         $dryRun    = $this->option('dry-run');
-        $retention = max(1, (int) ($this->option('retention') ?: env('DB_BACKUP_RETENTION', 7)));
+        $retention = max(1, (int) ($this->option('retention') ?: config('deployment.database_backup_retention', 7)));
         $compress  = ! $this->option('no-compress');
 
         $backupDir = storage_path('backups');
@@ -134,7 +134,7 @@ class BackupDatabaseCommand extends Command
 
     private function mysqldumpBin(): string
     {
-        $fromEnv = env('MYSQLDUMP_PATH');
+        $fromEnv = config('deployment.mysqldump_path');
         if ($fromEnv && file_exists($fromEnv)) {
             return $fromEnv;
         }

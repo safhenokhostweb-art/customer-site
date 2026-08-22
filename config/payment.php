@@ -2,6 +2,8 @@
 
 return [
 
+    'live_gateway' => filter_var(env('PAYMENT_GATEWAY_LIVE', false), FILTER_VALIDATE_BOOLEAN),
+
     /*
     | درگاه فعال (fallback وقتی جدول payment_gateways خالی است):
     | zarinpal | idpay | mellat | melli | tejarat | pasargad | parsian

@@ -23,9 +23,8 @@ class Module
         if (array_key_exists('enabled', $config)) {
             $enabled = filter_var($config['enabled'], FILTER_VALIDATE_BOOLEAN);
         } else {
-            $envKey = $config['env'] ?? 'MODULE_' . strtoupper($key) . '_ENABLED';
             $default = $config['default'] ?? false;
-            $enabled = filter_var(env($envKey, $default), FILTER_VALIDATE_BOOLEAN);
+            $enabled = filter_var($default, FILTER_VALIDATE_BOOLEAN);
         }
         if (self::$resolved === null) {
             self::$resolved = [];

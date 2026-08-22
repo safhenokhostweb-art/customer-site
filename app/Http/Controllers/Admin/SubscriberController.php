@@ -285,7 +285,7 @@ class SubscriberController extends Controller
      */
     public function destroy(Subscription $subscriber)
     {
-        $isLiveGateway = config('subscription.live_gateway', env('PAYMENT_GATEWAY_LIVE', false));
+        $isLiveGateway = config('payment.live_gateway', false);
         $hasPaidInvoice = $subscriber->invoice && $subscriber->invoice->status === 'paid';
 
         if ($isLiveGateway && $hasPaidInvoice) {

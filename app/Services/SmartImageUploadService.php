@@ -327,12 +327,12 @@ class SmartImageUploadService
 
     private function aiAvailable(): bool
     {
-        return (bool) config('app.local_ai_enabled', env('LOCAL_AI_ENABLED', false));
+        return (bool) config('services.local_ai.enabled', false);
     }
 
     private function enhanceWithAi(string $path, string $context): ?string
     {
-        $endpoint = rtrim((string) config('services.local_ai.base_url', env('LOCAL_AI_BASE_URL', '')), '/');
+        $endpoint = rtrim((string) config('services.local_ai.base_url', ''), '/');
         if ($endpoint === '') {
             return null;
         }

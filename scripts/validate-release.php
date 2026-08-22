@@ -100,6 +100,64 @@ function jsonRead(string $path): ?array
     $decoded = json_decode((string) file_get_contents($path), true);
     return is_array($decoded) ? $decoded : null;
 }
+
+function phpConstraintSatisfied(string $version, string $constraint): bool
+{
+    foreach (preg_split('/\s*\|\|\s*/', trim($constraint)) ?: [] as $alternative) {
+        $tokens = preg_split('/(?:\s*,\s*|\s+)/', trim($alternative), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $matches = $tokens !== [];
+
+        foreach ($tokens as $token) {
+            if (str_starts_with($token, '^')) {
+                $lower = substr($token, 1);
+                $parts = array_map('intval', explode('.', $lower));
+                if (($parts[0] ?? 0) > 0 || count($parts) === 1) {
+                    $upper = (($parts[0] ?? 0) + 1) . '.0.0';
+                } elseif (($parts[1] ?? 0) > 0 || count($parts) === 2) {
+                    $upper = '0.' . (($parts[1] ?? 0) + 1) . '.0';
+                } else {
+                    $upper = '0.0.' . (($parts[2] ?? 0) + 1);
+                }
+                $matches = $matches
+                    && version_compare($version, $lower, '>=')
+                    && version_compare($version, $upper, '<');
+                continue;
+            }
+
+            if (str_starts_with($token, '~')) {
+                $lower = substr($token, 1);
+                $parts = array_map('intval', explode('.', $lower));
+                $upper = count($parts) >= 3
+                    ? ($parts[0] ?? 0) . '.' . (($parts[1] ?? 0) + 1) . '.0'
+                    : (($parts[0] ?? 0) + 1) . '.0.0';
+                $matches = $matches
+                    && version_compare($version, $lower, '>=')
+                    && version_compare($version, $upper, '<');
+                continue;
+            }
+
+            if (preg_match('/^(>=|<=|>|<|==|=)?\s*([0-9]+(?:\.[0-9]+){0,2})$/', $token, $m) === 1) {
+                $matches = $matches && version_compare($version, $m[2], $m[1] ?: '==');
+                continue;
+            }
+
+            if (preg_match('/^([0-9]+)(?:\.([0-9]+))?\.(?:x|\*)$/i', $token, $m) === 1) {
+                $matches = $matches
+                    && (int) explode('.', $version)[0] === (int) $m[1]
+                    && (!isset($m[2]) || (int) explode('.', $version)[1] === (int) $m[2]);
+                continue;
+            }
+
+            return false; // Unsupported syntax must fail closed.
+        }
+
+        if ($matches) {
+            return true;
+        }
+    }
+
+    return false;
+}
 // ---------------------------------------------------------------------------
 // Checks (fixed order -> deterministic output)
 // ---------------------------------------------------------------------------
@@ -130,7 +188,7 @@ check('php_version', 'PHP platform requirement satisfied', function () use ($tar
     if ($requiredPhp === null) {
         return 'composer.json declares no php requirement';
     }
-    if (version_compare(PHP_VERSION, $requiredPhp, '<')) {
+    if (!phpConstraintSatisfied(PHP_VERSION, (string) $requiredPhp)) {
         return 'PHP ' . PHP_VERSION . ' does not satisfy composer.json requirement ' . $requiredPhp;
     }
     return true;
@@ -308,6 +366,9 @@ if (is_file($target . '/composer.lock')) {
 }
 
 $manifest = [
+    'format'               => 'deployment-system-release-manifest',
+    'version'              => 1,
+    'project_key'          => 'customer-site',
     'commit_sha'           => $commitSha,
     'composer_lock_sha256' => $composerLockSha,
     'php'                  => PHP_VERSION,

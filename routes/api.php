@@ -69,6 +69,8 @@ Route::get('health', function () {
         }
     } catch (\Throwable) {}
 
+    $healthy = $app === 'ok' && $db === 'ok';
+
     return response()->json([
         'app'               => $app,
         'db'                => $db,
@@ -78,7 +80,7 @@ Route::get('health', function () {
         'disk_used_percent' => $diskUsedPercent,
         'memory_used_percent' => $memUsedPercent,
         'timestamp'         => now()->toIso8601String(),
-    ], 200);
+    ], $healthy ? 200 : 503);
 });
 
 use App\Http\Controllers\Api\SupportConversationController;

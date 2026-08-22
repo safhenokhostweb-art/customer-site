@@ -17,3 +17,10 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Runtime/customer state must never enter source-derived release artifacts.
+/storage/backups export-ignore
+/storage/uploads export-ignore
+/storage/advertisements export-ignore
+/storage/installed.lock export-ignore
+/public/uploads export-ignore

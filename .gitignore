@@ -1,6 +1,16 @@
 *.log
+*.sql
+*.sql.*
+*.dump
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
 .DS_Store
 .env
+.env.*
+!.env.example
+!.env.testing.example
 /public/uploads/
 /bootstrap/cache/*.php
 .env.backup
@@ -22,14 +32,11 @@ cursor-rules-sync.local.json
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/backups/
+/storage/uploads/
+/storage/advertisements/
+/storage/installed.lock
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
-/public/uploads/
-echo /public/uploads/admin-avatars/>> C:\laragon\www\customer-site\.gitignore
-echo /public/uploads/avatar/>> C:\laragon\www\customer-site\.gitignore
-echo /public/uploads/featured/>> C:\laragon\www\customer-site\.gitignore
-echo /public/uploads/notifications/>> C:\laragon\www\customer-site\.gitignore
-echo /public/uploads/product/>> C:\laragon\www\customer-site\.gitignore
-echo /public/uploads/tickets/>> C:\laragon\www\customer-site\.gitignore

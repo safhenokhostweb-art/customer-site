@@ -39,4 +39,15 @@ return [
         'skip_in_local' => filter_var(env('AUTH_CAPTCHA_SKIP_IN_LOCAL', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY', ''),
+    ],
+
+    'local_ai' => [
+        'enabled' => filter_var(env('LOCAL_AI_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'base_url' => env('LOCAL_AI_BASE_URL', ''),
+    ],
+
+    'customer_provision_secret' => env('CUSTOMER_PROVISION_SECRET', ''),
+
 ];

@@ -221,6 +221,9 @@ $manifestPath = $base . '/manifest-8.json';
 $r = runGate($fixture, ['--commit-sha=abc123def456', '--manifest-out=' . $manifestPath]);
 $manifest = json_decode((string) @file_get_contents($manifestPath), true);
 $ok = is_array($manifest)
+    && ($manifest['format'] ?? '') === 'deployment-system-release-manifest'
+    && ($manifest['version'] ?? 0) === 1
+    && ($manifest['project_key'] ?? '') === 'customer-site'
     && ($manifest['commit_sha'] ?? '') === 'abc123def456'
     && !empty($manifest['composer_lock_sha256'])
     && ($manifest['status'] ?? '') === 'pass'

@@ -10,7 +10,7 @@ class ProvisionSecretMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = config('app.provision_secret', env('CUSTOMER_PROVISION_SECRET', ''));
+        $secret = config('services.customer_provision_secret', '');
 
         // If no secret is configured, reject all provision calls
         if (empty($secret)) {

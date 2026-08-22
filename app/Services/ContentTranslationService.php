@@ -122,7 +122,7 @@ class ContentTranslationService
 
     private function callAi(string $text, string $locale, string $field): ?string
     {
-        $apiKey = config('services.anthropic.key', env('ANTHROPIC_API_KEY', ''));
+        $apiKey = config('services.anthropic.key', '');
         if (!$apiKey) {
             return null;
         }
