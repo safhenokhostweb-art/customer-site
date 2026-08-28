@@ -34,7 +34,7 @@ if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
         </p>
     </div>
     <div class="pib-banner__actions">
-        <a href="{{ route('subscriptions.pay', $__pendingInvoice->invoice_number) }}"
+        <a href="{{ route('subscriptions.pay', $__pendingInvoice->invoice_number) }}" data-payment-start
            class="pib-banner__btn pib-banner__btn--pay">
             پرداخت الان
         </a>

@@ -62,7 +62,7 @@
                     </div>
                 </dl>
 
-                <form method="POST" action="{{ route('installment.initiate') }}" style="margin-top:1rem">
+                <form method="POST" action="{{ route('installment.initiate') }}" style="margin-top:1rem" data-payment-start>
                     @csrf
                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                     <input type="hidden" name="amount" value="{{ $amount }}">

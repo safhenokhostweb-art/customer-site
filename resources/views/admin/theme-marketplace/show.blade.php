@@ -124,7 +124,7 @@
                  class="block text-center text-sm text-gray-500 hover:text-gray-700 py-1">مشاهده لایسنس</a>
             </div>
           @else
-            <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}">
+            <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}" @if(! ($theme['is_free'] ?? false)) data-payment-start @endif>
               @csrf
               <button type="submit"
                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 rounded-lg transition">

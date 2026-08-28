@@ -220,7 +220,7 @@
                 @if($blocked->isPending()) در انتظار تأیید @else اشتراک فعال دارید @endif
             </div>
             @else
-            <form method="POST" action="{{ route('account.subscriptions.subscribe') }}">
+            <form method="POST" action="{{ route('account.subscriptions.subscribe') }}" @if(! $plan->isFree()) data-payment-start @endif>
                 @csrf
                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                 @if(! $plan->isFree())

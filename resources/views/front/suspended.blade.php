@@ -286,5 +286,6 @@
             اگر این پیام به اشتباه نمایش داده می‌شود، با پشتیبانی تماس بگیرید.
         </p>
     </div>
+<x-core-ui::payment-connection-warning />
 </body>
 </html>

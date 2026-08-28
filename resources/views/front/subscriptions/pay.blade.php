@@ -68,7 +68,7 @@
         <div class="subpay-card__footer">
             @if($gatewayConfigured)
             {{-- ریدایرکت مستقیم به درگاه --}}
-            <a href="{{ route('subscriptions.pay', $invoice->invoice_number) }}" class="subpay-card__btn" style="text-decoration:none">
+            <a href="{{ route('subscriptions.pay', $invoice->invoice_number) }}" class="subpay-card__btn" style="text-decoration:none" data-payment-start>
                 <x-core-ui::icon name="credit-card" style="width:18px;height:18px" />
                 پرداخت آنلاین از طریق درگاه بانکی
             </a>

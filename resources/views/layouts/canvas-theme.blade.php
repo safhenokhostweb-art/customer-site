@@ -645,5 +645,6 @@
         @endif
         @endif
     @endauth
+<x-core-ui::payment-connection-warning />
 </body>
 </html>

@@ -170,7 +170,7 @@
                     </td>
                     <td>
                         @if($canPay)
-                        <form method="POST" action="{{ route('installment.pay', [$order->id, $payment->id]) }}" style="display:inline">
+                        <form method="POST" action="{{ route('installment.pay', [$order->id, $payment->id]) }}" style="display:inline" data-payment-start>
                             @csrf
                             <button type="submit" class="inst-show__btn-pay">
                                 <x-core-ui::icon name="credit-card" class="w-3.5 h-3.5 ml-1" />

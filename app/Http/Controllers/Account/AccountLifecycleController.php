@@ -10,6 +10,7 @@ use App\Services\Payment\GatewayException;
 use App\Services\Payment\PaymentGatewayFactory;
 use App\Services\PlatformApiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -74,11 +75,43 @@ class AccountLifecycleController extends Controller
         Session::put('lifecycle_restore_local_invoice', $invoice->invoice_number);
 
         if (PaymentGatewayFactory::isConfigured()) {
-            return $this->redirectToGateway($invoice);
+            // The gateway transaction is intentionally deferred until the
+            // user has passed (or explicitly overridden) the UX preflight.
+            return view('front.lifecycle.restore-checkout', compact('invoice', 'amount'));
         }
 
         // No gateway configured — show manual payment page
         return view('front.lifecycle.restore-pay', compact('invoice', 'amount', 'restoreData'));
+    }
+
+    /**
+     * Create the gateway token only after the connection advisory decision.
+     * The short lock and persisted link make rapid duplicate submissions safe.
+     */
+    public function startPayment(string $invoiceNumber)
+    {
+        abort_unless(PaymentGatewayFactory::isConfigured(), 404);
+
+        $invoice = Invoice::where('invoice_number', $invoiceNumber)
+            ->where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->where('invoice_number', 'like', 'RESTORE-%')
+            ->firstOrFail();
+
+        abort_unless(
+            Session::get('lifecycle_restore_local_invoice') === $invoice->invoice_number,
+            403
+        );
+
+        return Cache::lock('lifecycle-payment-start:' . $invoice->id, 20)->block(5, function () use ($invoice) {
+            $invoice->refresh();
+
+            if ($invoice->payment_link) {
+                return redirect()->away($invoice->payment_link);
+            }
+
+            return $this->redirectToGateway($invoice);
+        });
     }
 
     /**
@@ -216,6 +249,7 @@ class AccountLifecycleController extends Controller
         try {
             $gateway     = PaymentGatewayFactory::make();
             $redirectUrl = $gateway->request($invoice, auth()->user(), $callbackUrl);
+            $invoice->update(['payment_link' => $redirectUrl]);
             return redirect()->away($redirectUrl);
         } catch (GatewayException $e) {
             Log::error('C04: lifecycle restore gateway request failed', [

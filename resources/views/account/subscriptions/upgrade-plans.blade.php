@@ -146,7 +146,7 @@
 
         {{-- دکمه --}}
         <div class="upg-card__footer">
-            <form method="POST" action="{{ route('account.subscriptions.upgrade', $subscription) }}">
+            <form method="POST" action="{{ route('account.subscriptions.upgrade', $subscription) }}" @if(! $isDirect && ! $plan->isFree()) data-payment-start @endif>
                 @csrf
                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                 <button type="submit"

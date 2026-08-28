@@ -696,5 +696,6 @@
         });
     })();
     </script>
+<x-core-ui::payment-connection-warning />
 </body>
 </html>

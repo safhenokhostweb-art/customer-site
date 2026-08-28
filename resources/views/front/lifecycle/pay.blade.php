@@ -87,11 +87,12 @@
         </ul>
         @endif
 
-        <form method="POST" action="/lifecycle-pay/{{ $invoiceRef }}">
+        <form method="POST" action="/lifecycle-pay/{{ $invoiceRef }}" data-payment-start>
             @csrf
             <button type="submit" class="btn">پرداخت و فعال‌سازی مجدد</button>
         </form>
     @endif
 </div>
+<x-core-ui::payment-connection-warning />
 </body>
 </html>

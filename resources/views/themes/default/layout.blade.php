@@ -660,6 +660,7 @@
             });
         });
     </script>
+    <x-core-ui::payment-connection-warning />
     @stack('scripts')
 </body>
 </html>

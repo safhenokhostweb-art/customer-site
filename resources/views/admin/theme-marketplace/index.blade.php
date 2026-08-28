@@ -85,7 +85,7 @@
               <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
                  class="text-center text-xs bg-green-500 text-white py-1.5 rounded-lg font-medium">✓ خریداری‌شده</a>
             @else
-              <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}">
+              <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}" @if(! ($theme['is_free'] ?? false)) data-payment-start @endif>
                 @csrf
                 <button type="submit" class="w-full text-center text-xs bg-white text-indigo-700 py-1.5 rounded-lg font-bold hover:bg-indigo-50 transition">
                   {{ ($theme['is_free'] ?? false) ? 'دریافت رایگان' : 'خرید قالب' }}
@@ -226,7 +226,7 @@
                     ✓ مدیریت لایسنس
                   </a>
                 @else
-                  <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}" class="flex-1">
+                  <form method="POST" action="{{ route('admin.theme-marketplace.purchase', $theme['id']) }}" class="flex-1" @if(! ($theme['is_free'] ?? false)) data-payment-start @endif>
                     @csrf
                     <button type="submit"
                       class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
