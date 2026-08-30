@@ -4,23 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\ThemeInstanceRevision;
 use App\Models\ThemeSetting;
 use App\Models\SiteThemeTemplate;
 use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeCanvas\SiteThemeTemplateService;
+use App\Services\ThemeCanvas\ThemeInstanceBaseRelease;
+use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemeEngine\TenantThemeResolver;
+use App\Services\MotionGraphics\MotionRuntimeManifestReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ThemeDesignController extends Controller
 {
     public function __construct(
         private TenantThemeResolver $resolver,
         private SiteThemeTemplateService $templateSvc,
+        private ThemeInstanceRevisionService $revisions,
+        private ThemeInstanceBaseRelease $baseRelease,
     ) {}
 
     public function index(): View
@@ -125,10 +132,10 @@ class ThemeDesignController extends Controller
 
     public function canvasDeactivate(): RedirectResponse
     {
-        Setting::set('active_canvas_theme_data',  '', 'theme');
-        Setting::set('active_canvas_theme_name',  '', 'theme');
-        Setting::set('active_canvas_theme_slug',  '', 'theme');
-        Setting::set('active_canvas_theme_id',    '', 'theme');
+        // Phase 3B: centralized through the ledger service, which also
+        // clears the now-dangling active_theme_revision_id pointer instead
+        // of leaving it pointed at a revision that is no longer active.
+        $this->revisions->deactivate();
 
         Cache::forget('canvas_theme_data');
         $this->resolver->clearCache();
@@ -156,6 +163,21 @@ class ThemeDesignController extends Controller
             'theme_id'     => Setting::get('active_canvas_theme_id', ''),
             'exported_by'  => 'canvas-admin',
         ];
+
+        // Phase 3D-B: include release provenance ONLY when this instance's
+        // own ledger actually proves it (never fabricated). This makes the
+        // export self-documenting and lets a later re-import into THIS same
+        // installation verify and carry it forward (see canvasImport()) —
+        // but the claim is never trusted on its own; canvasImport() only
+        // ever accepts it after independently confirming this installation's
+        // ledger already recorded the exact same (theme_identifier,
+        // source_release_id) pair through the real install pipeline.
+        $baseRelease = $this->baseRelease->resolveForCurrentTheme();
+        if ($baseRelease->isResolved()) {
+            $data['_export_meta']['source_theme_id']      = $baseRelease->sourceThemeId;
+            $data['_export_meta']['source_theme_version'] = $baseRelease->sourceThemeVersion;
+            $data['_export_meta']['source_release_id']    = $baseRelease->sourceReleaseId;
+        }
 
         $slug     = Str::slug(Setting::get('active_canvas_theme_name', 'canvas-theme'));
         $filename = $slug . '-' . now()->format('Ymd') . '.json';
@@ -197,10 +219,67 @@ class ThemeDesignController extends Controller
 
         unset($data['_export_meta']);
 
-        Setting::set('active_canvas_theme_data', json_encode($data), 'theme');
-        Setting::set('active_canvas_theme_name', $themeName,         'theme');
-        Setting::set('active_canvas_theme_slug', $themeSlug,         'theme');
-        Setting::set('active_canvas_theme_id',   $themeId,           'theme');
+        // Phase 3B: import used to write active_canvas_theme_data directly,
+        // bypassing the ledger entirely — no revision was ever created for
+        // an import, and active_theme_revision_id was left stale (still
+        // pointing at whatever was active before). Route through the same
+        // single write path install()/publish() use, so an import is fully
+        // recoverable like any other lineage-changing action.
+        $wasActive = (bool) Setting::get('active_canvas_theme_data');
+
+        // A meta-provided theme_id is only ever a real platform id (numeric)
+        // when the file was originally exported from this same system with
+        // that metadata intact — the synthesized 'imported-<timestamp>'
+        // fallback is a local display label, not a real source theme id, so
+        // it must never be fabricated into the ledger's source_theme_id.
+        $sourceThemeId = isset($meta['theme_id']) && is_numeric($meta['theme_id'])
+            ? (int) $meta['theme_id']
+            : null;
+
+        // Phase 3D-B: an uploaded file's claimed release provenance
+        // (_export_meta.source_release_id/source_theme_version) is never
+        // trusted at face value — it can be hand-edited, or genuinely
+        // exported from a completely different installation that happens
+        // to reuse the same theme_slug. It is only accepted when THIS
+        // installation's own immutable ledger independently already proves
+        // the exact same (theme_identifier, source_release_id) pair was
+        // installed here through the real download pipeline — never a
+        // network round-trip to saas-platform, just a local, forgery-proof
+        // cross-check against history nothing outside record() can write.
+        // Anything else stays null: the imported lineage is NON_RECONCILABLE
+        // rather than trusting supplied metadata (Phase 3D-B security
+        // requirement — see ThemeInstanceBaseRelease).
+        $claimedReleaseId = isset($meta['source_release_id']) && is_numeric($meta['source_release_id'])
+            ? (int) $meta['source_release_id']
+            : null;
+        $verifiedReleaseId = null;
+        $verifiedThemeVersion = null;
+        if ($claimedReleaseId !== null) {
+            $verified = ThemeInstanceRevision::where('theme_identifier', $themeSlug)
+                ->where('source_release_id', $claimedReleaseId)
+                ->exists();
+            if ($verified) {
+                $verifiedReleaseId = $claimedReleaseId;
+                $verifiedThemeVersion = isset($meta['source_theme_version']) && is_string($meta['source_theme_version'])
+                    ? $meta['source_theme_version']
+                    : null;
+            }
+        }
+
+        $this->revisions->record($data, $wasActive ? ThemeInstanceRevision::TYPE_UPDATE : ThemeInstanceRevision::TYPE_INSTALL, [
+            'theme_identifier'     => $themeSlug,
+            'theme_name'           => $themeName,
+            'active_theme_id'      => $themeId,
+            'source_theme_id'      => $sourceThemeId,
+            'source_theme_version' => $verifiedThemeVersion,
+            'source_release_id'    => $verifiedReleaseId,
+            'metadata'             => ['theme_name' => $themeName, 'imported' => true],
+        ]);
+
+        // A draft from whatever theme was previously active no longer
+        // applies to the newly imported lineage — starting the editor on a
+        // foreign, stale draft would silently mask the import.
+        Setting::where('key', 'canvas_draft_data')->delete();
 
         Cache::forget('canvas_theme_data');
         $this->resolver->clearCache();
@@ -452,13 +531,23 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'پیش‌نویسی برای انتشار وجود ندارد.'], 404);
         }
 
-        // GAP-M02 — Revision history: rotate before overwriting active (cap at 5 revisions)
+        // GAP-M02 — legacy rotating revision history: rotate before overwriting
+        // active (cap at 5 revisions). Kept for the existing revisions UI.
         $currentActive = Setting::get('active_canvas_theme_data');
         if (! empty($currentActive)) {
             $this->rotateRevisions($currentActive);
         }
 
-        Setting::set('active_canvas_theme_data', $draft, 'theme');
+        // Permanent version history: creates an immutable revision and sets
+        // active_canvas_theme_data + active_theme_revision_id. A publish
+        // never changes which release the instance is based on, so
+        // provenance is carried forward from whatever is currently active
+        // (Phase 3D-B) — resolves to null if it was already unresolvable.
+        $decoded = json_decode($draft, true) ?: [];
+        $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_PUBLISH, [
+            'resolve_provenance_from' => (int) Setting::get('active_theme_revision_id'),
+        ]);
+
         Setting::set('canvas_draft_data', '', 'theme');
 
         Cache::forget('canvas_theme_data');
@@ -472,24 +561,162 @@ class ThemeDesignController extends Controller
      */
     private function rotateRevisions(string $currentData): void
     {
-        // Shift revisions down: 5→drop, 4→5, 3→4, 2→3, 1→2
+        // Shift revisions down: 5→drop, 4→5, 3→4, 2→3, 1→2 (data + timestamp together)
         for ($i = 5; $i >= 2; $i--) {
-            $older = Setting::get("canvas_revision_{$i}");
             if ($i === 5) {
                 // Slot 5 drops off
-                if (! empty($older)) {
+                if (! empty(Setting::get("canvas_revision_{$i}"))) {
                     Setting::where('key', "canvas_revision_{$i}")->delete();
+                    Setting::where('key', "canvas_revision_{$i}_at")->delete();
                 }
                 continue;
             }
             $newer = Setting::get('canvas_revision_' . ($i - 1));
             if (! empty($newer)) {
                 Setting::set("canvas_revision_{$i}", $newer, 'theme');
+                $newerAt = Setting::get('canvas_revision_' . ($i - 1) . '_at');
+                if (! empty($newerAt)) {
+                    Setting::set("canvas_revision_{$i}_at", $newerAt, 'theme');
+                }
             }
         }
         // Slot 1 = just-replaced active
         Setting::set('canvas_revision_1', $currentData, 'theme');
         Setting::set('canvas_revision_1_at', now()->toDateTimeString(), 'theme');
+    }
+
+    /**
+     * Theme Builder Motion Picker (customer-site): the visual asset list
+     * for the module:motion block's picker modal. Reuses the exact same
+     * manifest the public runtime already fetches/validates/caches
+     * (MotionRuntimeManifestReader) — no parallel query, no way to see
+     * anything beyond this site's own already-authorized package. Every
+     * field returned here already passed MotionRuntimeManifestReader's own
+     * forbidden-field/shape validation before reaching this method.
+     */
+    public function canvasMotionAssets(MotionRuntimeManifestReader $reader): JsonResponse
+    {
+        $manifest = $reader->read();
+        $assets = collect($manifest['assets'] ?? [])->map(fn (array $a): array => [
+            'asset_id' => $a['asset_id'] ?? null,
+            'name'     => $a['name'] ?? null,
+            'category' => $a['category'] ?? null,
+            'type'     => $a['asset_type'] ?? null,
+            'thumbnail'=> $a['full_reference'] ?? null,
+        ])->filter(fn (array $a) => !empty($a['asset_id']))->values();
+
+        return response()->json(['assets' => $assets]);
+    }
+
+    /**
+     * List available canvas revisions (customer-facing restore UI).
+     */
+    public function canvasRevisions(): JsonResponse
+    {
+        $revisions = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $data = Setting::get("canvas_revision_{$i}");
+            if (empty($data)) {
+                continue;
+            }
+            $at = Setting::get("canvas_revision_{$i}_at");
+            $revisions[] = [
+                'slot'     => $i,
+                'time_ago' => $at ? \App\Helpers\Jalali::diffForHumansFa(\Carbon\Carbon::parse($at)) : null,
+                'date'     => $at ? \App\Helpers\Jalali::formatFa(\Carbon\Carbon::parse($at), 'Y/m/d H:i') : null,
+            ];
+        }
+
+        return response()->json(['success' => true, 'revisions' => $revisions]);
+    }
+
+    /**
+     * Restore a canvas revision. The currently active theme is rotated into
+     * the revision history first, so restoring never loses what was live —
+     * mirrors the existing page-builder revision restore behavior.
+     */
+    public function canvasRestoreRevision(int $slot): JsonResponse
+    {
+        if ($slot < 1 || $slot > 5) {
+            return response()->json(['success' => false, 'error' => 'شماره نسخه نامعتبر است.'], 422);
+        }
+
+        $data = Setting::get("canvas_revision_{$slot}");
+        if (empty($data)) {
+            return response()->json(['success' => false, 'error' => 'این نسخه دیگر موجود نیست.'], 404);
+        }
+
+        $currentActive = Setting::get('active_canvas_theme_data');
+        if (! empty($currentActive)) {
+            $this->rotateRevisions($currentActive);
+        }
+
+        // Permanent version history: this legacy slot-restore action is also
+        // captured as a durable rollback_snapshot revision.
+        $decoded = json_decode($data, true);
+        if (is_array($decoded)) {
+            $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_ROLLBACK_SNAPSHOT, [
+                'metadata' => ['legacy_revision_slot' => $slot],
+            ]);
+        }
+
+        Setting::set('canvas_draft_data', '', 'theme');
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json(['success' => true, 'message' => 'نسخه انتخاب‌شده با موفقیت بازیابی شد.']);
+    }
+
+    /**
+     * Permanent version history (theme_instance_revisions) — customer-facing
+     * list, newest first. Unlike canvasRevisions() (5-slot rotating window),
+     * this never drops entries: every install/update/publish/rollback for
+     * the currently active theme lineage stays listed indefinitely.
+     */
+    public function canvasInstanceRevisions(): JsonResponse
+    {
+        // listForCurrentTheme() triggers the backfill (if needed) first, so
+        // active_theme_revision_id must be read only after it returns.
+        $list = $this->revisions->listForCurrentTheme();
+        $activeId = (int) Setting::get('active_theme_revision_id');
+
+        $revisions = $list->map(fn (ThemeInstanceRevision $r) => [
+            'id'              => $r->id,
+            'revision_number' => $r->revision_number,
+            'type'            => $r->type,
+            'theme_name'      => $r->metadata['theme_name'] ?? null,
+            'is_active'       => $r->id === $activeId,
+            'time_ago'        => $r->created_at ? \App\Helpers\Jalali::diffForHumansFa($r->created_at) : null,
+            'date'            => $r->created_at ? \App\Helpers\Jalali::formatFa($r->created_at, 'Y/m/d H:i') : null,
+        ]);
+
+        return response()->json(['success' => true, 'revisions' => $revisions]);
+    }
+
+    /**
+     * Restore any prior permanent revision by ID. Never deletes or rewinds
+     * history — creates a new rollback_snapshot revision carrying the
+     * target's data forward and activates it, so a second (or Nth) rollback
+     * afterward always still has something to work from.
+     */
+    public function canvasRollbackToRevision(int $revision): JsonResponse
+    {
+        try {
+            $restored = $this->revisions->rollbackTo($revision);
+        } catch (NotFoundHttpException $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 404);
+        }
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'نسخه انتخاب‌شده با موفقیت بازیابی شد.',
+            'revision_id' => $restored->id,
+            'revision_number' => $restored->revision_number,
+        ]);
     }
 
     public function canvasDiscardDraft(): RedirectResponse

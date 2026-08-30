@@ -28,14 +28,14 @@ class ImageHelper
         // Admin avatars written before the MediaStorage migration used the
         // public/uploads root but persisted the literal "uploads/" prefix.
         // Keep those records readable while new uploads use canonical paths.
-        if (str_starts_with($path, 'uploads/admin-avatars/')) {
-            return $media->url(substr($path, strlen('uploads/')), 'uploads');
-        }
+        $url = match (true) {
+            str_starts_with($path, 'uploads/admin-avatars/') => $media->url(substr($path, strlen('uploads/')), 'uploads'),
+            str_starts_with($path, 'uploads/') => $media->url($path, 'legacy'),
+            default => $media->url($path, 'uploads'),
+        };
 
-        if (str_starts_with($path, 'uploads/')) {
-            return $media->url($path, 'legacy');
-        }
-
-        return $media->url($path, 'uploads');
+        // MediaStorage::url() degrades to '' when the disk can't be resolved
+        // at all (see its docblock) — treat that the same as "no image".
+        return $url !== '' ? $url : null;
     }
 }

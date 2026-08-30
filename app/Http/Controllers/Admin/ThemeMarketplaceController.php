@@ -136,13 +136,13 @@ class ThemeMarketplaceController extends Controller
             Setting::set('canvas_theme_backup_at', now()->toDateTimeString(), 'theme');
         }
 
-        // ذخیره داده قالب در تنظیمات سایت
-        Setting::set('active_canvas_theme_id', $themeId, 'theme');
-        Setting::set('active_canvas_theme_name', $themeData['theme_name'], 'theme');
-        Setting::set('active_canvas_theme_slug', $themeData['theme_slug'], 'theme');
-
-        // Permanent version history: creates an immutable revision and sets
-        // active_canvas_theme_data + active_theme_revision_id. A first-ever
+        // Permanent version history: creates an immutable revision and
+        // atomically sets active_canvas_theme_data + active_theme_revision_id
+        // + the identity Settings (id/name/slug) in one transaction (Phase
+        // 3B) — previously the identity Settings were written directly here,
+        // outside the ledger's transaction, so a failure between the two
+        // could leave the installed theme's name/slug pointing at the new
+        // theme while the ledger still reflected the old one. A first-ever
         // install for this site is type=install; installing over an
         // already-active theme (confirmed above) is type=update.
         $this->revisions->record([
@@ -153,6 +153,8 @@ class ThemeMarketplaceController extends Controller
             'settings'      => $themeData['settings'] ?? [],
         ], $isUpdate ? ThemeInstanceRevision::TYPE_UPDATE : ThemeInstanceRevision::TYPE_INSTALL, [
             'theme_identifier' => $themeData['theme_slug'],
+            'theme_name'       => $themeData['theme_name'],
+            'active_theme_id'  => $themeId,
             'source_theme_id'  => $themeData['theme_id'] ?? $themeId,
             // ThemeRelease-authoritative lineage (Phase 1h): both come
             // straight from the download response's release identity, never
@@ -186,23 +188,36 @@ class ThemeMarketplaceController extends Controller
         $backupName = Setting::get('canvas_theme_backup_name', 'قالب قبلی');
         $backupAt   = Setting::get('canvas_theme_backup_at', '');
 
-        // Permanent version history: this legacy single-slot restore doesn't
-        // track which theme lineage the backup belongs to (the slug/id are
-        // deleted below, as before), so the resulting rollback_snapshot is
-        // recorded under whatever lineage was active going into this call.
+        // Phase 3B: this used to record the rollback_snapshot revision under
+        // whichever lineage was active BEFORE the restore, then separately
+        // overwrite active_canvas_theme_data/name directly and delete the
+        // slug/id Settings — leaving active_theme_revision_id pointing at a
+        // revision filed under a theme_identifier that currentIdentifier()
+        // (now slug-less) would no longer report, breaking the ledger's own
+        // lineage invariant for the very next rollback attempt. The legacy
+        // single-slot backup never tracked which lineage it belonged to, so
+        // the restored state is filed under 'custom' (no marketplace theme
+        // confirmed installed) — the identity Settings and the revision now
+        // land in one atomic call, so the pointer and currentIdentifier()
+        // agree immediately afterward.
         $decoded = json_decode($backupData, true);
         if (is_array($decoded)) {
             $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_ROLLBACK_SNAPSHOT, [
-                'theme_identifier' => $this->revisions->currentIdentifier(),
-                'metadata' => ['legacy_backup_restore' => true, 'restored_theme_name' => $backupName],
+                'theme_identifier' => ThemeInstanceRevisionService::DEFAULT_IDENTIFIER,
+                'theme_name'       => $backupName,
+                'active_theme_id'  => null,
+                'metadata'         => ['legacy_backup_restore' => true, 'restored_theme_name' => $backupName],
             ]);
+        } else {
+            // Backup payload isn't valid JSON — shouldn't happen, it was
+            // written by json_encode() — fail safe without leaving the
+            // revision pointer dangling.
+            Setting::set('active_canvas_theme_data', $backupData, 'theme');
+            Setting::set('active_canvas_theme_name', $backupName, 'theme');
+            Setting::set('active_canvas_theme_slug', '', 'theme');
+            Setting::where('key', 'active_canvas_theme_id')->delete();
+            Setting::set('active_theme_revision_id', '', 'theme');
         }
-
-        // بازگردانی قالب پشتیبان
-        Setting::set('active_canvas_theme_data', $backupData, 'theme');
-        Setting::set('active_canvas_theme_name', $backupName, 'theme');
-        Setting::where('key', 'active_canvas_theme_id')->delete();
-        Setting::where('key', 'active_canvas_theme_slug')->delete();
 
         // حذف draft و backup پس از بازگردانی
         Setting::where('key', 'canvas_draft_data')->delete();

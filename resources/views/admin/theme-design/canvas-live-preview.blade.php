@@ -191,7 +191,11 @@ body.tb-drag-active .tb-drop-zone {
     var inlineState = { active: false, el: null, propKey: null, inlineType: 'text', timer: null };
 
     function notifyParent(msg) {
-        try { parent.postMessage(msg, '*'); } catch (_) {}
+        // Phase 3C: this preview is only ever embedded same-origin (by the
+        // canvas editor, served from this same app) — targeting window.
+        // location.origin instead of '*' means nothing is delivered if this
+        // frame is ever loaded under an unexpected parent.
+        try { parent.postMessage(msg, window.location.origin); } catch (_) {}
     }
 
     /* ── Inline editing (TB3-04) ─────────────────────────────── */
@@ -345,6 +349,9 @@ body.tb-drag-active .tb-drop-zone {
 
     /* postMessage bridge: parent → iframe */
     window.addEventListener('message', function (e) {
+        // Phase 3C: only ever trust messages from this app's own origin —
+        // this frame is only ever embedded same-origin by the canvas editor.
+        if (e.origin !== window.location.origin) return;
         var d = e.data;
         if (!d || !d.action) return;
         switch (d.action) {

@@ -747,9 +747,9 @@ class ThemeCanvasRenderer extends BlockRenderer
     // the inherited canonical implementation (via BlockRenderer), and their
     // narrower `string $s` signature became LSP-incompatible once canonical
     // widened to `mixed $s` (Phase 2j's malformed-_style-input safety fix).
-
-    protected function sanitizeHtml(string $s): string
-    {
-        return strip_tags($s, '<p><br><a><strong><em><ul><ol><li><h2><h3>');
-    }
+    // Phase 3C: sanitizeHtml() removed for the same reason — this override
+    // was a byte-identical (and, until Phase 3C fixed the canonical one,
+    // equally vulnerable) duplicate of the inherited implementation. Do not
+    // re-add it here; the canonical attribute-stripping fix must not be
+    // silently shadowed by a stale local copy again.
 }

@@ -54,8 +54,12 @@ class SiteThemeTemplateService
 
     private function regenIds(array $blocks): array
     {
+        // Phase 3D-B: inserting a saved reusable block/template creates a
+        // fresh customer-owned block instance — 'cust_' namespace, matching
+        // the canvas editor's own new-block/duplicate id convention, so a
+        // future reconciler can always tell it has no master counterpart.
         foreach ($blocks as &$block) {
-            $block['id'] = 'blk_' . Str::random(8);
+            $block['id'] = 'cust_' . Str::random(8);
             if (!empty($block['children'])) {
                 $block['children'] = $this->regenIds($block['children']);
             }

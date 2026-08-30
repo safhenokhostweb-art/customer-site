@@ -44,4 +44,30 @@ class ImageHelperTest extends TestCase
 
         $this->assertStringEndsWith('uploads/legacy.jpg', $url);
     }
+
+    /**
+     * Production incident: public/uploads (the local 'uploads' disk root)
+     * is missing and its parent isn't writable. Resolving the disk used to
+     * throw League\Flysystem\UnableToCreateDirectory from inside a plain
+     * page render (video-player.blade.php -> ImageHelper::url()). This must
+     * degrade to null instead of throwing, so the page still renders.
+     */
+    public function test_unusable_storage_root_degrades_to_null_instead_of_throwing(): void
+    {
+        $blockingFile = sys_get_temp_dir().'/image_helper_test_blocker_'.uniqid('', true);
+        file_put_contents($blockingFile, 'not-a-directory');
+
+        Config::set('filesystems.disks.broken_uploads', [
+            'driver' => 'local',
+            'root' => $blockingFile,
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ]);
+        Config::set('filesystems.upload_disk', 'broken_uploads');
+
+        $this->assertNull(ImageHelper::url('thumbnail/2026/08/x.webp'));
+
+        @unlink($blockingFile);
+    }
 }

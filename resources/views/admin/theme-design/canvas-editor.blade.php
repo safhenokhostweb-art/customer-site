@@ -831,6 +831,37 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     >
                                 </template>
 
+                                {{-- Theme Builder Motion Picker: visual selection from this
+                                     site's own permitted assets only (fetched via
+                                     ROUTES.motionAssets -> the same runtime manifest the
+                                     motion runtime component already uses). Never a
+                                     free-text asset id field. --}}
+                                <template x-if="schemaDef.type === 'motion'">
+                                    <div class="space-y-2">
+                                        <template x-if="selectedBlock.props[propKey]">
+                                            <div class="flex items-center gap-2 border border-slate-200 rounded-lg px-2.5 py-2 bg-slate-50">
+                                                <template x-if="motionAssetById(selectedBlock.props[propKey])?.thumbnail">
+                                                    <img :src="motionAssetById(selectedBlock.props[propKey]).thumbnail" class="w-8 h-8 rounded object-cover bg-white border border-slate-200">
+                                                </template>
+                                                <template x-if="!motionAssetById(selectedBlock.props[propKey])?.thumbnail">
+                                                    <span class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-400 text-xs shrink-0">🎬</span>
+                                                </template>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-semibold text-slate-700 truncate" x-text="motionAssetById(selectedBlock.props[propKey])?.name || selectedBlock.props[propKey]"></p>
+                                                    <p class="text-[11px] text-slate-400 truncate" x-text="motionAssetById(selectedBlock.props[propKey])?.category || 'در دسترس این سایت'"></p>
+                                                </div>
+                                                <button @click="clearMotionSelect(propKey)" title="حذف انتخاب" class="text-slate-400 hover:text-red-500 text-sm px-1">×</button>
+                                            </div>
+                                        </template>
+                                        <template x-if="!selectedBlock.props[propKey]">
+                                            <p class="text-xs text-slate-400">موشنی انتخاب نشده — این بلوک چیزی نمایش نمی‌دهد.</p>
+                                        </template>
+                                        <button @click="openMotionPicker(propKey)" class="w-full text-xs px-3 py-2 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition font-medium">
+                                            🎬 انتخاب موشن از موشن‌های مجاز این سایت
+                                        </button>
+                                    </div>
+                                </template>
+
                                 <template x-if="schemaDef.type === 'boolean'">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <div class="relative">
@@ -1161,6 +1192,46 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
     </div>
 
+    {{-- Motion Picker Modal — lists ONLY this site's own permitted Motion
+         assets (from ROUTES.motionAssets, backed by the existing runtime
+         manifest). Never browses the platform Master Library. --}}
+    <div x-show="motionModal.open" x-transition.opacity class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div @click.outside="motionModal.open = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height:80vh;">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+                <h3 class="font-bold text-slate-800 text-sm">انتخاب موشن گرافیک</h3>
+                <button @click="motionModal.open = false" class="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div x-show="motionModal.loading" class="text-center py-10 text-slate-400 text-sm">در حال بارگذاری...</div>
+                <div x-show="!motionModal.loading && motionModal.assets.length === 0" class="text-center py-10 text-slate-400 text-sm">
+                    هنوز هیچ موشنی برای این سایت فعال نشده است.
+                </div>
+                <div x-show="!motionModal.loading" class="grid grid-cols-2 gap-3">
+                    <template x-for="asset in motionModal.assets" :key="asset.asset_id">
+                        <div class="relative group rounded-xl overflow-hidden border-2 cursor-pointer transition p-3 flex items-center gap-3"
+                             :class="motionModal.selected === asset.asset_id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'"
+                             @click="motionModal.selected = (motionModal.selected === asset.asset_id ? null : asset.asset_id)">
+                            <template x-if="asset.thumbnail">
+                                <img :src="asset.thumbnail" class="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200 shrink-0">
+                            </template>
+                            <template x-if="!asset.thumbnail">
+                                <span class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-400 text-lg shrink-0">🎬</span>
+                            </template>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-800 truncate" x-text="asset.name || asset.asset_id"></p>
+                                <p class="text-xs text-slate-400 truncate" x-text="(asset.category ? asset.category + ' · ' : '') + (asset.type || '')"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <div class="flex gap-2 px-4 py-3 border-t border-slate-100 shrink-0">
+                <button x-show="motionModal.selected" @click="confirmMotionSelect()" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">انتخاب این موشن</button>
+                <button @click="motionModal.open = false" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">بستن</button>
+            </div>
+        </div>
+    </div>
+
     {{-- Toast --}}
     <div x-show="toast.show" x-transition.opacity
          :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
@@ -1189,6 +1260,7 @@ const ROUTES = {
     mediaIndex:   '{{ route('admin.theme-design.media-index') }}',
     mediaUpload:  '{{ route('admin.theme-design.media-upload') }}',
     mediaDestroy: '{{ route('admin.theme-design.media-destroy') }}',
+    motionAssets: '{{ route('admin.theme-design.canvas-motion-assets') }}',
 };
 
 function canvasEditor() {
@@ -1239,6 +1311,7 @@ function canvasEditor() {
         inlineAutoSaveTimer: null,
         // TB3-07: media modal
         mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null },
+        motionModal: { open: false, assets: [], loading: false, selected: null, propKey: null, loaded: false },
         // TB6: template library
         showTemplateLibrary: false,
         showSaveAsTemplate: false,
@@ -1303,8 +1376,15 @@ function canvasEditor() {
 
         // ── TB4: Block Tree Helpers ───────────────────────────
         makeBlock(type) {
+            // Phase 3D-B: customer-created blocks get a distinct 'cust_'
+            // namespace (not 'blk_') so a stable-identity cross-release
+            // reconciler (Phase 3D-C/D) can always tell "this block has no
+            // master counterpart" without needing to search the master
+            // release for it — and so a customer-created id can never be
+            // mistaken for a master-origin one even in the (already
+            // astronomically unlikely) case of a coincidental value match.
             return {
-                id: 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                id: 'cust_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                 type,
                 props: JSON.parse(JSON.stringify(BLOCK_SCHEMAS[type]?.defaultProps ?? {})),
                 ...(this.isContainerType(type) ? { children: [] } : {})
@@ -1420,7 +1500,10 @@ function canvasEditor() {
         },
 
         _regenIds(block) {
-            block.id = 'blk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            // Phase 3D-B: a duplicate (of a master block or a customer
+            // block) is itself customer-created content the moment it's
+            // cloned — 'cust_' namespace, same as makeBlock() above.
+            block.id = 'cust_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
             (block.children ?? []).forEach(c => this._regenIds(c));
         },
 
@@ -1717,13 +1800,22 @@ function canvasEditor() {
         sendToIframe(msg) {
             const iframe = this.getIframe();
             if (iframe && iframe.contentWindow) {
-                try { iframe.contentWindow.postMessage(msg, '*'); } catch (_) {}
+                // Phase 3C: the live-preview iframe is always same-origin
+                // (served from this app's own routes) — targeting window.
+                // location.origin instead of '*' means the message is never
+                // delivered if the iframe has somehow navigated away to a
+                // different origin.
+                try { iframe.contentWindow.postMessage(msg, window.location.origin); } catch (_) {}
             }
         },
 
         onIframeLoad() { setTimeout(() => { this.iframeLoading = false; }, 150); },
 
         handleIframeMessage(e) {
+            // Phase 3C: only ever trust messages from this app's own origin
+            // — the live-preview iframe is same-origin by design, so a
+            // message from anywhere else is not the preview iframe.
+            if (e.origin !== window.location.origin) return;
             const d = e.data;
             if (!d || !d.action) return;
             switch (d.action) {
@@ -1849,6 +1941,50 @@ function canvasEditor() {
                 this.updateStyle('bgGradientFrom', '');
                 this.updateStyle('bgGradientTo', '');
                 this.updateStyle('bgGradientDir', '');
+            }
+        },
+
+        // ── Theme Builder Motion Picker (Phase 3) ───────────────────
+        // Lists ONLY this site's own permitted Motion assets — the fetch
+        // hits ROUTES.motionAssets, which is backed by the exact same
+        // MotionRuntimeManifestReader the public motion runtime component
+        // already uses. There is no code path here that can reach the
+        // platform Master Library or another site's assets.
+        motionAssetById(assetId) {
+            return this.motionModal.assets.find(a => a.asset_id === assetId) || null;
+        },
+
+        openMotionPicker(propKey) {
+            this.motionModal.propKey  = propKey;
+            this.motionModal.selected = this.selectedBlock?.props?.[propKey] || null;
+            this.motionModal.open     = true;
+            if (!this.motionModal.loaded) this.fetchMotionAssets();
+        },
+
+        async fetchMotionAssets() {
+            this.motionModal.loading = true;
+            try {
+                const r = await fetch(ROUTES.motionAssets, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } });
+                const d = await r.json();
+                this.motionModal.assets = d.assets ?? [];
+                this.motionModal.loaded = true;
+            } catch (_) { this.motionModal.assets = []; }
+            finally { this.motionModal.loading = false; }
+        },
+
+        confirmMotionSelect() {
+            if (!this.motionModal.propKey) return;
+            if (this.selectedBlock) {
+                this.selectedBlock.props[this.motionModal.propKey] = this.motionModal.selected || '';
+                this.schedulePropUpdate();
+            }
+            this.motionModal.open = false;
+        },
+
+        clearMotionSelect(propKey) {
+            if (this.selectedBlock) {
+                this.selectedBlock.props[propKey] = '';
+                this.schedulePropUpdate();
             }
         },
 
