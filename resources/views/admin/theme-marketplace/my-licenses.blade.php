@@ -50,8 +50,9 @@
     </div>
   @else
 
-    {{-- Update available banner --}}
-    @php $outdatedCount = count(array_filter($licenses, fn($l) => $l['is_outdated'] ?? false)); @endphp
+    {{-- Update available banner (Phase 1h: ledger-preferred, legacy fallback
+         only when ledger state is unavailable — see ThemeMarketplacePresenter) --}}
+    @php $outdatedCount = count(array_filter($licenses, fn($l) => \App\Services\ThemeMarketplacePresenter::isOutdated($l))); @endphp
     @if($outdatedCount > 0)
     <div class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-center gap-4">
       <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -61,7 +62,13 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       @foreach($licenses as $lic)
-        @php $theme = $lic['theme'] ?? null; $isOutdated = $lic['is_outdated'] ?? false; @endphp
+        @php
+          $theme = $lic['theme'] ?? null;
+          $isOutdated = \App\Services\ThemeMarketplacePresenter::isOutdated($lic);
+          $currentVersion = \App\Services\ThemeMarketplacePresenter::currentVersion($theme);
+          $installedVersion = \App\Services\ThemeMarketplacePresenter::installedVersion($lic);
+          $releaseNotes = \App\Services\ThemeMarketplacePresenter::releaseNotes($theme);
+        @endphp
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col {{ $isOutdated ? 'ring-2 ring-amber-400' : '' }}">
 
           {{-- Thumbnail --}}
@@ -99,10 +106,10 @@
               </span>
             </div>
 
-            {{-- Update notes --}}
-            @if($isOutdated && ($theme['version_notes'] ?? null))
+            {{-- Update notes (Phase 1h: release_notes preferred over version_notes) --}}
+            @if($isOutdated && $releaseNotes)
               <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3 text-xs text-amber-700">
-                <span class="font-semibold">نوآوری نسخه جدید: </span>{{ $theme['version_notes'] }}
+                <span class="font-semibold">نوآوری نسخه جدید: </span>{{ $releaseNotes }}
               </div>
             @endif
 
@@ -114,8 +121,14 @@
 
             <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
               <span>تاریخ خرید: {{ $lic['purchased_at'] ?? '—' }}</span>
-              @if($theme['version'] ?? null)
-                <span>نسخه {{ $theme['version'] ?? '—' }}</span>
+              @if($currentVersion)
+                <span class="font-mono">
+                  @if($installedVersion && $installedVersion !== $currentVersion)
+                    نصب‌شده {{ $installedVersion }} ← جدید {{ $currentVersion }}
+                  @else
+                    نسخه {{ $currentVersion }}
+                  @endif
+                </span>
               @endif
             </div>
             {{-- GAP-L01: License expiry date --}}
@@ -137,8 +150,16 @@
             <div class="mt-auto flex flex-col gap-2">
               <form method="POST"
                 action="{{ route('admin.theme-marketplace.install', $theme['id'] ?? 0) }}"
-                onsubmit="return confirm('قالب «{{ $theme['name'] ?? '' }}» نصب و فعال شود؟')">
+                onsubmit="return confirm('{{ ($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false) ? 'قالب فعلی و شخصی‌سازی‌های آن جایگزین خواهد شد. ادامه می‌دهید؟' : 'قالب «'.($theme['name'] ?? '').'» نصب و فعال شود؟' }}')">
                 @csrf
+                @if(($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false))
+                  <label class="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <input type="checkbox" name="confirm_overwrite" value="1" required class="mt-0.5">
+                    <span>
+                      می‌دانم که {{ $isOutdated ? 'آپدیت' : 'نصب' }} این قالب، قالب فعال فعلی{{ ($hasUnsavedDraft ?? false) ? ' و تغییرات ذخیره‌نشده در ویرایشگر بوم' : '' }} را جایگزین می‌کند.
+                    </span>
+                  </label>
+                @endif
                 <button type="submit"
                   class="w-full inline-flex items-center justify-center gap-2 {{ $isOutdated ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700' }} text-white text-sm font-medium py-2.5 rounded-lg transition">
                   <x-core-ui::icon name="download" class="w-4 h-4" />

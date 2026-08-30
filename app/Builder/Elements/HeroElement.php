@@ -23,6 +23,12 @@ class HeroElement extends BaseElement
             'align' => ['type' => 'enum', 'values' => ['left', 'center', 'right'], 'default' => 'center'],
         ];
     }
+    /**
+     * Phase 2j (ADR-030/031): delegates to the shared canonical authority,
+     * which now also validates button_url via the shared escapeUrl()
+     * (promoted from this element's own isValidUrl() check) — canonical is
+     * no longer less safe than this element was.
+     */
     public static function render(array $props, array $context = []): string
     {
         $title = self::escape($props['title'] ?? '');
@@ -35,6 +41,9 @@ class HeroElement extends BaseElement
         $align = in_array($props['align'] ?? 'center', ['left', 'center', 'right'], true) ? $props['align'] : 'center';
         $id = $context['id'] ?? '';
         $btn = $btnText ? "<a href=\"{$btnUrl}\" class=\"tb-btn tb-btn-primary\">{$btnText}</a>" : '';
-        return "<section id=\"tb-{$id}\" class=\"tb-hero tb-bg-{$bg} tb-align-{$align}\"><div class=\"tb-hero-inner\"><h1 class=\"tb-hero-title\">{$title}</h1><p class=\"tb-hero-subtitle\">{$subtitle}</p>{$btn}</div></section>";
+        $fallback = "<section id=\"tb-{$id}\" class=\"tb-hero tb-bg-{$bg} tb-align-{$align}\"><div class=\"tb-hero-inner\"><h1 class=\"tb-hero-title\">{$title}</h1><p class=\"tb-hero-subtitle\">{$subtitle}</p>{$btn}</div></section>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('hero', $props, $context['inner'] ?? '', $id)
+            ?? $fallback;
     }
 }

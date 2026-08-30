@@ -47,6 +47,17 @@ class ElementRenderer
         }
 
         try {
+            // Phase 2j: `_style` is a cross-cutting runtime convention
+            // (custom per-block styling), not an authored element schema
+            // field — ElementValidator::validate() rebuilds props from only
+            // the schema's own declared keys and silently dropped it,
+            // discarding real authored styling whenever it arrived embedded
+            // in props._style (as canonical Theme content actually stores
+            // it) rather than as a sibling block.style key. Found by
+            // CanonicalStructuralParityTest as a real divergence, not
+            // merely a markup difference — this was data loss.
+            $incomingStyle = is_array($props['_style'] ?? null) ? $props['_style'] : ($context['style'] ?? []);
+
             $schema = $class::getSchema();
             $result = ElementValidator::validate($schema, $props);
             $props = $result['props'];
@@ -58,7 +69,7 @@ class ElementRenderer
                 $props = $this->resolver->setContext($context)->resolve($props);
             }
 
-            $props['_style'] = $context['style'] ?? [];
+            $props['_style'] = $incomingStyle;
             $html = $class::render($props, $context);
 
             if (is_subclass_of($class, HasAssets::class)) {

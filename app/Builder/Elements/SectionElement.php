@@ -18,32 +18,23 @@ class SectionElement extends BaseElement
             'background_image' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 2048],
         ];
     }
+    /**
+     * Phase 2j (ADR-030/031): delegates to the shared canonical authority,
+     * which now absorbs this element's own _style.background/layout/effects
+     * capability (identical logic, promoted rather than duplicated).
+     */
     public static function render(array $props, array $context = []): string
     {
         $padding = self::spacingClass($props['padding'] ?? 'md');
-        $bg = self::escapeAttr($props['background'] ?? 'transparent');
-        $bgImg = self::escapeAttr($props['background_image'] ?? '');
         $useContainer = (bool)($props['container'] ?? true);
         $inner = $context['inner'] ?? '';
         $id = $context['id'] ?? '';
-        $inlineStyles = [];
-        if ($bgImg) {
-            $inlineStyles[] = "background-image: url({$bgImg})";
-            $inlineStyles[] = "background-size: cover";
-        }
-        $customBg = $props['_style']['background']['color'] ?? null;
-        if ($customBg) $inlineStyles[] = "background-color:" . self::escapeAttr($customBg);
         $class = "tb-section tb-padding-{$padding}";
-        if ($bg !== 'transparent' && !str_starts_with($bg, '#')) $class .= " tb-bg-{$bg}";
-        if ($bg !== 'transparent' && str_starts_with($bg, '#')) $inlineStyles[] = "background-color:{$bg}";
-        $layoutStyle = $props['_style']['layout'] ?? [];
-        $effectsStyle = $props['_style']['effects'] ?? [];
-        if (in_array($layoutStyle['radius'] ?? null, ['sm', 'md', 'lg'], true)) $class .= " tb-radius-" . $layoutStyle['radius'];
-        if (in_array($layoutStyle['shadow'] ?? null, ['sm', 'md', 'lg'], true)) $class .= " tb-shadow-" . $layoutStyle['shadow'];
-        if (($effectsStyle['hover'] ?? null) === 'lift') $class .= " tb-hover-lift";
-        $styleAttr = $inlineStyles ? ' style="' . implode(';', $inlineStyles) . '"' : '';
         $open = $useContainer ? '<div class="tb-container">' : '';
         $close = $useContainer ? '</div>' : '';
-        return "<section id=\"tb-{$id}\" class=\"{$class}\"{$styleAttr}><div class=\"tb-section-inner\">{$open}{$inner}{$close}</div></section>";
+        $fallback = "<section id=\"tb-{$id}\" class=\"{$class}\"><div class=\"tb-section-inner\">{$open}{$inner}{$close}</div></section>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('section', $props, $inner, $id)
+            ?? $fallback;
     }
 }

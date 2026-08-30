@@ -20,6 +20,8 @@ class ThemeCategoryHelper
         'store'       => 'فروشگاه',
         'saas'        => 'SaaS',
         'landing'     => 'لندینگ پیج',
+        'business'    => 'کسب‌وکار',
+        'services'    => 'خدمات',
     ];
 
     public static function label(string $category): string

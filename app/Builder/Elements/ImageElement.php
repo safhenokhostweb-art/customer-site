@@ -17,18 +17,17 @@ class ImageElement extends BaseElement
             'caption' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 500],
         ];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
-        $url = (string) ($props['url'] ?? '');
-        $alt = self::escapeAttr((string) ($props['alt'] ?? ''));
-        $caption = self::escape((string) ($props['caption'] ?? ''));
         $id = $context['id'] ?? '';
+        $url = (string) ($props['url'] ?? '');
+        $fallback = "<figure id=\"tb-{$id}\" class=\"tb-image tb-image-placeholder\"><span>تصویر انتخاب نشده</span></figure>";
         if ($url === '' || !self::isValidUrl($url)) {
-            return "<figure id=\"tb-{$id}\" class=\"tb-image tb-image-placeholder\"><span>تصویر</span></figure>";
+            return $fallback;
         }
-        $url = self::escapeAttr($url);
-        $img = "<img src=\"{$url}\" alt=\"{$alt}\" loading=\"lazy\" class=\"tb-img\">";
-        $cap = $caption ? "<figcaption class=\"tb-image-caption\">{$caption}</figcaption>" : '';
-        return "<figure id=\"tb-{$id}\" class=\"tb-image\">{$img}{$cap}</figure>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('image', $props, $context['inner'] ?? '', $id)
+            ?? $fallback;
     }
 }

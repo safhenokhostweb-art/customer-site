@@ -16,11 +16,14 @@ class GridElement extends BaseElement
             'gap' => ['type' => 'enum', 'values' => ['none', 'xs', 'sm', 'md', 'lg', 'xl'], 'default' => 'md'],
         ];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
+        $inner = $context['inner'] ?? ''; $id = $context['id'] ?? '';
         $cols = max(1, min(6, (int)($props['columns'] ?? 3)));
         $gap = self::spacingClass($props['gap'] ?? 'md');
-        $inner = $context['inner'] ?? ''; $id = $context['id'] ?? '';
-        return "<div id=\"tb-{$id}\" class=\"tb-grid tb-grid-cols-{$cols} tb-gap-{$gap}\">{$inner}</div>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('grid', $props, $inner, $id)
+            ?? "<div id=\"tb-{$id}\" class=\"tb-grid tb-grid-cols-{$cols} tb-gap-{$gap}\">{$inner}</div>";
     }
 }

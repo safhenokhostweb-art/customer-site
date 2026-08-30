@@ -37,9 +37,17 @@ class DividerElement extends BaseElement
         return [];
     }
 
+    /**
+     * Phase 2j (ADR-030/031): delegates structural markup to the shared
+     * canonical ThemeRuntime authority instead of maintaining a second,
+     * independent HTML implementation. This element's own responsibility
+     * is now purely schema/registration/editor metadata.
+     */
     public static function render(array $props, array $context = []): string
     {
         $id = $context['id'] ?? '';
-        return "<hr id=\"tb-{$id}\" class=\"tb-divider\">";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('divider', $props, $context['inner'] ?? '', $id)
+            ?? "<hr id=\"tb-{$id}\" class=\"tb-divider\">";
     }
 }

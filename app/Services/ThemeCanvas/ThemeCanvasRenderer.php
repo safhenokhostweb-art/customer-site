@@ -111,6 +111,18 @@ class ThemeCanvasRenderer extends BlockRenderer
             $type === 'module:hero_video'
                 => $this->renderModuleHeroVideo($props, $id),
 
+            $type === 'module:whatsapp_widget'
+                => $this->renderModuleWhatsappWidget($props, $id),
+
+            $type === 'module:form_embed'
+                => $this->renderModuleFormEmbed($props, $id),
+
+            $type === 'module:reviews_grid'
+                => $this->renderModuleReviewsGrid($props, $id),
+
+            $type === 'module:motion'
+                => $this->renderModuleMotion($props, $id),
+
             default => $this->renderModuleGenericPlaceholder($type, $props, $id),
         };
     }
@@ -568,6 +580,160 @@ class ThemeCanvasRenderer extends BlockRenderer
         </div>";
     }
 
+    // ── WhatsApp ─────────────────────────────────────────────────────────────
+
+    protected function renderModuleWhatsappWidget(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('whatsapp')) {
+            return '';
+        }
+
+        $phone = \App\Models\Setting::get('whatsapp_phone', '');
+        if (!$phone) {
+            return '';
+        }
+
+        $label    = $this->escape($props['label'] ?? 'پشتیبانی واتساپ');
+        $message  = \App\Models\Setting::get('whatsapp_message', '');
+        $position = $props['position'] ?? 'bottom-right';
+        $posStyle = $position === 'bottom-left' ? 'left:1.5rem;right:auto;' : 'right:1.5rem;left:auto;';
+
+        $waNumber = preg_replace('/[^0-9]/', '', $phone);
+        $waUrl    = 'https://wa.me/' . $waNumber . ($message ? '?text=' . urlencode($message) : '');
+
+        return "<div id=\"tb-{$id}\">
+            <a href=\"" . $this->escapeAttr($waUrl) . "\" target=\"_blank\" rel=\"noopener noreferrer\"
+               style=\"position:fixed;bottom:1.5rem;{$posStyle}background:#25D366;color:#fff;padding:0.75rem 1.25rem;border-radius:999px;text-decoration:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:0.5rem;\"
+               aria-label=\"{$label}\">💬 {$label}</a>
+        </div>";
+    }
+
+    // ── Form embed ───────────────────────────────────────────────────────────
+
+    protected function renderModuleFormEmbed(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('forms')) {
+            return '';
+        }
+
+        $formId = trim((string) ($props['form_id'] ?? ''));
+        if ($formId === '' || !class_exists(\SaaSPlatform\Modules\Forms\Models\Form::class)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-form-embed\"><p class=\"tb-text\">فرم انتخاب نشده است.</p></div>";
+        }
+
+        $form = \SaaSPlatform\Modules\Forms\Models\Form::where('is_active', true)
+            ->where(function ($q) use ($formId) {
+                $q->where('id', $formId)->orWhere('slug', $formId);
+            })
+            ->first();
+
+        if (!$form) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-form-embed\"><p class=\"tb-text\">فرم یافت نشد.</p></div>";
+        }
+
+        $title     = $this->escape($props['title'] ?? '');
+        $showTitle = $props['show_title'] ?? true;
+        $titleHtml = ($showTitle && $title) ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        $src       = $this->escapeAttr(route('forms.show', $form->slug));
+        $frameTitle = $this->escapeAttr($form->title ?? 'فرم');
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-form-embed\">
+            {$titleHtml}
+            <iframe src=\"{$src}\" loading=\"lazy\" style=\"width:100%;min-height:520px;border:0;\" title=\"{$frameTitle}\"></iframe>
+        </div>";
+    }
+
+    // ── Reviews (cross-product, distinct from renderTestimonials) ──────────────
+
+    protected function renderModuleReviewsGrid(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('reviews')) {
+            return '';
+        }
+
+        $title      = $this->escape($props['title'] ?? 'نظرات مشتریان');
+        $limit      = max(1, (int) ($props['limit'] ?? 6));
+        $showAvatar = $props['show_avatar'] ?? true;
+
+        if (!class_exists(\App\Models\ProductReview::class)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
+        }
+
+        $reviews = \App\Models\ProductReview::with('product:id,title,slug')
+            ->approved()
+            ->latest()
+            ->take($limit)
+            ->get();
+
+        if ($reviews->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">
+                <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
+                <p class=\"tb-text\">هنوز نظری ثبت نشده است.</p>
+            </div>";
+        }
+
+        $cards = [];
+        foreach ($reviews as $review) {
+            $name        = $this->escape($review->guest_name ?: 'کاربر');
+            $body        = $this->escape(Str::limit($review->body ?? '', 180));
+            $rating      = (int) ($review->rating ?? 5);
+            $stars       = str_repeat('★', min(5, max(0, $rating))) . str_repeat('☆', 5 - min(5, max(0, $rating)));
+            $avatar      = $showAvatar ? "<div class=\"tb-review-avatar\">" . mb_substr($name, 0, 1) . "</div>" : '';
+            $productName = $review->product->title ?? '';
+            $productLine = $productName ? "<p class=\"tb-review-product\">" . $this->escape($productName) . "</p>" : '';
+            $cards[] = "<div class=\"tb-testimonial-card\">{$avatar}<div class=\"tb-testimonial-rating\">{$stars}</div><p class=\"tb-testimonial-text\">{$body}</p><p class=\"tb-testimonial-author\">— {$name}</p>{$productLine}</div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">
+            <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
+            <div class=\"tb-testimonials-grid\">" . implode('', $cards) . "</div>
+        </div>";
+    }
+
+    // ── Motion Graphics bridge ──────────────────────────────────────────────
+    //
+    // Reuses the existing <x-motion:graphics name="..."> runtime component
+    // verbatim (resources/views/components/motion/graphics.blade.php) — this
+    // method contains zero Motion resolution/rendering/entitlement logic of
+    // its own. That component already fails closed on every unsafe case
+    // (missing manifest, unpublished asset, unauthorized site, malformed
+    // reference), so no duplicate license/ownership check belongs here.
+
+    protected function renderModuleMotion(array $props, string $id): string
+    {
+        if (! ($props['enabled'] ?? true)) {
+            return '';
+        }
+
+        $assetId = trim((string) ($props['motion_asset_id'] ?? ''));
+        if ($assetId === '') {
+            return '';
+        }
+
+        $html = '';
+        try {
+            $html = trim(\Illuminate\Support\Facades\Blade::render(
+                '<x-motion.graphics :name="$assetId" class="tb-module-motion" />',
+                ['assetId' => $assetId]
+            ));
+        } catch (\Throwable $e) {
+            $html = '';
+        }
+
+        if ($html === '') {
+            $fallbackImage = trim((string) ($props['fallback_image'] ?? ''));
+            if ($fallbackImage === '') {
+                // No published/assigned/authorized asset and no fallback
+                // image configured — render nothing, page stays intact.
+                return '';
+            }
+
+            return "<div id=\"tb-{$id}\" class=\"tb-module-motion-fallback\"><img src=\"" . $this->escapeAttr($fallbackImage) . "\" alt=\"\" loading=\"lazy\"></div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-motion\" data-placement=\"" . $this->escapeAttr($props['placement'] ?? 'section') . "\">{$html}</div>";
+    }
+
     // ── Generic placeholder ───────────────────────────────────────────────────
 
     protected function renderModuleGenericPlaceholder(string $type, array $props, string $id): string
@@ -577,16 +743,10 @@ class ThemeCanvasRenderer extends BlockRenderer
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    protected function escape(string $s): string
-    {
-        return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-    }
-
-    protected function escapeAttr(string $s): string
-    {
-        return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-    }
+    // Phase 2j: escape()/escapeAttr() removed — byte-identical duplicates of
+    // the inherited canonical implementation (via BlockRenderer), and their
+    // narrower `string $s` signature became LSP-incompatible once canonical
+    // widened to `mixed $s` (Phase 2j's malformed-_style-input safety fix).
 
     protected function sanitizeHtml(string $s): string
     {

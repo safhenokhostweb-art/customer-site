@@ -424,6 +424,171 @@ return [
             'styles'   => ['layout', 'typography', 'background', 'effects'],
             'children' => 'none',
         ],
+
+        /*
+        | "Nexus Pro premium blocks" — registered here so validate() no longer
+        | rejects them as "Unknown element type" and routes them to
+        | renderPlaceholder() instead of the render methods ported from
+        | saas-platform (Preview Renderer + Screenship Pipeline Hardening
+        | audit). 'mixed' is used deliberately for list-shaped props
+        | (features/steps/members/skills/items/plans, and columns) because
+        | real theme data stores them either as a JSON-encoded string or a
+        | raw PHP array depending on the authoring path — both are already
+        | handled defensively by the render methods themselves, so a strict
+        | 'string' or 'array' type here would falsely reject valid blocks.
+        */
+        'hero_split' => [
+            'type' => 'hero_split',
+            'props' => [
+                'badge'        => ['required' => false, 'type' => 'string'],
+                'title'        => ['required' => false, 'type' => 'string'],
+                'subtitle'     => ['required' => false, 'type' => 'string'],
+                'button_text'  => ['required' => false, 'type' => 'string'],
+                'button_url'   => ['required' => false, 'type' => 'string'],
+                'button2_text' => ['required' => false, 'type' => 'string'],
+                'button2_url'  => ['required' => false, 'type' => 'string'],
+                'image_url'    => ['required' => false, 'type' => 'string'],
+                'image_side'   => ['required' => false, 'type' => 'string'],
+                'background'   => ['required' => false, 'type' => 'string'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'hero_gradient' => [
+            'type' => 'hero_gradient',
+            'props' => [
+                'badge'         => ['required' => false, 'type' => 'string'],
+                'title'         => ['required' => false, 'type' => 'string'],
+                'subtitle'      => ['required' => false, 'type' => 'string'],
+                'button_text'   => ['required' => false, 'type' => 'string'],
+                'button_url'    => ['required' => false, 'type' => 'string'],
+                'button2_text'  => ['required' => false, 'type' => 'string'],
+                'button2_url'   => ['required' => false, 'type' => 'string'],
+                'gradient_from' => ['required' => false, 'type' => 'string'],
+                'gradient_to'   => ['required' => false, 'type' => 'string'],
+                'text_color'    => ['required' => false, 'type' => 'string'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'features_grid' => [
+            'type' => 'features_grid',
+            'props' => [
+                'title'    => ['required' => false, 'type' => 'string'],
+                'subtitle' => ['required' => false, 'type' => 'string'],
+                'columns'  => ['required' => false, 'type' => 'mixed'],
+                'style'    => ['required' => false, 'type' => 'string'],
+                'features' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'process_steps' => [
+            'type' => 'process_steps',
+            'props' => [
+                'title'    => ['required' => false, 'type' => 'string'],
+                'subtitle' => ['required' => false, 'type' => 'string'],
+                'steps'    => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'team_cards' => [
+            'type' => 'team_cards',
+            'props' => [
+                'title'   => ['required' => false, 'type' => 'string'],
+                'columns' => ['required' => false, 'type' => 'mixed'],
+                'members' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'skills_bars' => [
+            'type' => 'skills_bars',
+            'props' => [
+                'title'  => ['required' => false, 'type' => 'string'],
+                'skills' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'testimonials_slider' => [
+            'type' => 'testimonials_slider',
+            'props' => [
+                'title'   => ['required' => false, 'type' => 'string'],
+                'columns' => ['required' => false, 'type' => 'mixed'],
+                'items'   => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'pricing_cards' => [
+            'type' => 'pricing_cards',
+            'props' => [
+                'title'    => ['required' => false, 'type' => 'string'],
+                'subtitle' => ['required' => false, 'type' => 'string'],
+                'plans'    => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'newsletter_form' => [
+            'type' => 'newsletter_form',
+            'props' => [
+                'title'       => ['required' => false, 'type' => 'string'],
+                'subtitle'    => ['required' => false, 'type' => 'string'],
+                'placeholder' => ['required' => false, 'type' => 'string'],
+                'button_text' => ['required' => false, 'type' => 'string'],
+                'background'  => ['required' => false, 'type' => 'string'],
+                'text_color'  => ['required' => false, 'type' => 'string'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'bento_grid' => [
+            'type' => 'bento_grid',
+            'props' => [
+                'title' => ['required' => false, 'type' => 'string'],
+                'items' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'services_cards' => [
+            'type' => 'services_cards',
+            'props' => [
+                'title'    => ['required' => false, 'type' => 'string'],
+                'subtitle' => ['required' => false, 'type' => 'string'],
+                'columns'  => ['required' => false, 'type' => 'mixed'],
+                'style'    => ['required' => false, 'type' => 'string'],
+                'services' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'contact_split' => [
+            'type' => 'contact_split',
+            'props' => [
+                'title'     => ['required' => false, 'type' => 'string'],
+                'subtitle'  => ['required' => false, 'type' => 'string'],
+                'phone'     => ['required' => false, 'type' => 'string'],
+                'email'     => ['required' => false, 'type' => 'string'],
+                'address'   => ['required' => false, 'type' => 'string'],
+                'hours'     => ['required' => false, 'type' => 'string'],
+                'show_form' => ['required' => false, 'type' => 'boolean'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
+        'team' => [
+            'type' => 'team',
+            'props' => [
+                'title' => ['required' => false, 'type' => 'string'],
+                'limit' => ['required' => false, 'type' => 'mixed'],
+            ],
+            'styles'   => ['layout', 'typography', 'background', 'effects'],
+            'children' => 'none',
+        ],
     ],
 
     /*

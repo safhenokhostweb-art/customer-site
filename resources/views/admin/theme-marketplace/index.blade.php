@@ -184,14 +184,22 @@
               @endif
             </div>
 
-            {{-- Requirements --}}
-            @if(!empty($theme['requirements']))
-              <div class="flex flex-wrap gap-1 mb-3">
-                @foreach($theme['requirements'] as $req)
-                  <span class="bg-gray-100 text-gray-500 text-xs px-1.5 py-0.5 rounded font-mono">{{ $req }}</span>
-                @endforeach
-              </div>
-            @endif
+            {{-- Version + dependency summary (Phase 1h: ThemeRelease-authoritative) --}}
+            @php
+              $currentVersion = \App\Services\ThemeMarketplacePresenter::currentVersion($theme);
+              $depStatus = \App\Services\ThemeMarketplacePresenter::dependencyStatus($theme);
+              $depCount = count(\App\Services\ThemeMarketplacePresenter::dependencies($theme));
+            @endphp
+            <div class="flex flex-wrap items-center gap-1.5 mb-3 text-xs">
+              @if($currentVersion)
+                <span class="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">نسخه {{ $currentVersion }}</span>
+              @endif
+              @if($depStatus === 'unresolved')
+                <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded" title="فهرست نیازمندی‌های این قالب هنوز کامل ثبت نشده">نیازمندی‌ها در حال بررسی</span>
+              @elseif($depCount > 0)
+                <span class="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{{ $depCount }} نیازمندی</span>
+              @endif
+            </div>
 
             {{-- Pricing --}}
             <div class="mt-auto">

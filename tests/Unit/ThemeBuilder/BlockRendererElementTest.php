@@ -77,7 +77,11 @@ class BlockRendererElementTest extends TestCase
         $html = $this->renderer->renderBlock($block);
         $this->assertStringContainsString('tb-btn', $html);
         $this->assertStringContainsString('کلیک', $html);
-        $this->assertStringContainsString('href="#"', $html);
+        // Phase 2j: a relative internal path like "/page" is a real, safe
+        // URL (no scheme to exploit) — was previously incorrectly rejected
+        // and replaced with "#" by a URL check that only accepted absolute
+        // URLs; fixed, see ThemeRuntimeSecurityTest.
+        $this->assertStringContainsString('href="/page"', $html);
         $this->assertStringContainsString('tb-btn-primary', $html);
     }
 
