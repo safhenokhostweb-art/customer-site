@@ -160,6 +160,7 @@ jobs:
         with:
           name: cs-component-authority-report
           path: /tmp/component-authority.json
+          retention-days: 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 3 — Responsive Governance
@@ -214,6 +215,7 @@ jobs:
         with:
           name: cs-responsive-governance-report
           path: /tmp/responsive-governance.json
+          retention-days: 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 4 — Enterprise Governance (master score >= 95)
@@ -268,6 +270,7 @@ jobs:
         with:
           name: cs-enterprise-governance-report
           path: /tmp/enterprise-governance.json
+          retention-days: 1
 
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 5 — Frontend Parity (zero drift with saas-platform canonical package)
@@ -347,3 +350,4 @@ jobs:
             /tmp/frontend-parity.json
             /tmp/auto-heal.json
             /tmp/lockdown-report.json
+          retention-days: 1

@@ -121,4 +121,6 @@ jobs:
         with:
           name: test-results-customer
           path: storage/logs/
-          retention-days: 7
+          # Category E (test/debug) default per storage policy. Was 7d;
+          # bump back up if weekend on-call debugging needs a longer window.
+          retention-days: 1
