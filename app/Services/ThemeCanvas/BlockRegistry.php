@@ -349,17 +349,10 @@ final class BlockRegistry
                 ],
                 'defaultProps' => ['label' => 'پشتیبانی آنلاین', 'style' => 'floating', 'position' => 'bottom-right', 'bg_color' => '#4f46e5'],
             ],
-            'module:gallery_widget' => [
-                'name'     => 'گالری تصاویر',
-                'category' => self::CATEGORY_MODULE,
-                'requires' => 'gallery',
-                'schema'   => [
-                    'title'   => ['type' => 'string', 'label' => 'عنوان',  'default' => 'گالری'],
-                    'style'   => ['type' => 'select', 'label' => 'استایل', 'options' => ['masonry' => 'ماسونری', 'grid' => 'گرید', 'carousel' => 'چرخشی'], 'default' => 'grid'],
-                    'columns' => ['type' => 'select', 'label' => 'ستون',   'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '3'],
-                ],
-                'defaultProps' => ['title' => 'گالری', 'style' => 'grid', 'columns' => '3'],
-            ],
+            // module:gallery_widget removed — 'gallery' module has no backend
+            // content type in this codebase (no model/table), so the block
+            // could never render real data. Use the plain 'gallery' block
+            // instead, which renders a per-instance, editor-entered image list.
             'module:reviews_grid' => [
                 'name'     => 'نظرات کاربران',
                 'category' => self::CATEGORY_MODULE,
@@ -415,6 +408,23 @@ final class BlockRegistry
                     'position' => ['type' => 'select', 'label' => 'موقعیت', 'options' => ['bottom-right' => 'پایین راست', 'bottom-left' => 'پایین چپ'], 'default' => 'bottom-right'],
                 ],
                 'defaultProps' => ['label' => 'پشتیبانی واتساپ', 'phone' => '', 'position' => 'bottom-right'],
+            ],
+            // Theme Builder <-> Motion Graphics contract: a stable reference to
+            // an already-published/assigned Motion asset only — never raw
+            // source, editable timeline, AI prompt, or master metadata. The
+            // renderer resolves motion_asset_id through the site's own
+            // existing Motion runtime component (<x-motion:graphics>);
+            // nothing here talks to the Motion module directly.
+            'module:motion' => [
+                'name'     => 'موشن گرافیک',
+                'category' => self::CATEGORY_MODULE,
+                'schema'   => [
+                    'motion_asset_id' => ['type' => 'motion', 'label' => 'موشن انتخاب‌شده', 'default' => ''],
+                    'placement'       => ['type' => 'select', 'label' => 'جایگاه', 'options' => ['hero' => 'هیرو', 'section' => 'بخش', 'cta' => 'فراخوان به اقدام', 'background' => 'پس‌زمینه'], 'default' => 'section'],
+                    'enabled'         => ['type' => 'boolean', 'label' => 'فعال', 'default' => true],
+                    'fallback_image'  => ['type' => 'string', 'label' => 'تصویر جایگزین (در صورت نبود موشن)', 'default' => ''],
+                ],
+                'defaultProps' => ['motion_asset_id' => '', 'placement' => 'section', 'enabled' => true, 'fallback_image' => ''],
             ],
             // ─── NEXUS PRO PREMIUM BLOCKS ────────────────────────────────────
             'hero_split' => [
@@ -639,12 +649,40 @@ final class BlockRegistry
             ],
         ];
 
+        // Phase 2i (ADR-029): this registry is no longer disconnected from
+        // the canonical one — every canonical type (hero, section, stats_row,
+        // ...) is now reachable through this class too, for any type this
+        // file doesn't already define locally. A type defined in BOTH keeps
+        // its LOCAL definition (host wins) to guarantee zero behavior change
+        // — none of the ~40 locally-defined canonical-name overlaps were
+        // re-verified schema-field-by-field against the canonical source in
+        // this phase (a large, real remaining audit, not done here to avoid
+        // an unreviewed schema change reaching a live tenant runtime). Only
+        // genuinely local-only types (module:* and customer-site-only
+        // content types) are exclusively defined by this class.
+        self::$blocks = self::$blocks + \SaaSPlatform\ThemeRuntime\BlockRegistry::all();
+
+        // module:gallery_widget was deliberately removed above (no backend
+        // content type/model exists for it on this host) — the merge must
+        // not silently resurrect it from the canonical registry, which
+        // still defines it for saas-platform's own Builder preview.
+        unset(self::$blocks['module:gallery_widget']);
+
         return self::$blocks;
     }
 
     public static function get(string $type): ?array
     {
         return self::all()[$type] ?? null;
+    }
+
+    /**
+     * Phase 2i: this registry had no empty-output-policy concept at all —
+     * delegates to the canonical authority rather than reimplementing it.
+     */
+    public static function emptyOutputPolicy(string $type): string
+    {
+        return \SaaSPlatform\ThemeRuntime\BlockRegistry::emptyOutputPolicy($type);
     }
 
     public static function defaultProps(string $type): array

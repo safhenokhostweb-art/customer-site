@@ -6,32 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: \App\Helpers\Seo::title();
-        $seoDesc = trim($__env->yieldContent('meta_description')) ?: \App\Helpers\Seo::description();
-        $seoImage = trim($__env->yieldContent('meta_image')) ?: \App\Helpers\Seo::imageUrl();
-        $seoCanonical = \App\Helpers\Seo::canonical(trim($__env->yieldContent('canonical')));
-        $ogType = trim($__env->yieldContent('og_type')) ?: 'website';
-        $seoRobots = trim($__env->yieldContent('meta_robots')) ?: \App\Helpers\Seo::robots();
     @endphp
     <title>{{ $seoTitle }}</title>
-    <meta name="description" content="{{ e($seoDesc) }}">
-    <meta name="robots" content="{{ e($seoRobots) }}">
-    <link rel="canonical" href="{{ e($seoCanonical) }}">
-    <meta property="og:type" content="{{ e($ogType) }}">
-    <meta property="og:title" content="{{ $seoTitle }}">
-    <meta property="og:url" content="{{ e($seoCanonical) }}">
-    <meta property="og:locale" content="fa_IR">
-    @if($seoDesc)
-    <meta property="og:description" content="{{ e($seoDesc) }}">
-    <meta name="twitter:card" content="{{ e(\App\Helpers\Seo::twitterCard()) }}">
-    <meta name="twitter:title" content="{{ $seoTitle }}">
-    <meta name="twitter:description" content="{{ e($seoDesc) }}">
-    @endif
-    @if($seoImage)
-    <meta property="og:image" content="{{ e($seoImage) }}">
-    @endif
-    <script type="application/ld+json">@json(\App\Helpers\JsonLd::organization())</script>
-    <script type="application/ld+json">@json(\App\Helpers\JsonLd::webSite(\App\Helpers\SiteHelper::moduleEnabled('advanced_search') ? route('search.index') : null))</script>
-    @stack('json-ld')
+    <x-seo-meta
+        :title="$seoTitle"
+        :description="trim($__env->yieldContent('meta_description'))"
+        :image="trim($__env->yieldContent('meta_image'))"
+        :canonical="trim($__env->yieldContent('canonical'))"
+        :robots="trim($__env->yieldContent('meta_robots'))"
+        :og-type="trim($__env->yieldContent('og_type')) ?: 'website'"
+    />
     {{-- فونت آفلاین Vazirmatn (یکسان با پنل ادمین مشتری) --}}
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
@@ -146,7 +130,7 @@
         .tb-section { padding: 2.5rem 0; }
         .tb-section-inner { width: 100%; }
         .tb-container { max-width: var(--tb-container, 80rem); margin: 0 auto; padding: 0 1rem; }
-        .tb-hero { padding: 3rem 1.5rem; text-align: center; border-radius: 1rem; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: #fff; margin-bottom: 2.5rem; }
+        .tb-hero { padding: 3rem 1.5rem; text-align: center; border-radius: 1rem; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: var(--tb-on-primary, #fff); margin-bottom: 2.5rem; }
         .tb-hero-title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; margin: 0 0 0.75rem; line-height: 1.2; }
         .tb-hero-subtitle { font-size: 1.1rem; opacity: 0.95; max-width: 42rem; margin: 0 auto 1.25rem; line-height: 1.6; }
         .tb-btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: var(--tb-radius, 0.75rem); text-decoration: none; font-weight: 600; font-size: 1rem; transition: opacity 0.2s, transform 0.15s; }
@@ -194,7 +178,7 @@
         .tb-product-card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1.25rem 1rem; box-shadow: var(--tb-shadow-sm, 0 1px 2px rgb(0 0 0 / 0.05)); text-align: center; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 0.5rem; }
         .tb-product-title { font-weight: 700; margin-bottom: 0.25rem; }
         .tb-product-price { font-weight: 700; color: var(--tb-primary, var(--platform-primary, #4f46e5)); }
-        .tb-cta { margin-top: 2.5rem; padding: 2rem 1.5rem; border-radius: 1rem; text-align: center; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: #fff; }
+        .tb-cta { margin-top: 2.5rem; padding: 2rem 1.5rem; border-radius: 1rem; text-align: center; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: var(--tb-on-primary, #fff); }
         .tb-cta-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
         .tb-cta-subtitle { opacity: 0.9; margin-bottom: 1rem; }
         .tb-cta .tb-btn { background: #fff !important; color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; margin-top: 0.5rem; }
@@ -256,8 +240,8 @@
         /* پس‌زمینه سکشن‌های Theme Builder */
         .tb-bg-background { background-color: var(--tb-background, #f9fafb) !important; }
         .tb-bg-surface { background-color: var(--tb-surface, #ffffff) !important; }
-        .tb-bg-primary { background-color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; color: #fff !important; }
-        .tb-bg-primary a { color: #fff !important; opacity: 0.95; }
+        .tb-bg-primary { background-color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; color: var(--tb-on-primary, #fff) !important; }
+        .tb-bg-primary a { color: var(--tb-on-primary, #fff) !important; opacity: 0.95; }
         .tb-bg-primary a:hover { opacity: 1; }
         .tb-bg-text { background-color: var(--tb-text, #111827) !important; color: #fff !important; }
         .tb-bg-text a { color: #e5e7eb !important; }
@@ -329,6 +313,70 @@
         @media (max-width: 767px) {
             .tb-column.tb-col-1-2, .tb-column.tb-col-1-3, .tb-column.tb-col-2-3, .tb-column.tb-col-1-4, .tb-column.tb-col-3-4 { flex: 1 1 100%; }
         }
+        /* Phase 2e (ADR-026): styling for the canonical block family that
+           BlockRenderer's tb-* class markup relies on but this stylesheet
+           never defined — services_cards/stats_row/contact_split, and the
+           newly-added nav_header/nav_footer/hero_trust/about_section/
+           service_cards/project_cards/contact_info all share these. */
+        .tb-features-section-header { text-align: center; margin-bottom: 2.5rem; }
+        .tb-features-section-title { font-size: clamp(1.375rem, 2.5vw, 1.875rem); font-weight: 800; color: var(--tb-text, #111827); margin: 0 0 0.5rem; }
+        .tb-features-section-sub { color: var(--tb-text-muted, #6b7280); font-size: 1rem; margin: 0; }
+        .tb-stats-grid { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+        .tb-stat-item { flex: 1 1 8rem; text-align: center; }
+        .tb-stat-value { display: block; font-size: 1.875rem; font-weight: 800; color: var(--tb-primary-text, var(--platform-primary, #4f46e5)); }
+        .tb-stat-suffix { font-size: 1.25rem; }
+        .tb-stat-label { display: block; font-size: 0.875rem; color: var(--tb-text-muted, #6b7280); margin-top: 0.25rem; }
+        .tb-service-card { display: block; background: var(--tb-surface, #fff); border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; color: inherit; transition: box-shadow 0.2s; }
+        .tb-service-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .tb-service-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+        .tb-service-title { font-size: 1rem; font-weight: 700; color: var(--tb-text, #111827); margin: 0 0 0.4rem; }
+        .tb-service-text { font-size: 0.875rem; color: var(--tb-text-muted, #6b7280); line-height: 1.6; margin: 0; }
+        .tb-services-grid, .tb-project-cards-grid { margin: 0; }
+        .tb-project-card { display: block; background: var(--tb-surface, #fff); border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; color: inherit; }
+        .tb-project-card-category { display: inline-block; background: var(--tb-background, #eff6ff); color: var(--tb-primary, var(--platform-primary, #4f46e5)); padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .tb-project-card-title { font-size: 1.0625rem; font-weight: 700; color: var(--tb-text, #111827); margin: 0 0 0.4rem; }
+        .tb-project-card-text { font-size: 0.875rem; color: var(--tb-text-muted, #6b7280); line-height: 1.5; margin: 0; }
+        .tb-contact-info-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+        .tb-contact-info-item { display: flex; align-items: flex-start; gap: 0.65rem; }
+        .tb-contact-info-icon { font-size: 1.25rem; }
+        .tb-contact-info-label { font-size: 0.75rem; font-weight: 700; color: var(--tb-text-muted, #6b7280); text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
+        .tb-contact-info-value { font-size: 0.9375rem; font-weight: 600; color: var(--tb-text, #111827); margin: 0.15rem 0 0; }
+        .tb-about-section { max-width: 48rem; margin: 0 auto; text-align: center; }
+        .tb-about-features { list-style: none; padding: 0; margin: 1rem 0; text-align: start; display: inline-block; }
+        .tb-about-feature { padding: 0.3rem 0; }
+        .tb-about-stats { justify-content: center; margin-top: 1.5rem; }
+        .tb-hero-split-single { padding: 3rem 0; }
+        .tb-hero-trust-inner { max-width: 42rem; margin: 0 auto; text-align: center; }
+        .tb-hero-trust-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.25rem; margin-top: 1.25rem; font-size: 0.9rem; color: var(--tb-text-muted, #6b7280); }
+        .tb-hero-trust-rating, .tb-hero-trust-phone { display: inline-flex; align-items: center; gap: 0.4rem; }
+        .tb-nav-header { border-bottom: 1px solid rgba(0,0,0,0.08); }
+        .tb-nav-header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; min-height: 4rem; }
+        .tb-nav-header-logo { font-weight: 800; font-size: 1.15rem; text-decoration: none; color: inherit; }
+        .tb-nav-header-links { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+        .tb-nav-header-link { text-decoration: none; color: inherit; font-weight: 500; }
+        .tb-nav-header-actions { display: flex; align-items: center; gap: 1rem; }
+        .tb-nav-header-search-input { padding: 0.4rem 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+        .tb-nav-header-phone, .tb-nav-header-icon-link { text-decoration: none; color: inherit; }
+        .tb-nav-footer { padding: 3rem 0 1.5rem; }
+        .tb-nav-footer-brand { margin-bottom: 2rem; }
+        .tb-nav-footer-logo { font-weight: 800; font-size: 1.1rem; margin: 0 0 0.5rem; }
+        .tb-nav-footer-tagline { opacity: 0.75; font-size: 0.875rem; margin: 0; }
+        .tb-nav-footer-cols { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 2rem; }
+        .tb-nav-footer-col-title { font-size: 0.9rem; font-weight: 700; margin: 0 0 0.75rem; }
+        .tb-nav-footer-links { list-style: none; padding: 0; margin: 0; }
+        .tb-nav-footer-links li { margin-bottom: 0.4rem; }
+        .tb-nav-footer-links a { color: inherit; opacity: 0.7; text-decoration: none; font-size: 0.875rem; }
+        .tb-nav-footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.25rem; }
+        .tb-nav-footer-copyright { opacity: 0.55; font-size: 0.8rem; margin: 0; }
+        .tb-nav-footer-legal-link { color: inherit; opacity: 0.55; font-size: 0.8rem; text-decoration: none; margin-inline-end: 1rem; }
+        .tb-breadcrumb { font-size: 0.875rem; margin-bottom: 1rem; }
+        .tb-breadcrumb a { color: var(--tb-primary, var(--platform-primary, #4f46e5)); text-decoration: none; }
+        .tb-login-register { display: flex; align-items: center; gap: 1rem; }
+        .tb-price-box-empty { padding: 1rem; text-align: center; }
+        /* Phase 2f (ADR-027): honest placeholder state for client_logos
+           when no logos are authored — no fabricated brand names. */
+        .tb-client-logos-empty { padding: 2rem 0; text-align: center; }
+        .tb-client-logos-title { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tb-text-muted, #9ca3af); margin: 0 0 0.75rem; }
     </style>
     @if(\App\Helpers\SiteHelper::moduleEnabled('advertisements'))
     <style>
@@ -384,7 +432,7 @@
         <header class="tb-site-header {{ $stickyHeader ? 'tb-header-sticky' : '' }}" role="banner" id="site-header">
             <div class="tb-header-inner">
                 <div class="tb-header-brand">
-                    <a href="{{ route('home') }}">{{ \App\Helpers\SiteHelper::siteName() }}</a>
+                    <x-site-brand />
                 </div>
                 <button type="button" id="tb-mobile-menu-btn" class="tb-menu-btn" aria-label="منو" aria-expanded="false">
                     <x-core-ui::icon name="menu" style="width:24px;height:24px" />
@@ -431,9 +479,7 @@
     <header class="site-header" style="background: var(--platform-menu-bg, #1e293b); color: var(--platform-menu-text, #e2e8f0);">
         <div class="container-inner">
             <div class="header-row">
-                <a href="{{ route('home') }}" style="font-size: 1.25rem; font-weight: 700; color: var(--platform-primary, #a5b4fc); text-decoration: none;">
-                    {{ \App\Helpers\SiteHelper::siteName() }}
-                </a>
+                <x-site-brand style="font-size: 1.25rem; font-weight: 700; color: var(--platform-primary, #a5b4fc); text-decoration: none;" />
                 <button type="button" id="mobile-menu-btn" class="menu-btn" aria-label="منو">
                     <x-core-ui::icon name="menu" style="width:24px;height:24px" />
                 </button>
@@ -664,4 +710,3 @@
     @stack('scripts')
 </body>
 </html>
-

@@ -16,14 +16,17 @@ class ColumnsElement extends BaseElement
             'gap' => ['type' => 'enum', 'values' => ['none', 'xs', 'sm', 'md', 'lg', 'xl'], 'default' => 'md'],
         ];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
+        $inner = $context['inner'] ?? '';
+        $id = $context['id'] ?? '';
         $parts = array_map('trim', explode(',', $props['ratios'] ?? '1/2,1/2'));
         $classes = [];
         foreach ($parts as $i => $r) { $classes[] = 'tb-col-' . ($i + 1); }
         $colClass = implode(' ', $classes);
-        $inner = $context['inner'] ?? '';
-        $id = $context['id'] ?? '';
-        return "<div id=\"tb-{$id}\" class=\"tb-columns {$colClass}\">{$inner}</div>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('columns', $props, $inner, $id)
+            ?? "<div id=\"tb-{$id}\" class=\"tb-columns {$colClass}\">{$inner}</div>";
     }
 }

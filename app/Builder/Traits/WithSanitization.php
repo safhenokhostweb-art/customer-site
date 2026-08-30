@@ -24,13 +24,26 @@ trait WithSanitization
 
     /**
      * Validate URL for href/src to prevent javascript: etc.
+     *
+     * Phase 2j: was `FILTER_VALIDATE_URL`, which rejects relative URLs
+     * ("/services", "about.html") — real, common, and safe (no scheme to
+     * exploit). Only an explicit dangerous scheme is rejected; only a
+     * known-safe explicit scheme is accepted; no scheme at all (relative)
+     * passes through. Kept in sync with the promoted canonical
+     * SaaSPlatform\ThemeRuntime\BlockRenderer::isValidUrl().
      */
     protected static function isValidUrl(string $url): bool
     {
-        if ($url === '' || $url === '#') {
+        $trimmed = trim($url);
+        if ($trimmed === '') {
             return true;
         }
-        return filter_var($url, FILTER_VALIDATE_URL) !== false
-            && !preg_match('#^\s*javascript:#i', $url);
+        if (preg_match('#^[\s\x00-\x1f]*(javascript|data|vbscript):#i', $trimmed)) {
+            return false;
+        }
+        if (!preg_match('#^[a-z][a-z0-9+.\-]*:#i', $trimmed)) {
+            return true;
+        }
+        return (bool) preg_match('#^(https?|mailto|tel):#i', $trimmed);
     }
 }

@@ -3,14 +3,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\ThemeInstanceRevision;
 use App\Services\PlatformApiService;
+use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class ThemeMarketplaceController extends Controller
 {
-    public function __construct(protected PlatformApiService $platform) {}
+    public function __construct(
+        protected PlatformApiService $platform,
+        protected ThemeInstanceRevisionService $revisions,
+    ) {}
 
     public function index(Request $request)
     {
@@ -45,7 +50,10 @@ class ThemeMarketplaceController extends Controller
                 ->with('error', 'قالب یافت نشد.');
         }
 
-        return view('admin.theme-marketplace.show', compact('theme'));
+        $hasActiveTheme  = (bool) Setting::get('active_canvas_theme_data');
+        $hasUnsavedDraft = (bool) Setting::get('canvas_draft_data');
+
+        return view('admin.theme-marketplace.show', compact('theme', 'hasActiveTheme', 'hasUnsavedDraft'));
     }
 
     public function purchase(Request $request, int $themeId)
@@ -89,7 +97,10 @@ class ThemeMarketplaceController extends Controller
         $purchased = $request->query('purchased') == '1';
         $msg       = $request->query('msg', '');
 
-        return view('admin.theme-marketplace.my-licenses', compact('licenses', 'purchased', 'msg'));
+        $hasActiveTheme  = (bool) Setting::get('active_canvas_theme_data');
+        $hasUnsavedDraft = (bool) Setting::get('canvas_draft_data');
+
+        return view('admin.theme-marketplace.my-licenses', compact('licenses', 'purchased', 'msg', 'hasActiveTheme', 'hasUnsavedDraft'));
     }
 
     public function install(Request $request, int $themeId)
@@ -98,14 +109,27 @@ class ThemeMarketplaceController extends Controller
             return back()->with('error', 'سرویس در دسترس نیست.');
         }
 
+        // Theme Update Safety: installing over an active theme (or discarding an
+        // unsaved canvas draft) is destructive — require explicit customer
+        // confirmation instead of silently overwriting customizations. Re-checked
+        // here against live Settings rather than trusting client-submitted state.
+        $hasActiveTheme  = (bool) Setting::get('active_canvas_theme_data');
+        $hasUnsavedDraft = (bool) Setting::get('canvas_draft_data');
+        if (($hasActiveTheme || $hasUnsavedDraft) && !$request->boolean('confirm_overwrite')) {
+            return back()->with('error', 'برای نصب قالب جدید باید تأیید کنید که قالب فعلی و شخصی‌سازی‌های ذخیره‌نشده آن جایگزین خواهند شد.');
+        }
+
         $themeData = $this->platform->marketplaceDownloadTheme($themeId);
 
         if (!$themeData || empty($themeData['success'])) {
             return back()->with('error', 'دانلود قالب ناموفق بود. لطفاً مطمئن شوید لایسنس معتبر است.');
         }
 
-        // BFA-H02: پشتیبان‌گیری از قالب فعلی قبل از نصب
+        // BFA-H02: پشتیبان‌گیری از قالب فعلی قبل از نصب (legacy single-slot
+        // backup — kept for the existing rollback() below; superseded as
+        // the source of truth by the permanent revision recorded below).
         $currentData = Setting::get('active_canvas_theme_data');
+        $isUpdate = (bool) $currentData;
         if ($currentData) {
             Setting::set('canvas_theme_backup_data', $currentData, 'theme');
             Setting::set('canvas_theme_backup_name', Setting::get('active_canvas_theme_name', 'قالب قبلی'), 'theme');
@@ -116,13 +140,28 @@ class ThemeMarketplaceController extends Controller
         Setting::set('active_canvas_theme_id', $themeId, 'theme');
         Setting::set('active_canvas_theme_name', $themeData['theme_name'], 'theme');
         Setting::set('active_canvas_theme_slug', $themeData['theme_slug'], 'theme');
-        Setting::set('active_canvas_theme_data', json_encode([
+
+        // Permanent version history: creates an immutable revision and sets
+        // active_canvas_theme_data + active_theme_revision_id. A first-ever
+        // install for this site is type=install; installing over an
+        // already-active theme (confirmed above) is type=update.
+        $this->revisions->record([
             'header_blocks' => $themeData['header_blocks'] ?? [],
             'footer_blocks' => $themeData['footer_blocks'] ?? [],
             'pages'         => $themeData['pages'] ?? [],
             'global_styles' => $themeData['global_styles'] ?? [],
             'settings'      => $themeData['settings'] ?? [],
-        ]), 'theme');
+        ], $isUpdate ? ThemeInstanceRevision::TYPE_UPDATE : ThemeInstanceRevision::TYPE_INSTALL, [
+            'theme_identifier' => $themeData['theme_slug'],
+            'source_theme_id'  => $themeData['theme_id'] ?? $themeId,
+            // ThemeRelease-authoritative lineage (Phase 1h): both come
+            // straight from the download response's release identity, never
+            // fabricated — null on either side simply means the theme had no
+            // release yet at download time.
+            'source_theme_version' => $themeData['release_version'] ?? null,
+            'source_release_id'    => $themeData['release_id'] ?? null,
+            'metadata'         => ['theme_name' => $themeData['theme_name']],
+        ]);
 
         // BFA-M05: پاک‌سازی draft قدیمی تا editor با قالب جدید شروع کند
         Setting::where('key', 'canvas_draft_data')->delete();
@@ -146,6 +185,18 @@ class ThemeMarketplaceController extends Controller
 
         $backupName = Setting::get('canvas_theme_backup_name', 'قالب قبلی');
         $backupAt   = Setting::get('canvas_theme_backup_at', '');
+
+        // Permanent version history: this legacy single-slot restore doesn't
+        // track which theme lineage the backup belongs to (the slug/id are
+        // deleted below, as before), so the resulting rollback_snapshot is
+        // recorded under whatever lineage was active going into this call.
+        $decoded = json_decode($backupData, true);
+        if (is_array($decoded)) {
+            $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_ROLLBACK_SNAPSHOT, [
+                'theme_identifier' => $this->revisions->currentIdentifier(),
+                'metadata' => ['legacy_backup_restore' => true, 'restored_theme_name' => $backupName],
+            ]);
+        }
 
         // بازگردانی قالب پشتیبان
         Setting::set('active_canvas_theme_data', $backupData, 'theme');

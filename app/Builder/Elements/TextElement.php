@@ -13,19 +13,13 @@ class TextElement extends BaseElement
     {
         return ['content' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 65535]];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
-        $content = self::sanitizeHtml((string) ($props['content'] ?? ''));
         $id = $context['id'] ?? '';
-        $style = $props['_style']['typography'] ?? [];
-        $w = []; $i = [];
-        if (!empty($style['color'])) $w[] = 'color:' . self::escapeAttr($style['color']);
-        if (!empty($style['textAlign']) && in_array($style['textAlign'], ['left', 'right', 'center'], true)) {
-            $w[] = 'text-align:' . self::escapeAttr($style['textAlign']);
-            $i[] = 'text-align:' . self::escapeAttr($style['textAlign']);
-        }
-        $wa = $w ? ' style="' . implode(';', $w) . '"' : '';
-        $ia = $i ? ' style="' . implode(';', $i) . '"' : '';
-        return "<div id=\"tb-{$id}\" class=\"tb-text\"{$wa}><div{$ia}>{$content}</div></div>";
+        $content = self::sanitizeHtml((string) ($props['content'] ?? ''));
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('text', $props, $context['inner'] ?? '', $id)
+            ?? "<div id=\"tb-{$id}\" class=\"tb-text prose\">{$content}</div>";
     }
 }

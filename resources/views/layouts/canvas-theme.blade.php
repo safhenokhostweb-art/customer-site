@@ -8,20 +8,9 @@
         $siteTitle  = \App\Helpers\SiteHelper::siteName();
         $fullTitle  = ($pageTitle ?? $siteTitle) . ($pageTitle ? ' — ' . $siteTitle : '');
         $gs         = $globalStyles ?? [];
-        $primary    = $gs['primary_color']   ?? $gs['colors']['primary']   ?? '#4f46e5';
-        $secondary  = $gs['secondary_color'] ?? $gs['colors']['secondary'] ?? '#7c3aed';
-        $bgColor    = $gs['background_color'] ?? $gs['colors']['background'] ?? '#f9fafb';
-        $textColor  = $gs['text_color']      ?? $gs['colors']['text']      ?? '#1f2937';
-        $fontBody   = $gs['font_family']     ?? $gs['fonts']['body']       ?? 'Vazirmatn';
-        $borderRad  = $gs['border_radius']   ?? '0.75rem';
-        $shadowSm   = $gs['shadow_sm']       ?? '0 1px 3px rgba(15,23,42,0.12)';
-        $containerW = $gs['container_width'] ?? '80rem';
     @endphp
     <title>{{ $fullTitle }}</title>
-    <meta name="description" content="{{ \App\Helpers\Seo::description() }}">
-    <link rel="canonical" href="{{ \App\Helpers\Seo::canonical() }}">
-    <meta property="og:title" content="{{ $fullTitle }}">
-    <meta property="og:locale" content="fa_IR">
+    <x-seo-meta :title="$fullTitle" />
 
     {{-- فونت آفلاین Vazirmatn --}}
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
@@ -38,21 +27,20 @@
     @include('partials.theme-engine-tokens')
     {{-- CSS متغیرهای قالب canvas (اولویت بالاتر از preset) --}}
     <style>
-        :root {
-            --tb-primary:    {{ $primary }};
-            --tb-secondary:  {{ $secondary }};
-            --tb-background: {{ $bgColor }};
-            --tb-text:       {{ $textColor }};
-            --tb-text-muted: #4b5563;
-            --tb-surface:    #ffffff;
-            --tb-font-body:  {{ $fontBody }}, Tahoma, sans-serif;
-            --tb-radius:     {{ $borderRad }};
-            --tb-shadow-sm:  {{ $shadowSm }};
-            --tb-container:  {{ $containerW }};
-            --platform-primary: {{ $primary }};
-        }
+        {{-- Phase 2h (ADR-029): the same shared ThemeTokenNormalizer
+             saas-platform's GlobalStyleEngine now delegates to — the same
+             global_styles input produces the same --tb-* values on both
+             hosts. This used to be a hand-rolled, materially incomplete
+             subset (no --tb-accent, no dark mode, no custom_css, a
+             different --tb-text-muted default) maintained independently
+             here; see ADR-029 for the full before/after. --}}
+        {!! app(\SaaSPlatform\ThemeRuntime\ThemeTokenNormalizer::class)->renderCssBlock($gs) !!}
+        :root { --platform-primary: var(--tb-primary); }
 
-        * { box-sizing: border-box; }
+        {{-- Shared structural/responsive/marquee contract (ADR-029) — the
+             rules below it (.tb-container, .tb-grid, .tb-padding-*, etc.)
+             are this host's own remaining, not-yet-migrated visual CSS. --}}
+        @include('theme-runtime::css.contract')
 
         body {
             font-family: var(--tb-font-body);
@@ -89,14 +77,14 @@
         .tb-section { padding: 2.5rem 0; }
         .tb-section-inner { width: 100%; }
         .tb-container { max-width: var(--tb-container, 80rem); margin: 0 auto; padding: 0 1rem; }
-        .tb-hero { padding: 3rem 1.5rem; text-align: center; border-radius: var(--tb-radius, 0.75rem); background: var(--tb-primary, #4f46e5); color: #fff; margin-bottom: 2.5rem; }
+        .tb-hero { padding: 3rem 1.5rem; text-align: center; border-radius: var(--tb-radius, 0.75rem); background: var(--tb-primary, #4f46e5); color: var(--tb-on-primary, #fff); margin-bottom: 2.5rem; }
         .tb-hero-inner { max-width: 56rem; margin: 0 auto; }
         .tb-hero-title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; margin: 0 0 0.75rem; line-height: 1.2; }
         .tb-hero-subtitle { font-size: 1.1rem; opacity: 0.95; max-width: 42rem; margin: 0 auto 1.25rem; line-height: 1.6; }
         .tb-btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: var(--tb-radius, 0.75rem); text-decoration: none; font-weight: 600; font-size: 1rem; transition: opacity 0.2s, transform 0.15s; cursor: pointer; }
         .tb-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .tb-btn-primary { background: var(--tb-primary, #4f46e5); color: #fff !important; }
-        .tb-btn-secondary { background: transparent; color: var(--tb-primary, #4f46e5); border: 2px solid currentColor; }
+        .tb-btn-primary { background: var(--tb-primary, #4f46e5); color: var(--tb-on-primary, #fff) !important; }
+        .tb-btn-secondary { background: transparent; color: var(--tb-primary-text, #4f46e5); border: 2px solid currentColor; }
         .tb-heading { margin: 0 0 0.75rem; font-weight: 700; color: var(--tb-text, #111827); line-height: 1.3; display: block; }
         h1.tb-heading { font-size: clamp(1.75rem, 3vw, 2.25rem); }
         h2.tb-heading { font-size: clamp(1.5rem, 2.5vw, 1.875rem); }
@@ -108,49 +96,20 @@
         .tb-image { display: block; max-width: 100%; margin: 0 auto 1.5rem; }
         .tb-image .tb-img { display: block; max-width: 100%; height: auto; margin: 0 auto; max-height: 520px; object-fit: contain; }
         .tb-image-caption { text-align: center; font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem; }
-        .tb-divider { border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0; }
+        {{-- .tb-divider now in the shared contract included above. --}}
         .tb-spacer { display: block; }
 
-        /* گرید */
-        .tb-grid { display: grid; gap: 1.5rem; }
-        .tb-grid.tb-grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-        .tb-grid.tb-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .tb-grid.tb-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .tb-grid.tb-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        .tb-grid.tb-grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        .tb-grid.tb-grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-        @media (max-width: 767px) {
-            .tb-grid.tb-grid-cols-2,
-            .tb-grid.tb-grid-cols-3,
-            .tb-grid.tb-grid-cols-4,
-            .tb-grid.tb-grid-cols-5,
-            .tb-grid.tb-grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .tb-grid.tb-grid-cols-1 { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 480px) {
-            .tb-grid.tb-grid-cols-2,
-            .tb-grid.tb-grid-cols-3,
-            .tb-grid.tb-grid-cols-4 { grid-template-columns: 1fr; }
-        }
+        {{-- .tb-grid / .tb-grid-cols-* / breakpoints now in the shared
+             contract included above. --}}
 
         /* پس‌زمینه */
         .tb-bg-background { background-color: var(--tb-background, #f9fafb) !important; }
         .tb-bg-surface    { background-color: var(--tb-surface, #fff) !important; }
-        .tb-bg-primary    { background-color: var(--tb-primary, #4f46e5) !important; color: #fff !important; }
-        .tb-bg-secondary  { background-color: var(--tb-secondary, #7c3aed) !important; color: #fff !important; }
+        .tb-bg-primary    { background-color: var(--tb-primary, #4f46e5) !important; color: var(--tb-on-primary, #fff) !important; }
+        .tb-bg-secondary  { background-color: var(--tb-secondary, #7c3aed) !important; color: var(--tb-on-secondary, #fff) !important; }
         .tb-bg-text       { background-color: var(--tb-text, #111827) !important; color: #fff !important; }
 
-        /* padding */
-        .tb-padding-none { padding-top: 0; padding-bottom: 0; }
-        .tb-padding-xs   { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .tb-padding-sm   { padding-top: 1.25rem; padding-bottom: 1.25rem; }
-        .tb-padding-md   { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-        .tb-padding-lg   { padding-top: 3.5rem; padding-bottom: 3.5rem; }
-        .tb-padding-xl   { padding-top: 4.5rem; padding-bottom: 4.5rem; }
-        @media (min-width: 768px) {
-            .tb-padding-lg { padding-top: 4rem; padding-bottom: 4rem; }
-            .tb-padding-xl { padding-top: 5.5rem; padding-bottom: 5.5rem; }
-        }
+        {{-- .tb-padding-* scale now in the shared contract included above. --}}
 
         /* hero align */
         .tb-hero.tb-align-left    { text-align: right; }
@@ -158,10 +117,10 @@
         .tb-hero.tb-align-center  { text-align: center; }
 
         /* CTA */
-        .tb-cta { padding: 2.5rem 1.5rem; border-radius: var(--tb-radius, 0.75rem); text-align: center; background: var(--tb-primary, #4f46e5); color: #fff; }
+        .tb-cta { padding: 2.5rem 1.5rem; border-radius: var(--tb-radius, 0.75rem); text-align: center; background: var(--tb-primary, #4f46e5); color: var(--tb-on-primary, #fff); }
         .tb-cta-title    { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.5rem; }
         .tb-cta-subtitle { font-size: 1rem; opacity: 0.9; margin: 0 0 1rem; }
-        .tb-cta .tb-btn  { background: #fff !important; color: var(--tb-primary, #4f46e5) !important; }
+        .tb-cta .tb-btn  { background: #fff !important; color: var(--tb-primary-text, #4f46e5) !important; }
 
         /* کارت محصول */
         .tb-product-card { background: var(--tb-surface, #fff); border-radius: var(--tb-radius, 0.75rem); border: 1px solid #e5e7eb; padding: 0; overflow: hidden; box-shadow: var(--tb-shadow-sm); text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: box-shadow 0.2s, transform 0.15s; }
@@ -171,7 +130,7 @@
         .tb-product-card-noimg { font-size: 2.5rem; color: #9ca3af; }
         .tb-product-card-inner { padding: 1rem; flex: 1; }
         .tb-product-title { font-weight: 700; font-size: 1rem; margin: 0 0 0.4rem; color: var(--tb-text, #111827); }
-        .tb-product-price { font-weight: 700; color: var(--tb-primary, #4f46e5); font-size: 0.95rem; }
+        .tb-product-price { font-weight: 700; color: var(--tb-primary-text, #4f46e5); font-size: 0.95rem; }
         .tb-product-grid-empty { padding: 2rem; text-align: center; background: #f9fafb; border-radius: 0.75rem; border: 1px dashed #d1d5db; }
         .tb-product-grid-empty p { margin-bottom: 1rem; color: #6b7280; }
 
@@ -189,17 +148,17 @@
         /* ناوبری داخل canvas */
         .tb-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; }
         .tb-nav a { text-decoration: none; color: var(--tb-text, #1f2937); font-weight: 500; padding: 0.3rem 0; }
-        .tb-nav a:hover { color: var(--tb-primary, #4f46e5); }
+        .tb-nav a:hover { color: var(--tb-primary-text, #4f46e5); }
         .tb-social-icons { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
         .tb-social-link { text-decoration: none; color: var(--tb-text, #374151); font-weight: 500; }
-        .tb-social-link:hover { color: var(--tb-primary, #4f46e5); }
+        .tb-social-link:hover { color: var(--tb-primary-text, #4f46e5); }
 
         /* هدر و فوتر site */
         .tb-site-header { padding: 0 1rem; background: var(--tb-surface, #fff); border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: var(--tb-shadow-sm); }
         .tb-site-header.tb-header-sticky { position: sticky; top: 0; z-index: 100; }
         .tb-header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; max-width: var(--tb-container, 80rem); margin: 0 auto; min-height: 4rem; }
         .tb-header-brand { font-size: 1.25rem; font-weight: 700; }
-        .tb-header-brand a { color: var(--tb-primary, #4f46e5); text-decoration: none; }
+        .tb-header-brand a { color: var(--tb-primary-text, #4f46e5); text-decoration: none; }
         .tb-site-header .tb-section { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; flex: 1; }
         .tb-site-header .tb-container { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 1rem; }
         .tb-header-nav-wrap { flex: 1; display: flex; align-items: center; justify-content: flex-end; }
@@ -221,20 +180,7 @@
             .tb-mobile-menu { display: none !important; }
         }
 
-        /* FAQ */
-        .tb-faq-item { border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
-        .tb-faq-question { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; background: #f9fafb; margin: 0; }
-        .tb-faq-answer { padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb; line-height: 1.7; color: #4b5563; }
-
-        /* accordion */
-        .tb-accordion-item { border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
-        .tb-accordion-item summary { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; background: #f9fafb; }
-        .tb-accordion-body { padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb; }
-
-        /* tabs */
-        .tb-tabs { }
-        .tb-tab-title { font-size: 1rem; font-weight: 700; padding: 0.75rem 0; border-bottom: 2px solid var(--tb-primary, #4f46e5); margin-bottom: 0.75rem; }
-        .tb-tab-content { padding: 0.5rem 0; }
+        {{-- FAQ / accordion / tabs now in the shared contract included above. --}}
 
         /* placeholder (خطا) */
         .tb-placeholder { min-height: 2rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; }
@@ -309,8 +255,8 @@
         .tb-stats-grid { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; }
         .tb-stat-item { text-align:center; padding:1.5rem 2rem; flex:1 1 160px; }
         .tb-stat-divider { width:1px; height:80px; background:rgba(0,0,0,0.1); align-self:center; flex-shrink:0; }
-        .tb-stat-value { font-size:clamp(2.25rem,4.5vw,3.5rem); font-weight:800; color:var(--tb-primary,#6366f1); line-height:1; display:block; }
-        .tb-stat-suffix { font-size:1.5rem; font-weight:700; color:var(--tb-primary,#6366f1); }
+        .tb-stat-value { font-size:clamp(2.25rem,4.5vw,3.5rem); font-weight:800; color:var(--tb-primary-text,#6366f1); line-height:1; display:block; }
+        .tb-stat-suffix { font-size:1.5rem; font-weight:700; color:var(--tb-primary-text,#6366f1); }
         .tb-stat-label { font-size:0.9rem; color:var(--tb-text-muted,#4b5563); margin-top:0.4rem; display:block; font-weight:500; }
         @media(max-width:600px) { .tb-stat-item{flex:1 1 130px;padding:1rem 0.75rem;} .tb-stat-divider{display:none;} }
 
@@ -323,7 +269,13 @@
         .tb-logos-marquee-wrap::after  { left:0;  background:linear-gradient(to right,var(--tb-background,#fff) 0%,transparent 100%); }
         .tb-logos-marquee { display:flex; gap:2rem; width:max-content; animation:tb-marquee 32s linear infinite; align-items:center; padding:0.5rem 0; }
         .tb-logos-marquee:hover { animation-play-state:paused; }
-        .tb-logo-item { font-size:1rem; font-weight:700; color:var(--tb-text-muted,#9ca3af); white-space:nowrap; padding:0.5rem 1.25rem; border:1px solid #e5e7eb; border-radius:0.5rem; background:var(--tb-surface,#fff); transition:color 0.2s; }
+        {{-- Phase 2g (saas-platform ADR-028): #9ca3af (gray-400) on a white
+             surface measures ~2.54:1 via real browser contrast verification,
+             below WCAG AA's 4.5:1 — and was already inconsistent with
+             .tb-client-logos-title's own #6b7280 fallback one line above for
+             the same visual context. Aligned to the same, compliant shade
+             (~4.83:1 on white). --}}
+        .tb-logo-item { font-size:1rem; font-weight:700; color:var(--tb-text-muted,#6b7280); white-space:nowrap; padding:0.5rem 1.25rem; border:1px solid #e5e7eb; border-radius:0.5rem; background:var(--tb-surface,#fff); transition:color 0.2s; }
         .tb-logos-static { display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:center; align-items:center; }
         @keyframes tb-marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
@@ -342,7 +294,7 @@
         .tb-team-avatar { width:84px; height:84px; border-radius:50%; object-fit:cover; margin:1.75rem auto 1rem; border:3px solid var(--tb-primary,#6366f1); display:block; }
         .tb-team-avatar-placeholder { width:84px; height:84px; border-radius:50%; background:linear-gradient(135deg,var(--tb-primary,#6366f1),var(--tb-secondary,#0ea5e9)); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:#fff; margin:1.75rem auto 1rem; }
         .tb-team-name { font-size:1rem; font-weight:700; margin:0 0 0.25rem; color:var(--tb-text,#0f172a); }
-        .tb-team-role { font-size:0.85rem; color:var(--tb-primary,#6366f1); font-weight:600; margin:0 0 0.75rem; }
+        .tb-team-role { font-size:0.85rem; color:var(--tb-primary-text,#6366f1); font-weight:600; margin:0 0 0.75rem; }
         .tb-team-bio { font-size:0.85rem; color:var(--tb-text-muted,#4b5563); line-height:1.55; margin:0 1.25rem; }
 
         /* ─── skills_bars ───────────────────────────────────────────── */
@@ -362,7 +314,7 @@
         .tb-testimonials-grid.cols-3 { grid-template-columns:repeat(3,1fr); }
         .tb-testimonial-card { background:var(--tb-surface,#fff); border-radius:var(--tb-radius,0.75rem); border:1px solid #e5e7eb; padding:1.75rem; box-shadow:var(--tb-shadow-sm); display:flex; flex-direction:column; }
         .tb-testimonial-stars { color:#f59e0b; font-size:0.95rem; margin-bottom:0.75rem; letter-spacing:2px; }
-        .tb-testimonial-text { font-size:0.95rem; line-height:1.75; color:var(--tb-text,#1f2937); margin:0 0 1.25rem; font-style:italic; flex:1; }
+        .tb-testimonial-text { font-size:0.95rem; line-height:1.75; color:var(--tb-surface-text,#1f2937); margin:0 0 1.25rem; font-style:italic; flex:1; }
         .tb-testimonial-author { display:flex; align-items:center; gap:0.75rem; }
         .tb-testimonial-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--tb-primary,#6366f1),var(--tb-secondary,#0ea5e9)); display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; color:#fff; flex-shrink:0; }
         .tb-testimonial-name { font-weight:700; font-size:0.9rem; color:var(--tb-text,#0f172a); }
@@ -394,7 +346,7 @@
         .tb-plan-period { font-size:0.85rem; color:var(--tb-text-muted,#6b7280); margin:0.25rem 0 1.5rem; }
         .tb-plan-features { list-style:none; padding:0; margin:0 0 2rem; flex:1; }
         .tb-plan-features li { padding:0.55rem 0; font-size:0.9rem; color:var(--tb-text,#374151); border-bottom:1px solid #f3f4f6; display:flex; align-items:flex-start; gap:0.5rem; }
-        .tb-plan-features li::before { content:'✓'; color:var(--tb-primary,#6366f1); font-weight:800; flex-shrink:0; }
+        .tb-plan-features li::before { content:'✓'; color:var(--tb-primary-text,#6366f1); font-weight:800; flex-shrink:0; }
         .tb-plan-features li:last-child { border-bottom:none; }
         @media(max-width:767px) { .tb-pricing-grid.cols-2,.tb-pricing-grid.cols-3,.tb-pricing-grid.cols-4{grid-template-columns:1fr;} .tb-pricing-card.highlighted{transform:none;} }
 
@@ -433,7 +385,7 @@
         .tb-service-icon { font-size:2.5rem; margin-bottom:1rem; line-height:1; }
         .tb-service-title { font-size:1.1rem; font-weight:700; margin:0 0 0.5rem; color:var(--tb-text,#0f172a); }
         .tb-service-text { font-size:0.875rem; color:var(--tb-text-muted,#4b5563); line-height:1.7; margin:0 0 1.25rem; }
-        .tb-service-link { font-size:0.875rem; font-weight:700; color:var(--tb-primary,#6366f1); text-decoration:none; }
+        .tb-service-link { font-size:0.875rem; font-weight:700; color:var(--tb-primary-text,#6366f1); text-decoration:none; }
         .tb-service-link:hover { text-decoration:underline; }
 
         /* ─── contact_split ─────────────────────────────────────────── */
@@ -483,7 +435,7 @@
         <header class="canvas-site-header tb-site-header" role="banner" id="site-header">
             <div class="tb-header-inner">
                 <div class="tb-header-brand">
-                    <a href="{{ route('home') }}">{{ \App\Helpers\SiteHelper::siteName() }}</a>
+                    <x-site-brand />
                 </div>
                 <button type="button" id="tb-mobile-menu-btn" class="tb-menu-btn" aria-label="منو" aria-expanded="false">
                     ☰
@@ -520,9 +472,7 @@
         {{-- هدر پیش‌فرض اگر canvas هدر ندارد --}}
         <header class="canvas-site-header" style="background:var(--tb-primary,#4f46e5);color:#fff;padding:0 1rem;" role="banner">
             <div style="display:flex;align-items:center;justify-content:space-between;max-width:var(--tb-container,80rem);margin:0 auto;min-height:4rem;gap:1rem;flex-wrap:wrap;">
-                <a href="{{ route('home') }}" style="font-size:1.25rem;font-weight:700;color:#fff;text-decoration:none;">
-                    {{ \App\Helpers\SiteHelper::siteName() }}
-                </a>
+                <x-site-brand style="font-size:1.25rem;font-weight:700;color:#fff;text-decoration:none;" />
                 <nav style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
                     <a href="{{ route('home') }}" style="color:#fff;text-decoration:none;opacity:0.9;">خانه</a>
                     @if(\App\Helpers\SiteHelper::blogEnabled())

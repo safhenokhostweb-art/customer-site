@@ -55,6 +55,10 @@
 
         {{-- Stats --}}
         <div class="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
+          @php $showVersion = \App\Services\ThemeMarketplacePresenter::currentVersion($theme); @endphp
+          @if($showVersion)
+            <span class="font-mono">نسخه {{ $showVersion }}</span>
+          @endif
           @if(($theme['installs_count'] ?? 0) > 0)
             <span>⬇ @numFa($theme['installs_count']) نصب</span>
           @endif
@@ -102,11 +106,19 @@
             </div>
           @endif
 
-          {{-- Requirements warning --}}
-          @if(!empty($theme['requirements']))
-            <div class="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-              <span class="font-medium text-amber-700">ماژول‌های مورد نیاز: </span>
-              {{ implode('، ', $theme['requirements']) }}
+          {{-- Dependency summary (Phase 1h) — full list rendered in its own
+               section below; this is a compact sidebar pointer only. --}}
+          @php
+            $sidebarDepStatus = \App\Services\ThemeMarketplacePresenter::dependencyStatus($theme);
+            $sidebarDepCount = count(\App\Services\ThemeMarketplacePresenter::dependencies($theme));
+          @endphp
+          @if($sidebarDepStatus === 'unresolved')
+            <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              نیازمندی‌های این قالب هنوز در حال بررسی است — جزئیات پایین صفحه.
+            </div>
+          @elseif($sidebarDepCount > 0)
+            <div class="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+              <span class="font-medium text-gray-700">{{ $sidebarDepCount }} نیازمندی</span> — جزئیات پایین صفحه.
             </div>
           @endif
 
@@ -114,8 +126,16 @@
           @if($theme['has_license'] ?? false)
             <div class="space-y-2">
               <form method="POST" action="{{ route('admin.theme-marketplace.install', $theme['id']) }}"
-                onsubmit="return confirm('قالب «{{ $theme['name'] }}» نصب و فعال شود؟')">
+                onsubmit="return confirm('{{ ($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false) ? 'قالب فعلی و شخصی‌سازی‌های آن جایگزین خواهد شد. ادامه می‌دهید؟' : 'قالب «'.$theme['name'].'» نصب و فعال شود؟' }}')">
                 @csrf
+                @if(($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false))
+                  <label class="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                    <input type="checkbox" name="confirm_overwrite" value="1" required class="mt-0.5">
+                    <span>
+                      می‌دانم که نصب این قالب، قالب فعال فعلی{{ ($hasUnsavedDraft ?? false) ? ' و تغییرات ذخیره‌نشده در ویرایشگر بوم' : '' }} را جایگزین می‌کند.
+                    </span>
+                  </label>
+                @endif
                 <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-3 rounded-lg transition">
                   نصب و فعال‌سازی
                 </button>
@@ -158,13 +178,35 @@
   </div>
   @endif
 
-  {{-- Version notes --}}
-  @if($theme['version_notes'] ?? null)
+  {{-- Release information (Phase 1h: ThemeRelease-authoritative, falls back
+       to the legacy version_notes only when no release exists yet) --}}
+  @php
+    $releaseNotes = \App\Services\ThemeMarketplacePresenter::releaseNotes($theme);
+    $changelog = \App\Services\ThemeMarketplacePresenter::changelog($theme);
+    $releasedAt = \App\Services\ThemeMarketplacePresenter::releasedAt($theme);
+  @endphp
+  @if($releaseNotes || $changelog)
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-    <h2 class="text-sm font-semibold text-gray-700 mb-2">یادداشت نسخه</h2>
-    <p class="text-sm text-gray-600 leading-7">{{ $theme['version_notes'] }}</p>
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-sm font-semibold text-gray-700">یادداشت انتشار</h2>
+      @if($releasedAt)
+        <span class="text-xs text-gray-400">{{ $releasedAt }}</span>
+      @endif
+    </div>
+    @if($releaseNotes)
+      <p class="text-sm text-gray-600 leading-7">{{ $releaseNotes }}</p>
+    @endif
+    @if($changelog && $changelog !== $releaseNotes)
+      <p class="text-xs text-gray-500 leading-6 mt-3 border-t border-gray-100 pt-3">{{ $changelog }}</p>
+    @endif
   </div>
   @endif
+
+  {{-- Dependencies (Phase 1h: structured, type-generic — see partial) --}}
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <h2 class="text-sm font-semibold text-gray-700 mb-3">نیازمندی‌ها و وابستگی‌ها</h2>
+    @include('admin.theme-marketplace.partials.dependencies', ['theme' => $theme])
+  </div>
 
   {{-- Back --}}
   <a href="{{ route('admin.theme-marketplace.index') }}"

@@ -16,17 +16,14 @@ class HeadingElement extends BaseElement
             'level' => ['type' => 'enum', 'values' => [1, 2, 3, 4, 5, 6], 'default' => 2],
         ];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
+        $id = $context['id'] ?? '';
         $level = max(1, min(6, (int)($props['level'] ?? 2)));
         $text = self::escape((string)($props['text'] ?? ''));
-        $id = $context['id'] ?? '';
-        $style = $props['_style']['typography'] ?? [];
-        $inline = [];
-        if (!empty($style['color'])) $inline[] = 'color:' . self::escapeAttr($style['color']);
-        if (!empty($style['textAlign']) && in_array($style['textAlign'], ['left', 'right', 'center'], true)) $inline[] = 'text-align:' . self::escapeAttr($style['textAlign']);
-        $inline[] = 'display:block'; $inline[] = 'width:100%';
-        $styleAttr = $inline ? ' style="' . implode(';', $inline) . '"' : '';
-        return "<h{$level} id=\"tb-{$id}\" class=\"tb-heading\"{$styleAttr}>{$text}</h{$level}>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('heading', $props, $context['inner'] ?? '', $id)
+            ?? "<h{$level} id=\"tb-{$id}\" class=\"tb-heading\">{$text}</h{$level}>";
     }
 }

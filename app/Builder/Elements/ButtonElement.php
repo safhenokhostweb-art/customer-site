@@ -17,14 +17,17 @@ class ButtonElement extends BaseElement
             'style' => ['type' => 'enum', 'values' => ['primary', 'secondary'], 'default' => 'primary'],
         ];
     }
+    /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {
+        $id = $context['id'] ?? '';
         $text = self::escape((string) ($props['text'] ?? ''));
         $url = (string) ($props['url'] ?? '#');
         if (!self::isValidUrl($url)) $url = '#';
         $url = self::escapeAttr($url);
         $style = in_array($props['style'] ?? 'primary', ['primary', 'secondary'], true) ? $props['style'] : 'primary';
-        $id = $context['id'] ?? '';
-        return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-{$style}\">{$text}</a>";
+        return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
+            ->dispatchStructural('button', $props, $context['inner'] ?? '', $id)
+            ?? "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-{$style}\">{$text}</a>";
     }
 }
