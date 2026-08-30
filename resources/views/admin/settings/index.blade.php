@@ -90,6 +90,78 @@
     @php
         $tm = $themeMeta ?? [];
     @endphp
+    {{-- ── Logo Upload ─────────────────────────────────────────────────────── --}}
+    <div class="card">
+        <div class="card-header">لوگوی سایت</div>
+        <div class="card-body">
+            <p style="font-size:.875rem;color:#64748b;margin:0 0 1.25rem">
+                لوگویی که در سربرگ سایت به‌جای نام سایت نمایش داده می‌شود.<br>
+                فرمت‌های قابل‌قبول: <code>png، jpg، gif، webp، svg</code> — حداکثر ۲ مگابایت
+            </p>
+
+            @if($currentLogo && \Illuminate\Support\Facades\Storage::disk('public')->exists($currentLogo))
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.625rem">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <img src="{{ Storage::url($currentLogo) }}" alt="لوگوی فعلی"
+                         style="max-height:44px;max-width:140px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff;padding:4px">
+                    <div>
+                        <div style="font-size:.875rem;font-weight:600;color:#374151">لوگوی فعلی</div>
+                        <div style="font-size:.78rem;color:#94a3b8;font-family:monospace">{{ $currentLogo }}</div>
+                    </div>
+                </div>
+                <form action="{{ route('admin.settings.logo-remove') }}" method="POST"
+                      onsubmit="return confirm('لوگو حذف شود؟ نام سایت به‌جای آن نمایش داده می‌شود.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-sm" style="background:transparent;border:1px solid #fecaca;color:#dc2626;">حذف</button>
+                </form>
+            </div>
+            @else
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding:.75rem 1rem;background:#fafafa;border:1px dashed #d1d5db;border-radius:.625rem;color:#94a3b8;font-size:.875rem">
+                <x-core-ui::icon name="settings" style="width:1.5rem;height:1.5rem;flex-shrink:0" />
+                هنوز لوگویی آپلود نشده؛ نام سایت در سربرگ نمایش داده می‌شود.
+            </div>
+            @endif
+
+            <form action="{{ route('admin.settings.logo') }}" method="POST" enctype="multipart/form-data"
+                  x-data="{ file: null, preview: null }" style="display:flex;flex-direction:column;gap:1rem">
+                @csrf
+
+                <div>
+                    <label class="form-label">فایل لوگوی جدید</label>
+                    <input type="file"
+                           name="logo"
+                           accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
+                           style="display:block;width:100%;padding:.5rem;border:1px solid #e2e8f0;border-radius:.625rem;font-size:.875rem;cursor:pointer"
+                           x-on:change="
+                               file = $event.target.files[0];
+                               if (file) {
+                                   const r = new FileReader();
+                                   r.onload = e => preview = e.target.result;
+                                   r.readAsDataURL(file);
+                               }
+                           ">
+                    @error('logo')
+                        <p style="margin-top:.375rem;font-size:.8rem;color:#dc2626">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div x-show="preview" style="display:none;align-items:center;gap:.75rem;padding:.75rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.625rem" x-cloak>
+                    <img :src="preview" alt="پیش‌نمایش"
+                         style="max-height:44px;max-width:140px;object-fit:contain;border:1px solid #d1fae5;border-radius:4px;background:#fff;padding:4px">
+                    <span style="font-size:.875rem;color:#166534;font-weight:500" x-text="'پیش‌نمایش: ' + (file ? file.name : '')"></span>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <x-core-ui::icon name="download" class="w-4 h-4" />
+                        آپلود لوگو
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ── Favicon Upload ──────────────────────────────────────────────────── --}}
     @php $currentFavicon = \App\Models\Setting::get('site_favicon', ''); @endphp
     <div class="card">

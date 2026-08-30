@@ -33,9 +33,11 @@ class SettingController extends Controller
         $modules = Module::all();
         $themeBuilder = PlatformUx::themeBuilder();
         $themeMeta = $themeBuilder['meta'] ?? ($themeBuilder['settings']['meta'] ?? []);
+        $currentLogo = Setting::get('site_logo', '');
         return view('admin.settings.index', compact(
             'siteName',
             'theme',
+            'currentLogo',
             'aboutUsTitle',
             'aboutUsText',
             'aboutUsEnabled',
@@ -103,5 +105,46 @@ class SettingController extends Controller
         Setting::set('site_favicon', $path);
 
         return back()->with('success', 'آیکن سایت با موفقیت آپلود شد.');
+    }
+
+    public function uploadLogo(Request $request)
+    {
+        $request->validate([
+            'logo' => [
+                'required',
+                'file',
+                'max:2048',
+                'mimes:png,jpg,jpeg,gif,webp,svg+xml,svg',
+            ],
+        ], [
+            'logo.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
+            'logo.max'      => 'حجم فایل نباید بیشتر از ۲ مگابایت باشد.',
+            'logo.mimes'    => 'فرمت قابل‌قبول: png, jpg, gif, webp, svg',
+        ]);
+
+        $file = $request->file('logo');
+        $ext  = strtolower($file->getClientOriginalExtension()) ?: 'png';
+
+        // Delete old logo if it exists
+        $old = Setting::get('site_logo', '');
+        if ($old && Storage::disk('public')->exists($old)) {
+            Storage::disk('public')->delete($old);
+        }
+
+        $path = $file->storeAs('logo', 'logo.' . $ext, 'public');
+        Setting::set('site_logo', $path);
+
+        return back()->with('success', 'لوگوی سایت با موفقیت آپلود شد.');
+    }
+
+    public function removeLogo(Request $request)
+    {
+        $old = Setting::get('site_logo', '');
+        if ($old && Storage::disk('public')->exists($old)) {
+            Storage::disk('public')->delete($old);
+        }
+        Setting::set('site_logo', '');
+
+        return back()->with('success', 'لوگو حذف شد؛ نام سایت به‌جای آن نمایش داده می‌شود.');
     }
 }

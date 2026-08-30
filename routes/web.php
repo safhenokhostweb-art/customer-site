@@ -178,6 +178,7 @@ Route::middleware('install.check')->group(function () {
         // C04 — Self-service lifecycle restore
         Route::prefix('lifecycle')->name('lifecycle.')->group(function () {
             Route::post('/restore',                                      [AccountLifecycleController::class, 'requestRestore'])->name('restore');
+            Route::post('/restore/pay/{invoiceNumber}',                  [AccountLifecycleController::class, 'startPayment'])->name('start-payment');
             Route::get('/restore/callback/{invoiceNumber}',              [AccountLifecycleController::class, 'callback'])->name('callback');
             Route::post('/restore/manual-confirm/{invoiceNumber}',       [AccountLifecycleController::class, 'manualConfirm'])->name('manual-confirm');
         });
@@ -377,6 +378,8 @@ Route::middleware('install.check')->group(function () {
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
             Route::post('settings/favicon', [AdminSettingController::class, 'uploadFavicon'])->name('settings.favicon');
+            Route::post('settings/logo', [AdminSettingController::class, 'uploadLogo'])->name('settings.logo');
+            Route::delete('settings/logo', [AdminSettingController::class, 'removeLogo'])->name('settings.logo-remove');
             Route::get('menus/{menu}/preview', [AdminMenuController::class, 'preview'])->name('menus.preview');
             Route::post('menus/{menu}/publish', [AdminMenuController::class, 'publish'])->name('menus.publish');
             Route::post('menus/{menu}/preview-token', [AdminMenuController::class, 'regeneratePreviewLink'])->name('menus.preview-token');
@@ -411,6 +414,14 @@ Route::middleware('install.check')->group(function () {
             Route::put('theme-design/canvas/global-styles',               [ThemeDesignController::class, 'canvasSaveGlobalStyles'])->name('theme-design.canvas-global-styles');
             Route::post('theme-design/canvas/publish',                    [ThemeDesignController::class, 'canvasPublish'])->name('theme-design.canvas-publish');
             Route::post('theme-design/canvas/discard-draft',              [ThemeDesignController::class, 'canvasDiscardDraft'])->name('theme-design.canvas-discard-draft');
+            // Motion Picker — this site's own permitted Motion assets (from the existing runtime manifest)
+            Route::get('theme-design/canvas/motion-assets',               [ThemeDesignController::class, 'canvasMotionAssets'])->name('theme-design.canvas-motion-assets');
+            // Revision history — view and restore previously published canvas versions
+            Route::get('theme-design/canvas/revisions',                   [ThemeDesignController::class, 'canvasRevisions'])->name('theme-design.canvas-revisions');
+            Route::post('theme-design/canvas/revisions/{slot}/restore',   [ThemeDesignController::class, 'canvasRestoreRevision'])->name('theme-design.canvas-revisions-restore');
+            // Permanent version history (theme_instance_revisions) — never rotates/drops entries
+            Route::get('theme-design/canvas/instance-revisions',                  [ThemeDesignController::class, 'canvasInstanceRevisions'])->name('theme-design.canvas-instance-revisions');
+            Route::post('theme-design/canvas/instance-revisions/{revision}/rollback', [ThemeDesignController::class, 'canvasRollbackToRevision'])->name('theme-design.canvas-instance-revisions-rollback');
             // TB3-02: Live iframe canvas
             Route::get('theme-design/canvas/live-preview',                [ThemeDesignController::class, 'canvasLivePreview'])->name('theme-design.canvas-live-preview');
             Route::post('theme-design/canvas/render-block',               [ThemeDesignController::class, 'canvasRenderBlockAjax'])->name('theme-design.canvas-render-block');
@@ -947,4 +958,3 @@ Route::middleware('install.check')->group(function () {
             Route::post('/ai-generate',      [\App\Http\Controllers\Admin\SiteContentController::class, 'aiGenerate'])->name('ai-generate');
         });
 });
-

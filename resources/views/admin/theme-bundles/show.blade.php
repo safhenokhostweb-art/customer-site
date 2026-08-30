@@ -185,7 +185,7 @@
                         همه قالب‌های این باندل لایسنس دارید.
                     </div>
                 @else
-                    <form action="{{ route('admin.theme-bundles.purchase', $bundle['id']) }}" method="POST">
+                    <form action="{{ route('admin.theme-bundles.purchase', $bundle['id']) }}" method="POST" @if(! ($bundle['is_free'] ?? false)) data-payment-start @endif>
                         @csrf
                         <button type="submit"
                                 class="w-full py-3 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 transition">

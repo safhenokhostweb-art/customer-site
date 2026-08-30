@@ -66,4 +66,3 @@ if (auth()->check() && \App\Helpers\SiteHelper::moduleEnabled('subscription')) {
 </style>
 @endif
 
-
