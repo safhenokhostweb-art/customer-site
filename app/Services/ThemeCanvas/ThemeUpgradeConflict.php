@@ -183,18 +183,30 @@ final class ThemeUpgradeConflict
     //    exist only so the severity/canApply contract is already correct
     //    once Phase 3E's dependency resolver starts emitting these. ───────
 
-    public static function dependencyUnavailable(string $blockId, string $dependencyType, string $dependencyIdentifier): self
+    /**
+     * @param ?string $blockId A dependency requirement is a whole-release
+     *   concern, not inherently tied to one block — null unless a caller
+     *   can genuinely attribute it to a specific block.
+     * @param string $availabilityStatus The exact ThemeDependencyAvailabilityResult
+     *   status that triggered this (MISSING or UNVERIFIABLE) — both map to
+     *   this one conflict type, but the report must still distinguish them.
+     */
+    public static function dependencyUnavailable(?string $blockId, string $dependencyType, string $dependencyIdentifier, string $availabilityStatus): self
     {
         return new self(
             conflictType: self::DEPENDENCY_UNAVAILABLE,
             severity: self::SEVERITY_BLOCKING,
             blockId: $blockId,
-            metadata: ['dependency_type' => $dependencyType, 'dependency_identifier' => $dependencyIdentifier],
+            metadata: [
+                'dependency_type' => $dependencyType,
+                'dependency_identifier' => $dependencyIdentifier,
+                'availability_status' => $availabilityStatus,
+            ],
         );
     }
 
     public static function incompatibleDependency(
-        string $blockId,
+        ?string $blockId,
         string $dependencyType,
         string $dependencyIdentifier,
         string $requiredConstraint,

@@ -215,7 +215,7 @@ class ThemeUpgradeConflictContractTest extends TestCase
 
     public function test_i_synthetic_blocking_conflict_makes_has_blocking_conflicts_true(): void
     {
-        $blocking = ThemeUpgradeConflict::dependencyUnavailable('m1', 'motion_asset', 'medical-hero-intro');
+        $blocking = ThemeUpgradeConflict::dependencyUnavailable('m1', 'motion_asset', 'medical-hero-intro', 'MISSING');
         $this->assertTrue($blocking->isBlocking());
         $this->assertSame(ThemeUpgradeConflict::SEVERITY_BLOCKING, $blocking->severity);
 

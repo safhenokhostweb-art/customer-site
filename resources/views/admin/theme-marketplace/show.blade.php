@@ -125,21 +125,31 @@
           {{-- CTA --}}
           @if($theme['has_license'] ?? false)
             <div class="space-y-2">
-              <form method="POST" action="{{ route('admin.theme-marketplace.install', $theme['id']) }}"
-                onsubmit="return confirm('{{ ($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false) ? 'قالب فعلی و شخصی‌سازی‌های آن جایگزین خواهد شد. ادامه می‌دهید؟' : 'قالب «'.$theme['name'].'» نصب و فعال شود؟' }}')">
-                @csrf
-                @if(($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false))
-                  <label class="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
-                    <input type="checkbox" name="confirm_overwrite" value="1" required class="mt-0.5">
-                    <span>
-                      می‌دانم که نصب این قالب، قالب فعال فعلی{{ ($hasUnsavedDraft ?? false) ? ' و تغییرات ذخیره‌نشده در ویرایشگر بوم' : '' }} را جایگزین می‌کند.
-                    </span>
-                  </label>
-                @endif
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-3 rounded-lg transition">
-                  نصب و فعال‌سازی
-                </button>
-              </form>
+              @if($canPreviewUpgrade ?? false)
+                {{-- Phase 3D-F: an upgrade of the SAME installed theme with a
+                     provable base — goes through the safe reconciled-upgrade
+                     preview, never straight to a wholesale replace. --}}
+                <a href="{{ route('admin.theme-marketplace.preview-upgrade', $theme['id']) }}"
+                   class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-3 rounded-lg transition">
+                  پیش‌نمایش ارتقا
+                </a>
+              @else
+                <form method="POST" action="{{ route('admin.theme-marketplace.install', $theme['id']) }}"
+                  onsubmit="return confirm('{{ ($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false) ? 'این عملیات جایگزینی کامل است: قالب فعلی و شخصی‌سازی‌های آن (به‌جز نسخه‌های ذخیره‌شده در تاریخچه) جایگزین خواهد شد. ادامه می‌دهید؟' : 'قالب «'.$theme['name'].'» نصب و فعال شود؟' }}')">
+                  @csrf
+                  @if(($hasActiveTheme ?? false) || ($hasUnsavedDraft ?? false))
+                    <label class="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                      <input type="checkbox" name="confirm_overwrite" value="1" required class="mt-0.5">
+                      <span>
+                        می‌دانم این یک <strong>جایگزینی کامل و مخرب</strong> است (نه ارتقای ایمن) — قالب فعال فعلی{{ ($hasUnsavedDraft ?? false) ? ' و تغییرات ذخیره‌نشده در ویرایشگر بوم' : '' }} را جایگزین می‌کند.
+                      </span>
+                    </label>
+                  @endif
+                  <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-3 rounded-lg transition">
+                    نصب و فعال‌سازی
+                  </button>
+                </form>
+              @endif
               <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
                  class="block text-center text-sm text-gray-500 hover:text-gray-700 py-1">مشاهده لایسنس</a>
             </div>

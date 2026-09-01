@@ -441,6 +441,8 @@ Route::middleware('install.check')->group(function () {
                 Route::get('/{themeId}',               [AdminThemeMarketplaceController::class, 'show'])->name('show');
                 Route::post('/{themeId}/purchase',     [AdminThemeMarketplaceController::class, 'purchase'])->name('purchase');
                 Route::post('/{themeId}/install',      [AdminThemeMarketplaceController::class, 'install'])->name('install');
+                Route::get('/{themeId}/preview-upgrade', [AdminThemeMarketplaceController::class, 'previewUpgrade'])->name('preview-upgrade');
+                Route::post('/{themeId}/apply-upgrade',  [AdminThemeMarketplaceController::class, 'applyUpgrade'])->name('apply-upgrade');
                 Route::post('/rollback',               [AdminThemeMarketplaceController::class, 'rollback'])->name('rollback');
                 Route::get('/my-licenses/{licenseKey}/invoice', [AdminThemeMarketplaceController::class, 'invoiceDownload'])->name('invoice-download');
             });

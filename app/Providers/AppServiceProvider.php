@@ -40,6 +40,18 @@ class AppServiceProvider extends ServiceProvider
             SiteRepository::class
         );
 
+        // Phase 3E-A/3D-F — the one registered dependency-type adapter today
+        // is 'module' (via the already-existing, product-neutral
+        // TenantContext::hasModule()). Motion/Icons/etc. register their own
+        // adapters here later; ThemeUpgradeReconciler and the reconciliation
+        // gate never need to know which adapters exist.
+        $this->app->singleton(
+            \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver::class,
+            fn ($app) => new \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver([
+                $app->make(\App\Services\ThemeCanvas\Dependency\ModuleDependencyResolver::class),
+            ])
+        );
+
         $this->app->bind(
             AuthUserResolverInterface::class,
             \App\Services\AuthUserResolverAdapter::class

@@ -13,6 +13,12 @@ class ThemeInstanceRevision extends Model
     public const TYPE_PUBLISH = 'publish';
     public const TYPE_UPDATE = 'update';
     public const TYPE_ROLLBACK_SNAPSHOT = 'rollback_snapshot';
+    // Phase 3D-F — a marketplace update applied through the BASE/LOCAL/REMOTE
+    // reconciliation flow (ThemeUpgradePreviewService/ThemeUpgradeReconciler),
+    // as opposed to TYPE_UPDATE's wholesale replacement. Always carries real
+    // REMOTE provenance (source_theme_version/source_release_id) — this
+    // revision becomes the BASE for the next upgrade.
+    public const TYPE_UPGRADE_RECONCILED = 'upgrade_reconciled';
 
     protected $fillable = [
         'theme_identifier',

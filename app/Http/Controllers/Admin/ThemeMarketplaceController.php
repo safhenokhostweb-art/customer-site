@@ -5,7 +5,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\ThemeInstanceRevision;
 use App\Services\PlatformApiService;
+use App\Services\ThemeCanvas\ThemeInstanceBaseRelease;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
+use App\Services\ThemeCanvas\ThemeUpgradePreviewService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,6 +17,7 @@ class ThemeMarketplaceController extends Controller
     public function __construct(
         protected PlatformApiService $platform,
         protected ThemeInstanceRevisionService $revisions,
+        protected ThemeInstanceBaseRelease $baseRelease,
     ) {}
 
     public function index(Request $request)
@@ -53,7 +56,17 @@ class ThemeMarketplaceController extends Controller
         $hasActiveTheme  = (bool) Setting::get('active_canvas_theme_data');
         $hasUnsavedDraft = (bool) Setting::get('canvas_draft_data');
 
-        return view('admin.theme-marketplace.show', compact('theme', 'hasActiveTheme', 'hasUnsavedDraft'));
+        // Phase 3D-F: offer the safe reconciled-upgrade path only when this
+        // is genuinely an upgrade of the SAME already-installed lineage
+        // with a provable BASE — never for a fresh install, and never for
+        // switching to an unrelated theme (that stays the existing
+        // explicit-confirmation wholesale-replace flow below).
+        $baseResolution = $hasActiveTheme ? $this->baseRelease->resolveForCurrentTheme() : null;
+        $canPreviewUpgrade = $hasActiveTheme
+            && $baseResolution?->isResolved()
+            && ($theme['slug'] ?? null) === $baseResolution->themeIdentifier;
+
+        return view('admin.theme-marketplace.show', compact('theme', 'hasActiveTheme', 'hasUnsavedDraft', 'canPreviewUpgrade'));
     }
 
     public function purchase(Request $request, int $themeId)
@@ -176,6 +189,118 @@ class ThemeMarketplaceController extends Controller
         }
 
         return back()->with('success', "قالب «{$themeData['theme_name']}» نصب و فعال شد.");
+    }
+
+    /**
+     * Phase 3D-F — read-only preview of a reconciled upgrade. Never writes
+     * anything: this is exactly ThemeUpgradePreviewService::preview(), the
+     * same pure computation Apply below re-runs independently.
+     */
+    public function previewUpgrade(int $themeId, ThemeUpgradePreviewService $previewService)
+    {
+        if (!$this->platform->isConfigured()) {
+            return redirect()->route('admin.theme-marketplace.index')
+                ->with('error', 'اتصال به پلتفرم پیکربندی نشده است.');
+        }
+
+        $preview = $previewService->preview($themeId);
+
+        return view('admin.theme-marketplace.upgrade-preview', [
+            'themeId' => $themeId,
+            'preview' => $preview,
+        ]);
+    }
+
+    /**
+     * Phase 3D-F — the only endpoint that actually writes an upgrade. The
+     * browser supplies identity/confirmation only (theme id, the target
+     * release id it was shown, and the reconciliation fingerprint it was
+     * shown) — never the reconciled Theme JSON, never conflict/canApply
+     * booleans. Everything is recomputed here, from scratch, against
+     * current real state, and compared to what was confirmed.
+     */
+    public function applyUpgrade(Request $request, int $themeId, ThemeUpgradePreviewService $previewService)
+    {
+        $data = $request->validate([
+            'release_id'  => 'required|integer',
+            'fingerprint' => 'required|string',
+        ]);
+
+        $preview = $previewService->preview($themeId);
+
+        if (!$preview->isReady()) {
+            return back()->with('error', 'پیش‌نمایش این ارتقا دیگر معتبر نیست. لطفاً دوباره تلاش کنید.');
+        }
+
+        // §12: exact target release identity, never "latest" — if the
+        // platform's current release changed (or the theme was switched
+        // out from under this identity) between Preview and this request,
+        // this comparison catches it and refuses to guess which one was
+        // actually confirmed.
+        if ((int) ($preview->targetRelease['release_id'] ?? 0) !== $data['release_id']) {
+            return back()->with('error', 'نسخهٔ مقصد از زمان پیش‌نمایش تغییر کرده است. لطفاً پیش‌نمایش را دوباره باز کنید.');
+        }
+
+        // §11: STALE_UPGRADE_PREVIEW — anything that changed BASE, LOCAL,
+        // REMOTE, or dependency availability since Preview changes this
+        // fingerprint (it is derived from exactly those three snapshots;
+        // the dependency gate never touches it). No Theme/revision write
+        // happens on a mismatch.
+        if (!hash_equals($preview->reconciliation->fingerprint, $data['fingerprint'])) {
+            return back()->with('error', 'وضعیت قالب از زمان پیش‌نمایش تغییر کرده است (STALE_UPGRADE_PREVIEW). لطفاً پیش‌نمایش را دوباره باز کنید.');
+        }
+
+        // §13/§20: dependency availability is a TOCTOU concern — re-checked
+        // by this fresh preview() call above, never trusted from an older
+        // canApply the client might submit.
+        if (!$preview->reconciliation->canApply()) {
+            return back()->with('error', 'به دلیل وابستگی‌های مسدودکننده، ارتقا امکان‌پذیر نیست.');
+        }
+
+        $activeRevisionId = (int) Setting::get('active_theme_revision_id');
+
+        $newRevision = $this->revisions->recordUpgradeIfActiveRevisionUnchanged(
+            $activeRevisionId,
+            $preview->reconciliation->reconciledTheme,
+            [
+                'theme_identifier'     => $preview->targetRelease['theme_slug'],
+                'theme_name'           => $preview->targetRelease['theme_name'],
+                'active_theme_id'      => $preview->targetRelease['theme_id'],
+                'source_theme_id'      => $preview->targetRelease['theme_id'],
+                // §15: REMOTE becomes the new BASE — the old BASE's
+                // provenance is never carried forward past a successful upgrade.
+                'source_theme_version' => $preview->targetRelease['release_version'],
+                'source_release_id'    => $preview->targetRelease['release_id'],
+                'metadata' => [
+                    'theme_name'                 => $preview->targetRelease['theme_name'],
+                    'previous_revision_id'       => $activeRevisionId,
+                    'previous_source_release_id' => $preview->currentRelease['release_id'] ?? null,
+                    'target_release_id'          => $preview->targetRelease['release_id'],
+                    'reconciliation_fingerprint' => $preview->reconciliation->fingerprint,
+                    'conflict_count'             => count($preview->reconciliation->conflicts),
+                    'blocking_conflict_count'    => 0,
+                    'detached_block_count'       => count($preview->reconciliation->detachedBlocks),
+                    'warning_count'              => count($preview->reconciliation->warnings),
+                ],
+            ]
+        );
+
+        if ($newRevision === null) {
+            // §22/§23: the active revision moved between this fresh
+            // preview() call and the write attempt (a concurrent Apply, or
+            // an unrelated publish/rollback) — never a duplicate revision.
+            return back()->with('error', 'وضعیت قالب هم‌زمان تغییر کرده است. لطفاً دوباره تلاش کنید.');
+        }
+
+        Setting::where('key', 'canvas_draft_data')->delete();
+        Cache::forget('settings');
+        Cache::forget('canvas_theme_data');
+        if (class_exists(\App\Services\ThemeEngine\TenantThemeResolver::class)) {
+            app(\App\Services\ThemeEngine\TenantThemeResolver::class)->clearCache();
+        }
+
+        return redirect()->route('admin.theme-marketplace.my-licenses')
+            ->with('success', "قالب «{$preview->targetRelease['theme_name']}» با موفقیت ارتقا یافت.");
     }
 
     public function rollback(Request $request)

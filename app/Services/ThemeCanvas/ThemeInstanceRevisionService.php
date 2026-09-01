@@ -296,4 +296,37 @@ class ThemeInstanceRevisionService
 
         return $restored;
     }
+
+    /**
+     * Phase 3D-F — the concurrency/idempotency guard a stale-fingerprint
+     * check alone cannot provide: two Apply requests computed against the
+     * exact same pre-apply state (same fingerprint, both genuinely valid
+     * at the moment each was checked) must never both succeed and create
+     * two upgrade revisions. A `lockForUpdate()` read of the active-pointer
+     * Setting row inside this transaction serializes concurrent callers —
+     * the second one blocks until the first commits, then sees the
+     * ALREADY-ADVANCED pointer, no longer matches
+     * $expectedActiveRevisionId, and is correctly told "stale" (returns
+     * null) rather than writing a duplicate revision. record() itself
+     * (called only once the lock has confirmed nothing changed) remains
+     * the single, unmodified write boundary from Phase 3B.
+     *
+     * @return ThemeInstanceRevision|null null means the active revision
+     *   was no longer $expectedActiveRevisionId at write time — nothing
+     *   was written; the caller must treat this as a stale Apply.
+     */
+    public function recordUpgradeIfActiveRevisionUnchanged(int $expectedActiveRevisionId, array $themeData, array $context): ?ThemeInstanceRevision
+    {
+        return DB::transaction(function () use ($expectedActiveRevisionId, $themeData, $context) {
+            $currentActiveId = (int) (
+                Setting::where('key', 'active_theme_revision_id')->lockForUpdate()->value('value') ?? 0
+            );
+
+            if ($currentActiveId !== $expectedActiveRevisionId) {
+                return null;
+            }
+
+            return $this->record($themeData, ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED, $context);
+        });
+    }
 }
