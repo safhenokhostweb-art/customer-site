@@ -30,6 +30,10 @@
     <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 text-sm">
       نسخه مقصد فاقد شناسه انتشار معتبر است و نمی‌تواند به‌صورت ایمن پیگیری شود.
     </div>
+  @elseif($preview->status === \App\Services\ThemeCanvas\ThemeUpgradePreviewResult::STATUS_RECONCILIATION_FAILED)
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">
+      داده‌های قالب معتبر نیستند و امکان محاسبه ارتقا وجود ندارد. لطفاً با پشتیبانی تماس بگیرید.
+    </div>
   @else
     @php($r = $preview->reconciliation)
 

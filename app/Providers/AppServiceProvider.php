@@ -45,7 +45,16 @@ class AppServiceProvider extends ServiceProvider
         // TenantContext::hasModule()). Motion/Icons/etc. register their own
         // adapters here later; ThemeUpgradeReconciler and the reconciliation
         // gate never need to know which adapters exist.
-        $this->app->singleton(
+        //
+        // Deliberately `bind()`, not `singleton()`: this transitively holds
+        // a TenantContext, which caches the resolved License for its own
+        // lifetime — fine for the lifetime of one real HTTP request under
+        // traditional PHP-FPM (a fresh process per request), but a singleton
+        // here would let that cached license silently outlive a single
+        // request under any persistent-worker deployment (e.g. Octane),
+        // serving a stale entitlement to a later request. Constructing this
+        // is cheap; there is no reason to share the instance.
+        $this->app->bind(
             \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver::class,
             fn ($app) => new \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver([
                 $app->make(\App\Services\ThemeCanvas\Dependency\ModuleDependencyResolver::class),

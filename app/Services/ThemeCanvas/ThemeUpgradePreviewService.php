@@ -38,11 +38,27 @@ class ThemeUpgradePreviewService
         }
 
         // Phase 3D-F §4: customer-site already possesses the exact BASE
-        // snapshot locally — the immutable ledger row that first proved
-        // this provenance IS byte-for-byte what was downloaded/installed
-        // at that point (record() stores theme_data verbatim). No platform
-        // API call is needed or used to reconstruct BASE.
-        $baseRevision = ThemeInstanceRevision::find($baseResolution->resolvedFromRevisionId);
+        // snapshot locally — no platform API call is needed or used to
+        // reconstruct it. Deliberately NOT `resolvedFromRevisionId`'s own
+        // theme_data, though: Phase 3D-B's provenance resolver answers "what
+        // release am I based on" by finding the nearest revision that
+        // carries that release id — including a later PUBLISH/ROLLBACK
+        // revision the value was only ever copied forward onto (by design,
+        // so provenance stays self-describing without a long walk). That
+        // revision's theme_data is the customer's current (edited) state —
+        // exactly LOCAL, not BASE. BASE must be the pristine content from
+        // the one revision that actually came straight from the download
+        // response for this exact release — an INSTALL/UPDATE/
+        // UPGRADE_RECONCILED-type row, never a PUBLISH/ROLLBACK one.
+        $baseRevision = ThemeInstanceRevision::where('theme_identifier', $baseResolution->themeIdentifier)
+            ->where('source_release_id', $baseResolution->sourceReleaseId)
+            ->whereIn('type', [
+                ThemeInstanceRevision::TYPE_INSTALL,
+                ThemeInstanceRevision::TYPE_UPDATE,
+                ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED,
+            ])
+            ->orderByDesc('revision_number')
+            ->first();
 
         // §5: LOCAL is the ledger row the active pointer actually names —
         // never the separate active_canvas_theme_data Setting blob taken
@@ -91,11 +107,19 @@ class ThemeUpgradePreviewService
 
         $remoteSnapshot = $this->extractSnapshot($remoteData);
 
-        $reconciliation = (new ThemeUpgradeReconciler())->reconcile(
-            $baseRevision->theme_data,
-            $localRevision->theme_data,
-            $remoteSnapshot
-        );
+        // §17: a structurally invalid snapshot (e.g. REMOTE authored with a
+        // duplicate block id) must never surface as a server error — it is
+        // a reportable, gracefully handled failure mode, same as every
+        // other terminal preview status, and leaves nothing written.
+        try {
+            $reconciliation = (new ThemeUpgradeReconciler())->reconcile(
+                $baseRevision->theme_data,
+                $localRevision->theme_data,
+                $remoteSnapshot
+            );
+        } catch (ThemeCustomizationDiffException) {
+            return ThemeUpgradePreviewResult::reconciliationFailed($currentRelease, $targetRelease);
+        }
 
         $gated = (new ThemeUpgradeDependencyGate($this->dependencyResolver))
             ->gate($reconciliation, $remoteData['dependencies'] ?? []);

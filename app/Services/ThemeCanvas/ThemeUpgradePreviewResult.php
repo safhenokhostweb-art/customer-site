@@ -23,6 +23,10 @@ final class ThemeUpgradePreviewResult
      *  trustworthy BASE for the next upgrade, so it is never reconciled
      *  against as if it were one. */
     public const STATUS_REMOTE_NOT_TRACKABLE = 'REMOTE_NOT_TRACKABLE';
+    /** BASE, LOCAL, or REMOTE was structurally invalid (e.g. a duplicate
+     *  block id) — ThemeCustomizationDiffException, caught and reported
+     *  here rather than left to surface as a server error. */
+    public const STATUS_RECONCILIATION_FAILED = 'RECONCILIATION_FAILED';
 
     private function __construct(
         public readonly string $status,
@@ -55,6 +59,11 @@ final class ThemeUpgradePreviewResult
     public static function remoteNotTrackable(?array $currentRelease, ?array $targetRelease): self
     {
         return new self(self::STATUS_REMOTE_NOT_TRACKABLE, $currentRelease, $targetRelease);
+    }
+
+    public static function reconciliationFailed(?array $currentRelease, ?array $targetRelease): self
+    {
+        return new self(self::STATUS_RECONCILIATION_FAILED, $currentRelease, $targetRelease);
     }
 
     public function isReady(): bool
