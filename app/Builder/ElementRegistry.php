@@ -137,6 +137,19 @@ class ElementRegistry
     }
 
     /**
+     * Phase 3E-F — the one deterministic ownership classification for a
+     * registered type: ThemeBuilderElementDefinition::OWNERSHIP_CANONICAL_ADAPTER
+     * / OWNERSHIP_HOST_ONLY / OWNERSHIP_EXTENSION, or null if unregistered.
+     * ElementRegistry itself stores no separate ownership flag — this
+     * simply surfaces the definition's own derived classification, so
+     * there is exactly one place that decision can ever be computed.
+     */
+    public static function ownershipOf(string $type): ?string
+    {
+        return self::definition($type)?->ownership;
+    }
+
+    /**
      * Every registered type's declarative definition, keyed by type —
      * deterministic (same registration order as all()/self::$classes).
      */

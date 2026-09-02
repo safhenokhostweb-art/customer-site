@@ -6,7 +6,9 @@ use App\Builder\Contracts\ElementInterface;
 use App\Builder\Contracts\HasAssets;
 use App\Builder\Contracts\HasContainerCapability;
 use App\Builder\Contracts\HasDynamicData;
+use App\Services\ThemeCanvas\Extension\ExtensionBlockTypeIdentity;
 use InvalidArgumentException;
+use SaaSPlatform\ThemeRuntime\BlockRegistry as CanonicalBlockRegistry;
 
 /**
  * Phase 3E-D — the declarative description of one Builder element type:
@@ -24,9 +26,20 @@ use InvalidArgumentException;
  * change, except the 6 that now also implement HasContainerCapability to
  * declare their existing (unchanged) container status explicitly instead
  * of relying on a hardcoded external list.
+ *
+ * Phase 3E-F — `ownership` gives every definition ONE deterministic
+ * classification (canonical adapter / host-only / extension), DERIVED from
+ * the existing authoritative sources (canonical BlockRegistry's own type
+ * map, and the `ext:` namespace convention) rather than stored as a
+ * separately-maintained flag anywhere — there is nothing new to keep in
+ * sync, and no fourth registry. See ElementRegistry::ownershipOf().
  */
 final class ThemeBuilderElementDefinition
 {
+    public const OWNERSHIP_CANONICAL_ADAPTER = 'canonical_adapter';
+    public const OWNERSHIP_HOST_ONLY = 'host_only';
+    public const OWNERSHIP_EXTENSION = 'extension';
+
     /** @param array<string, ThemeBuilderControlDefinition> $controls keyed by control key */
     private function __construct(
         public readonly string $type,
@@ -38,6 +51,7 @@ final class ThemeBuilderElementDefinition
         public readonly ?array $allowedChildren,
         public readonly bool $supportsDynamicData,
         public readonly bool $hasAssets,
+        public readonly string $ownership,
     ) {
     }
 
@@ -90,7 +104,30 @@ final class ThemeBuilderElementDefinition
             $keyed[$control->key] = $control;
         }
 
-        return new self($type, $label, $category, $icon, $keyed, $isContainer, $allowedChildren, $supportsDynamicData, $hasAssets);
+        return new self($type, $label, $category, $icon, $keyed, $isContainer, $allowedChildren, $supportsDynamicData, $hasAssets, self::classify($type));
+    }
+
+    /**
+     * Phase 3E-F — the ONE deterministic ownership rule, a pure function of
+     * the type string and the already-populated canonical registry (no
+     * mutable state of its own, no registration side effect, safe to call
+     * in any boot order): `ext:`-prefixed is always an extension type;
+     * otherwise a type the canonical BlockRegistry itself defines is a
+     * canonical adapter (10 of the 13 elements delegate their rendering to
+     * that same canonical implementation); anything else registered here
+     * is host-only (spacer/row/column today).
+     */
+    private static function classify(string $type): string
+    {
+        if (str_starts_with($type, ExtensionBlockTypeIdentity::NAMESPACE_PREFIX)) {
+            return self::OWNERSHIP_EXTENSION;
+        }
+
+        if (CanonicalBlockRegistry::isCanonicalType($type)) {
+            return self::OWNERSHIP_CANONICAL_ADAPTER;
+        }
+
+        return self::OWNERSHIP_HOST_ONLY;
     }
 
     /**
