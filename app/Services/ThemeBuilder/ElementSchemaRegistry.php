@@ -17,7 +17,15 @@ class ElementSchemaRegistry
 
     public function __construct()
     {
-        $this->schemas = config('builder-element-schemas.elements', []);
+        // Phase 3E-H-B: existing config remains sole authority for every
+        // existing type — `+` keeps the LEFT operand (config) on any key
+        // collision, and by construction (3E-B) an `ext:*` key can never
+        // collide with a bare production key anyway. Only registered
+        // extension definitions (never canonical-adapter/host-only
+        // built-ins) are added, so a currently-unregistered/unknown `ext:*`
+        // type still correctly fails this gate exactly as before.
+        $this->schemas = config('builder-element-schemas.elements', [])
+            + \App\Builder\Extension\ProductionBuilderAdapter::schemas();
     }
 
     /**

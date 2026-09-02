@@ -446,7 +446,14 @@ class PageBuilderController extends Controller
      */
     protected function buildRegistryData(): array
     {
-        $config  = config('builder-elements.elements', []);
+        // Phase 3E-H-B: existing production config remains sole authority
+        // for every existing type — `+` keeps the LEFT operand (config) on
+        // any key collision, and by construction (3E-B) an `ext:*` key can
+        // never collide with a bare production key anyway. Only registered
+        // Extension SDK definitions (never canonical-adapter/host-only
+        // built-ins — see ProductionBuilderAdapter's own docblock) are
+        // added.
+        $config  = config('builder-elements.elements', []) + \App\Builder\Extension\ProductionBuilderAdapter::palette();
         $enabled = $this->enabledModuleSlugs();
         $orderedCats = ['layout', 'content', 'marketing', 'interactive', 'dynamic', 'ecommerce', 'utility'];
 
@@ -480,7 +487,8 @@ class PageBuilderController extends Controller
      */
     protected function getElementsForSite(): array
     {
-        $config = config('builder-elements.elements', []);
+        // Phase 3E-H-B: same extension-only, config-wins merge as buildRegistryData().
+        $config = config('builder-elements.elements', []) + \App\Builder\Extension\ProductionBuilderAdapter::palette();
         $categories = config('builder-elements.categories', []);
         $enabledModules = $this->enabledModuleSlugs();
 
