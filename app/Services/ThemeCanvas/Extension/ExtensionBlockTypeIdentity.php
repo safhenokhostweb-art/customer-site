@@ -45,14 +45,24 @@ final class ExtensionBlockTypeIdentity
         return new self($vendorSlug, $blockName, self::NAMESPACE_PREFIX . $vendorSlug . ':' . $blockName);
     }
 
-    private static function assertValidVendorSlug(string $vendorSlug): void
+    /**
+     * Phase 3E-E: exposed publicly so the extension DEPENDENCY identity
+     * (the product/package identity a ThemeRelease depends on — see
+     * Dependency\ExtensionDependencyResolver) can validate against the
+     * exact same vendor-slug rule as the block-identity namespace, without
+     * a second, divergent copy of this regex.
+     */
+    public static function isValidVendorSlug(string $vendorSlug): bool
     {
         $length = strlen($vendorSlug);
-        if (
-            $length < self::VENDOR_SLUG_MIN
-            || $length > self::VENDOR_SLUG_MAX
-            || !preg_match(self::VENDOR_SLUG_PATTERN, $vendorSlug)
-        ) {
+        return $length >= self::VENDOR_SLUG_MIN
+            && $length <= self::VENDOR_SLUG_MAX
+            && preg_match(self::VENDOR_SLUG_PATTERN, $vendorSlug) === 1;
+    }
+
+    private static function assertValidVendorSlug(string $vendorSlug): void
+    {
+        if (!self::isValidVendorSlug($vendorSlug)) {
             throw ExtensionIdentityRegistrationException::malformedVendorSlug($vendorSlug);
         }
     }

@@ -30,6 +30,24 @@ final class ExtensionIdentityRegistrationException extends RuntimeException
         );
     }
 
+    /** Phase 3E-E: same shape family, for the extension PRODUCT identity (vendor/package), never a block name. */
+    public static function malformedPackageSlug(string $packageSlug): self
+    {
+        return new self(
+            "Invalid extension package slug \"{$packageSlug}\" — must be lowercase ASCII "
+            . 'letters, digits, and hyphens only, 2-60 characters, no leading/trailing/'
+            . 'double hyphen.'
+        );
+    }
+
+    public static function malformedPackageIdentifier(string $identifier): self
+    {
+        return new self(
+            "Invalid extension product identifier \"{$identifier}\" — must be exactly "
+            . '"{vendor-slug}/{package-slug}", each a valid slug on its own.'
+        );
+    }
+
     public static function reservedNamespace(string $type, string $namespace): self
     {
         return new self(

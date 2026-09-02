@@ -40,11 +40,27 @@ class AppServiceProvider extends ServiceProvider
             SiteRepository::class
         );
 
-        // Phase 3E-A/3D-F — the one registered dependency-type adapter today
-        // is 'module' (via the already-existing, product-neutral
-        // TenantContext::hasModule()). Motion/Icons/etc. register their own
-        // adapters here later; ThemeUpgradeReconciler and the reconciliation
-        // gate never need to know which adapters exist.
+        // Phase 3E-E (correction) — ExtensionEntitlementProviderContract's
+        // V1 bridge implementation. Deliberately `bind()`, not
+        // `singleton()`, for the identical reason the resolver below is:
+        // it transitively holds a TenantContext and must resolve the
+        // current tenant fresh, never sharing a cached entitlement across
+        // requests.
+        $this->app->bind(
+            \App\Services\ThemeCanvas\Dependency\ExtensionEntitlementProviderContract::class,
+            \App\Services\ThemeCanvas\Dependency\ConfigExtensionEntitlementProvider::class
+        );
+
+        // Phase 3E-A/3D-F/3E-E — registered dependency-type adapters:
+        // 'module' (via the already-existing, product-neutral
+        // TenantContext::hasModule()) and 'extension' (Phase 3E-E, the
+        // third-party Extension SDK's PRODUCT identity — vendor/package,
+        // never a bare vendor — gated by BOTH InstalledExtensionProvider's
+        // package-presence fact AND ExtensionEntitlementProviderContract's
+        // independent tenant-entitlement fact; neither alone is sufficient).
+        // Motion/Icons/etc. register their own adapters here later;
+        // ThemeUpgradeReconciler and the reconciliation gate never need to
+        // know which adapters exist.
         //
         // Deliberately `bind()`, not `singleton()`: this transitively holds
         // a TenantContext, which caches the resolved License for its own
@@ -58,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver::class,
             fn ($app) => new \App\Services\ThemeCanvas\Dependency\ThemeDependencyAvailabilityResolver([
                 $app->make(\App\Services\ThemeCanvas\Dependency\ModuleDependencyResolver::class),
+                $app->make(\App\Services\ThemeCanvas\Dependency\ExtensionDependencyResolver::class),
             ])
         );
 
