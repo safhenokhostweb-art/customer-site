@@ -2,7 +2,9 @@
 
 namespace App\Builder\Elements;
 
-class RowElement extends BaseElement
+use App\Builder\Contracts\HasContainerCapability;
+
+class RowElement extends BaseElement implements HasContainerCapability
 {
     public static function getType(): string { return 'row'; }
     public static function getName(): string { return 'ردیف'; }
@@ -13,6 +15,10 @@ class RowElement extends BaseElement
     {
         return ['gap' => ['type' => 'enum', 'values' => ['none', 'xs', 'sm', 'md', 'lg', 'xl'], 'default' => 'md']];
     }
+
+    /** Phase 3E-D: declares the established row>column structural pattern. */
+    public static function isContainer(): bool { return true; }
+    public static function getAllowedChildren(): ?array { return ['column']; }
     public static function render(array $props, array $context = []): string
     {
         $gap = self::spacingClass($props['gap'] ?? 'md');

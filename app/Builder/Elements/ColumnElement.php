@@ -2,7 +2,9 @@
 
 namespace App\Builder\Elements;
 
-class ColumnElement extends BaseElement
+use App\Builder\Contracts\HasContainerCapability;
+
+class ColumnElement extends BaseElement implements HasContainerCapability
 {
     public static function getType(): string { return 'column'; }
     public static function getName(): string { return 'ستون'; }
@@ -13,6 +15,10 @@ class ColumnElement extends BaseElement
     {
         return ['width' => ['type' => 'string', 'required' => false, 'default' => '1/1', 'max' => 20]];
     }
+
+    /** Phase 3E-D: holds arbitrary leaf content — no child-type restriction. */
+    public static function isContainer(): bool { return true; }
+    public static function getAllowedChildren(): ?array { return null; }
     public static function render(array $props, array $context = []): string
     {
         $width = $props['width'] ?? '1/1';

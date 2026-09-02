@@ -12,7 +12,7 @@ class ImageElement extends BaseElement
     public static function getSchema(): array
     {
         return [
-            'url' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 2048],
+            'url' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 2048, 'control' => 'media'],
             'alt' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 500],
             'caption' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 500],
         ];

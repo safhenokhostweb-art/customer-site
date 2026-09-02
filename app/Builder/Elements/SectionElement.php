@@ -2,7 +2,9 @@
 
 namespace App\Builder\Elements;
 
-class SectionElement extends BaseElement
+use App\Builder\Contracts\HasContainerCapability;
+
+class SectionElement extends BaseElement implements HasContainerCapability
 {
     public static function getType(): string { return 'section'; }
     public static function getName(): string { return 'بخش'; }
@@ -15,9 +17,13 @@ class SectionElement extends BaseElement
             'padding' => ['type' => 'enum', 'values' => ['none', 'xs', 'sm', 'md', 'lg', 'xl'], 'default' => 'md'],
             'background' => ['type' => 'string', 'required' => false, 'default' => 'transparent', 'max' => 100],
             'container' => ['type' => 'boolean', 'required' => false, 'default' => true],
-            'background_image' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 2048],
+            'background_image' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 2048, 'control' => 'media'],
         ];
     }
+
+    /** Phase 3E-D: generic wrapper — no child-type restriction. */
+    public static function isContainer(): bool { return true; }
+    public static function getAllowedChildren(): ?array { return null; }
     /**
      * Phase 2j (ADR-030/031): delegates to the shared canonical authority,
      * which now absorbs this element's own _style.background/layout/effects

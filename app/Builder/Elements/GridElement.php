@@ -2,7 +2,9 @@
 
 namespace App\Builder\Elements;
 
-class GridElement extends BaseElement
+use App\Builder\Contracts\HasContainerCapability;
+
+class GridElement extends BaseElement implements HasContainerCapability
 {
     public static function getType(): string { return 'grid'; }
     public static function getName(): string { return 'گرید'; }
@@ -16,6 +18,10 @@ class GridElement extends BaseElement
             'gap' => ['type' => 'enum', 'values' => ['none', 'xs', 'sm', 'md', 'lg', 'xl'], 'default' => 'md'],
         ];
     }
+
+    /** Phase 3E-D: generic wrapper — no child-type restriction. */
+    public static function isContainer(): bool { return true; }
+    public static function getAllowedChildren(): ?array { return null; }
     /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {

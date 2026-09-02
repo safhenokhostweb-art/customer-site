@@ -2,6 +2,7 @@
 
 namespace App\Builder\Validation;
 
+use App\Builder\Definition\ThemeBuilderElementDefinition;
 use SaaSPlatform\ThemeRuntime\Security\HtmlSanitizer;
 
 /**
@@ -74,6 +75,19 @@ class ElementValidator
         }
 
         return ['props' => $out, 'errors' => $errors];
+    }
+
+    /**
+     * Phase 3E-D — validates against a declarative ThemeBuilderElementDefinition
+     * instead of a raw schema array. Delegates entirely to the existing
+     * validate() above (via the definition's toLegacySchema()) so
+     * coercion/defaults/unknown-key-stripping/non-throwing behavior is
+     * byte-identical to today's — this is a convenience entry point, not a
+     * second validator.
+     */
+    public static function validateDefinition(ThemeBuilderElementDefinition $definition, array $props): array
+    {
+        return self::validate($definition->toLegacySchema(), $props);
     }
 
     /**

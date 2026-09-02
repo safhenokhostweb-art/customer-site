@@ -13,7 +13,7 @@ class ButtonElement extends BaseElement
     {
         return [
             'text' => ['type' => 'string', 'required' => false, 'default' => 'دکمه', 'max' => 200],
-            'url' => ['type' => 'string', 'required' => false, 'default' => '#', 'max' => 2048],
+            'url' => ['type' => 'string', 'required' => false, 'default' => '#', 'max' => 2048, 'control' => 'url'],
             'style' => ['type' => 'enum', 'values' => ['primary', 'secondary'], 'default' => 'primary'],
         ];
     }

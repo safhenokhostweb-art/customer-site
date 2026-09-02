@@ -2,7 +2,9 @@
 
 namespace App\Builder\Elements;
 
-class ContainerElement extends BaseElement
+use App\Builder\Contracts\HasContainerCapability;
+
+class ContainerElement extends BaseElement implements HasContainerCapability
 {
     public static function getType(): string { return 'container'; }
     public static function getName(): string { return 'کانتینر'; }
@@ -10,6 +12,10 @@ class ContainerElement extends BaseElement
     public static function getCategory(): string { return 'layout'; }
     public static function getDefaultProps(): array { return ['maxWidth' => '7xl']; }
     public static function getSchema(): array { return ['maxWidth' => ['type' => 'string', 'required' => false, 'default' => '7xl', 'max' => 20]]; }
+
+    /** Phase 3E-D: generic wrapper — no child-type restriction. */
+    public static function isContainer(): bool { return true; }
+    public static function getAllowedChildren(): ?array { return null; }
     /** Phase 2j (ADR-030/031): delegates to the shared canonical authority. */
     public static function render(array $props, array $context = []): string
     {

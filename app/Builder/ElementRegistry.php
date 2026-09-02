@@ -3,6 +3,7 @@
 namespace App\Builder;
 
 use App\Builder\Contracts\ElementInterface;
+use App\Builder\Definition\ThemeBuilderElementDefinition;
 use App\Services\ThemeCanvas\Extension\ExtensionBlockTypeRegistry;
 use Illuminate\Support\Facades\Cache;
 
@@ -120,6 +121,33 @@ class ElementRegistry
     {
         self::load();
         return isset(self::$classes[$type]);
+    }
+
+    /**
+     * Phase 3E-D — the declarative ThemeBuilderElementDefinition for one
+     * registered type, or null if unregistered. Pure introspection over the
+     * already-registered class; does not change registration/collision
+     * behavior (assertClaimable() above is untouched and still the sole
+     * gate on what may register).
+     */
+    public static function definition(string $type): ?ThemeBuilderElementDefinition
+    {
+        $class = self::get($type);
+        return $class === null ? null : ThemeBuilderElementDefinition::fromElementClass($class);
+    }
+
+    /**
+     * Every registered type's declarative definition, keyed by type —
+     * deterministic (same registration order as all()/self::$classes).
+     */
+    public static function definitions(): array
+    {
+        self::load();
+        $out = [];
+        foreach (self::$classes as $type => $class) {
+            $out[$type] = ThemeBuilderElementDefinition::fromElementClass($class);
+        }
+        return $out;
     }
 
     /**
