@@ -2,6 +2,8 @@
 
 namespace App\Builder\Validation;
 
+use SaaSPlatform\ThemeRuntime\Security\HtmlSanitizer;
+
 /**
  * Validates props against element schema, applies defaults, strips unknown keys, sanitizes.
  * Invalid props must not break rendering; we return sanitized props and list of errors.
@@ -96,9 +98,14 @@ class ElementValidator
 
     /**
      * Sanitize rich HTML (allow limited tags).
+     *
+     * Phase 3E-C: delegates to the shared canonical sanitization authority
+     * instead of this class's own independent strip_tags()-only copy — see
+     * App\Builder\Traits\WithSanitization::sanitizeHtml() for the full
+     * rationale (the same fix, applied to this class's separate duplicate).
      */
     public static function sanitizeRichHtml(string $s): string
     {
-        return strip_tags($s, '<p><br><a><strong><em><ul><ol><li><h2><h3>');
+        return HtmlSanitizer::sanitizeRichHtml($s);
     }
 }
