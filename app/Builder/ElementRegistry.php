@@ -3,6 +3,7 @@
 namespace App\Builder;
 
 use App\Builder\Contracts\ElementInterface;
+use App\Services\ThemeCanvas\Extension\ExtensionBlockTypeRegistry;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -25,8 +26,39 @@ class ElementRegistry
             throw new \InvalidArgumentException("Element class must implement ElementInterface: {$class}");
         }
         $type = $class::getType();
+        self::assertClaimable($type, $class);
         self::$classes[$type] = $class;
         self::$byType = null;
+    }
+
+    /**
+     * Phase 3E-B — the minimum identity boundary needed before third-party
+     * extension registration exists: a Builder element must never silently
+     * shadow another already-registered element under the same type, and
+     * must never be able to claim an identity reserved for (or already
+     * claimed by) the ext: extension namespace (Phase 3E-B's
+     * ExtensionBlockTypeRegistry). Deliberately does NOT check against
+     * canonical/ThemeCanvas bare type names: 10 of the 13 current elements
+     * intentionally share a bare canonical name by design (Phase 2j —
+     * they delegate their structural rendering to the canonical
+     * implementation of that same name), so rejecting that overlap here
+     * would break all of them, not fix a defect.
+     */
+    private static function assertClaimable(string $type, string $class): void
+    {
+        if (isset(self::$classes[$type]) && self::$classes[$type] !== $class) {
+            throw new \InvalidArgumentException(
+                "Element type \"{$type}\" is already registered to " . self::$classes[$type]
+                . " — cannot re-register it to {$class}."
+            );
+        }
+
+        if (str_starts_with($type, 'ext:') || ExtensionBlockTypeRegistry::has($type)) {
+            throw new \InvalidArgumentException(
+                "Element type \"{$type}\" falls in the reserved third-party extension namespace "
+                . 'and cannot be claimed by a Builder element.'
+            );
+        }
     }
 
     /**
@@ -111,7 +143,9 @@ class ElementRegistry
         $list = config('builder.elements', []);
         foreach ($list as $class) {
             if (is_string($class) && is_subclass_of($class, ElementInterface::class)) {
-                self::$classes[$class::getType()] = $class;
+                $type = $class::getType();
+                self::assertClaimable($type, $class);
+                self::$classes[$type] = $class;
             }
         }
 
