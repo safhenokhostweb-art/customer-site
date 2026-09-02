@@ -94,10 +94,18 @@ final class ExtensionBlockTypeRegistry
             throw ExtensionIdentityRegistrationException::hostCollision($type);
         }
 
-        if (ElementRegistry::has($type)) {
-            throw ExtensionIdentityRegistrationException::hostCollision($type);
-        }
-
+        // Phase 3E-G: checked BEFORE the ElementRegistry::has() probe below,
+        // deliberately. Once ThemeBuilderExtensionRegistrar exists, a type
+        // already present in self::$registered legitimately means
+        // ElementRegistry::has($type) is ALSO true (its renderer class was
+        // registered right after this identity was claimed) — that is no
+        // longer a collision to reject, it is the authoritative record
+        // this exact identity is already an extension's own, and owner/
+        // definition equality alone decides idempotent-vs-rejected, same
+        // as always. Resolving this first means the ElementRegistry check
+        // below only ever fires for a type ElementRegistry holds WITHOUT
+        // this registry's own knowledge of it — a genuine inconsistency,
+        // not the normal idempotent-reregistration path.
         if (array_key_exists($type, self::$registered)) {
             $existing = self::$registered[$type];
             if ($existing['owner'] === $vendorSlug && $existing['definition'] === $definition) {
@@ -105,6 +113,28 @@ final class ExtensionBlockTypeRegistry
             }
 
             throw ExtensionIdentityRegistrationException::extensionCollision($type, $existing['owner'], $vendorSlug);
+        }
+
+        if (ElementRegistry::has($type)) {
+            throw ExtensionIdentityRegistrationException::hostCollision($type);
+        }
+    }
+
+    /**
+     * Phase 3E-G — read-only preflight: would registerExtensionType() for
+     * these exact arguments succeed right now, without mutating anything?
+     * Lets a caller (ThemeBuilderExtensionRegistrar) validate an entire
+     * multi-block package BEFORE committing any of it — true atomicity via
+     * validate-then-mutate, never a partial registration to roll back.
+     */
+    public static function isClaimable(string $type, string $vendorSlug, array $definition): bool
+    {
+        try {
+            self::assertNotReserved($type);
+            self::assertAvailable($type, $vendorSlug, $definition);
+            return true;
+        } catch (ExtensionIdentityRegistrationException) {
+            return false;
         }
     }
 

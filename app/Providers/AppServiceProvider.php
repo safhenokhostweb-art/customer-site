@@ -217,6 +217,12 @@ $this->app->bind(
 
             $this->pushExtraJsonLd($view);
         });
+
+        // Phase 3E-G — the one deterministic boot boundary for third-party
+        // Extension SDK packages. Config-driven, empty by default (no real
+        // extension exists yet), so this is a total no-op in production
+        // today; see App\Builder\Extension\ThemeBuilderExtensionLoader.
+        \App\Builder\Extension\ThemeBuilderExtensionLoader::boot($this->app);
     }
 
     /**

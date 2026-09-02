@@ -3,6 +3,7 @@
 namespace App\Builder\Rendering;
 
 use App\Builder\Contracts\HasAssets;
+use App\Builder\Contracts\HasDynamicData;
 use App\Builder\ElementRegistry;
 use App\Builder\Services\DynamicDataResolver;
 use App\Builder\Validation\ElementValidator;
@@ -65,7 +66,13 @@ class ElementRenderer
                 Log::debug('Builder element validation warnings', ['type' => $type, 'errors' => $result['errors']]);
             }
 
-            if ($class::supportsDynamicData() && $this->resolver !== null) {
+            // Phase 3E-G (correction): gated by HasDynamicData exactly like
+            // ThemeBuilderElementDefinition::fromElementClass() already
+            // does — supportsDynamicData() is an OPTIONAL capability, not
+            // a method every ElementInterface implementation is
+            // guaranteed to have. Previously called unconditionally here,
+            // safe only because every built-in element extends BaseElement.
+            if (is_subclass_of($class, HasDynamicData::class) && $class::supportsDynamicData() && $this->resolver !== null) {
                 $props = $this->resolver->setContext($context)->resolve($props);
             }
 

@@ -46,6 +46,25 @@ final class ExtensionBlockTypeIdentity
     }
 
     /**
+     * Phase 3E-G: parses an already-`ext:`-prefixed full type string back
+     * into its validated parts — the one place that split ever happens, so
+     * ThemeBuilderExtensionDefinition and ThemeBuilderExtensionRegistrar
+     * never each carry their own copy of it. Throws
+     * ExtensionIdentityRegistrationException::malformedVendorSlug() if
+     * `$type` is not `ext:`-prefixed at all (the caller is expected to
+     * have already checked the prefix if it needs a more specific error).
+     */
+    public static function fromType(string $type): self
+    {
+        $withoutPrefix = str_starts_with($type, self::NAMESPACE_PREFIX)
+            ? substr($type, strlen(self::NAMESPACE_PREFIX))
+            : $type;
+        $parts = explode(':', $withoutPrefix, 2);
+
+        return self::fromParts($parts[0] ?? '', $parts[1] ?? '');
+    }
+
+    /**
      * Phase 3E-E: exposed publicly so the extension DEPENDENCY identity
      * (the product/package identity a ThemeRelease depends on — see
      * Dependency\ExtensionDependencyResolver) can validate against the

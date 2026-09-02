@@ -63,6 +63,41 @@ class ElementRegistry
     }
 
     /**
+     * Phase 3E-G — the ONLY safe path for registering a third-party
+     * extension's renderer class, owned by ThemeBuilderExtensionRegistrar
+     * (never called directly). Deliberately separate from register()
+     * (whose ordinary boot-time path still rejects any `ext:` type — see
+     * assertClaimable()) — this narrow entry point requires the identity
+     * to have ALREADY been claimed in ExtensionBlockTypeRegistry first, so
+     * it can never be used to bypass that authority's collision rules, and
+     * mirrors the exact same "same class = idempotent, different class =
+     * rejected" duplicate policy register() already uses for everything
+     * else.
+     */
+    public static function registerExtensionElement(string $type, string $class): void
+    {
+        if (!\App\Services\ThemeCanvas\Extension\ExtensionBlockTypeRegistry::has($type)) {
+            throw new \InvalidArgumentException(
+                "Cannot register extension element \"{$type}\" — its identity was never claimed in ExtensionBlockTypeRegistry."
+            );
+        }
+        if (!is_subclass_of($class, ElementInterface::class)) {
+            throw new \InvalidArgumentException("Element class must implement ElementInterface: {$class}");
+        }
+
+        self::load();
+        if (isset(self::$classes[$type]) && self::$classes[$type] !== $class) {
+            throw new \InvalidArgumentException(
+                "Element type \"{$type}\" is already registered to " . self::$classes[$type]
+                . " — cannot re-register it to {$class}."
+            );
+        }
+
+        self::$classes[$type] = $class;
+        self::$byType = null;
+    }
+
+    /**
      * Get element class by type. Returns null if not registered.
      */
     public static function get(string $type): ?string
