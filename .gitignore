@@ -30,6 +30,10 @@ cursor-rules-sync.local.json
 /public/build
 /public/hot
 /public/storage
+/tests/browser/.runtime
+/test-results
+/playwright-report
+/playwright/.cache
 /storage/*.key
 /storage/pail
 /storage/backups/

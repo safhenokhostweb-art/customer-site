@@ -131,7 +131,7 @@
         </span>
 
         {{-- Save --}}
-        <button @click="saveBlocks()" :disabled="saving"
+        <button @click="saveBlocks()" :disabled="saving" data-testid="tb-save-button"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-60 shrink-0"
             style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff">
             <svg x-show="!saving" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
@@ -195,6 +195,7 @@
                                 <div class="px-2 pb-2 grid grid-cols-2 gap-1.5">
                                     @foreach($catDefs as $blockType => $blockDef)
                                         <button @click="addBlock('{{ $blockType }}')"
+                                            data-testid="tb-add-block-{{ $blockType }}"
                                             x-show="isBlockVisible('{{ $blockType }}','{{ addslashes($blockDef['name']) }}')"
                                             class="flex flex-col items-start gap-1 p-2 rounded-lg text-right cursor-pointer group transition"
                                             style="border:1px solid #334155;background:#0f172a"
@@ -358,7 +359,7 @@
 
             {{-- Canvas status bar --}}
             <div class="h-8 flex items-center justify-center gap-3 shrink-0" style="background:#0f172a;border-bottom:1px solid #1e293b">
-                <span class="text-[10px] text-slate-600" x-text="blocks.length + ' ویجت'"></span>
+                <span class="text-[10px] text-slate-600" data-testid="tb-block-count" x-text="blocks.length + ' ویجت'"></span>
                 <span class="text-[10px] text-slate-700">•</span>
                 <span class="text-[10px] text-slate-600">کلیک روی ویجت برای ویرایش</span>
                 <span x-show="canvasLoading" class="flex items-center gap-1 text-[10px] text-indigo-400">
@@ -437,7 +438,7 @@
                         {{-- ─ TAB: CONTENT (block props) ───────────────── --}}
                         <div x-show="rightTab==='content'" class="px-3 py-3 space-y-4">
                             <template x-for="(schemaDef, propKey) in selectedSchema" :key="propKey">
-                                <div>
+                                <div :data-testid="'tb-prop-' + propKey">
                                     <label class="block text-[10px] font-semibold mb-1.5" style="color:#94a3b8" x-text="schemaDef.label||propKey"></label>
 
                                     <template x-if="schemaDef.type==='string'">
