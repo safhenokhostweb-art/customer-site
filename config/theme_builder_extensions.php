@@ -24,7 +24,12 @@
 */
 
 return [
-    'providers' => [
-        // \App\Builder\Extension\SomeVendor\SomePackageProvider::class,
-    ],
+    // Phase 3E-H-D: BROWSER_TEST_EXTENSION_PROVIDERS is set ONLY by the
+    // isolated customer-site Playwright harness (tests/browser), never in
+    // any real environment — its absence (the normal case everywhere else)
+    // leaves this identical to the empty production default below.
+    'providers' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('BROWSER_TEST_EXTENSION_PROVIDERS', ''))
+    ))),
 ];

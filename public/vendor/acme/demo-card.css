@@ -1,0 +1,8 @@
+/* Phase 3E-H-D — test-only static asset for the acme/demo-suite browser
+   verification fixture (Tests\Unit\Builder\Extension\Fixtures\DemoCardElement).
+   Referenced only when that extension is registered via the
+   BROWSER_TEST_EXTENSION_PROVIDERS environment variable; never linked from
+   production content. */
+.ext-acme-demo-card {
+    border: 1px solid #6366f1;
+}

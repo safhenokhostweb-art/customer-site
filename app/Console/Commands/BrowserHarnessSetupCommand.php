@@ -37,6 +37,12 @@ class BrowserHarnessSetupCommand extends Command
     public const PASSWORD = 'browser-harness-pass';
     public const PAGE_SLUG = 'browser-harness-page';
     public const PAGE_TITLE = 'Browser Harness Page';
+    public const CONTROL_PAGE_SLUG = 'browser-harness-control-page';
+    public const CONTROL_PAGE_TITLE = 'Browser Harness Control Page';
+    public const LIFECYCLE_PAGE_SLUG = 'browser-harness-lifecycle-page';
+    public const LIFECYCLE_PAGE_TITLE = 'Browser Harness Lifecycle Page';
+    public const EXTENSION_PAGE_SLUG = 'browser-harness-extension-page';
+    public const EXTENSION_PAGE_TITLE = 'Browser Harness Extension Page';
 
     public function handle(): int
     {
@@ -83,6 +89,61 @@ class BrowserHarnessSetupCommand extends Command
         );
         $this->info("Builder page ready: id={$page->id} slug={$page->slug}");
 
+        // Phase 3E-H-D — a second, deliberately extension-free page, used
+        // only to prove asset-emission isolation (no extension asset must
+        // ever appear on a page that never used an extension block).
+        $controlPage = Page::updateOrCreate(
+            ['slug' => self::CONTROL_PAGE_SLUG],
+            [
+                'title' => self::CONTROL_PAGE_TITLE,
+                'body' => '',
+                'builder_content_v2' => ['blocks' => [
+                    ['id' => 'control_heading', 'type' => 'heading', 'props' => ['text' => 'Control page', 'level' => 2]],
+                ]],
+                'builder_type' => Page::BUILDER_TYPE_BUILDER,
+                'is_published' => true,
+                'show_in_menu' => false,
+            ],
+        );
+        $this->info("Control page ready: id={$controlPage->id} slug={$controlPage->slug}");
+
+        // Phase 3E-H-D — a third, dedicated, initially-empty page used only
+        // by the unavailable/re-enable extension lifecycle scenario, kept
+        // separate from the other pages so its multi-server-restart
+        // sequence never interferes with (or is polluted by) unrelated
+        // scenarios' accumulated content.
+        $lifecyclePage = Page::updateOrCreate(
+            ['slug' => self::LIFECYCLE_PAGE_SLUG],
+            [
+                'title' => self::LIFECYCLE_PAGE_TITLE,
+                'body' => '',
+                'builder_content_v2' => ['blocks' => []],
+                'builder_type' => Page::BUILDER_TYPE_BUILDER,
+                'is_published' => true,
+                'show_in_menu' => false,
+            ],
+        );
+        $this->info("Lifecycle page ready: id={$lifecyclePage->id} slug={$lifecyclePage->slug}");
+
+        // Phase 3E-H-D — a fourth, dedicated, initially-empty page owned
+        // exclusively by tests/browser/extension-sdk.spec.js's own
+        // "demo_card real path" / container / responsive scenarios, kept
+        // separate from D0's own `page` (smoke.spec.js) so the two spec
+        // files' block counts never interfere with each other when run
+        // together in one `npm run test:browser` invocation.
+        $extensionPage = Page::updateOrCreate(
+            ['slug' => self::EXTENSION_PAGE_SLUG],
+            [
+                'title' => self::EXTENSION_PAGE_TITLE,
+                'body' => '',
+                'builder_content_v2' => ['blocks' => []],
+                'builder_type' => Page::BUILDER_TYPE_BUILDER,
+                'is_published' => true,
+                'show_in_menu' => false,
+            ],
+        );
+        $this->info("Extension page ready: id={$extensionPage->id} slug={$extensionPage->slug}");
+
         $this->info('Browser harness environment ready.');
 
         if ($this->option('json')) {
@@ -91,6 +152,12 @@ class BrowserHarnessSetupCommand extends Command
                 'admin_password' => self::PASSWORD,
                 'page_id' => $page->id,
                 'page_slug' => $page->slug,
+                'control_page_id' => $controlPage->id,
+                'control_page_slug' => $controlPage->slug,
+                'lifecycle_page_id' => $lifecyclePage->id,
+                'lifecycle_page_slug' => $lifecyclePage->slug,
+                'extension_page_id' => $extensionPage->id,
+                'extension_page_slug' => $extensionPage->slug,
             ]));
         }
 
