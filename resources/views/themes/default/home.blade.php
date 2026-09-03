@@ -18,7 +18,22 @@
 @endif
 
 @if(is_array($homeLayoutBlocks) && !empty($homeLayoutBlocks))
-    {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->renderBlocks($homeLayoutBlocks) !!}
+    @php
+        $__tbRenderer = app(\App\Services\ThemeBuilder\BlockRenderer::class);
+        $__tbHtml = $__tbRenderer->renderBlocks($homeLayoutBlocks);
+        $__tbAssets = $__tbRenderer->getCollectedAssets();
+    @endphp
+    @foreach($__tbAssets['css'] ?? [] as $__tbHref)
+        @push('head')
+    <link rel="stylesheet" href="{{ $__tbHref }}">
+        @endpush
+    @endforeach
+    @foreach($__tbAssets['js'] ?? [] as $__tbSrc)
+        @push('scripts')
+    <script src="{{ $__tbSrc }}" defer></script>
+        @endpush
+    @endforeach
+    {!! $__tbHtml !!}
 @else
 <section class="hero-section" style="background: linear-gradient(135deg, var(--platform-primary, #4f46e5) 0%, var(--ui-indigo-hover, #4338ca) 100%); color: white;">
     <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 1rem;">به {{ \App\Helpers\SiteHelper::siteName() }} خوش آمدید</h1>

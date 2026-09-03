@@ -29,8 +29,23 @@
 @endauth
 
 @if($page->usesBuilder())
+    @php
+        $__tbRenderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->setContext(['menu_html' => '']);
+        $__tbHtml = $__tbRenderer->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []);
+        $__tbAssets = $__tbRenderer->getCollectedAssets();
+    @endphp
+    @foreach($__tbAssets['css'] ?? [] as $__tbHref)
+        @push('head')
+    <link rel="stylesheet" href="{{ $__tbHref }}">
+        @endpush
+    @endforeach
+    @foreach($__tbAssets['js'] ?? [] as $__tbSrc)
+        @push('scripts')
+    <script src="{{ $__tbSrc }}" defer></script>
+        @endpush
+    @endforeach
     <article class="page-builder-content">
-        {!! app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->setContext(['menu_html' => ''])->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []) !!}
+        {!! $__tbHtml !!}
     </article>
 @else
 <article style="max-width:48rem;">

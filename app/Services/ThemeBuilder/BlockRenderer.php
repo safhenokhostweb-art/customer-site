@@ -34,11 +34,30 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     /** @var ElementSchemaRegistry|null */
     protected $schemaRegistry;
 
+    /**
+     * Phase 3E-H-C — resolved once and reused for every extension element
+     * rendered within this BlockRenderer instance's lifetime (one per
+     * request), so HasAssets contributions accumulate across all blocks on
+     * the page instead of being discarded per-block. BlockRenderer itself
+     * is resolved fresh per request (never bound as a singleton), so this
+     * carries no cross-request/cross-tenant leakage risk.
+     */
+    protected ?\App\Builder\Rendering\ElementRenderer $elementRenderer = null;
 
     public function setSchemaRegistry(?ElementSchemaRegistry $registry): self
     {
         $this->schemaRegistry = $registry;
         return $this;
+    }
+
+    /**
+     * Phase 3E-H-C — CSS/JS assets declared (via HasAssets) by every
+     * extension element rendered so far in this request, deduplicated.
+     * Empty when no extension element with assets has rendered.
+     */
+    public function getCollectedAssets(): array
+    {
+        return $this->elementRenderer?->getCollectedAssets() ?? ['css' => [], 'js' => []];
     }
 
     /**
@@ -96,7 +115,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $idEsc = htmlspecialchars($id,   ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         // TB4: mark container blocks so iframe can show nested drop zones
-        $containerAttr = in_array($type, ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'], true)
+        $containerAttr = (in_array($type, ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'], true) || self::isExtensionContainer($type))
             ? ' data-tb-container="1"' : '';
         return "<div class=\"tb-canvas-block\" data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}>"
             . "<div class=\"tb-block-badge\">{$esc}</div>"
@@ -132,7 +151,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $inner = '';
         $containerTypes = ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'];
-        if (in_array($type, $containerTypes, true) && !empty($children)) {
+        if ((in_array($type, $containerTypes, true) || self::isExtensionContainer($type)) && !empty($children)) {
             $inner = $this->renderBlocks($children);
         }
         if ($type === 'tabs' && !empty($props['tabs'])) {
@@ -151,7 +170,8 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
                 'inner' => $inner,
                 'style' => $block['style'] ?? [],
             ]);
-            return app(\App\Builder\Rendering\ElementRenderer::class)
+            $this->elementRenderer ??= app(\App\Builder\Rendering\ElementRenderer::class);
+            return $this->elementRenderer
                 ->setContext($this->context)
                 ->render($type, $props, $context);
         }
@@ -162,6 +182,27 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
 
         return $this->renderFallback($type, $props, $inner, $id);
+    }
+
+    /**
+     * Phase 3E-H-C — additive extension-container detection: a
+     * currently-registered ext:* type declared as a container via
+     * HasContainerCapability is treated as one for child-rendering
+     * purposes, WITHOUT adding individual ext:* entries to the hardcoded
+     * $containerTypes list above (which stays the sole authority for every
+     * built-in type, unchanged). An unregistered/unavailable ext:* type is
+     * never a container (ElementRegistry::definition() returns null), which
+     * is the correct, safe default — its children simply don't render,
+     * matching the same silent-unless-rendered treatment any other
+     * unrenderable block already gets.
+     */
+    protected static function isExtensionContainer(string $type): bool
+    {
+        if (!str_starts_with($type, 'ext:')) {
+            return false;
+        }
+        $definition = \App\Builder\ElementRegistry::definition($type);
+        return $definition !== null && $definition->isContainer;
     }
 
 

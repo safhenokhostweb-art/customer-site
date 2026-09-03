@@ -182,12 +182,91 @@ class PageBuilderController extends Controller
                 ->delete();
         }
 
-        $content = ['blocks' => $data['blocks']];
+        $content = ['blocks' => $this->reconcileExtensionBlocks($data['blocks'], $previousContent['blocks'] ?? [])];
         $page->update([
             'builder_content_v2' => $content,
             'builder_type'       => Page::BUILDER_TYPE_BUILDER,
         ]);
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Phase 3E-H-C — fail-closed trust boundary for ext:* blocks whose
+     * extension is not currently registered (unavailable — provider not
+     * loaded, or never legitimately registered at all).
+     *
+     * Every other block type (any non-`ext:`-prefixed type, and any
+     * currently-registered ext:* type) passes through completely
+     * unchanged — zero behavior change for existing content.
+     *
+     * For an unregistered ext:* block, the incoming (client-submitted)
+     * copy is NEVER trusted as-is: the server reconciles against its own
+     * previously-persisted content for this page.
+     *   - If a block with the same id AND type already exists in the
+     *     page's own last-saved content, it is preserved using the
+     *     server's own last-known-good copy (so props/children the client
+     *     can't validate can't be silently rewritten either).
+     *   - Otherwise it is a brand-new client-asserted unavailable
+     *     extension block, which is dropped from this save — the rest of
+     *     the incoming blocks still save normally.
+     *
+     * @param array $incoming Blocks from this request.
+     * @param array $previous Blocks currently persisted for this page (pre-overwrite).
+     */
+    protected function reconcileExtensionBlocks(array $incoming, array $previous): array
+    {
+        $previousById = [];
+        $this->indexBlocksById($previous, $previousById);
+
+        return $this->reconcileExtensionBlocksLevel($incoming, $previousById);
+    }
+
+    /** Recursively flattens a block tree (any nesting key: blocks/children) into id => block. */
+    protected function indexBlocksById(array $blocks, array &$index): void
+    {
+        foreach ($blocks as $block) {
+            if (!is_array($block)) {
+                continue;
+            }
+            if (isset($block['id'])) {
+                $index[$block['id']] = $block;
+            }
+            $children = $block['blocks'] ?? $block['children'] ?? [];
+            if (is_array($children)) {
+                $this->indexBlocksById($children, $index);
+            }
+        }
+    }
+
+    /** @param array<string, array> $previousById */
+    protected function reconcileExtensionBlocksLevel(array $incoming, array $previousById): array
+    {
+        $result = [];
+        foreach ($incoming as $block) {
+            if (!is_array($block)) {
+                continue;
+            }
+            $type = $block['type'] ?? '';
+
+            if (str_starts_with($type, 'ext:') && !\App\Builder\ElementRegistry::has($type)) {
+                $existing = $previousById[$block['id'] ?? null] ?? null;
+                if ($existing === null || ($existing['type'] ?? null) !== $type) {
+                    continue;
+                }
+                $result[] = $existing;
+                continue;
+            }
+
+            if (isset($block['blocks']) && is_array($block['blocks'])) {
+                $block['blocks'] = $this->reconcileExtensionBlocksLevel($block['blocks'], $previousById);
+            }
+            if (isset($block['children']) && is_array($block['children'])) {
+                $block['children'] = $this->reconcileExtensionBlocksLevel($block['children'], $previousById);
+            }
+            $result[] = $block;
+        }
+
+        return $result;
     }
 
     /** List page revisions for the last 7 days. */
@@ -295,7 +374,7 @@ class PageBuilderController extends Controller
         $start    = $testMode ? (microtime(true) * 1000) : 0;
         $html     = $renderer->renderBlocks($blocks);
 
-        $payload = ['html' => $html];
+        $payload = ['html' => $html, 'assets' => $renderer->getCollectedAssets()];
         if ($testMode) {
             $payload['render_time_ms']    = round((microtime(true) * 1000) - $start, 2);
             $payload['memory_peak_bytes'] = memory_get_peak_usage(true);
