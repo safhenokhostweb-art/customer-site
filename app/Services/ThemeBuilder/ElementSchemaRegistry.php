@@ -140,7 +140,7 @@ class ElementSchemaRegistry
             case 'string':
                 return is_string($value);
             case 'integer':
-                return is_int($value);
+                return is_int($value) || self::isIntegerString($value);
             case 'boolean':
                 return is_bool($value);
             case 'array':
@@ -148,6 +148,28 @@ class ElementSchemaRegistry
             default:
                 return true;
         }
+    }
+
+    /**
+     * Phase 3F-D — the real root cause of the heading.level defect (and
+     * every other select-backed integer-typed prop): NONE of these fields'
+     * `<select>` controls, in either Production Builder's or Canvas's
+     * blade, apply Alpine's `.number` x-model modifier (verified directly
+     * against both templates) — so any value the user actually chooses via
+     * the dropdown (not merely a never-touched default) arrives here as a
+     * string ('2'), never the real int every hand-authored fixture/preset/
+     * kit in this codebase already stores. This is a validation-boundary
+     * coercion, not a type-domain change: `assertType()` still rejects
+     * anything that isn't a genuine whole-number representation (non-
+     * numeric strings, decimals, arrays) exactly as strictly as before —
+     * it only additionally recognizes the one extra shape a real browser
+     * select control legitimately produces. No persisted data changes;
+     * every existing integer-valued prop already satisfies is_int() and is
+     * completely unaffected.
+     */
+    private static function isIntegerString($value): bool
+    {
+        return is_string($value) && preg_match('/^-?\d+$/', $value) === 1;
     }
 
     /**
