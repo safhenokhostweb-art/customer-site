@@ -25,8 +25,15 @@ use App\Services\ThemeCanvas\Extension\ExtensionProductIdentity;
  */
 final class ThemeBuilderExtensionDefinition
 {
-    public const SDK_CONTRACT_V1 = 1;
-    private const SUPPORTED_SDK_CONTRACTS = [self::SDK_CONTRACT_V1];
+    /**
+     * Phase 3G-B-2: delegates to the shared SDK contract-version authority
+     * (SaaSPlatform\ExtensionSdk\ExtensionSdkContract, shared with
+     * saas-platform's ExtensionRelease validation) rather than defining its
+     * own competing integer — no call site below needed to change, since
+     * this constant still resolves to the same value (1) it always has.
+     */
+    public const SDK_CONTRACT_V1 = \SaaSPlatform\ExtensionSdk\ExtensionSdkContract::V1;
+    private const SUPPORTED_SDK_CONTRACTS = \SaaSPlatform\ExtensionSdk\ExtensionSdkContract::SUPPORTED;
 
     /** @param ThemeBuilderExtensionBlock[] $blocks keyed by full ext:* type */
     private function __construct(

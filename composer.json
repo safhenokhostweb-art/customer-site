@@ -50,6 +50,13 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "../saas-platform/packages/saas-platform/modules/extension-sdk",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {
@@ -66,6 +73,7 @@
         "pusher/pusher-php-server": "*",
         "saas-platform/core-utils": "@dev",
         "saas-platform/modules-crm": "@dev",
+        "saas-platform/modules-extension-sdk": "@dev",
         "saas-platform/modules-forms": "@dev",
         "saas-platform/modules-seo-advanced": "@dev",
         "saas-platform/modules-theme-runtime": "@dev",

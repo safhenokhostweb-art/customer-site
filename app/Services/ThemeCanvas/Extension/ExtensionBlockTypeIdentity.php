@@ -22,11 +22,8 @@ final class ExtensionBlockTypeIdentity
 {
     public const NAMESPACE_PREFIX = 'ext:';
 
-    private const VENDOR_SLUG_PATTERN = '/^[a-z0-9]+(-[a-z0-9]+)*$/';
     private const BLOCK_NAME_PATTERN = '/^[a-z0-9]+(_[a-z0-9]+)*$/';
 
-    private const VENDOR_SLUG_MIN = 2;
-    private const VENDOR_SLUG_MAX = 40;
     private const BLOCK_NAME_MIN = 1;
     private const BLOCK_NAME_MAX = 60;
 
@@ -65,18 +62,22 @@ final class ExtensionBlockTypeIdentity
     }
 
     /**
-     * Phase 3E-E: exposed publicly so the extension DEPENDENCY identity
-     * (the product/package identity a ThemeRelease depends on — see
-     * Dependency\ExtensionDependencyResolver) can validate against the
-     * exact same vendor-slug rule as the block-identity namespace, without
-     * a second, divergent copy of this regex.
+     * Phase 3E-E, delegated to the shared authority in 3G-B-2: exposed
+     * publicly so the extension DEPENDENCY identity (the product/package
+     * identity a ThemeRelease depends on — see
+     * Dependency\ExtensionDependencyResolver) and ExtensionProductIdentity
+     * can validate against the exact same vendor-slug rule as the
+     * block-identity namespace, without a second, divergent copy of this
+     * regex. The vendor-slug grammar itself is no longer defined here — it
+     * is owned solely by SaaSPlatform\ExtensionSdk\ExtensionProductIdentity
+     * (shared with saas-platform's commercial Extension/ExtensionRelease
+     * authority), which this method now simply delegates to. This method
+     * stays because it is this class's own established public entry point
+     * for the vendor-slug rule — not because the grammar lives here.
      */
     public static function isValidVendorSlug(string $vendorSlug): bool
     {
-        $length = strlen($vendorSlug);
-        return $length >= self::VENDOR_SLUG_MIN
-            && $length <= self::VENDOR_SLUG_MAX
-            && preg_match(self::VENDOR_SLUG_PATTERN, $vendorSlug) === 1;
+        return \SaaSPlatform\ExtensionSdk\ExtensionProductIdentity::isValidVendorSlug($vendorSlug);
     }
 
     private static function assertValidVendorSlug(string $vendorSlug): void
