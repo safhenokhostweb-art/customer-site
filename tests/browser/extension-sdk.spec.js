@@ -339,6 +339,12 @@ test.describe('Extension SDK — unavailable/re-enable lifecycle + new-injection
         await expect(page.locator('[data-testid="tb-block-count"]')).toHaveText('2 ویجت');
 
         // ── B. new request/run with provider unavailable: open same page ─
+        // Navigate away first: restartServer() forcibly kills the old
+        // server process, and a live page can otherwise have an in-flight
+        // fetch (e.g. the debounced canvas-refresh timer) that gets an
+        // ERR_CONNECTION_RESET the instant that happens — a harness/test
+        // timing artifact, not a product concern.
+        await page.goto('about:blank');
         await restartServer(WITH_NO_EXTENSIONS);
         await loginAsAdmin(page); // real new session against the restarted server
         await openBuilder(page, fixture.lifecycle_page_id);
@@ -397,6 +403,7 @@ test.describe('Extension SDK — unavailable/re-enable lifecycle + new-injection
         expect(afterInjectionBlocks.find((b) => b.type === 'ext:acme:demo_card')?.props?.title).toBe(originalTitle);
 
         // ── C. re-enable: original block renders again, unmodified ───────
+        await page.goto('about:blank'); // see the same rationale above
         await restartServer(WITH_DEMO_SUITE);
         await loginAsAdmin(page);
         await openBuilder(page, fixture.lifecycle_page_id);

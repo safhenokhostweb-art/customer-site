@@ -677,6 +677,25 @@ final class BlockRegistry
     }
 
     /**
+     * Phase 3F-B — the one container-capability answer for this Canvas
+     * domain, delegating to the canonical shared authority rather than the
+     * Canvas editor's own hardcoded JS array (which this replaces as the
+     * decision source, not merely a duplicate of it). Deliberately queries
+     * the canonical registry directly rather than reading an `is_container`
+     * key off self::all()[$type]: several container-relevant types
+     * (section/grid/columns) are locally redefined above with a simpler,
+     * Canvas-specific schema that does not carry that flag, and this must
+     * stay correct regardless of local shadowing. No host-only or
+     * extension-aware layer exists here yet — that is Phase 3F-C's job
+     * (Extension SDK → Canvas authoring bridge); this phase only makes the
+     * canonical/shared layer consumable.
+     */
+    public static function isContainerType(string $type): bool
+    {
+        return \SaaSPlatform\ThemeRuntime\BlockRegistry::isContainerType($type);
+    }
+
+    /**
      * Phase 2i: this registry had no empty-output-policy concept at all —
      * delegates to the canonical authority rather than reimplementing it.
      */

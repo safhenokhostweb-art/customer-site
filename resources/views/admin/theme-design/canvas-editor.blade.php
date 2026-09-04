@@ -9,7 +9,11 @@
 @section('content')
 @php
 $blockLabels  = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>$d['name']]);
-$blockSchemas = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>['schema'=>$d['schema']??[],'defaultProps'=>$d['defaultProps']??[]]]);
+// Phase 3F-B: is_container is declarative capability metadata from the
+// canonical/shared authority (\App\Services\ThemeCanvas\BlockRegistry::
+// isContainerType()), not a client-side hardcoded array — see that
+// method's docblock for the layered shared+host design.
+$blockSchemas = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>['schema'=>$d['schema']??[],'defaultProps'=>$d['defaultProps']??[],'is_container'=>\App\Services\ThemeCanvas\BlockRegistry::isContainerType($t)]]);
 $orderedCats  = ['layout','content','dynamic','ecommerce','marketing','utility','module'];
 $catColors    = ['layout'=>'text-blue-600 bg-blue-50','content'=>'text-green-700 bg-green-50','dynamic'=>'text-purple-600 bg-purple-50','ecommerce'=>'text-emerald-700 bg-emerald-50','marketing'=>'text-orange-600 bg-orange-50','utility'=>'text-slate-600 bg-slate-100','module'=>'text-indigo-700 bg-indigo-50'];
 $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
@@ -49,6 +53,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <template x-for="(page, key) in pages" :key="key">
                 <button
                     @click="switchPage(key)"
+                    :data-testid="'tb-canvas-page-tab-' + key"
                     :class="key === '__header__'
                         ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
                         : key === '__footer__'
@@ -139,6 +144,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <button
                 @click="saveCurrentPage()"
                 :disabled="saving"
+                data-testid="tb-canvas-save-button"
                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-300 text-indigo-700 hover:bg-indigo-50 text-xs font-medium transition disabled:opacity-60"
             >
                 <svg x-show="!saving" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
@@ -233,7 +239,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <button @click="leftPanelTab='blocks'"
                     :class="leftPanelTab==='blocks' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
                     class="flex-1 py-2 text-xs text-center transition">بلوک‌ها</button>
-                <button @click="leftPanelTab='tree'"
+                <button @click="leftPanelTab='tree'" data-testid="tb-canvas-tree-tab"
                     :class="leftPanelTab==='tree' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
                     class="flex-1 py-2 text-xs text-center transition">ساختار</button>
             </div>
@@ -248,6 +254,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <template x-for="node in flattenTree()" :key="node.block.id + node.depth">
                         <div
                             @click="selectBlock(node.path)"
+                            :data-testid="'tb-tree-node-' + node.block.id"
                             :style="'padding-right:' + (12 + node.depth * 14) + 'px'"
                             :class="isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50'"
                             class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
@@ -916,7 +923,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                                         فرزندان (<span x-text="selectedBlock?.children?.length ?? 0"></span>)
                                     </span>
-                                    <button @click="showAddChildModal = true"
+                                    <button @click="showAddChildModal = true" data-testid="tb-open-add-child-modal"
                                         class="text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium transition flex items-center gap-1">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                         افزودن
@@ -972,6 +979,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     @foreach($byCategory[$catKey] as $blockType => $blockDef)
                         <button
                             @click="addChildBlock('{{ $blockType }}'); showAddChildModal = false"
+                            data-testid="tb-add-child-{{ $blockType }}"
                             class="flex items-center gap-2 px-2 py-2 rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-xs text-right transition">
                             <span class="text-base leading-none shrink-0">
                                 @switch($blockType)
@@ -1391,7 +1399,11 @@ function canvasEditor() {
             };
         },
         isContainerType(type) {
-            return ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'].includes(type);
+            // Phase 3F-B: declarative metadata from the server (see
+            // BLOCK_SCHEMAS construction in this file's @php block), not a
+            // hardcoded array — the authoritative source is
+            // App\Services\ThemeCanvas\BlockRegistry::isContainerType().
+            return !!(BLOCK_SCHEMAS[type]?.is_container);
         },
         getBlockByPath(path, arr) {
             arr = arr ?? this.blocks;

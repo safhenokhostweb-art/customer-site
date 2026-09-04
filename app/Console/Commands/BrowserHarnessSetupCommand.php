@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Page;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\Installation;
 use Illuminate\Console\Command;
@@ -143,6 +144,26 @@ class BrowserHarnessSetupCommand extends Command
             ],
         );
         $this->info("Extension page ready: id={$extensionPage->id} slug={$extensionPage->slug}");
+
+        // Phase 3F-B — minimal Canvas Theme fixture so the harness can
+        // reach /admin/theme-design/canvas/edit for real browser
+        // verification of the (pre-existing, unmodified this phase) nested
+        // authoring UI and the new declarative container-capability
+        // metadata. One page, one built-in `section` container block, no
+        // children — real child authoring is exercised live by the test.
+        $canvasThemeData = [
+            'pages' => [
+                'home' => ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => [
+                    ['id' => 'canvas_section_1', 'type' => 'section', 'props' => ['padding' => 'md', 'background' => 'transparent'], 'children' => []],
+                ]],
+            ],
+            'header_blocks' => [],
+            'footer_blocks' => [],
+            'global_styles' => [],
+        ];
+        Setting::set('active_canvas_theme_data', json_encode($canvasThemeData), 'theme');
+        Setting::set('canvas_draft_data', '', 'theme');
+        $this->info('Canvas Theme fixture ready (active_canvas_theme_data).');
 
         $this->info('Browser harness environment ready.');
 

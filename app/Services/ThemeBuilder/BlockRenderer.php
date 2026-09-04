@@ -104,7 +104,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
      * No-op in production rendering (editor_mode not set in context).
      */
     #[HostOwnedOverride(
-        reason: 'Adds row/column to the container-type list (customer-site\'s canvas has two extra layout primitives the Builder does not) — a real, small schema difference, not a copy.',
+        reason: 'Marks container blocks for the canvas iframe\'s nested drop zones — container detection itself is delegated to the shared isContainerType() authority (Phase 3F-B), not a local list.',
         category: HostOwnedOverride::REASON_HOST_CONTEXT,
     )]
     protected function wrapEditorMode(string $html, string $id, string $type): string
@@ -115,8 +115,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $idEsc = htmlspecialchars($id,   ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         // TB4: mark container blocks so iframe can show nested drop zones
-        $containerAttr = (in_array($type, ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'], true) || self::isExtensionContainer($type))
-            ? ' data-tb-container="1"' : '';
+        $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
         return "<div class=\"tb-canvas-block\" data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}>"
             . "<div class=\"tb-block-badge\">{$esc}</div>"
             . $html
@@ -150,8 +149,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $children = $block['children'] ?? $block['blocks'] ?? ($props['blocks'] ?? []);
 
         $inner = '';
-        $containerTypes = ['section', 'container', 'grid', 'columns', 'row', 'column', 'flex_container'];
-        if ((in_array($type, $containerTypes, true) || self::isExtensionContainer($type)) && !empty($children)) {
+        if (self::isContainerType($type) && !empty($children)) {
             $inner = $this->renderBlocks($children);
         }
         if ($type === 'tabs' && !empty($props['tabs'])) {
@@ -185,21 +183,32 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     }
 
     /**
-     * Phase 3E-H-C — additive extension-container detection: a
-     * currently-registered ext:* type declared as a container via
-     * HasContainerCapability is treated as one for child-rendering
-     * purposes, WITHOUT adding individual ext:* entries to the hardcoded
-     * $containerTypes list above (which stays the sole authority for every
-     * built-in type, unchanged). An unregistered/unavailable ext:* type is
-     * never a container (ElementRegistry::definition() returns null), which
-     * is the correct, safe default — its children simply don't render,
-     * matching the same silent-unless-rendered treatment any other
-     * unrenderable block already gets.
+     * Phase 3F-B — the one container-capability authority for this host,
+     * replacing what used to be a raw 7-type array literal duplicated
+     * across this method, wrapEditorMode(), and the Canvas editor's own
+     * client-side JS. Layered, not merged into a single registry:
+     *
+     *   1. Canonical/shared layer — SaaSPlatform\ThemeRuntime\BlockRegistry
+     *      ::isContainerType() (shared package, also consumed by
+     *      saas-platform's own Canvas authoring): section/container/grid/
+     *      columns/flex_container.
+     *   2. Host/extension layer — App\Builder\ElementRegistry::definition()
+     *      ::isContainer, driven by HasContainerCapability (3E-D): covers
+     *      customer-site-only host types (row/column) and any registered
+     *      ext:* extension type (3E-H-C), uniformly, through the exact same
+     *      declarative contract — no separate extension-only check needed
+     *      anymore.
+     *
+     * An unregistered/unavailable type — including an unregistered ext:* —
+     * is never a container (ElementRegistry::definition() returns null),
+     * the same safe fail-closed default as before. Existing behavior for
+     * every currently-recognized type is unchanged; nothing here enforces
+     * allowed_children (never has).
      */
-    protected static function isExtensionContainer(string $type): bool
+    protected static function isContainerType(string $type): bool
     {
-        if (!str_starts_with($type, 'ext:')) {
-            return false;
+        if (\SaaSPlatform\ThemeRuntime\BlockRegistry::isContainerType($type)) {
+            return true;
         }
         $definition = \App\Builder\ElementRegistry::definition($type);
         return $definition !== null && $definition->isContainer;
