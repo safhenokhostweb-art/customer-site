@@ -165,6 +165,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <button
                 @click="publishDraft()"
                 :disabled="publishing"
+                data-testid="tb-canvas-publish-button"
                 class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-60"
             >
                 <svg x-show="!publishing" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -328,6 +329,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         @dragstart="startDragBlock($event, '{{ $blockType }}')"
                                         @dragend="endDragBlock()"
                                         x-show="isBlockVisible('{{ $blockType }}', '{{ addslashes($blockDef['name']) }}')"
+                                        data-testid="tb-palette-add-{{ $blockType }}"
                                         class="flex flex-col items-start gap-1 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm transition text-right cursor-grab active:cursor-grabbing group"
                                         title="{{ $blockDef['name'] }}"
                                     >
@@ -813,6 +815,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :placeholder="schemaDef.default ?? ''"
+                                        :data-testid="'tb-prop-' + propKey"
                                     >
                                 </template>
 
@@ -835,6 +838,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :min="0"
+                                        :data-testid="'tb-prop-' + propKey"
                                     >
                                 </template>
 
@@ -872,7 +876,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'boolean'">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <div class="relative">
-                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="schedulePropUpdate()" class="sr-only peer">
+                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="schedulePropUpdate()" class="sr-only peer" :data-testid="'tb-prop-' + propKey">
                                             <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
                                             <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
                                         </div>
@@ -885,6 +889,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         x-model="selectedBlock.props[propKey]"
                                         @change="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
+                                        :data-testid="'tb-prop-' + propKey"
                                     >
                                         <template x-for="(label, val) in schemaDef.options" :key="val">
                                             <option :value="val" x-text="label"></option>
@@ -895,7 +900,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'color'">
                                     <div class="flex items-center gap-2">
                                         <input type="color" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000">
+                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" :data-testid="'tb-prop-' + propKey">
                                     </div>
                                 </template>
 
@@ -906,6 +911,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         rows="3"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition resize-y"
                                         :placeholder="schemaDef.default ?? ''"
+                                        :data-testid="'tb-prop-' + propKey"
                                     ></textarea>
                                 </template>
                             </div>

@@ -131,8 +131,15 @@ final class ProductionBuilderAdapter
      * to the closest faithful representation (never silently weakening the
      * underlying VALUE validation, which is driven by schemaValidationType()
      * below, not by this cosmetic mapping).
+     *
+     * Phase 3F-C: made public (behavior unchanged) so CanvasBuilderAdapter
+     * can reuse the exact same mapping for the Canvas authoring palette
+     * instead of carrying a second, divergent copy of it — the target
+     * vocabulary (string/textarea/number/boolean/select/color/image) is
+     * byte-identical to what the Canvas editor's own control-type checks
+     * already render (verified against canvas-editor.blade.php).
      */
-    private static function editorControlType(ThemeBuilderControlDefinition $control): string
+    public static function editorControlType(ThemeBuilderControlDefinition $control): string
     {
         return match ($control->controlType) {
             ThemeBuilderControlDefinition::TEXT => 'string',

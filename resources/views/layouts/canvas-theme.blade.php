@@ -425,6 +425,9 @@
     });
     </script>
 
+    @foreach(($extensionAssets['css'] ?? []) as $__extHref)
+    <link rel="stylesheet" href="{{ $__extHref }}">
+    @endforeach
     @stack('head')
 </head>
 <body>
@@ -553,6 +556,9 @@
     })();
     </script>
 
+    @foreach(($extensionAssets['js'] ?? []) as $__extSrc)
+    <script src="{{ $__extSrc }}" defer></script>
+    @endforeach
     @stack('scripts')
 
     {{-- ─── Builder Edit Bar (for admin users only) ─── --}}

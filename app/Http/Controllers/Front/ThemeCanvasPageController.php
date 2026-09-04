@@ -79,6 +79,13 @@ class ThemeCanvasPageController extends Controller
         $footerHtml  = $this->renderer->renderBlocks($themeData['footer_blocks'] ?? []);
         $contentHtml = $this->renderer->renderBlocks($blocks);
 
+        // Phase 3F-C — HasAssets bridge for the real public Canvas render,
+        // same pattern as themes/default/page.blade.php/home.blade.php
+        // (ADR-041 §2): the renderer instance accumulates CSS/JS from every
+        // extension block rendered across header+content+footer above,
+        // deduplicated, request-scoped.
+        $extensionAssets = $this->renderer->getCollectedAssets();
+
         return view('layouts.canvas-theme', [
             'headerHtml'  => $headerHtml,
             'footerHtml'  => $footerHtml,
@@ -87,6 +94,7 @@ class ThemeCanvasPageController extends Controller
             'pageTitle'   => $title,
             'themeName'   => Setting::get('active_canvas_theme_name', ''),
             'globalStyles'=> $themeData['global_styles'] ?? [],
+            'extensionAssets' => $extensionAssets,
         ]);
     }
 

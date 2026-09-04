@@ -400,9 +400,16 @@ class ThemeDesignController extends Controller
         // ─── Virtual pages: header/footer blocks ─────────────────────────────
         if ($key === '__header__' || $key === '__footer__') {
             $field = $key === '__header__' ? 'header_blocks' : 'footer_blocks';
-            $themeData[$field] = $validated['blocks'];
+            // Phase 3F-C — same fail-closed ext:* trust boundary the
+            // Production Builder already enforces (3E-H-C), reused via the
+            // extracted ExtensionBlockReconciler rather than reimplemented:
+            // an incoming block whose type is ext:*-shaped but not
+            // currently registered is never trusted as submitted; it is
+            // reconciled against this same field's own previously-persisted
+            // content instead of accepted verbatim.
+            $themeData[$field] = \App\Builder\Extension\ExtensionBlockReconciler::reconcile($validated['blocks'], $themeData[$field] ?? []);
             Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-            return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
+            return response()->json(['success' => true, 'block_count' => count($themeData[$field])]);
         }
 
         // Normalize pages to slug-keyed (handles both indexed and associative arrays)
@@ -412,11 +419,15 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'صفحه «' . $key . '» یافت نشد.'], 404);
         }
 
-        $themeData['pages'][$key]['blocks'] = $validated['blocks'];
+        // Phase 3F-C — same reconciliation gate for regular pages.
+        $themeData['pages'][$key]['blocks'] = \App\Builder\Extension\ExtensionBlockReconciler::reconcile(
+            $validated['blocks'],
+            $themeData['pages'][$key]['blocks'] ?? []
+        );
 
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
-        return response()->json(['success' => true, 'block_count' => count($validated['blocks'])]);
+        return response()->json(['success' => true, 'block_count' => count($themeData['pages'][$key]['blocks'])]);
     }
 
     public function canvasAddPage(Request $request): JsonResponse
@@ -770,8 +781,15 @@ class ThemeDesignController extends Controller
             }
         }
 
+        // Phase 3F-C — HasAssets bridge for the editor's own live iframe,
+        // same pattern as the public render bridge (ADR-041 §2): assets
+        // accumulate on the renderer instance across every block rendered
+        // above, deduplicated, request-scoped (renderer resolved fresh per
+        // request, never a singleton).
+        $extensionAssets = $renderer->getCollectedAssets();
+
         return response()
-            ->view('admin.theme-design.canvas-live-preview', compact('blocks', 'renderedBlocks', 'globalStyles', 'pageKey'))
+            ->view('admin.theme-design.canvas-live-preview', compact('blocks', 'renderedBlocks', 'globalStyles', 'pageKey', 'extensionAssets'))
             ->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
@@ -844,8 +862,13 @@ class ThemeDesignController extends Controller
         $renderedHeader = collect($headerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
         $renderedFooter = collect($footerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
 
+        // Phase 3F-C — same HasAssets bridge as canvasLivePreview()/the
+        // public render path; renderer instance accumulates assets across
+        // all three renderBlock() calls above.
+        $extensionAssets = $renderer->getCollectedAssets();
+
         return view('canvas-preview', compact(
-            'renderedBlocks', 'renderedHeader', 'renderedFooter', 'globalStyles', 'themeData'
+            'renderedBlocks', 'renderedHeader', 'renderedFooter', 'globalStyles', 'themeData', 'extensionAssets'
         ));
     }
 

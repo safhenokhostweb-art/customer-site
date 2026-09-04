@@ -84,28 +84,22 @@ final class ExtensionBlockTypeRegistry
             throw ExtensionIdentityRegistrationException::hostCollision($type);
         }
 
-        // Covers every currently-persisted host/local/module type this
-        // installation defines, including the module:* namespace and the
-        // ~40 pre-existing local-definition overlaps with canonical names
-        // (Phase 3E-A finding) — none of those are ext:-prefixed, so this
-        // can only ever match a genuine collision, never a false positive
-        // against that grandfathered precedence question.
-        if (array_key_exists($type, ThemeCanvasBlockRegistry::all())) {
-            throw ExtensionIdentityRegistrationException::hostCollision($type);
-        }
-
-        // Phase 3E-G: checked BEFORE the ElementRegistry::has() probe below,
-        // deliberately. Once ThemeBuilderExtensionRegistrar exists, a type
-        // already present in self::$registered legitimately means
-        // ElementRegistry::has($type) is ALSO true (its renderer class was
-        // registered right after this identity was claimed) — that is no
-        // longer a collision to reject, it is the authoritative record
-        // this exact identity is already an extension's own, and owner/
-        // definition equality alone decides idempotent-vs-rejected, same
-        // as always. Resolving this first means the ElementRegistry check
-        // below only ever fires for a type ElementRegistry holds WITHOUT
-        // this registry's own knowledge of it — a genuine inconsistency,
-        // not the normal idempotent-reregistration path.
+        // Phase 3E-G: checked BEFORE the Canvas-registry/ElementRegistry
+        // probes below, deliberately. Once ThemeBuilderExtensionRegistrar
+        // exists, a type already present in self::$registered legitimately
+        // means ElementRegistry::has($type) — and, since Phase 3F-C,
+        // ThemeCanvasBlockRegistry::all() — is ALSO true (its renderer
+        // class was registered right after this identity was claimed):
+        // that is no longer a collision to reject, it is the authoritative
+        // record this exact identity is already an extension's own, and
+        // owner/definition equality alone decides idempotent-vs-rejected,
+        // same as always. Resolving this first means the checks below only
+        // ever fire for a type they hold WITHOUT this registry's own
+        // knowledge of it — a genuine inconsistency, not the normal
+        // idempotent-reregistration path (Phase 3F-C: this ordering is now
+        // load-bearing, not just an optimization — ThemeCanvasBlockRegistry
+        // ::all() below legitimately reflects this exact identity once
+        // registered, so it must never be consulted before this check).
         if (array_key_exists($type, self::$registered)) {
             $existing = self::$registered[$type];
             if ($existing['owner'] === $vendorSlug && $existing['definition'] === $definition) {
@@ -113,6 +107,21 @@ final class ExtensionBlockTypeRegistry
             }
 
             throw ExtensionIdentityRegistrationException::extensionCollision($type, $existing['owner'], $vendorSlug);
+        }
+
+        // Covers every currently-persisted host/local/module type this
+        // installation defines, including the module:* namespace and the
+        // ~40 pre-existing local-definition overlaps with canonical names
+        // (Phase 3E-A finding) — none of those are ext:-prefixed, so this
+        // can only ever match a genuine collision, never a false positive
+        // against that grandfathered precedence question. Since Phase
+        // 3F-C, ThemeCanvasBlockRegistry::all() also reflects OTHER
+        // already-registered ext:* identities — reaching this line already
+        // means $type is not one of them (the self::$registered check
+        // above returned/threw for that case), so this can still only ever
+        // match a genuine host/local collision, never a false positive.
+        if (array_key_exists($type, ThemeCanvasBlockRegistry::all())) {
+            throw ExtensionIdentityRegistrationException::hostCollision($type);
         }
 
         if (ElementRegistry::has($type)) {

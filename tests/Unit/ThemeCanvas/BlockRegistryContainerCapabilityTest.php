@@ -11,6 +11,11 @@ use Tests\TestCase;
  * regardless of local schema shadowing (section/grid/columns are locally
  * redefined here with a simpler schema than the canonical one, and must
  * still report container capability correctly).
+ *
+ * Phase 3F-C extended isContainerType() with the host/extension layer
+ * (App\Builder\ElementRegistry) already anticipated by ADR-043 — see the
+ * updated test below for row/column, which now correctly report true
+ * through that layer despite still having no Canvas palette entry.
  */
 class BlockRegistryContainerCapabilityTest extends TestCase
 {
@@ -40,13 +45,28 @@ class BlockRegistryContainerCapabilityTest extends TestCase
         }
     }
 
-    public function test_types_absent_from_this_domain_entirely_are_false(): void
+    public function test_wholly_unregistered_type_is_false(): void
     {
-        // row/column exist in the Production Builder's own ElementRegistry
-        // (host-only types there) but have no palette entry in this Canvas
-        // domain at all — must not be reported as containers here.
-        foreach (['row', 'column', 'not_a_real_type'] as $type) {
-            $this->assertFalse(BlockRegistry::isContainerType($type), "{$type} must not be a container in the Canvas domain");
+        $this->assertFalse(BlockRegistry::isContainerType('not_a_real_type'), 'an unregistered type must never be a container');
+    }
+
+    /**
+     * Phase 3F-C: row/column exist in the Production Builder's own
+     * ElementRegistry (host-only types there, declaring
+     * HasContainerCapability since 3E-D) — isContainerType() now correctly
+     * reports true for them via the host/extension layer, the same layer
+     * an ext:* container type is recognized through. This is purely a
+     * defensive-classification correctness fix: row/column still have NO
+     * Canvas palette entry (see the companion test below), so no real
+     * Canvas Theme content can ever actually contain a 'row'/'column'
+     * block — this assertion cannot change any currently-authorable
+     * behavior, only how a hypothetical/foreign such type would classify.
+     */
+    public function test_host_only_types_report_true_via_extension_layer_despite_no_palette_entry(): void
+    {
+        foreach (['row', 'column'] as $type) {
+            $this->assertTrue(BlockRegistry::isContainerType($type), "{$type} must be a container via the host/extension layer");
+            $this->assertNull(BlockRegistry::get($type), "{$type} must still have no Canvas palette entry");
         }
     }
 }

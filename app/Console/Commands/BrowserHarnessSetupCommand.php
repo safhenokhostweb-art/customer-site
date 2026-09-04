@@ -151,11 +151,19 @@ class BrowserHarnessSetupCommand extends Command
         // authoring UI and the new declarative container-capability
         // metadata. One page, one built-in `section` container block, no
         // children — real child authoring is exercised live by the test.
+        // Phase 3F-C — a second Canvas page, dedicated to the Extension SDK
+        // → Canvas bridge scenarios (palette/nested authoring/assets/XSS),
+        // kept separate from 'home' so its content never interferes with
+        // 3F-B's own nested-authoring proof. Starts empty; real authoring
+        // is exercised live by the browser test.
         $canvasThemeData = [
             'pages' => [
                 'home' => ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => [
                     ['id' => 'canvas_section_1', 'type' => 'section', 'props' => ['padding' => 'md', 'background' => 'transparent'], 'children' => []],
                 ]],
+                'ext-bridge' => ['title' => 'Extension Bridge', 'slug' => 'ext-bridge', 'is_home' => false, 'blocks' => []],
+                'ext-lifecycle' => ['title' => 'Extension Lifecycle', 'slug' => 'ext-lifecycle', 'is_home' => false, 'blocks' => []],
+                'ext-throwing' => ['title' => 'Extension Throwing', 'slug' => 'ext-throwing', 'is_home' => false, 'blocks' => []],
             ],
             'header_blocks' => [],
             'footer_blocks' => [],

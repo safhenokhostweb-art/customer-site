@@ -22,6 +22,9 @@
         .bg-primary   { background-color: var(--color-primary); }
         .border-primary { border-color: var(--color-primary); }
     </style>
+    @foreach(($extensionAssets['css'] ?? []) as $__extHref)
+    <link rel="stylesheet" href="{{ $__extHref }}">
+    @endforeach
 </head>
 <body>
 
@@ -48,5 +51,8 @@
         @endif
     </div>
 
+    @foreach(($extensionAssets['js'] ?? []) as $__extSrc)
+    <script src="{{ $__extSrc }}" defer></script>
+    @endforeach
 </body>
 </html>

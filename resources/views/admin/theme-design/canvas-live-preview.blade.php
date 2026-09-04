@@ -154,6 +154,9 @@ body.tb-drag-active .tb-drop-zone {
     background: rgba(99,102,241,0.04) !important;
 }
 </style>
+@foreach(($extensionAssets['css'] ?? []) as $__extHref)
+<link rel="stylesheet" href="{{ $__extHref }}">
+@endforeach
 </head>
 <body>
 
@@ -392,5 +395,8 @@ body.tb-drag-active .tb-drop-zone {
     }
 }());
 </script>
+@foreach(($extensionAssets['js'] ?? []) as $__extSrc)
+<script src="{{ $__extSrc }}" defer></script>
+@endforeach
 </body>
 </html>

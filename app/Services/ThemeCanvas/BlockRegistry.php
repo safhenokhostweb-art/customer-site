@@ -16,8 +16,11 @@ final class BlockRegistry
 
     public static function all(): array
     {
+        // Phase 3F-C: only the local+canonical portion is memoized — see
+        // the merge at the end of this method for why the extension
+        // portion deliberately is not.
         if (self::$blocks !== null) {
-            return self::$blocks;
+            return self::$blocks + \App\Builder\Extension\CanvasBuilderAdapter::palette();
         }
 
         self::$blocks = [
@@ -668,12 +671,45 @@ final class BlockRegistry
         // still defines it for saas-platform's own Builder preview.
         unset(self::$blocks['module:gallery_widget']);
 
-        return self::$blocks;
+        // Phase 3F-C — registered Theme Builder Extension SDK definitions
+        // (ext:*) are bridged in on every call, NOT folded into the
+        // memoized self::$blocks above. This is deliberate, not an
+        // oversight: ExtensionBlockTypeRegistry::assertAvailable() (the
+        // existing 3E-B collision authority) itself calls
+        // ThemeCanvasBlockRegistry::all() as one of its checks, DURING
+        // extension registration — i.e. before ElementRegistry has yet
+        // been told about the type being registered. If the extension
+        // merge were folded into the memoized self::$blocks, that
+        // in-progress registration call would permanently freeze a
+        // pre-registration (extension-less) snapshot for the remainder of
+        // the process — the very extension being registered would never
+        // become visible here again. Keeping self::$blocks as the pure
+        // local+canonical snapshot (never containing an ext:*-prefixed
+        // key) also preserves, rather than merely coincidentally matches,
+        // that collision check's own documented assumption. The merge
+        // itself costs nothing extra to repeat: CanvasBuilderAdapter reads
+        // ElementRegistry::definitions(), itself already memoized.
+        return self::$blocks + \App\Builder\Extension\CanvasBuilderAdapter::palette();
     }
 
     public static function get(string $type): ?array
     {
         return self::all()[$type] ?? null;
+    }
+
+    /**
+     * Phase 3F-C — test-only cache invalidation, mirroring
+     * ElementRegistry::clearCache(). Before this phase all() was 100%
+     * static/config-driven within a process, so no reset ever mattered;
+     * now that it also merges CanvasBuilderAdapter::palette() (which
+     * reflects test-scoped extension registration/reset cycles), a test
+     * that registers or resets extensions must also reset this memoized
+     * snapshot. No production caller needs this — a real request is
+     * always a fresh process, exactly like ElementRegistry's own cache.
+     */
+    public static function reset(): void
+    {
+        self::$blocks = null;
     }
 
     /**
@@ -692,7 +728,17 @@ final class BlockRegistry
      */
     public static function isContainerType(string $type): bool
     {
-        return \SaaSPlatform\ThemeRuntime\BlockRegistry::isContainerType($type);
+        // Phase 3F-C: layered exactly like App\Services\ThemeBuilder\
+        // BlockRenderer::isContainerType() — canonical/shared layer first,
+        // then the host/extension layer (App\Builder\ElementRegistry),
+        // covering any registered ext:* type declaring
+        // HasContainerCapability. Unregistered/unavailable types (including
+        // unregistered ext:*) are never containers (definition() is null).
+        if (\SaaSPlatform\ThemeRuntime\BlockRegistry::isContainerType($type)) {
+            return true;
+        }
+        $definition = \App\Builder\ElementRegistry::definition($type);
+        return $definition !== null && $definition->isContainer;
     }
 
     /**
