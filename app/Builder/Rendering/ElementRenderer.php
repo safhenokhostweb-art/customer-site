@@ -7,6 +7,7 @@ use App\Builder\Contracts\HasDynamicData;
 use App\Builder\ElementRegistry;
 use App\Builder\Services\DynamicDataResolver;
 use App\Builder\Validation\ElementValidator;
+use App\Services\ThemeCanvas\Extension\ThemeExtensionAssetMap;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -21,9 +22,25 @@ class ElementRenderer
 
     protected ?DynamicDataResolver $resolver = null;
 
+    /**
+     * Manifest-declared Extension assets (ThemeExtensionAssetMap), set by
+     * the host BlockRenderer from the Theme's own `extension_assets`
+     * payload. Null (the default) is a complete no-op — every pre-existing
+     * caller that never calls setExtensionAssetMap() behaves exactly as
+     * before.
+     */
+    protected ?ThemeExtensionAssetMap $extensionAssetMap = null;
+
     public function setContext(array $context): self
     {
         $this->context = $context;
+        return $this;
+    }
+
+    /** @param array<string, array{css?: string[], js?: string[]}> $rawAssetMap raw, untrusted — parsed defensively by ThemeExtensionAssetMap */
+    public function setExtensionAssetMap(array $rawAssetMap): self
+    {
+        $this->extensionAssetMap = ThemeExtensionAssetMap::fromArray($rawAssetMap);
         return $this;
     }
 
@@ -81,6 +98,17 @@ class ElementRenderer
 
             if (is_subclass_of($class, HasAssets::class)) {
                 $this->collectAssets($class::getAssets());
+            }
+
+            // Manifest-declared Extension assets are independent of
+            // HasAssets — a renderer is never required to implement
+            // HasAssets merely to repeat the same assets its Extension's
+            // manifest already declares. collectAssets()'s own in_array()
+            // dedup means a URL declared by BOTH sources is still emitted
+            // exactly once.
+            $manifestAssets = $this->extensionAssetMap?->assetsFor($type);
+            if ($manifestAssets !== null) {
+                $this->collectAssets($manifestAssets);
             }
 
             return $html;

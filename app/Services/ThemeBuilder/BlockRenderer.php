@@ -44,9 +44,26 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
      */
     protected ?\App\Builder\Rendering\ElementRenderer $elementRenderer = null;
 
+    /**
+     * Manifest-declared Extension assets ({ext:* type => {css, js}}), read
+     * from the Theme's own `extension_assets` payload (see
+     * ThemeCanvasRenderer::setThemeData()) — forwarded into
+     * ElementRenderer so an ext:* renderer never needs to implement
+     * HasAssets merely to repeat the exact same assets its manifest
+     * already declares. Empty by default: every non-Canvas caller of this
+     * class (and every Theme predating this feature) is unaffected.
+     */
+    protected array $extensionAssetsByType = [];
+
     public function setSchemaRegistry(?ElementSchemaRegistry $registry): self
     {
         $this->schemaRegistry = $registry;
+        return $this;
+    }
+
+    public function setExtensionAssets(array $assetsByType): self
+    {
+        $this->extensionAssetsByType = $assetsByType;
         return $this;
     }
 
@@ -171,6 +188,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $this->elementRenderer ??= app(\App\Builder\Rendering\ElementRenderer::class);
             return $this->elementRenderer
                 ->setContext($this->context)
+                ->setExtensionAssetMap($this->extensionAssetsByType)
                 ->render($type, $props, $context);
         }
 

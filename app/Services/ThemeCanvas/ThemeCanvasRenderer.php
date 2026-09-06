@@ -26,6 +26,14 @@ class ThemeCanvasRenderer extends BlockRenderer
     public function setThemeData(array $themeData): self
     {
         $this->themeData = $themeData;
+
+        // Phase: Extension manifest asset delivery — saas-platform projects
+        // each selected Extension release's declared CSS/JS into absolute
+        // URLs under `extension_assets` (ExtensionThemeRuntimeAssetProjector)
+        // as part of this exact same JSON payload. Absent/empty for every
+        // Theme that selects no Extension — a pure no-op for old Themes.
+        $this->setExtensionAssets($themeData['extension_assets'] ?? []);
+
         return $this;
     }
 
