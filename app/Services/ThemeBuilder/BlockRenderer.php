@@ -9,6 +9,7 @@ use App\Models\Review;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SaaSPlatform\ThemeRuntime\Attributes\HostOwnedOverride;
+use SaaSPlatform\ThemeRuntime\Security\HtmlSanitizer;
 
 /**
  * رندرکنندهٔ بلوک‌های Theme Builder در سایت مشتری.
@@ -402,10 +403,24 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
 
 
+    /**
+     * Phase 3H-S1 (security closure) — was previously an independent
+     * `strip_tags()`-only implementation with a wider allowlist and NO
+     * attribute stripping, so `on*` event-handler attributes and
+     * `javascript:`/`data:`/`vbscript:` URL schemes survived verbatim on
+     * every allowed tag except the one this method never rebuilt. Delegates
+     * entirely to the canonical `HtmlSanitizer::sanitizeRichHtml()` — the
+     * one intended sole rich-HTML sanitization authority for the whole
+     * Theme Runtime — instead of maintaining a second, independently
+     * drifting tag/attribute/URL-scheme policy. This narrows the allowed
+     * tag set to canonical's own (`<p><br><a><strong><em><ul><ol><li><h2>
+     * <h3>`, dropping `<h4><div><span><blockquote>`) — a deliberate,
+     * security-motivated behavior change, not an oversight.
+     */
     protected function renderCustomHtml(array $props, string $inner, string $id): string
     {
         $raw = (string) ($props['content'] ?? '');
-        $clean = strip_tags($raw, '<p><br><a><strong><em><ul><ol><li><h2><h3><h4><div><span><blockquote>');
+        $clean = HtmlSanitizer::sanitizeRichHtml($raw);
 
         return "<div id=\"tb-{$id}\" class=\"tb-custom-html\">{$clean}</div>";
     }
