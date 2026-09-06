@@ -41,61 +41,12 @@
     </div>
     @endif
 
-    @if($canvasActive)
-    {{-- ═══ Canvas Revision History — view + restore previous published versions ═══ --}}
-    <div class="card" style="margin-bottom:1.75rem;"
-         x-data="{
-            revisions: [],
-            loading: true,
-            async load() {
-                this.loading = true;
-                const res = await fetch('{{ route('admin.theme-design.canvas-revisions') }}', { headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                this.revisions = data.revisions ?? [];
-                this.loading = false;
-            },
-            async restore(slot) {
-                if (!confirm('نسخه فعلی قبل از بازیابی، خودش به تاریخچه اضافه می‌شود. این نسخه انتخابی جایگزین قالب فعال شود؟')) return;
-                const res = await fetch('{{ url('admin/theme-design/canvas/revisions') }}/' + slot + '/restore', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                });
-                const data = await res.json();
-                if (data.success) { location.reload(); } else { alert(data.error || 'خطا در بازیابی نسخه.'); }
-            }
-         }"
-         x-init="load()">
-        <div class="card-header" style="display:flex;align-items:center;gap:0.75rem;">
-            <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#b45309,#92400e);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <x-core-ui::icon name="clock" class="w-4 h-4" style="color:#fef3c7;" />
-            </div>
-            <div style="flex:1;">
-                <span style="font-weight:700;font-size:1rem;display:block;">تاریخچه نسخه‌های Canvas</span>
-                <span style="font-size:0.78rem;color:#6b7280;">۵ نسخه آخر منتشرشده — قابل بازیابی در هر زمان</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <template x-if="loading">
-                <p style="font-size:0.85rem;color:#6b7280;">در حال بارگذاری...</p>
-            </template>
-            <template x-if="!loading && revisions.length === 0">
-                <p style="font-size:0.85rem;color:#6b7280;">هنوز نسخه پشتیبانی ثبت نشده است. هر بار که قالب Canvas منتشر می‌شود، نسخه قبلی این‌جا ذخیره می‌شود.</p>
-            </template>
-            <template x-for="rev in revisions" :key="rev.slot">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.75rem 0;border-bottom:1px solid #f1f5f9;">
-                    <div>
-                        <p style="font-weight:600;font-size:0.85rem;margin:0;" x-text="'نسخه #' + rev.slot"></p>
-                        <p style="font-size:0.75rem;color:#6b7280;margin:0.15rem 0 0;" x-text="(rev.date || '') + (rev.time_ago ? ' — ' + rev.time_ago : '')"></p>
-                    </div>
-                    <button @click="restore(rev.slot)" type="button"
-                        style="display:inline-flex;align-items:center;gap:0.4rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:0.78rem;font-weight:600;padding:0.4rem 0.9rem;border-radius:0.6rem;cursor:pointer;">
-                        بازیابی این نسخه
-                    </button>
-                </div>
-            </template>
-        </div>
-    </div>
-    @endif
+    {{-- Phase 3H-B: legacy 5-slot rotating "Canvas Revision History" UI
+         de-exposed here — superseded by the canonical, append-only permanent
+         revision history/rollback panel on the Canvas dashboard itself
+         (admin.theme-design.canvas). Backend (canvasRevisions()/
+         canvasRestoreRevision(), canvas_revision_{1..5} Settings) left
+         intact/untouched — not an ordinary UI choice any more. --}}
 
     {{-- ══════════════════════════════════════════════════════════════════════
          SECTION 1 — ظاهر پنل مدیریت (Dashboard)

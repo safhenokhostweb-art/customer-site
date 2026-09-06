@@ -56,6 +56,7 @@
     @endphp
 
     {{-- ─── Theme Header Card ─────────────────────────────────────────────── --}}
+    <div x-data="{ historyOpen: false }">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {{-- Color Bar --}}
       <div class="h-2" style="background: linear-gradient(90deg, {{ $primary }} 0%, {{ $secondary }} 100%);"></div>
@@ -100,18 +101,11 @@
             <x-core-ui::icon name="shield-check" class="w-4 h-4" />
             لایسنس‌های من
           </a>
-          @if($hasBackup)
-          <form method="POST"
-                action="{{ route('admin.theme-marketplace.rollback') }}"
-                onsubmit="return confirm('قالب «{{ $backupName }}» بازگردانی شود؟ قالب فعلی حذف خواهد شد.')">
-            @csrf
-            <button type="submit"
-                    class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium px-4 py-2 rounded-xl border border-amber-200 transition">
-              <x-core-ui::icon name="arrow-uturn-left" class="w-4 h-4" />
-              بازگردانی «{{ $backupName }}»
-            </button>
-          </form>
-          @endif
+          <button type="button" @click="historyOpen = !historyOpen"
+                  class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
+            <x-core-ui::icon name="arrow-uturn-left" class="w-4 h-4" />
+            تاریخچه و بازیابی نسخه‌ها
+          </button>
           <form method="POST"
                 action="{{ route('admin.theme-design.canvas-deactivate') }}"
                 onsubmit="return confirm('قالب Canvas غیرفعال شود و سایت به حالت پیش‌فرض برگردد؟')">
@@ -140,6 +134,61 @@
           <p class="text-gray-500 text-xs mt-0.5">بلاک فوتر</p>
         </div>
       </div>
+    </div>
+
+    {{-- ─── Version History / Permanent Rollback (canonical, append-only) ──── --}}
+    <div x-show="historyOpen" x-collapse
+         x-data="{
+            revisions: [],
+            loading: true,
+            async load() {
+                this.loading = true;
+                const res = await fetch('{{ route('admin.theme-design.canvas-instance-revisions') }}', { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                this.revisions = data.revisions ?? [];
+                this.loading = false;
+            },
+            async restore(id) {
+                if (!confirm('نسخه فعلی به‌طور خودکار در تاریخچه ثبت می‌شود. این نسخه انتخابی جایگزین قالب فعال شود؟')) return;
+                const res = await fetch('{{ url('admin/theme-design/canvas/instance-revisions') }}/' + id + '/rollback', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                });
+                const data = await res.json();
+                if (data.success) { location.reload(); } else { alert(data.error || 'خطا در بازیابی نسخه.'); }
+            }
+         }"
+         x-init="load()"
+         class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+        <x-core-ui::icon name="clock" class="w-5 h-5 text-indigo-500" />
+        <h2 class="text-base font-bold text-gray-800">تاریخچه نسخه‌های قالب</h2>
+        <span class="text-xs font-normal text-gray-400">— تمام نسخه‌ها برای همیشه نگه‌داری می‌شوند؛ بازیابی، نسخه جدیدی به تاریخچه اضافه می‌کند</span>
+      </div>
+      <div class="divide-y divide-gray-100">
+        <template x-if="loading">
+          <p class="px-6 py-6 text-sm text-gray-400 text-center">در حال بارگذاری...</p>
+        </template>
+        <template x-if="!loading && revisions.length === 0">
+          <p class="px-6 py-6 text-sm text-gray-400 text-center">هنوز تاریخچه‌ای ثبت نشده است.</p>
+        </template>
+        <template x-for="rev in revisions" :key="rev.id">
+          <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition">
+            <div class="min-w-0">
+              <p class="font-semibold text-gray-800 text-sm">
+                نسخه #<span x-text="rev.revision_number"></span>
+                <span x-show="rev.is_active" class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full mr-1">فعلی</span>
+              </p>
+              <p class="text-xs text-gray-400 mt-0.5" x-text="rev.type + ' — ' + (rev.date || '') + (rev.time_ago ? ' (' + rev.time_ago + ')' : '')"></p>
+            </div>
+            <button type="button" x-show="!rev.is_active" @click="restore(rev.id)"
+                    class="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 text-sm font-medium transition shrink-0">
+              بازیابی این نسخه
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
     </div>
 
     {{-- ─── Color Palette ────────────────────────────────────────────────── --}}

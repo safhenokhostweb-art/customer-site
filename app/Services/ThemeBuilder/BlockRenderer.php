@@ -473,12 +473,6 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
     // Alias so Str::studly('nav_menu') → renderNavMenu works
 
-    // Alias so Str::studly('custom_html') → renderCustomHtml works
-    protected function renderCustomHtml2(array $props, string $inner, string $id): string
-    {
-        return $this->renderCustomHtml($props, $inner, $id);
-    }
-
     // Alias so Str::studly('promo_banner') → renderPromoBanner works
 
     // Alias so Str::studly('search_bar') → renderSearchBar works
@@ -734,13 +728,6 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
                 <div class=\"tb-services-grid tb-grid tb-grid-cols-{$columns} tb-gap-md\">{$items}</div>
             </div>
         </div>";
-    }
-
-
-
-    protected function renderStats_row(array $props, string $inner, string $id): string
-    {
-        return $this->renderStatsRow($props, $inner, $id);
     }
 
 

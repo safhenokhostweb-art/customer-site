@@ -158,4 +158,40 @@ class ManifestAssetEmissionTest extends TestCase
         $this->assertSame(['https://saas.example.test/vendor/e2etest/gallery-suite/1.0.0/gallery.css'], $assets['css']);
         $this->assertSame([], $assets['js']);
     }
+
+    /**
+     * Phase 3H-B (projector follow-up §15D) — the SaaS-side
+     * ExtensionThemeRuntimeAssetProjector deliberately emits an
+     * `extension_assets` entry for every type a Theme's selected release
+     * manifests declare, not only the types actually used in that Theme's
+     * blocks (payload-size optimization is explicitly NOT a required
+     * convergence outcome). Proves that unused-entry breadth is harmless on
+     * the consuming side: an asset map entry for a type that is never
+     * rendered on this page must never leak into the page's collected
+     * asset output.
+     */
+    public function test_case6_unused_manifest_entry_does_not_affect_rendered_page_asset_output(): void
+    {
+        $this->registerManifestOnlyGallery();
+
+        $renderer = new ElementRenderer;
+        $renderer->setExtensionAssetMap([
+            'ext:e2etest:gallery' => [
+                'css' => ['https://saas.example.test/vendor/e2etest/gallery-suite/1.0.0/gallery.css'],
+                'js' => [],
+            ],
+            // Declared by the selected release's manifest, but no block of
+            // this type is ever rendered on this page.
+            'ext:acme:never_rendered' => [
+                'css' => ['https://saas.example.test/vendor/acme/never-rendered/1.0.0/x.css'],
+                'js' => [],
+            ],
+        ]);
+
+        $renderer->render('ext:e2etest:gallery', [], ['id' => 'b1']);
+
+        $assets = $renderer->getCollectedAssets();
+        $this->assertSame(['https://saas.example.test/vendor/e2etest/gallery-suite/1.0.0/gallery.css'], $assets['css']);
+        $this->assertStringNotContainsString('never-rendered', implode(',', $assets['css']));
+    }
 }

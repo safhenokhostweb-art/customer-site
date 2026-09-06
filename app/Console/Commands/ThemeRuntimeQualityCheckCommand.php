@@ -58,6 +58,13 @@ class ThemeRuntimeQualityCheckCommand extends Command
         $originalName = DB::table('settings')->where('key', 'active_canvas_theme_name')->value('value');
 
         try {
+            // Deliberate exception to the normal invariant (every
+            // active_canvas_theme_data write goes through
+            // ThemeInstanceRevisionService so it's captured in the
+            // permanent revision ledger): this is a throwaway CLI-only
+            // verification snapshot, restored unconditionally in the
+            // `finally` block below even on failure, so it must never
+            // itself become a permanent revision row.
             Setting::set('active_canvas_theme_data', $snapshot);
             Setting::set('active_canvas_theme_name', $this->option('name') ?? ($path));
             Cache::forget('canvas_theme_data');
