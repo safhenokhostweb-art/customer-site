@@ -4,6 +4,7 @@ namespace App\Services\ThemeCanvas;
 
 use App\Models\Setting;
 use App\Models\ThemeInstanceRevision;
+use App\Services\CustomerMediaService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,7 @@ class ThemeInstanceRevisionService
 {
     public const DEFAULT_IDENTIFIER = 'custom';
 
-    public function __construct(private ThemeInstanceBaseRelease $baseRelease)
+    public function __construct(private ThemeInstanceBaseRelease $baseRelease, private CustomerMediaService $media)
     {
     }
 
@@ -100,6 +101,10 @@ class ThemeInstanceRevisionService
                 'metadata' => array_merge(['theme_name' => $themeName], $context['metadata'] ?? []),
                 'created_by' => auth()->id(),
             ]);
+
+            // Immutable revisions are usage-bearing: deleting a media asset
+            // referenced by any rollback target would silently corrupt it.
+            $this->media->registerThemeRevisionUsages($revision->id, $themeData);
 
             Setting::set('active_canvas_theme_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
             Setting::set('active_theme_revision_id', $revision->id, 'theme');
