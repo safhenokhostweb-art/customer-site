@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\ThemeCanvas\BlockRegistry;
+use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Support\Installation;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
@@ -30,7 +32,12 @@ use Illuminate\Support\Facades\Hash;
  */
 class BrowserHarnessSetupCommand extends Command
 {
-    protected $signature = 'browser-harness:setup {--json : Print a single machine-readable JSON summary line at the end}';
+    protected $signature = 'browser-harness:setup
+        {--json : Print a single machine-readable JSON summary line at the end}
+        {--universal : Install the complete multipurpose Canvas QA fixture after the baseline fixtures}
+        {--source-theme-id= : Run-evidence ID of the slug-resolved SaaS Theme}
+        {--source-release-id= : Run-evidence ID of the canonical SaaS ThemeRelease}
+        {--source-version=1.0.0 : Canonical SaaS ThemeRelease version}';
 
     protected $description = 'Provision the isolated database/fixtures used by the Playwright browser test harness (tests/browser). Never run outside the dedicated browser-test database.';
 
@@ -169,7 +176,27 @@ class BrowserHarnessSetupCommand extends Command
             'footer_blocks' => [],
             'global_styles' => [],
         ];
-        Setting::set('active_canvas_theme_data', json_encode($canvasThemeData), 'theme');
+        if ($this->option('universal')) {
+            $canvasThemeData = $this->universalThemeData();
+            $this->seedUniversalCustomerData();
+
+            app(ThemeInstanceRevisionService::class)->record(
+                $canvasThemeData,
+                \App\Models\ThemeInstanceRevision::TYPE_INSTALL,
+                [
+                    'theme_identifier' => 'universal-multipurpose-qa',
+                    'theme_name' => 'قالب جامع چندمنظوره',
+                    'active_theme_id' => $this->nullableIntOption('source-theme-id'),
+                    'source_theme_id' => $this->nullableIntOption('source-theme-id'),
+                    'source_theme_version' => (string) $this->option('source-version'),
+                    'source_release_id' => $this->nullableIntOption('source-release-id'),
+                    'metadata' => ['qa_fixture' => true],
+                ],
+            );
+            $this->info('Universal multipurpose Theme installed through ThemeInstanceRevisionService.');
+        } else {
+            Setting::set('active_canvas_theme_data', json_encode($canvasThemeData), 'theme');
+        }
         Setting::set('canvas_draft_data', '', 'theme');
         $this->info('Canvas Theme fixture ready (active_canvas_theme_data).');
 
@@ -191,5 +218,128 @@ class BrowserHarnessSetupCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    private function nullableIntOption(string $name): ?int
+    {
+        $value = $this->option($name);
+        return $value === null || $value === '' ? null : (int) $value;
+    }
+
+    /**
+     * QA-only customer instance of the portable SaaS master structure.
+     * Inventory is always read from the canonical Canvas registry; the
+     * explicit page groupings provide human-usable navigation, and the
+     * final coverage page catches every remaining registered type.
+     */
+    private function universalThemeData(): array
+    {
+        $registry = BlockRegistry::all();
+        $definitions = [
+            'home' => ['خانه', '', ['hero', 'hero_split', 'features_grid', 'stats_row', 'project_cards', 'product_grid', 'blog_posts', 'testimonials', 'pricing_cards', 'faq', 'gallery', 'newsletter_form']],
+            'about' => ['درباره ما', 'about', ['about_section', 'team', 'team_cards', 'skills_bars', 'client_logos', 'trust_badges']],
+            'services' => ['خدمات', 'services', ['services_cards', 'service_cards', 'process_steps', 'cta', 'contact_split']],
+            'portfolio' => ['نمونه‌کارها', 'portfolio', ['portfolio_grid', 'bento_grid', 'image', 'video', 'modal']],
+            'blog' => ['وبلاگ', 'blog', ['module:blog_posts', 'module:blog_featured', 'module:blog_categories', 'search_bar', 'breadcrumb']],
+            'shop' => ['فروشگاه', 'shop', ['products', 'product_slider', 'module:shop_product_grid', 'module:shop_product_slider', 'module:shop_categories', 'cart_icon', 'add_to_cart', 'price_box']],
+            'learning' => ['آموزش', 'learning', ['module:courses_grid', 'module:course_enroll_cta', 'module:my_learning_link', 'module:edu_article_grid']],
+            'contact' => ['تماس با ما', 'contact', ['contact_info', 'module:contact_quick', 'module:form_embed', 'module:support_button', 'module:whatsapp_widget']],
+            'account' => ['حساب کاربری', 'account', ['login_register', 'module:account_quick_links', 'module:subscriber_stats', 'module:referral_widget', 'module:invoice_quick_pay']],
+            'utilities' => ['امکانات', 'utilities', ['tabs', 'accordion', 'slider', 'countdown', 'promo_banner', 'email_capture', 'language_switcher', 'module:motion']],
+        ];
+
+        $block = function (string $type) use ($registry): array {
+            $props = $registry[$type]['defaultProps'] ?? [];
+            $overrides = match ($type) {
+                'hero' => ['title' => 'راهکار جامع برای کسب‌وکار شما', 'subtitle' => 'یک سایت کامل برای معرفی، فروش، آموزش و ارتباط با مشتری', 'button_text' => 'مشاهده خدمات', 'button_url' => '/page/services'],
+                'nav_header' => ['logo_text' => 'قالب جامع', 'nav_links' => [
+                    ['label' => 'خانه', 'url' => '/'], ['label' => 'خدمات', 'url' => '/page/services'],
+                    ['label' => 'فروشگاه', 'url' => '/page/shop'], ['label' => 'وبلاگ', 'url' => '/page/blog'],
+                    ['label' => 'تماس', 'url' => '/page/contact'],
+                ], 'sticky' => true],
+                'nav_footer' => ['logo_text' => 'قالب جامع', 'tagline' => 'سطح مرجع کنترل کیفیت Builder', 'copyright' => 'QA'],
+                'image' => ['url' => '/storage/theme-media/qa-existing-a.svg', 'alt' => 'تصویر نمونه قالب جامع', 'caption' => 'رسانه نمونه'],
+                'gallery' => ['items' => [['url' => '/storage/theme-media/qa-existing-a.svg', 'alt' => 'نمونه نخست', 'qa_unknown' => 'preserve-gallery']]],
+                'team_cards' => ['members' => json_encode([[
+                    'name' => 'عضو نمونه', 'role' => 'مدیر', 'image' => '', 'bio' => 'توضیح عضو',
+                    'qa_unknown' => 'preserve-team',
+                ]], JSON_UNESCAPED_UNICODE)],
+                default => [],
+            };
+
+            return [
+                'id' => 'qa_' . str_replace([':', '-'], '_', $type),
+                'type' => $type,
+                'props' => array_replace($props, $overrides),
+                'children' => [],
+            ];
+        };
+
+        $used = [];
+        $pages = [];
+        foreach ($definitions as $key => [$title, $slug, $types]) {
+            $blocks = [];
+            foreach ($types as $type) {
+                if (!isset($registry[$type])) continue;
+                $blocks[] = $block($type);
+                $used[$type] = true;
+            }
+            $pages[$key] = ['title' => $title, 'slug' => $slug, 'is_home' => $key === 'home', 'blocks' => $blocks];
+        }
+        $pages['builder-coverage'] = [
+            'title' => 'پوشش عناصر سازنده',
+            'slug' => 'builder-coverage',
+            'is_home' => false,
+            'blocks' => array_map($block, array_keys(array_diff_key($registry, $used))),
+        ];
+
+        return [
+            'pages' => $pages,
+            'header_blocks' => [$block('nav_header'), $block('nav_menu')],
+            'footer_blocks' => [$block('cta'), $block('nav_footer'), $block('social_icons')],
+            'global_styles' => [
+                'primary_color' => '#4f46e5', 'secondary_color' => '#6366f1',
+                'background_color' => '#f8fafc', 'text_color' => '#111827',
+            ],
+            'settings' => ['qa_fixture' => true],
+        ];
+    }
+
+    private function seedUniversalCustomerData(): void
+    {
+        \App\Models\License::create([
+            'license_key' => 'BROWSER-UNIVERSAL-QA',
+            'domain' => '127.0.0.1',
+            'platform_valid' => true,
+            'expires_at' => now()->addYear(),
+            'last_validated_at' => now(),
+            'modules' => collect(BlockRegistry::all())->pluck('requires')->filter()->unique()->values()->all(),
+        ]);
+
+        \App\Models\Post::create([
+            'title' => 'خبر نمونه قالب جامع', 'slug' => 'universal-qa-post',
+            'body' => 'محتوای قطعی برای کنترل کیفیت.', 'excerpt' => 'خلاصه محتوای نمونه',
+            'is_published' => true, 'editorial_status' => \App\Models\Post::EDITORIAL_PUBLISHED,
+            'published_at' => now(), 'user_id' => \App\Models\User::query()->value('id'),
+        ]);
+        \App\Models\Product::create([
+            'title' => 'محصول نمونه قالب جامع', 'slug' => 'universal-qa-product',
+            'description' => 'محصول قطعی کنترل کیفیت', 'sku' => 'UNIVERSAL-QA-1',
+            'price' => 125000, 'stock' => 10, 'status' => \App\Models\Product::STATUS_PUBLISHED,
+        ]);
+        \App\Models\Course::create([
+            'title' => 'دوره نمونه قالب جامع', 'slug' => 'universal-qa-course',
+            'description' => 'دوره قطعی کنترل کیفیت', 'price' => 0, 'is_active' => true,
+        ]);
+        \App\Models\Form::create(['title' => 'فرم درخواست قالب جامع', 'slug' => 'universal-qa-form', 'is_active' => true]);
+
+        \Illuminate\Support\Facades\Storage::disk('public')->put(
+            'theme-media/qa-existing-a.svg',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#4f46e5"/><text x="32" y="100" fill="white" font-size="24">QA A</text></svg>'
+        );
+        \Illuminate\Support\Facades\Storage::disk('public')->put(
+            'theme-media/qa-existing-b.svg',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#059669"/><text x="32" y="100" fill="white" font-size="24">QA B</text></svg>'
+        );
     }
 }

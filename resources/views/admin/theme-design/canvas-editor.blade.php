@@ -25,6 +25,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
     x-cloak
     class="flex flex-col h-screen bg-slate-100 overflow-hidden select-none"
     @keydown.ctrl.s.window.prevent="saveCurrentPage()"
+    @keydown.escape.window="if (mediaModal.open) closeMediaPicker()"
 >
     {{-- ══════════════════════════════════════════════════════════
          TOOLBAR
@@ -75,6 +76,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             </template>
             <button
                 @click="showAddPage = true"
+                data-testid="tb-add-page-open"
                 class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -256,6 +258,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         <div
                             @click="selectBlock(node.path)"
                             :data-testid="'tb-tree-node-' + node.block.id"
+                            :data-block-type="node.block.type"
                             :style="'padding-right:' + (12 + node.depth * 14) + 'px'"
                             :class="isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50'"
                             class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
@@ -310,6 +313,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <div x-show="isCategoryVisible('{{ $catKey }}')" class="border-b border-slate-100">
                         <button
                             @click="toggleCategory('{{ $catKey }}')"
+                            data-testid="tb-palette-category-{{ $catKey }}"
                             class="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition text-right"
                         >
                             <div class="flex items-center gap-2">
@@ -808,7 +812,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5" x-text="schemaDef.label || propKey"></label>
 
-                                <template x-if="schemaDef.type === 'string'">
+                                <template x-if="schemaDef.type === 'string' && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
                                     <input
                                         type="text"
                                         x-model="selectedBlock.props[propKey]"
@@ -819,15 +823,67 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     >
                                 </template>
 
-                                <template x-if="schemaDef.type === 'image'">
+                                {{-- One media adapter for every semantically-image property.
+                                     It delegates to the existing Canvas media library/upload
+                                     endpoints; individual blocks never own an uploader. --}}
+                                <template x-if="isMediaControl(schemaDef, propKey, selectedBlock?.type)">
                                     <div class="space-y-2">
                                         <template x-if="selectedBlock.props[propKey]">
-                                            <img :src="selectedBlock.props[propKey]" class="w-full h-28 object-cover rounded-lg border border-slate-200">
+                                            <img :src="selectedBlock.props[propKey]" :data-testid="'tb-media-preview-' + propKey" class="w-full h-28 object-cover rounded-lg border border-slate-200">
                                         </template>
                                         <div class="flex gap-2">
-                                            <input type="url" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" placeholder="آدرس تصویر" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
-                                            <button @click="openMediaPicker(propKey)" class="px-2 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition">📁</button>
+                                            <input type="url" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" placeholder="آدرس تصویر" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                            <button @click="openMediaPicker(propKey)" :data-testid="'tb-media-picker-' + propKey" class="px-2 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition">📁</button>
                                         </div>
+                                    </div>
+                                </template>
+
+                                {{-- Schema-driven structured/repeater adapter. It only
+                                     translates the schema's declared storage shape for
+                                     authoring; nested image fields reuse the same media
+                                     modal and upload endpoints as single-image fields. --}}
+                                <template x-if="schemaDef.type === 'repeater'">
+                                    <div class="space-y-3" :data-testid="'tb-repeater-' + propKey">
+                                        <template x-for="(item, itemIndex) in structuredItems(propKey, schemaDef)" :key="itemIndex">
+                                            <fieldset class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+                                                <legend class="px-1 text-[11px] font-semibold text-slate-500" x-text="`${schemaDef.label || propKey} ${itemIndex + 1}`"></legend>
+                                                <template x-for="(fieldDef, fieldKey) in schemaDef.fields" :key="fieldKey">
+                                                    <div class="space-y-1.5">
+                                                        <label class="block text-[11px] font-medium text-slate-600" :for="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" x-text="fieldDef.label || fieldKey"></label>
+                                                        <template x-if="fieldDef.type === 'image'">
+                                                            <div class="space-y-2">
+                                                                <template x-if="item[fieldKey]">
+                                                                    <div>
+                                                                        <img :src="item[fieldKey]" alt="" class="w-full h-24 object-cover rounded-lg border border-slate-200" :data-testid="`tb-structured-preview-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                        <p class="mt-1 text-[10px] text-slate-500 break-all" x-text="item[fieldKey]"></p>
+                                                                    </div>
+                                                                </template>
+                                                                <div class="flex gap-2">
+                                                                    <button type="button" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" @click="openMediaPicker(propKey, { index: itemIndex, fieldKey })" :data-testid="`tb-structured-media-${propKey}-${itemIndex}-${fieldKey}`" class="flex-1 px-2 py-2 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition" :aria-label="`انتخاب ${fieldDef.label || fieldKey} برای مورد ${itemIndex + 1}`">انتخاب از رسانه</button>
+                                                                    <button type="button" @click="updateStructuredField(propKey, itemIndex, fieldKey, '', schemaDef)" :data-testid="`tb-structured-clear-${propKey}-${itemIndex}-${fieldKey}`" class="px-2 py-2 rounded border border-slate-200 text-slate-600 hover:text-red-600 text-xs" :aria-label="`حذف ${fieldDef.label || fieldKey} از مورد ${itemIndex + 1}`">حذف تصویر</button>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="fieldDef.type !== 'image'">
+                                                            <div>
+                                                                <template x-if="fieldDef.type === 'textarea'">
+                                                                    <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                </template>
+                                                                <template x-if="fieldDef.type !== 'textarea'">
+                                                                    <input type="text" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                                <div class="flex gap-1 justify-end">
+                                                    <button type="button" @click="moveStructuredItem(propKey, itemIndex, -1, schemaDef)" :disabled="itemIndex === 0" :data-testid="`tb-structured-up-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-slate-200 text-xs disabled:opacity-30" :aria-label="`انتقال مورد ${itemIndex + 1} به بالا`">↑</button>
+                                                    <button type="button" @click="moveStructuredItem(propKey, itemIndex, 1, schemaDef)" :disabled="itemIndex >= structuredItems(propKey, schemaDef).length - 1" :data-testid="`tb-structured-down-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-slate-200 text-xs disabled:opacity-30" :aria-label="`انتقال مورد ${itemIndex + 1} به پایین`">↓</button>
+                                                    <button type="button" @click="removeStructuredItem(propKey, itemIndex, schemaDef)" :data-testid="`tb-structured-remove-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-red-200 text-red-600 text-xs" :aria-label="`حذف مورد ${itemIndex + 1}`">حذف مورد</button>
+                                                </div>
+                                            </fieldset>
+                                        </template>
+                                        <button type="button" @click="addStructuredItem(propKey, schemaDef)" :data-testid="'tb-structured-add-' + propKey" class="w-full px-3 py-2 rounded-lg border border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs font-medium">+ افزودن مورد</button>
                                     </div>
                                 </template>
 
@@ -897,10 +953,18 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </select>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'color'">
-                                    <div class="flex items-center gap-2">
-                                        <input type="color" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                <template x-if="isColorControl(schemaDef, propKey, selectedBlock?.type)">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                        <input type="color" :value="colorInputValue(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
                                         <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" :data-testid="'tb-prop-' + propKey">
+                                        <button type="button" @click="clearColor(propKey, schemaDef.default ?? '')" class="px-2 py-1.5 rounded border border-slate-200 text-xs text-slate-600 hover:bg-slate-50">پاک‌کردن</button>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5" aria-label="پالت رنگ قالب">
+                                            <template x-for="color in themePalette()" :key="color.token">
+                                                <button type="button" @click="selectThemeColor(propKey, color)" :data-testid="'tb-theme-color-' + propKey + '-' + color.token" :title="color.label" class="w-6 h-6 rounded-full border-2 border-white shadow ring-1 ring-slate-200 hover:scale-110 transition" :style="'background:' + color.value"></button>
+                                            </template>
+                                        </div>
                                     </div>
                                 </template>
 
@@ -1147,15 +1211,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <div class="space-y-3">
                 <div>
                     <label class="text-xs font-semibold text-slate-600 mb-1.5 block">عنوان صفحه *</label>
-                    <input x-model="newPageTitle" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="مثال: درباره ما" @keydown.enter="confirmAddPage()">
+                    <input x-model="newPageTitle" data-testid="tb-add-page-title" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="مثال: درباره ما" @keydown.enter="confirmAddPage()">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-slate-600 mb-1.5 block">اسلاگ (URL) <span class="text-slate-400 font-normal">اختیاری</span></label>
-                    <input x-model="newPageSlug" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="about-us">
+                    <input x-model="newPageSlug" data-testid="tb-add-page-slug" type="text" class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="about-us">
                 </div>
             </div>
             <div class="flex gap-2 mt-5">
-                <button @click="confirmAddPage()" :disabled="!newPageTitle" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition">افزودن</button>
+                <button @click="confirmAddPage()" data-testid="tb-add-page-confirm" :disabled="!newPageTitle" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition">افزودن</button>
                 <button @click="showAddPage = false; newPageTitle=''; newPageSlug=''" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">انصراف</button>
             </div>
         </div>
@@ -1163,14 +1227,14 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
     {{-- Media Modal --}}
     <div x-show="mediaModal.open" x-transition.opacity class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div @click.outside="mediaModal.open = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height:80vh;">
+        <div @click.outside="closeMediaPicker()" role="dialog" aria-modal="true" aria-labelledby="tb-media-dialog-title" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height:80vh;">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-                <h3 class="font-bold text-slate-800 text-sm">مدیریت رسانه</h3>
-                <button @click="mediaModal.open = false" class="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+                <h3 id="tb-media-dialog-title" class="font-bold text-slate-800 text-sm">مدیریت رسانه</h3>
+                <button type="button" @click="closeMediaPicker()" aria-label="بستن انتخاب رسانه" class="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
             </div>
             <div class="flex border-b border-slate-100 shrink-0">
                 <button @click="mediaModal.tab = 'library'" :class="mediaModal.tab==='library'?'border-b-2 border-indigo-500 text-indigo-600 font-semibold':'text-slate-500'" class="flex-1 py-2.5 text-xs text-center transition">کتابخانه</button>
-                <button @click="mediaModal.tab = 'upload'" :class="mediaModal.tab==='upload'?'border-b-2 border-indigo-500 text-indigo-600 font-semibold':'text-slate-500'" class="flex-1 py-2.5 text-xs text-center transition">آپلود</button>
+                <button @click="mediaModal.tab = 'upload'" data-testid="tb-media-upload-tab" :class="mediaModal.tab==='upload'?'border-b-2 border-indigo-500 text-indigo-600 font-semibold':'text-slate-500'" class="flex-1 py-2.5 text-xs text-center transition">آپلود</button>
             </div>
             {{-- Library --}}
             <div x-show="mediaModal.tab === 'library'" class="flex-1 overflow-y-auto p-4">
@@ -1179,6 +1243,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <div x-show="!mediaModal.loading" class="grid grid-cols-4 gap-3">
                     <template x-for="img in mediaModal.images" :key="img.url">
                         <div class="relative group rounded-lg overflow-hidden border-2 cursor-pointer transition"
+                             :data-testid="'tb-media-item-' + img.name"
                              :class="mediaModal.selected === img.url ? 'border-indigo-500' : 'border-transparent hover:border-indigo-300'"
                              @click="selectMedia(img.url)">
                             <img :src="img.url" class="w-full h-20 object-cover">
@@ -1195,13 +1260,13 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <div class="text-4xl mb-3">📁</div>
                     <p class="text-sm text-slate-600 font-medium">کلیک کنید یا فایل را بکشید</p>
                     <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WebP, SVG — حداکثر ۵ مگابایت</p>
-                    <input type="file" x-ref="mediaFileInput" accept="image/*" class="hidden" @change="uploadMediaFile($event.target.files[0])">
+                    <input type="file" x-ref="mediaFileInput" data-testid="tb-media-file-input" accept="image/*" class="hidden" @change="uploadMediaFile($event.target.files[0])">
                 </div>
                 <div x-show="mediaModal.uploading" class="mt-4 text-sm text-indigo-600">در حال آپلود...</div>
             </div>
             <div class="flex gap-2 px-4 py-3 border-t border-slate-100 shrink-0">
-                <button x-show="mediaModal.selected" @click="confirmMediaSelect()" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">انتخاب تصویر</button>
-                <button @click="mediaModal.open = false" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">بستن</button>
+                <button x-show="mediaModal.selected" @click="confirmMediaSelect()" data-testid="tb-media-confirm" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">انتخاب تصویر</button>
+                <button type="button" @click="closeMediaPicker()" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">بستن</button>
             </div>
         </div>
     </div>
@@ -1324,7 +1389,7 @@ function canvasEditor() {
         styleSection: { typography: true, colors: true, spacing: false, border: false, shadow: false, opacity: false },
         inlineAutoSaveTimer: null,
         // TB3-07: media modal
-        mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null },
+        mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null },
         motionModal: { open: false, assets: [], loading: false, selected: null, propKey: null, loaded: false },
         // TB6: template library
         showTemplateLibrary: false,
@@ -1410,6 +1475,103 @@ function canvasEditor() {
             // hardcoded array — the authoritative source is
             // App\Services\ThemeCanvas\BlockRegistry::isContainerType().
             return !!(BLOCK_SCHEMAS[type]?.is_container);
+        },
+        structuredItems(propKey, schemaDef) {
+            const raw = this.selectedBlock?.props?.[propKey];
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw !== 'string' || raw.trim() === '') return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (_) {
+                return [];
+            }
+        },
+        persistStructuredItems(propKey, schemaDef, items) {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = schemaDef?.storage === 'json'
+                ? JSON.stringify(items)
+                : items;
+            this.schedulePropUpdate();
+        },
+        addStructuredItem(propKey, schemaDef) {
+            const item = {};
+            for (const [fieldKey, fieldDef] of Object.entries(schemaDef?.fields ?? {})) {
+                item[fieldKey] = fieldDef?.default ?? '';
+            }
+            this.persistStructuredItems(propKey, schemaDef, [...this.structuredItems(propKey, schemaDef), item]);
+        },
+        updateStructuredField(propKey, itemIndex, fieldKey, value, schemaDef) {
+            const items = this.structuredItems(propKey, schemaDef).map(item => ({ ...item }));
+            if (!items[itemIndex]) return;
+            // Copying the complete existing object before changing one field
+            // deliberately preserves unknown/unmanaged nested keys.
+            items[itemIndex][fieldKey] = value;
+            this.persistStructuredItems(propKey, schemaDef, items);
+        },
+        removeStructuredItem(propKey, itemIndex, schemaDef) {
+            const items = [...this.structuredItems(propKey, schemaDef)];
+            items.splice(itemIndex, 1);
+            this.persistStructuredItems(propKey, schemaDef, items);
+        },
+        moveStructuredItem(propKey, itemIndex, direction, schemaDef) {
+            const items = [...this.structuredItems(propKey, schemaDef)];
+            const target = itemIndex + direction;
+            if (target < 0 || target >= items.length) return;
+            [items[itemIndex], items[target]] = [items[target], items[itemIndex]];
+            this.persistStructuredItems(propKey, schemaDef, items);
+        },
+        isMediaControl(schemaDef, propKey, blockType) {
+            if (schemaDef?.type === 'image') return true;
+            // A property name such as `url` is ambiguous (image vs video),
+            // and nav_header.logo_url is the logo *link target*, not an image.
+            // Keep this adapter explicit against the existing block schemas so
+            // every single-image renderer contract reaches the one canonical
+            // Media Library without misclassifying ordinary links.
+            return [
+                'hero:background_image',
+                'section:background_image',
+                'image:url',
+                'hero_split:image_url',
+                'module:motion:fallback_image',
+            ].includes(`${blockType}:${propKey}`);
+        },
+        isColorControl(schemaDef, propKey, blockType) {
+            if (schemaDef?.type === 'color') return true;
+            // These older shared schemas predate the `color` control marker,
+            // but their renderers consume a real CSS color value directly.
+            // Named-style fields (hero/section background) and enumerated
+            // brand-style selects remain their existing non-color controls.
+            return [
+                'nav_header:bg_color',
+                'nav_header:text_color',
+                'nav_footer:bg_color',
+                'nav_footer:text_color',
+                'contact_info:background',
+            ].includes(`${blockType}:${propKey}`);
+        },
+        themePalette() {
+            return [
+                { token: 'primary', label: 'رنگ اصلی قالب', value: this.globalStyles.primary_color || '#4f46e5' },
+                { token: 'secondary', label: 'رنگ ثانویه قالب', value: this.globalStyles.secondary_color || '#6366f1' },
+                { token: 'background', label: 'پس‌زمینه قالب', value: this.globalStyles.background_color || '#f9fafb' },
+                { token: 'text', label: 'متن قالب', value: this.globalStyles.text_color || '#111827' },
+            ];
+        },
+        selectThemeColor(propKey, color) {
+            if (!this.selectedBlock) return;
+            // Persist a normal CSS variable reference: ThemeTokenNormalizer
+            // remains the authority that emits each --tb-* token at runtime.
+            this.selectedBlock.props[propKey] = `var(--tb-${color.token})`;
+            this.schedulePropUpdate();
+        },
+        clearColor(propKey, defaultValue = '') {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = defaultValue;
+            this.schedulePropUpdate();
+        },
+        colorInputValue(value) {
+            return /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#000000';
         },
         getBlockByPath(path, arr) {
             arr = arr ?? this.blocks;
@@ -2006,12 +2168,25 @@ function canvasEditor() {
             }
         },
 
-        openMediaPicker(propKey) {
+        openMediaPicker(propKey, target = null) {
             this.mediaModal.propKey  = propKey;
-            this.mediaModal.selected = this.selectedBlock?.props?.[propKey] || null;
+            this.mediaModal.target   = target;
+            this.mediaModal.returnFocus = document.activeElement;
+            const schemaDef = this.selectedSchema?.[propKey] ?? {};
+            this.mediaModal.selected = target
+                ? (this.structuredItems(propKey, schemaDef)?.[target.index]?.[target.fieldKey] || null)
+                : (this.selectedBlock?.props?.[propKey] || null);
             this.mediaModal.tab      = 'library';
             this.mediaModal.open     = true;
             this.fetchMedia();
+        },
+
+        closeMediaPicker() {
+            const returnFocus = this.mediaModal.returnFocus;
+            this.mediaModal.open = false;
+            this.mediaModal.target = null;
+            this.mediaModal.returnFocus = null;
+            this.$nextTick(() => returnFocus?.focus?.());
         },
 
         async fetchMedia() {
@@ -2031,10 +2206,21 @@ function canvasEditor() {
         confirmMediaSelect() {
             if (!this.mediaModal.selected || !this.mediaModal.propKey) return;
             if (this.selectedBlock) {
-                this.selectedBlock.props[this.mediaModal.propKey] = this.mediaModal.selected;
-                this.schedulePropUpdate();
+                if (this.mediaModal.target) {
+                    const schemaDef = this.selectedSchema?.[this.mediaModal.propKey] ?? {};
+                    this.updateStructuredField(
+                        this.mediaModal.propKey,
+                        this.mediaModal.target.index,
+                        this.mediaModal.target.fieldKey,
+                        this.mediaModal.selected,
+                        schemaDef
+                    );
+                } else {
+                    this.selectedBlock.props[this.mediaModal.propKey] = this.mediaModal.selected;
+                    this.schedulePropUpdate();
+                }
             }
-            this.mediaModal.open = false;
+            this.closeMediaPicker();
         },
 
         async deleteMedia(url) {

@@ -24,8 +24,91 @@ class ElementSchemaRegistry
         // extension definitions (never canonical-adapter/host-only
         // built-ins) are added, so a currently-unregistered/unknown `ext:*`
         // type still correctly fails this gate exactly as before.
-        $this->schemas = config('builder-element-schemas.elements', [])
+        // Canvas is the authoring palette used by tenant administrators.  Its
+        // control definitions are therefore also the only trustworthy shape
+        // for a block created by that palette.  Previously the renderer used
+        // this legacy config-only list, so dozens of visible Canvas blocks
+        // were rejected as "Unknown element type" immediately after insert.
+        //
+        // This is deliberately a projection into the existing validator, not
+        // another registry or validator: BlockRegistry remains the owner of
+        // Canvas block metadata and this class remains the sole save/render
+        // validation gate.
+        $this->schemas = $this->canvasSchemas()
+            + $this->productionPaletteSchemas()
+            + config('builder-element-schemas.elements', [])
             + \App\Builder\Extension\ProductionBuilderAdapter::schemas();
+    }
+
+    /** @return array<string, array{type:string, props:array, styles:array, children:string}> */
+    private function canvasSchemas(): array
+    {
+        $schemas = [];
+
+        foreach (\App\Services\ThemeCanvas\BlockRegistry::all() as $type => $definition) {
+            // module:* blocks are dispatched by ThemeCanvasRenderer to their
+            // tenant-data adapters and have never entered this validator.
+            if (str_starts_with($type, 'module:')) {
+                continue;
+            }
+
+            $props = [];
+            foreach (($definition['schema'] ?? []) as $name => $control) {
+                $props[$name] = [
+                    'required' => false,
+                    'type' => $this->validationType($control['type'] ?? 'string', $control),
+                ];
+            }
+
+            $schemas[$type] = [
+                'type' => $type,
+                'props' => $props,
+                'styles' => ['layout', 'typography', 'background', 'effects'],
+                'children' => \App\Services\ThemeCanvas\BlockRegistry::isContainerType($type) ? 'blocks' : 'none',
+            ];
+        }
+
+        return $schemas;
+    }
+
+    /** Project the still-exposed legacy Production Builder palette into the
+     * same validator until that UI is formally retired. */
+    private function productionPaletteSchemas(): array
+    {
+        $schemas = [];
+        foreach (config('builder-elements.elements', []) as $type => $definition) {
+            $props = [];
+            foreach (($definition['schema'] ?? []) as $name => $control) {
+                $props[$name] = [
+                    'required' => false,
+                    'type' => $this->validationType($control['type'] ?? 'string', $control),
+                ];
+            }
+            $schemas[$type] = [
+                'type' => $type,
+                'props' => $props,
+                'styles' => ['layout', 'typography', 'background', 'effects'],
+                'children' => 'none',
+            ];
+        }
+        return $schemas;
+    }
+
+    private function validationType(string $controlType, array $control = []): string
+    {
+        return match ($controlType) {
+            'number' => 'integer',
+            'boolean' => 'boolean',
+            'repeater' => ($control['storage'] ?? 'array') === 'json' ? 'string' : 'array',
+            // Canvas textarea controls intentionally persist JSON-shaped
+            // values as text.  Treating those values as arrays caused valid
+            // defaults such as stats_row and client_logos to be rejected.
+            'textarea', 'string', 'color', 'image', 'motion' => 'string',
+            // A select is a UI representation, not a persisted type. Its
+            // existing defaults include both numeric and string options.
+            'select' => 'mixed',
+            default => 'mixed',
+        };
     }
 
     /**
@@ -138,7 +221,12 @@ class ElementSchemaRegistry
     {
         switch ($expected) {
             case 'string':
-                return is_string($value);
+                // Legacy palette defaults predate the Canvas control model
+                // and contain a small number of scalar numeric values (for
+                // example row.columns). Browser controls submit strings;
+                // accepting either scalar representation preserves that
+                // contract without admitting arrays/objects.
+                return is_string($value) || is_int($value) || is_float($value);
             case 'integer':
                 return is_int($value) || self::isIntegerString($value);
             case 'boolean':

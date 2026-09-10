@@ -34,6 +34,7 @@ export function serverEnv() {
     return {
         ...process.env,
         APP_ENV: 'local',
+        APP_URL: BASE_URL,
         DB_DATABASE: DB_DATABASE,
         OWNER_SITE: 'true',
         SESSION_DRIVER: 'file',

@@ -120,9 +120,23 @@ final class BlockRegistry
                 'schema'   => [
                     'title'   => ['type' => 'string', 'label' => 'عنوان گالری', 'default' => ''],
                     'columns' => ['type' => 'select', 'label' => 'ستون', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '3'],
-                    'images'  => ['type' => 'textarea', 'label' => 'آدرس تصاویر (هر خط یک آدرس)', 'default' => ''],
+                    // Canonical renderer contract is items: [{url, alt}], not
+                    // the old host-only `images` textarea. `storage=array`
+                    // preserves that exact runtime shape while allowing the
+                    // Canvas's generic repeater adapter to host the existing
+                    // canonical media picker for each item.
+                    'items' => [
+                        'type' => 'repeater',
+                        'label' => 'تصاویر گالری',
+                        'storage' => 'array',
+                        'default' => [],
+                        'fields' => [
+                            'url' => ['type' => 'image', 'label' => 'تصویر', 'default' => ''],
+                            'alt' => ['type' => 'string', 'label' => 'متن جایگزین', 'default' => ''],
+                        ],
+                    ],
                 ],
-                'defaultProps' => ['title' => '', 'columns' => '3', 'images' => ''],
+                'defaultProps' => ['title' => '', 'columns' => '3', 'items' => []],
             ],
             'video' => [
                 'name'     => 'ویدیو',
@@ -513,7 +527,21 @@ final class BlockRegistry
                 'schema'   => [
                     'title'   => ['type' => 'string',  'label' => 'عنوان',         'default' => 'تیم ما'],
                     'columns' => ['type' => 'select',  'label' => 'ستون',          'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '3'],
-                    'members' => ['type' => 'textarea','label' => 'اعضا (JSON)',    'default' => '[{"name":"نام","role":"مدیر","image":"","bio":"توضیح"}]'],
+                    'members' => [
+                        'type' => 'repeater',
+                        'label' => 'اعضای تیم',
+                        // Existing persisted/runtime contract is a JSON
+                        // string. The visual adapter decodes and re-encodes
+                        // it without changing that shape.
+                        'storage' => 'json',
+                        'default' => '[{"name":"نام","role":"مدیر","image":"","bio":"توضیح"}]',
+                        'fields' => [
+                            'name' => ['type' => 'string', 'label' => 'نام', 'default' => ''],
+                            'role' => ['type' => 'string', 'label' => 'سمت', 'default' => ''],
+                            'image' => ['type' => 'image', 'label' => 'تصویر عضو', 'default' => ''],
+                            'bio' => ['type' => 'textarea', 'label' => 'توضیح', 'default' => ''],
+                        ],
+                    ],
                 ],
                 'defaultProps' => ['title' => 'تیم ما', 'columns' => '3', 'members' => '[{"name":"نام","role":"مدیر","image":"","bio":"توضیح"}]'],
             ],

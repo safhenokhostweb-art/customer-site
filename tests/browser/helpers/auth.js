@@ -13,8 +13,13 @@ import { ADMIN_MOBILE, ADMIN_PASSWORD, BASE_URL } from '../fixtures/env.js';
  * @param {import('@playwright/test').Page} page
  */
 export async function blockNoisyAdminPolling(page) {
-    await page.route(/\/admin\/(notification-center|system-alerts)\/unread-count/, (route) => route.abort());
-    await page.route(/\/admin\/user-tickets\/check-new/, (route) => route.abort());
+    const emptyPoll = (route) => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ count: 0, unread_count: 0, has_new: false }),
+    });
+    await page.route(/\/admin\/(notification-center|system-alerts)\/unread-count/, emptyPoll);
+    await page.route(/\/admin\/user-tickets\/check-new/, emptyPoll);
 }
 
 /**

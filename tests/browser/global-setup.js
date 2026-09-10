@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serverEnv } from './fixtures/env.js';
@@ -9,6 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
 const runtimeDir = join(__dirname, '.runtime');
 const fixturePath = join(runtimeDir, 'fixture.json');
+const hotPath = join(repoRoot, 'public', 'hot');
+const hotBackupPath = join(runtimeDir, 'public-hot.backup');
 
 /**
  * Phase 3E-H-D0 — runs once before the whole browser test run:
@@ -31,6 +33,13 @@ const fixturePath = join(runtimeDir, 'fixture.json');
  */
 export default async function globalSetup() {
     mkdirSync(runtimeDir, { recursive: true });
+
+    // A developer Vite marker must not make the isolated browser server
+    // request assets from a dev server that is not part of this harness.
+    // Preserve it byte-for-byte and restore it in global-teardown.js.
+    if (existsSync(hotPath) && !existsSync(hotBackupPath)) {
+        renameSync(hotPath, hotBackupPath);
+    }
 
     const env = serverEnv();
 
