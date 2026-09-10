@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CustomerMedia;
 use App\Models\CustomerMediaUsage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -70,6 +71,43 @@ class CustomerMediaService
         return CustomerMedia::forSite($this->siteId())->available()->where('uuid', $uuid)->firstOrFail();
     }
 
+    /**
+     * Read access is scoped here too: controllers must never turn a UUID,
+     * query parameter, or client-supplied site id into an ownership decision.
+     */
+    public function paginateForCurrentSite(?string $search = null, ?string $category = null, int $perPage = 24): LengthAwarePaginator
+    {
+        $query = CustomerMedia::forSite($this->siteId())->available()->withCount('usages');
+
+        if ($category !== null) {
+            $query->where('category', $category);
+        }
+
+        if ($search !== null && $search !== '') {
+            $escaped = addcslashes($search, '\\%_');
+            $query->where(function ($media) use ($escaped) {
+                $media->where('title', 'like', "%{$escaped}%")
+                    ->orWhere('original_filename', 'like', "%{$escaped}%")
+                    ->orWhere('caption', 'like', "%{$escaped}%");
+            });
+        }
+
+        return $query->latest('id')->paginate($perPage)->withQueryString();
+    }
+
+    public function updateMetadata(CustomerMedia $media, array $metadata): CustomerMedia
+    {
+        $this->assertOwned($media);
+        $media->fill([
+            'title' => $metadata['title'] ?? null,
+            'alt_text' => $metadata['alt_text'] ?? null,
+            'caption' => $metadata['caption'] ?? null,
+        ]);
+        $media->save();
+
+        return $media->fresh();
+    }
+
     public function publicUrl(CustomerMedia $media): string
     {
         $this->assertOwned($media);
@@ -81,6 +119,9 @@ class CustomerMediaService
         $this->assertOwned($media);
         if ($media->deleted_at) {
             throw new \LogicException('Deleted media cannot be referenced.');
+        }
+        if ($consumerType === '' || mb_strlen($consumerType) > 64 || $path === '' || mb_strlen($path) > 512) {
+            throw ValidationException::withMessages(['usage' => 'Media usage identity exceeds canonical limits.']);
         }
         return CustomerMediaUsage::firstOrCreate([
             'customer_media_id' => $media->id, 'consumer_type' => $consumerType,

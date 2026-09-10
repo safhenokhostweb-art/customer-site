@@ -13,6 +13,7 @@ class AdminMenu
     public const MENU_KEYS = [
         'dashboard' => 'داشبورد',
         'pages' => 'صفحات',
+        'media' => 'کتابخانه رسانه',
         'categories' => 'دسته‌بندی‌های وبلاگ',
         'post_series' => 'مجموعه‌های مطالب',
         'posts' => 'مطالب وبلاگ',
@@ -148,6 +149,7 @@ class AdminMenu
         'homepage_videos'  => 'admin.homepage-videos.index',
         'translations'     => 'admin.translations.index',
         'pages' => 'admin.pages.index',
+        'media' => 'admin.media.index',
         'categories' => 'admin.categories.index',
         'post_series' => 'admin.post-series.index',
         'posts' => 'admin.posts.index',
@@ -253,13 +255,13 @@ class AdminMenu
         'accounting' => 'standalone',
         'analytics' => 'standalone',
         'omnichannel' => 'standalone',
-        'media' => 'embedded',
         'crm' => 'standalone',
     ];
 
     public const MENU_ROUTE_PATTERNS = [
         'dashboard' => 'admin.dashboard',
         'pages' => 'admin.pages.*',
+        'media' => 'admin.media.*',
         'categories' => 'admin.categories.*',
         'post_series' => 'admin.post-series.*',
         'posts' => 'admin.posts.*',
@@ -389,7 +391,7 @@ class AdminMenu
             'داشبورد' => ['dashboard'],
 
             // 2 ─ ساختار سایت: صفحات، محتوای ثابت، منو، جستجو
-            'وبسایت' => ['pages', 'site_content', 'menu', 'advanced_search'],
+            'وبسایت' => ['pages', 'media', 'site_content', 'menu', 'advanced_search'],
 
             // 3 ─ فروشگاه: سفارشات (اول)، محصولات، دسته‌بندی، ویژگی‌ها، نظرات، کوپن، قسطی، انبار
             'فروشگاه' => ['orders', 'products', 'product_categories', 'product_attributes', 'shop_product_reviews', 'coupon', 'installments', 'inventory'],
@@ -612,7 +614,7 @@ class AdminMenu
         if (in_array($key, self::getDynamicPlatformMenuKeys(), true)) {
             return true;
         }
-        if (in_array($key, ['dashboard', 'pages', 'captcha', 'theme_design', 'builder_health', 'settings',
+        if (in_array($key, ['dashboard', 'pages', 'media', 'captcha', 'theme_design', 'builder_health', 'settings',
                              'license', 'modules', 'modules_changelog', 'support',
                              'activity_log', 'users_panel', 'education_center',
                              'site_content', 'analytics_local', 'system_alerts'], true)) {

@@ -63,6 +63,7 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Api\SiteMenuApiController;
 use App\Http\Controllers\Admin\ThemeDesignController;
 use App\Http\Controllers\Admin\ThemeDesignMediaController;
+use App\Http\Controllers\Admin\CustomerMediaController;
 use App\Http\Controllers\Admin\ThemeMarketplaceController as AdminThemeMarketplaceController;
 use App\Http\Controllers\Admin\ThemeBundleController as AdminThemeBundleController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
@@ -325,6 +326,16 @@ Route::middleware('install.check')->group(function () {
         Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->middleware('throttle:shop-cart')->name('shop.cart.remove');
         Route::post('/shop/checkout', [ShopController::class, 'checkout'])->middleware('throttle:shop-checkout')->name('shop.checkout');
         Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
+    });
+
+    // Canonical customer media is a core, site-scoped capability. It is
+    // deliberately outside the license/module-gated admin group below.
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'force.password.change'])->group(function () {
+        Route::get('media', [CustomerMediaController::class, 'index'])->name('media.index');
+        Route::post('media', [CustomerMediaController::class, 'store'])->name('media.store');
+        Route::get('media/{media}', [CustomerMediaController::class, 'show'])->name('media.show');
+        Route::patch('media/{media}', [CustomerMediaController::class, 'update'])->name('media.update');
+        Route::delete('media/{media}', [CustomerMediaController::class, 'destroy'])->name('media.destroy');
     });
 
     // Admin panel (Persian)

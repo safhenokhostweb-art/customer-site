@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('customer_media')) {
         Schema::create('customer_media', function (Blueprint $table) {
             $table->id();
             // PLATFORM_SITE_ID is the installation's immutable tenant boundary.
@@ -34,7 +35,9 @@ return new class extends Migration
             $table->index(['site_id', 'category', 'deleted_at']);
             $table->index(['site_id', 'created_at']);
         });
+        }
 
+        if (! Schema::hasTable('customer_media_usages')) {
         Schema::create('customer_media_usages', function (Blueprint $table) {
             $table->id();
             // Historical usage is deletion evidence. A future maintenance
@@ -42,14 +45,15 @@ return new class extends Migration
             $table->foreignId('customer_media_id')->constrained('customer_media')->restrictOnDelete();
             // The consumer is deliberately explicit, rather than a polymorphic
             // relation: media appears in JSON trees as well as Eloquent rows.
-            $table->string('consumer_type', 80);
+            $table->string('consumer_type', 64);
             $table->unsignedBigInteger('consumer_id');
-            $table->string('reference_path', 1024);
+            $table->string('reference_path', 512);
             $table->timestamps();
 
             $table->unique(['customer_media_id', 'consumer_type', 'consumer_id', 'reference_path'], 'customer_media_usage_unique');
             $table->index(['consumer_type', 'consumer_id']);
         });
+        }
     }
 
     public function down(): void

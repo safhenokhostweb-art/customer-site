@@ -120,6 +120,24 @@ class CustomerMediaServiceTest extends TestCase
         $service->deleteUnused($media);
     }
 
+    public function test_usage_identity_distinguishes_every_exact_component_without_prefix_collisions(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $first = $service->upload(UploadedFile::fake()->image('first.jpg'));
+        $second = $service->upload(UploadedFile::fake()->image('second.jpg'));
+        $base = str_repeat('p', 500);
+
+        $service->registerUsage($first, 'revision', 1, $base . 'a');
+        $service->registerUsage($first, 'revision', 1, $base . 'a');
+        $service->registerUsage($first, 'revision-other', 1, $base . 'a');
+        $service->registerUsage($first, 'revision', 2, $base . 'a');
+        $service->registerUsage($first, 'revision', 1, $base . 'b');
+        $service->registerUsage($second, 'revision', 1, $base . 'a');
+
+        $this->assertCount(4, $service->usages($first));
+        $this->assertCount(1, $service->usages($second));
+    }
+
     public function test_nested_theme_media_ids_are_registered_against_immutable_revision(): void
     {
         $service = app(CustomerMediaService::class);

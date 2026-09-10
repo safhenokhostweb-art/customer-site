@@ -5,10 +5,12 @@ namespace App\Console\Commands;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\CustomerMediaService;
 use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Support\Installation;
 use Illuminate\Console\Command;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 
@@ -51,6 +53,18 @@ class BrowserHarnessSetupCommand extends Command
     public const LIFECYCLE_PAGE_TITLE = 'Browser Harness Lifecycle Page';
     public const EXTENSION_PAGE_SLUG = 'browser-harness-extension-page';
     public const EXTENSION_PAGE_TITLE = 'Browser Harness Extension Page';
+
+    // MEDIA-3 browser acceptance: this single deployment has exactly one
+    // PLATFORM_SITE_ID (site isolation is enforced per-row, not per-request
+    // — there is no second live site to log into within one running
+    // instance). A genuinely foreign-site row is seeded here, through the
+    // real CustomerMediaService, so the browser suite can prove real
+    // server-side denial against real HTTP requests instead of mocking it.
+    public const MEDIA_FOREIGN_SITE_ID = 999999;
+    public const MEDIA_FOREIGN_TITLE = 'Cross-Site QA Media (must never be visible)';
+    public const MEDIA_USED_TITLE = 'Used QA Media (delete must be rejected)';
+    public const MEDIA_PAGINATION_COUNT = 30;
+    public const MEDIA_PAGINATION_TITLE_PREFIX = 'Pagination QA Media ';
 
     public function handle(): int
     {
@@ -200,6 +214,10 @@ class BrowserHarnessSetupCommand extends Command
         Setting::set('canvas_draft_data', '', 'theme');
         $this->info('Canvas Theme fixture ready (active_canvas_theme_data).');
 
+        [$foreignMediaUuid, $usedMediaUuid] = $this->seedCustomerMediaFixtures();
+        $this->info("Cross-site QA media ready: uuid={$foreignMediaUuid}");
+        $this->info("Used QA media ready: uuid={$usedMediaUuid}");
+
         $this->info('Browser harness environment ready.');
 
         if ($this->option('json')) {
@@ -214,10 +232,65 @@ class BrowserHarnessSetupCommand extends Command
                 'lifecycle_page_slug' => $lifecyclePage->slug,
                 'extension_page_id' => $extensionPage->id,
                 'extension_page_slug' => $extensionPage->slug,
+                'foreign_media_uuid' => $foreignMediaUuid,
+                'foreign_media_title' => self::MEDIA_FOREIGN_TITLE,
+                'used_media_uuid' => $usedMediaUuid,
+                'used_media_title' => self::MEDIA_USED_TITLE,
+                'pagination_media_count' => self::MEDIA_PAGINATION_COUNT,
+                'pagination_media_title_prefix' => self::MEDIA_PAGINATION_TITLE_PREFIX,
             ]));
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * MEDIA-3 browser acceptance needs three preconditions that cannot be
+     * produced by clicking through the UI: a media row that genuinely
+     * belongs to a different site (isolation/forged-access proof), a media
+     * row with a real registered usage (delete-rejection proof), and enough
+     * site-scoped rows to cross the real pagination threshold. All three go
+     * through CustomerMediaService — the sole write authority — never a
+     * direct DB write, exactly like every other fixture in this command.
+     *
+     * @return array{0:string,1:string} [foreignMediaUuid, usedMediaUuid]
+     */
+    private function seedCustomerMediaFixtures(): array
+    {
+        $service = app(CustomerMediaService::class);
+        $realSiteId = config('site.platform_site_id');
+
+        config(['site.platform_site_id' => self::MEDIA_FOREIGN_SITE_ID]);
+        $foreignMedia = $service->upload(
+            $this->fakeUploadedPng('foreign-site-qa.png'),
+            ['title' => self::MEDIA_FOREIGN_TITLE],
+        );
+        config(['site.platform_site_id' => $realSiteId]);
+
+        $usedMedia = $service->upload(
+            $this->fakeUploadedPng('used-qa.png'),
+            ['title' => self::MEDIA_USED_TITLE],
+        );
+        $service->registerUsage($usedMedia, 'theme_instance_revision', 1, '.qa_fixture.media_id');
+
+        for ($i = 1; $i <= self::MEDIA_PAGINATION_COUNT; $i++) {
+            $service->upload(
+                $this->fakeUploadedPng(sprintf('pagination-qa-%02d.png', $i)),
+                ['title' => self::MEDIA_PAGINATION_TITLE_PREFIX . sprintf('%02d', $i)],
+            );
+        }
+
+        return [$foreignMedia->uuid, $usedMedia->uuid];
+    }
+
+    private function fakeUploadedPng(string $originalName): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'qa_media_');
+        file_put_contents($path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='
+        ));
+
+        return new UploadedFile($path, $originalName, 'image/png', null, true);
     }
 
     private function nullableIntOption(string $name): ?int
