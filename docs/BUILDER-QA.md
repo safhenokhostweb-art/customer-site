@@ -1,5 +1,13 @@
 # تست و کیفیت سازندهٔ بصری (Builder QA)
 
+> Referenced by `saas-platform/docs/quality/TESTING_AND_DELIVERY_GOVERNANCE.md`
+> §4 as the canonical spec of Builder behavior to verify. The manual
+> checklist below (`BUILDER-TEST-CHECKLIST.md`) is the interim procedure;
+> the governance document's Builder Delivery Contract is the plan to make
+> save→reload→preview→public-render automated-first via
+> `tests/browser/smoke.spec.js` and its siblings, per capability, rather
+> than a routine manual pass.
+
 این سند خلاصهٔ سیستم تست و رندر امن سازندهٔ بصری است.
 
 ---

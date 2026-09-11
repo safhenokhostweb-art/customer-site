@@ -1,5 +1,10 @@
 # Customer-Site Release Gate
 
+> Referenced as the canonical Deployment Gate implementation by
+> `saas-platform/docs/quality/TESTING_AND_DELIVERY_GOVERNANCE.md` §9. This
+> file remains the source of truth for its own content; the governance
+> document does not duplicate it.
+
 ## Purpose
 
 Prevents the recurring production incident class where an incomplete release

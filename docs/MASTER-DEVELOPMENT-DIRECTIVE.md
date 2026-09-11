@@ -1,5 +1,19 @@
 # Master Development Directive
 
+> **Status: historical / superseded (2026-09-11).** This file predates the
+> current governance split (`saas-platform/PROJECT_CONSTITUTION.md` +
+> `saas-platform/AGENTS.md`); `customer-site/AGENTS.md` now defers all
+> governance to that repository, so this document's "source of truth" claim
+> no longer holds. Kept in place as a historical record of Phase 1–5
+> planning (Constitution §12: historical records remain evidence, not a
+> competing authority). For current testing/delivery rules, see
+> `saas-platform/docs/quality/TESTING_AND_DELIVERY_GOVERNANCE.md`. The
+> process rules below (branching, phased approval, safety rules) are still
+> broadly consistent with current governance but are no longer the
+> authoritative statement of it.
+>
+> Original heading, preserved as written at adoption:
+>
 > Source of truth for every coding task in both repositories. Adopted on ۱۴۰۵/۰۲/۲۲ (Wednesday, May 13, 2026). Every subsequent agent action must conform to this document. If the directive conflicts with anything in `.cursor/rules/` or `docs/PROJECT-GUIDE.md`, the directive wins.
 
 ## Project Vision

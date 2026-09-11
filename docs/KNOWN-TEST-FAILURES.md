@@ -1,5 +1,12 @@
 # خطاهای شناخته‌شدهٔ Baseline در PHPUnit Suite
 
+> Referenced as the canonical Known Baseline Failure Registry by
+> `saas-platform/docs/quality/TESTING_AND_DELIVERY_GOVERNANCE.md` §6/§12,
+> which also generalizes this file's baseline-verification method
+> (`git checkout <sha> -- .` + re-run) beyond PHPUnit. This file remains the
+> source of truth for its own counts; the governance document does not copy
+> them.
+
 > این فایل **فقط** برای ثبت و ایزوله نگه‌داشتن خطاهای **pre-existing** در test suite این مخزن است. این خطاها مربوط به Wave 5.x نیستند و هیچ‌کدام در تست‌های Wave 1 تا Wave 7.0a یا waveهای آینده گزارش/پوشش داده نمی‌شوند.
 >
 > **آخرین به‌روزرسانی:** ۱۴۰۵/۰۲/۲۳ (پس از Wave 7.0a / Test Bootstrap Stabilization).
