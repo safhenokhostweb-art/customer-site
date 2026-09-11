@@ -828,11 +828,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                      endpoints; individual blocks never own an uploader. --}}
                                 <template x-if="isMediaControl(schemaDef, propKey, selectedBlock?.type)">
                                     <div class="space-y-2">
-                                        <template x-if="selectedBlock.props[propKey]">
-                                            <img :src="selectedBlock.props[propKey]" :data-testid="'tb-media-preview-' + propKey" class="w-full h-28 object-cover rounded-lg border border-slate-200">
+                                        <template x-if="mediaSrc(selectedBlock.props[propKey])">
+                                            <img :src="mediaSrc(selectedBlock.props[propKey])" :data-testid="'tb-media-preview-' + propKey" class="w-full h-28 object-cover rounded-lg border border-slate-200">
                                         </template>
                                         <div class="flex gap-2">
-                                            <input type="url" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" placeholder="آدرس تصویر" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                            <input type="url" :value="mediaSrc(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" placeholder="آدرس تصویر (یا انتخاب از کتابخانه)" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <button @click="openMediaPicker(propKey)" :data-testid="'tb-media-picker-' + propKey" class="px-2 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition">📁</button>
                                         </div>
                                     </div>
@@ -852,10 +852,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                         <label class="block text-[11px] font-medium text-slate-600" :for="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" x-text="fieldDef.label || fieldKey"></label>
                                                         <template x-if="fieldDef.type === 'image'">
                                                             <div class="space-y-2">
-                                                                <template x-if="item[fieldKey]">
+                                                                <template x-if="mediaSrc(item[fieldKey])">
                                                                     <div>
-                                                                        <img :src="item[fieldKey]" alt="" class="w-full h-24 object-cover rounded-lg border border-slate-200" :data-testid="`tb-structured-preview-${propKey}-${itemIndex}-${fieldKey}`">
-                                                                        <p class="mt-1 text-[10px] text-slate-500 break-all" x-text="item[fieldKey]"></p>
+                                                                        <img :src="mediaSrc(item[fieldKey])" alt="" class="w-full h-24 object-cover rounded-lg border border-slate-200" :data-testid="`tb-structured-preview-${propKey}-${itemIndex}-${fieldKey}`">
                                                                     </div>
                                                                 </template>
                                                                 <div class="flex gap-2">
@@ -1236,31 +1235,44 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <button @click="mediaModal.tab = 'library'" :class="mediaModal.tab==='library'?'border-b-2 border-indigo-500 text-indigo-600 font-semibold':'text-slate-500'" class="flex-1 py-2.5 text-xs text-center transition">کتابخانه</button>
                 <button @click="mediaModal.tab = 'upload'" data-testid="tb-media-upload-tab" :class="mediaModal.tab==='upload'?'border-b-2 border-indigo-500 text-indigo-600 font-semibold':'text-slate-500'" class="flex-1 py-2.5 text-xs text-center transition">آپلود</button>
             </div>
-            {{-- Library --}}
+            {{-- Library — the same canonical Media Library وبسایت → کتابخانه
+                 رسانه uses: real site-scoped CustomerMedia records via
+                 CustomerMediaService, never a separate theme-media store. --}}
             <div x-show="mediaModal.tab === 'library'" class="flex-1 overflow-y-auto p-4">
+                <div class="flex gap-2 mb-3">
+                    <input type="search" x-model="mediaModal.q" @input.debounce.400ms="fetchMedia()" data-testid="tb-media-search" placeholder="جستجو در کتابخانه رسانه" class="flex-1 text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    <select x-model="mediaModal.category" @change="fetchMedia()" data-testid="tb-media-category" class="text-xs px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <option value="">همه انواع</option>
+                        <option value="image">تصویر</option>
+                        <option value="video">ویدئو</option>
+                        <option value="audio">صوت</option>
+                        <option value="document">سند</option>
+                    </select>
+                </div>
                 <div x-show="mediaModal.loading" class="text-center py-10 text-slate-400 text-sm">در حال بارگذاری...</div>
-                <div x-show="!mediaModal.loading && mediaModal.images.length === 0" class="text-center py-10 text-slate-400 text-sm">هنوز تصویری آپلود نشده</div>
+                <div x-show="!mediaModal.loading && mediaModal.images.length === 0" class="text-center py-10 text-slate-400 text-sm">رسانه‌ای یافت نشد</div>
                 <div x-show="!mediaModal.loading" class="grid grid-cols-4 gap-3">
-                    <template x-for="img in mediaModal.images" :key="img.url">
+                    <template x-for="img in mediaModal.images" :key="img.uuid">
                         <div class="relative group rounded-lg overflow-hidden border-2 cursor-pointer transition"
-                             :data-testid="'tb-media-item-' + img.name"
-                             :class="mediaModal.selected === img.url ? 'border-indigo-500' : 'border-transparent hover:border-indigo-300'"
-                             @click="selectMedia(img.url)">
-                            <img :src="img.url" class="w-full h-20 object-cover">
-                            <button @click.stop="deleteMedia(img.url)" class="absolute top-1 left-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition flex items-center justify-center">×</button>
+                             :data-testid="'tb-media-item-' + img.uuid"
+                             :class="mediaModal.selected === img.uuid ? 'border-indigo-500' : 'border-transparent hover:border-indigo-300'"
+                             @click="selectMedia(img.uuid)"
+                             :title="img.title || img.name">
+                            <img :src="img.url" class="w-full h-20 object-cover" loading="lazy">
                         </div>
                     </template>
                 </div>
             </div>
-            {{-- Upload --}}
+            {{-- Upload — delegates to CustomerMediaService::upload(), the
+                 same sole write authority the main Media Library uses. --}}
             <div x-show="mediaModal.tab === 'upload'" class="flex-1 p-4 flex flex-col items-center justify-center">
                 <div class="w-full border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition"
                      @dragover.prevent @drop.prevent="handleMediaDrop($event)"
                      @click="$refs.mediaFileInput.click()">
                     <div class="text-4xl mb-3">📁</div>
                     <p class="text-sm text-slate-600 font-medium">کلیک کنید یا فایل را بکشید</p>
-                    <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WebP, SVG — حداکثر ۵ مگابایت</p>
-                    <input type="file" x-ref="mediaFileInput" data-testid="tb-media-file-input" accept="image/*" class="hidden" @change="uploadMediaFile($event.target.files[0])">
+                    <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WebP — حداکثر ۱۰ مگابایت</p>
+                    <input type="file" x-ref="mediaFileInput" data-testid="tb-media-file-input" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" @change="uploadMediaFile($event.target.files[0])">
                 </div>
                 <div x-show="mediaModal.uploading" class="mt-4 text-sm text-indigo-600">در حال آپلود...</div>
             </div>
@@ -1388,8 +1400,15 @@ function canvasEditor() {
         // TB3-05: style sections
         styleSection: { typography: true, colors: true, spacing: false, border: false, shadow: false, opacity: false },
         inlineAutoSaveTimer: null,
-        // TB3-07: media modal
-        mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null },
+        // TB3-07: media modal. `selected`/each image's identity is the
+        // canonical CustomerMedia uuid, not a raw URL — MEDIA-4.
+        mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null, q: '', category: '' },
+        // MEDIA-4: uuid -> resolved URL, populated as the library loads/
+        // uploads, so a persisted {media_id} value can render a live
+        // thumbnail in the property panel without a DB round trip per
+        // keystroke. Canvas/public rendering resolves independently and
+        // authoritatively server-side (CustomerMediaResolver) regardless.
+        mediaUrlCache: {},
         motionModal: { open: false, assets: [], loading: false, selected: null, propKey: null, loaded: false },
         // TB6: template library
         showTemplateLibrary: false,
@@ -1522,19 +1541,14 @@ function canvasEditor() {
             this.persistStructuredItems(propKey, schemaDef, items);
         },
         isMediaControl(schemaDef, propKey, blockType) {
-            if (schemaDef?.type === 'image') return true;
-            // A property name such as `url` is ambiguous (image vs video),
-            // and nav_header.logo_url is the logo *link target*, not an image.
-            // Keep this adapter explicit against the existing block schemas so
-            // every single-image renderer contract reaches the one canonical
-            // Media Library without misclassifying ordinary links.
-            return [
-                'hero:background_image',
-                'section:background_image',
-                'image:url',
-                'hero_split:image_url',
-                'module:motion:fallback_image',
-            ].includes(`${blockType}:${propKey}`);
+            // MEDIA-4: every real media-capable prop's canonical schema
+            // (BlockRegistry) now declares type:'image' — background_image,
+            // image.url, hero_split.image_url, module:motion.fallback_image,
+            // and the gallery/team_cards repeater fields all reach this
+            // exact same adapter through one honest marker, no per-prop
+            // name allowlist needed. nav_header.logo_url is deliberately
+            // NOT type:'image': it is the logo's link target, not an image.
+            return schemaDef?.type === 'image';
         },
         isColorControl(schemaDef, propKey, blockType) {
             if (schemaDef?.type === 'color') return true;
@@ -2168,15 +2182,67 @@ function canvasEditor() {
             }
         },
 
+        /**
+         * MEDIA-4: the one client-side resolver for display. A string is a
+         * legacy URL/path, returned as-is. A canonical {media_id} value is
+         * looked up in mediaUrlCache (populated by fetchMedia()/upload —
+         * both real CustomerMedia reads, never guessed). Anything else,
+         * including a media_id not yet cached, safely renders as "no image"
+         * rather than throwing — the canonical resolved URL always comes
+         * from the server (CustomerMediaResolver) at actual render time.
+         */
+        mediaSrc(value) {
+            if (typeof value === 'string') return value;
+            if (value && typeof value === 'object' && typeof value.media_id === 'string') {
+                const cached = this.mediaUrlCache[value.media_id];
+                // A block loaded fresh from the server (a reload, or first
+                // selecting it) may reference a media_id the picker was
+                // never opened for this session, so nothing populated the
+                // cache yet. Resolve it lazily, once, in the background —
+                // still through the real site-scoped lookup, not guessed.
+                if (cached === undefined) this.ensureMediaCached(value.media_id);
+                return cached ?? '';
+            }
+            return '';
+        },
+
+        /** Populates mediaUrlCache for one uuid not yet seen this session. */
+        ensureMediaCached(uuid) {
+            this._mediaCacheInFlight ??= new Set();
+            if (this._mediaCacheInFlight.has(uuid)) return;
+            this._mediaCacheInFlight.add(uuid);
+            fetch(`${ROUTES.mediaIndex}?uuid=${encodeURIComponent(uuid)}`, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } })
+                .then((r) => r.json())
+                .then((d) => {
+                    const item = (d.images ?? [])[0];
+                    if (item) {
+                        // Reassigning the whole object (not a bracket set on
+                        // the existing one) guarantees Alpine's reactivity
+                        // picks up a brand-new key, not just an update to an
+                        // already-tracked one.
+                        this.mediaUrlCache = { ...this.mediaUrlCache, [item.uuid]: item.url };
+                    }
+                })
+                .catch(() => {})
+                .finally(() => this._mediaCacheInFlight.delete(uuid));
+        },
+
         openMediaPicker(propKey, target = null) {
             this.mediaModal.propKey  = propKey;
             this.mediaModal.target   = target;
             this.mediaModal.returnFocus = document.activeElement;
             const schemaDef = this.selectedSchema?.[propKey] ?? {};
-            this.mediaModal.selected = target
-                ? (this.structuredItems(propKey, schemaDef)?.[target.index]?.[target.fieldKey] || null)
-                : (this.selectedBlock?.props?.[propKey] || null);
+            const current = target
+                ? this.structuredItems(propKey, schemaDef)?.[target.index]?.[target.fieldKey]
+                : this.selectedBlock?.props?.[propKey];
+            // Only a canonical {media_id} value can be pre-highlighted in
+            // the library grid — a legacy raw URL has no library identity.
+            this.mediaModal.selected = (current && typeof current === 'object' && typeof current.media_id === 'string')
+                ? current.media_id
+                : null;
             this.mediaModal.tab      = 'library';
+            this.mediaModal.q        = '';
+            this.mediaModal.category = '';
             this.mediaModal.open     = true;
             this.fetchMedia();
         },
@@ -2192,19 +2258,27 @@ function canvasEditor() {
         async fetchMedia() {
             this.mediaModal.loading = true;
             try {
-                const r = await fetch(ROUTES.mediaIndex, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } });
+                const params = new URLSearchParams();
+                if (this.mediaModal.q) params.set('q', this.mediaModal.q);
+                if (this.mediaModal.category) params.set('category', this.mediaModal.category);
+                const qs = params.toString();
+                const r = await fetch(ROUTES.mediaIndex + (qs ? `?${qs}` : ''), { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } });
                 const d = await r.json();
                 this.mediaModal.images = d.images ?? [];
+                for (const img of this.mediaModal.images) {
+                    if (img.uuid) this.mediaUrlCache[img.uuid] = img.url;
+                }
             } catch (_) { this.mediaModal.images = []; }
             finally { this.mediaModal.loading = false; }
         },
 
-        selectMedia(url) {
-            this.mediaModal.selected = (this.mediaModal.selected === url) ? null : url;
+        selectMedia(uuid) {
+            this.mediaModal.selected = (this.mediaModal.selected === uuid) ? null : uuid;
         },
 
         confirmMediaSelect() {
             if (!this.mediaModal.selected || !this.mediaModal.propKey) return;
+            const value = { media_id: this.mediaModal.selected };
             if (this.selectedBlock) {
                 if (this.mediaModal.target) {
                     const schemaDef = this.selectedSchema?.[this.mediaModal.propKey] ?? {};
@@ -2212,28 +2286,15 @@ function canvasEditor() {
                         this.mediaModal.propKey,
                         this.mediaModal.target.index,
                         this.mediaModal.target.fieldKey,
-                        this.mediaModal.selected,
+                        value,
                         schemaDef
                     );
                 } else {
-                    this.selectedBlock.props[this.mediaModal.propKey] = this.mediaModal.selected;
+                    this.selectedBlock.props[this.mediaModal.propKey] = value;
                     this.schedulePropUpdate();
                 }
             }
             this.closeMediaPicker();
-        },
-
-        async deleteMedia(url) {
-            if (!confirm('این تصویر حذف شود؟')) return;
-            try {
-                await fetch(ROUTES.mediaDestroy, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                    body: JSON.stringify({ url })
-                });
-                this.mediaModal.images = this.mediaModal.images.filter(i => i.url !== url);
-                if (this.mediaModal.selected === url) this.mediaModal.selected = null;
-            } catch (_) { this.showToast('خطا در حذف', 'error'); }
         },
 
         handleMediaDrop(e) {
@@ -2249,9 +2310,10 @@ function canvasEditor() {
             try {
                 const r = await fetch(ROUTES.mediaUpload, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' }, body: fd });
                 const d = await r.json();
-                if (d.url) {
-                    this.mediaModal.images.unshift({ url: d.url, name: d.name, size: 0 });
-                    this.mediaModal.selected = d.url;
+                if (d.uuid) {
+                    this.mediaUrlCache[d.uuid] = d.url;
+                    this.mediaModal.images.unshift({ uuid: d.uuid, url: d.url, name: d.name, title: null, category: 'image' });
+                    this.mediaModal.selected = d.uuid;
                     this.mediaModal.tab = 'library';
                     this.showToast('تصویر آپلود شد ✓', 'success');
                 } else this.showToast(d.error ?? 'خطا در آپلود', 'error');

@@ -103,7 +103,11 @@ class ElementSchemaRegistry
             // Canvas textarea controls intentionally persist JSON-shaped
             // values as text.  Treating those values as arrays caused valid
             // defaults such as stats_row and client_logos to be rejected.
-            'textarea', 'string', 'color', 'image', 'motion' => 'string',
+            'textarea', 'string', 'color', 'motion' => 'string',
+            // MEDIA-4: a canonical Media Library selection persists as
+            // {"media_id": "<uuid>"} — a JSON object, not a string. A plain
+            // URL/path string remains valid as transitional legacy data.
+            'image' => 'media',
             // A select is a UI representation, not a persisted type. Its
             // existing defaults include both numeric and string options.
             'select' => 'mixed',
@@ -177,7 +181,7 @@ class ElementSchemaRegistry
             }
 
             $maxLen = config('builder-element-schemas.limits.string_prop_max_length', 65535);
-            if ($expectedType === 'string' && is_string($value) && strlen($value) > $maxLen) {
+            if (($expectedType === 'string' || $expectedType === 'media') && is_string($value) && strlen($value) > $maxLen) {
                 $this->lastErrors[] = "Block \"{$type}\": prop \"{$propName}\" exceeds max length.";
             }
 
@@ -233,6 +237,14 @@ class ElementSchemaRegistry
                 return is_bool($value);
             case 'array':
                 return is_array($value);
+            case 'media':
+                // Canonical: {"media_id": "<uuid>"}. Transitional: a legacy
+                // URL/path string. Never a bare array without media_id —
+                // that would be neither shape and must still be rejected.
+                if (is_string($value)) {
+                    return true;
+                }
+                return is_array($value) && isset($value['media_id']) && is_string($value['media_id']) && $value['media_id'] !== '';
             default:
                 return true;
         }

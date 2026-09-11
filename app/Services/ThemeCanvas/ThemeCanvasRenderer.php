@@ -23,6 +23,8 @@ class ThemeCanvasRenderer extends BlockRenderer
 {
     protected array $themeData = [];
 
+    private ?CustomerMediaResolver $mediaResolver = null;
+
     public function setThemeData(array $themeData): self
     {
         $this->themeData = $themeData;
@@ -46,6 +48,7 @@ class ThemeCanvasRenderer extends BlockRenderer
     {
         $type = $block['type'] ?? 'text';
         $id   = $block['id'] ?? Str::random(8);
+        $block = $this->resolveMediaProps($block, $type);
 
         if (str_starts_with($type, 'module:')) {
             try {
@@ -58,6 +61,27 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         return parent::renderBlock($block);
+    }
+
+    /**
+     * MEDIA-4: the one bounded integration point that turns every
+     * canonical `{media_id}` prop into a real URL before any renderer
+     * (module or standard) sees it, so individual renderers never perform
+     * their own media lookup. Recurses automatically: every nested/child
+     * block (including slider slides) re-enters renderBlock() and is
+     * resolved here too. Block types/props CustomerMediaResolver doesn't
+     * know about pass through completely untouched.
+     */
+    private function resolveMediaProps(array $block, string $type): array
+    {
+        $key = isset($block['props']) ? 'props' : (isset($block['data']) ? 'data' : null);
+        if ($key === null || !is_array($block[$key])) {
+            return $block;
+        }
+        $this->mediaResolver ??= app(CustomerMediaResolver::class);
+        $block[$key] = $this->mediaResolver->resolveBlockProps($type, $block[$key]);
+
+        return $block;
     }
 
     // ── Module block dispatcher ───────────────────────────────────────────────

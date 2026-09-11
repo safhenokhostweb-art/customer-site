@@ -77,6 +77,40 @@ class ElementSchemaValidationTest extends TestCase
         $this->assertFalse($this->registry->validate($block));
     }
 
+    // ── MEDIA-4: canonical {media_id} shape alongside legacy strings ──────
+
+    public function test_image_valid_with_canonical_media_id(): void
+    {
+        $block = ['type' => 'image', 'props' => ['url' => ['media_id' => (string) \Illuminate\Support\Str::uuid()]]];
+        $this->assertTrue($this->registry->validate($block));
+    }
+
+    public function test_image_rejects_array_without_media_id(): void
+    {
+        $block = ['type' => 'image', 'props' => ['url' => ['not_media_id' => 'x']]];
+        $this->assertFalse($this->registry->validate($block));
+    }
+
+    public function test_image_rejects_empty_media_id(): void
+    {
+        $block = ['type' => 'image', 'props' => ['url' => ['media_id' => '']]];
+        $this->assertFalse($this->registry->validate($block));
+    }
+
+    public function test_image_rejects_non_string_media_id(): void
+    {
+        $block = ['type' => 'image', 'props' => ['url' => ['media_id' => 123]]];
+        $this->assertFalse($this->registry->validate($block));
+    }
+
+    public function test_hero_background_image_accepts_legacy_string_and_canonical_media_id(): void
+    {
+        $legacy = ['type' => 'hero', 'props' => ['background_image' => '/storage/theme-media/old.png']];
+        $canonical = ['type' => 'hero', 'props' => ['background_image' => ['media_id' => (string) \Illuminate\Support\Str::uuid()]]];
+        $this->assertTrue($this->registry->validate($legacy));
+        $this->assertTrue($this->registry->validate($canonical));
+    }
+
     public function test_button_valid(): void
     {
         $block = ['type' => 'button', 'props' => ['text' => 'دکمه', 'url' => '#', 'style' => 'primary']];
