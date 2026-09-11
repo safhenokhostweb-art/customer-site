@@ -5,9 +5,11 @@ namespace App\Services\ThemeCanvas;
 use App\Models\Setting;
 use App\Models\ThemeInstanceRevision;
 use App\Services\CustomerMediaService;
+use App\Support\CanvasReservedSlugs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -66,9 +68,32 @@ class ThemeInstanceRevisionService
      * Phase 3D-B: release provenance (source_theme_version/source_release_id)
      * follows the same explicit-context-only rule as the identity Settings —
      * see resolveProvenance() below.
+     *
+     * 2026-09-11 — the reverse half of the Page/Canvas namespace policy
+     * (see CanvasReservedSlugs): this is the single write path for
+     * anything that can make $themeData's pages live (publish, install,
+     * import, rollback, upgrade-reconcile), so it is the one place that
+     * can reject ALL of them uniformly if $themeData would silently
+     * shadow an existing Page row — ThemeCanvasPageController::show()
+     * always resolves a canvas-owned page first, so a colliding Page
+     * would become permanently, silently unreachable the moment this
+     * became active.
+     *
+     * @throws ConflictHttpException if any page in $themeData would shadow
+     *   an existing Page row — fails closed; existing Page content is
+     *   never silently shadowed or auto-renamed.
      */
     public function record(array $themeData, string $type, array $context = []): ThemeInstanceRevision
     {
+        $shadowed = CanvasReservedSlugs::collidingWithExistingPages($themeData);
+        if ($shadowed !== []) {
+            throw new ConflictHttpException(
+                'این عملیات صفحه(های) موجود را با این آدرس‌ها نامرئی می‌کند و انجام نشد: '
+                . implode('، ', $shadowed)
+                . '. ابتدا آن صفحه(ها) را در مدیریت صفحات حذف یا تغییر آدرس دهید.'
+            );
+        }
+
         $identifier = $context['theme_identifier'] ?? $this->currentIdentifier();
 
         return DB::transaction(function () use ($themeData, $type, $context, $identifier) {

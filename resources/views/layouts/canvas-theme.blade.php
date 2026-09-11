@@ -565,11 +565,18 @@
     @auth
         @if(auth()->user()->isTenantAdmin() || auth()->user()->is_admin)
         @php
-            $currentSlug  = request()->route('slug') ?? '';
-            $currentPage  = $currentSlug
-                ? \App\Models\Page::where('slug', $currentSlug)->first()
-                : \App\Models\Page::where('slug', '')->orWhere('slug', 'home')->first();
-            $builderEditUrl = $currentPage ? route('builder.page.edit', $currentPage) : null;
+            // This layout is rendered exclusively by
+            // ThemeCanvasPageController::renderPage() — every page reaching
+            // it is canvas-owned by construction (a Page-model row of the
+            // same slug, if one even exists, is never what's on screen).
+            // The edit action must therefore always route to Theme Design
+            // Canvas, deep-linked to the exact page being viewed — never to
+            // Page Builder, which previously guessed a same-slug Page row
+            // and silently sent admins to edit content that could never
+            // control this public page.
+            $builderEditUrl = isset($canvasPageKey) && $canvasPageKey !== ''
+                ? route('admin.theme-design.canvas-edit') . '?page=' . urlencode($canvasPageKey)
+                : route('admin.theme-design.canvas-edit');
         @endphp
         @if($builderEditUrl)
         <div id="builder-edit-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;font-family:Vazirmatn,Tahoma,sans-serif;font-size:13px;direction:rtl;display:flex;align-items:center;gap:12px;padding:8px 16px;box-shadow:0 -4px 24px rgba(0,0,0,0.3)">
@@ -579,7 +586,7 @@
             </span>
             <a href="{{ $builderEditUrl }}" style="background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:5px 14px;border-radius:8px;font-weight:600;border:1px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:6px;transition:background .15s">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                ویرایش این صفحه در Builder
+                ویرایش این صفحه در Canvas
             </a>
             <a href="{{ route('admin.pages.index') }}" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);text-decoration:none;padding:5px 14px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:6px">
                 📄 مدیریت صفحات

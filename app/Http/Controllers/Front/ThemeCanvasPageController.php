@@ -36,12 +36,13 @@ class ThemeCanvasPageController extends Controller
             return app(HomeController::class)->index();
         }
 
-        $page = $this->findHomePage($themeData['pages'] ?? []);
+        [$pageKey, $page] = $this->findHomePage($themeData['pages'] ?? []);
 
         return $this->renderPage(
             themeData: $themeData,
             blocks: $page['blocks'] ?? [],
             title: $page['title'] ?? SiteHelper::siteName(),
+            pageKey: $pageKey,
         );
     }
 
@@ -55,7 +56,7 @@ class ThemeCanvasPageController extends Controller
             return app(PageController::class)->show($slug);
         }
 
-        $page = $this->findPage($themeData['pages'] ?? [], $slug);
+        [$pageKey, $page] = $this->findPage($themeData['pages'] ?? [], $slug);
 
         if (!$page) {
             // Canvas theme installed but this slug is a DB page — delegate
@@ -66,12 +67,21 @@ class ThemeCanvasPageController extends Controller
             themeData: $themeData,
             blocks: $page['blocks'] ?? [],
             title: $page['title'] ?? ucfirst($slug),
+            pageKey: $pageKey,
         );
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
 
-    private function renderPage(array $themeData, array $blocks, string $title): \Illuminate\View\View
+    /**
+     * $pageKey is the canvas theme's own array key for the page actually
+     * being rendered (e.g. 'home', 'ext-bridge') — every call into this
+     * method is, by construction, rendering canvas-owned content (never a
+     * Page-model row), so the admin edit toolbar (layouts.canvas-theme)
+     * uses it to route to the one authoring surface that actually controls
+     * what's on screen: Theme Design Canvas, never Page Builder.
+     */
+    private function renderPage(array $themeData, array $blocks, string $title, string $pageKey): \Illuminate\View\View
     {
         $this->prepareRenderer($themeData);
 
@@ -95,6 +105,7 @@ class ThemeCanvasPageController extends Controller
             'themeName'   => Setting::get('active_canvas_theme_name', ''),
             'globalStyles'=> $themeData['global_styles'] ?? [],
             'extensionAssets' => $extensionAssets,
+            'canvasPageKey' => $pageKey,
         ]);
     }
 
@@ -151,6 +162,10 @@ class ThemeCanvasPageController extends Controller
     /**
      * Find the home page from the pages array.
      * Supports both indexed array (list) and associative array (key=slug) formats.
+     *
+     * @return array{0: string, 1: array} [pageKey, page] — the key is the
+     *   canvas theme's own array key for this page (e.g. 'home'), needed so
+     *   the admin edit toolbar can deep-link to the exact page being viewed.
      */
     private function findHomePage(array $pages): array
     {
@@ -158,37 +173,48 @@ class ThemeCanvasPageController extends Controller
             if (!is_array($page)) {
                 continue;
             }
+            $stringKey = is_string($key) ? $key : (string) $key;
             // Explicit is_home flag
             if (!empty($page['is_home'])) {
-                return $page;
+                return [$stringKey, $page];
             }
             // Slug-based: empty string or 'home'
-            $slug = $page['slug'] ?? (is_string($key) ? $key : '');
+            $slug = $page['slug'] ?? $stringKey;
             if ($slug === '' || $slug === 'home') {
-                return $page;
+                return [$stringKey, $page];
             }
         }
 
         // Return first page if nothing matched
-        $first = is_array($pages) ? reset($pages) : [];
-        return is_array($first) ? $first : [];
+        foreach ($pages as $key => $page) {
+            if (is_array($page)) {
+                return [is_string($key) ? $key : (string) $key, $page];
+            }
+        }
+
+        return ['', []];
     }
 
     /**
      * Find a specific page by slug.
+     *
+     * @return array{0: string, 1: ?array} [pageKey, page] — page is null
+     *   when no canvas-owned page matches this slug (caller delegates to
+     *   PageController).
      */
-    private function findPage(array $pages, string $slug): ?array
+    private function findPage(array $pages, string $slug): array
     {
         foreach ($pages as $key => $page) {
             if (!is_array($page)) {
                 continue;
             }
-            $pageSlug = $page['slug'] ?? (is_string($key) ? $key : '');
+            $stringKey = is_string($key) ? $key : (string) $key;
+            $pageSlug = $page['slug'] ?? $stringKey;
             if ($pageSlug === $slug) {
-                return $page;
+                return [$stringKey, $page];
             }
         }
 
-        return null;
+        return ['', null];
     }
 }

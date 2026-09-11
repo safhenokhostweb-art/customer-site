@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ThemeDesignController extends Controller
@@ -555,9 +556,13 @@ class ThemeDesignController extends Controller
         // provenance is carried forward from whatever is currently active
         // (Phase 3D-B) — resolves to null if it was already unresolvable.
         $decoded = json_decode($draft, true) ?: [];
-        $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_PUBLISH, [
-            'resolve_provenance_from' => (int) Setting::get('active_theme_revision_id'),
-        ]);
+        try {
+            $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_PUBLISH, [
+                'resolve_provenance_from' => (int) Setting::get('active_theme_revision_id'),
+            ]);
+        } catch (ConflictHttpException $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 409);
+        }
 
         Setting::set('canvas_draft_data', '', 'theme');
 

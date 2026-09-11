@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Services\BuilderLayoutService;
+use App\Support\CanvasReservedSlugs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -37,6 +38,17 @@ class PageController extends Controller
             'show_in_menu' => 'nullable|boolean',
         ]);
         $data['slug'] = $data['slug'] ?: Str::slug($data['title']);
+
+        // A slug the active canvas theme already owns must be rejected —
+        // ThemeCanvasPageController::show() resolves the canvas-owned page
+        // for that slug first, unconditionally, so a Page row created here
+        // would never be publicly reachable with no error or warning.
+        if (in_array($data['slug'], CanvasReservedSlugs::all(), true)) {
+            return back()->withInput()->withErrors([
+                'slug' => 'این آدرس (' . $data['slug'] . ') توسط قالب Canvas فعال استفاده شده و صفحه‌ای با این آدرس در سایت عمومی قابل مشاهده نخواهد بود. آدرس دیگری انتخاب کنید.',
+            ]);
+        }
+
         $data['is_published'] = $request->boolean('is_published', true);
         $data['show_in_menu'] = $request->boolean('show_in_menu', true);
         $data['order'] = Page::max('order') + 1;
@@ -65,6 +77,17 @@ class PageController extends Controller
             'builder_header_override' => 'nullable|string|max:64',
             'builder_footer_override' => 'nullable|string|max:64',
         ]);
+        // Same rejection as store(): renaming into a canvas-owned slug
+        // would make this page publicly unreachable without any error.
+        // Only checked when the slug is actually changing — saving an
+        // unrelated field on a page whose slug already happened to match
+        // (a pre-existing state) must not be blocked here.
+        if ($data['slug'] !== $page->slug && in_array($data['slug'], CanvasReservedSlugs::all(), true)) {
+            return back()->withInput()->withErrors([
+                'slug' => 'این آدرس (' . $data['slug'] . ') توسط قالب Canvas فعال استفاده شده و صفحه‌ای با این آدرس در سایت عمومی قابل مشاهده نخواهد بود. آدرس دیگری انتخاب کنید.',
+            ]);
+        }
+
         $data['is_published'] = $request->boolean('is_published');
         $data['show_in_menu'] = $request->boolean('show_in_menu');
 

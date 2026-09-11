@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageRevision;
 use App\Models\PageTemplate;
+use App\Support\CanvasReservedSlugs;
 use App\Services\ThemeBuilder\BlockRenderer;
 use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
@@ -334,11 +335,29 @@ class PageBuilderController extends Controller
             'slug'  => 'nullable|string|max:255|unique:pages,slug',
         ]);
 
+        $reserved = $this->canvasReservedSlugs();
+
+        // An explicitly-chosen slug that the active canvas theme already
+        // owns must be rejected, not silently accepted: ThemeCanvasPageController
+        // resolves the canvas-owned page for that slug before it ever looks
+        // at this Page row, so the page created here would never be
+        // publicly reachable — no error, no warning, indistinguishable from
+        // a working page until someone checks the live site.
+        if (isset($data['slug']) && in_array($data['slug'], $reserved, true)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'این آدرس (' . $data['slug'] . ') توسط قالب Canvas فعال استفاده شده و صفحه‌ای با این آدرس در سایت عمومی قابل مشاهده نخواهد بود. آدرس دیگری انتخاب کنید.',
+            ], 422);
+        }
+
         $slug = $data['slug'] ?? Str::slug($data['title']);
-        // Ensure unique
+        // Ensure unique against both other Page rows and the active canvas
+        // theme's own reserved page slugs (only reached for an
+        // auto-derived slug — an explicit collision was already rejected
+        // above).
         $base = $slug;
         $i = 1;
-        while (Page::where('slug', $slug)->exists()) {
+        while (Page::where('slug', $slug)->exists() || in_array($slug, $reserved, true)) {
             $slug = $base . '-' . $i++;
         }
 
@@ -373,6 +392,18 @@ class PageBuilderController extends Controller
             'meta_description' => 'sometimes|nullable|string|max:500',
         ]);
 
+        // Same rejection as createPage(): renaming into a canvas-owned slug
+        // would make this page publicly unreachable without any error.
+        // Only checked when the slug is actually changing — resubmitting
+        // an unchanged (possibly pre-existing, grandfathered) slug must
+        // not be blocked here.
+        if (isset($data['slug']) && $data['slug'] !== $page->slug && in_array($data['slug'], $this->canvasReservedSlugs(), true)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'این آدرس (' . $data['slug'] . ') توسط قالب Canvas فعال استفاده شده و صفحه‌ای با این آدرس در سایت عمومی قابل مشاهده نخواهد بود. آدرس دیگری انتخاب کنید.',
+            ], 422);
+        }
+
         $page->update($data);
 
         return response()->json([
@@ -386,6 +417,12 @@ class PageBuilderController extends Controller
                 'view_url'     => route('page.show', $page->slug),
             ],
         ]);
+    }
+
+    /** @return array<int, string> */
+    private function canvasReservedSlugs(): array
+    {
+        return CanvasReservedSlugs::all();
     }
 
     /** Delete a page from within the builder. */
