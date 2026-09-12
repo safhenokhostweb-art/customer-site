@@ -55,6 +55,17 @@ class ThemeCanvasRenderer extends BlockRenderer
                 $props = $block['props'] ?? $block['data'] ?? [];
                 $html  = $this->renderModuleBlock($type, $props, $id);
             } catch (\Throwable $e) {
+                // Builder integrity audit (2026-09-11): this catch
+                // previously swallowed every module-block render exception
+                // with no log entry at all — a real observability gap
+                // found while diagnosing module:shop_product_slider (the
+                // parent class's own equivalent catch, in BlockRenderer,
+                // does log). Matches that existing pattern instead of
+                // introducing a second one.
+                \Illuminate\Support\Facades\Log::error('Canvas module block render failed', [
+                    'element_id' => $id, 'type' => $type,
+                    'message' => $e->getMessage(), 'trace' => $e->getTraceAsString(),
+                ]);
                 $html = $this->renderPlaceholder($id, $type, 'render_error');
             }
             return $this->wrapEditorMode($html, $id, $type);
@@ -155,6 +166,36 @@ class ThemeCanvasRenderer extends BlockRenderer
             $type === 'module:motion'
                 => $this->renderModuleMotion($props, $id),
 
+            // Builder integrity audit (2026-09-11): these 8 were registered
+            // canonically but had no dispatch branch here, silently
+            // rendering '' regardless of state. Each is now backed by a
+            // real host model/route; module:portfolio_grid and
+            // module:services_section were de-exposed instead (no backend
+            // model — see BlockRegistry::all()).
+            $type === 'module:account_quick_links'
+                => $this->renderModuleAccountQuickLinks($props, $id),
+
+            $type === 'module:advertisement_zone'
+                => $this->renderModuleAdvertisementZone($props, $id),
+
+            $type === 'module:business_card_embed'
+                => $this->renderModuleBusinessCardEmbed($props, $id),
+
+            $type === 'module:content_cards'
+                => $this->renderModuleContentCards($props, $id),
+
+            $type === 'module:invoice_quick_pay'
+                => $this->renderModuleInvoiceQuickPay($props, $id),
+
+            $type === 'module:shop_countdown'
+                => $this->renderModuleShopCountdown($props, $id),
+
+            $type === 'module:shop_search_box'
+                => $this->renderModuleShopSearchBox($props, $id),
+
+            $type === 'module:site_search'
+                => $this->renderModuleSiteSearch($props, $id),
+
             default => $this->renderModuleGenericPlaceholder($type, $props, $id),
         };
     }
@@ -182,6 +223,82 @@ class ThemeCanvasRenderer extends BlockRenderer
             . "</div>";
     }
 
+    // ── Video (bare type — real dispatch, no module gate) ──────────────────────
+    //
+    // Builder integrity audit (2026-09-11): registered since before MEDIA-4,
+    // insertable, never had a renderer anywhere in the class hierarchy —
+    // always rendered empty. `url`/`poster` resolve through the same
+    // CustomerMediaResolver path every other media-capable prop uses
+    // (resolveMediaProps() already ran before this method is reached), so
+    // this method never performs its own media lookup.
+
+    protected function renderVideo(array $props, string $inner, string $id): string
+    {
+        $url = trim((string) ($props['url'] ?? ''));
+        if ($url === '') {
+            return "<div id=\"tb-{$id}\" class=\"tb-video tb-empty-state\"><p class=\"tb-text\">ویدیویی انتخاب نشده است.</p></div>";
+        }
+
+        $poster    = trim((string) ($props['poster'] ?? ''));
+        $caption   = $this->escape($props['caption'] ?? '');
+        $autoplay  = (bool) ($props['autoplay'] ?? false);
+        $loop      = (bool) ($props['loop'] ?? false);
+        $controls  = $props['controls'] ?? true;
+
+        $attrs = [];
+        if ($controls) $attrs[] = 'controls';
+        if ($autoplay) $attrs[] = 'autoplay muted playsinline';
+        if ($loop) $attrs[] = 'loop';
+        $attrStr = implode(' ', $attrs);
+        $posterAttr = $poster !== '' ? ' poster="' . $this->escapeAttr($poster) . '"' : '';
+
+        $captionHtml = $caption ? "<figcaption class=\"tb-video-caption\">{$caption}</figcaption>" : '';
+
+        return "<figure id=\"tb-{$id}\" class=\"tb-video\">
+            <video src=\"" . $this->escapeAttr($url) . "\"{$posterAttr} {$attrStr} style=\"width:100%;border-radius:0.5rem;display:block;\"></video>
+            {$captionHtml}
+        </figure>";
+    }
+
+    /**
+     * Builder integrity audit (2026-09-11): customer-site's local
+     * 'social_icons' schema (BlockRegistry::all()) declares only a
+     * 'style' select — no 'links' field, unlike the canonical shared
+     * schema this type would otherwise inherit the renderer from. The
+     * canonical renderSocialIcons() reads $props['links'] (never present
+     * here) and ignores 'style' entirely — real data could never reach
+     * it. This host override reads the same real SocialLink model
+     * module:social_links_bar already uses and honors all 3 real style
+     * variants, matching the local schema's actual intent instead of the
+     * canonical one it silently inherited from.
+     */
+    protected function renderSocialIcons(array $props, string $inner, string $id): string
+    {
+        $links = [];
+        if (class_exists(\App\Models\SocialLink::class)) {
+            $links = \App\Models\SocialLink::orderBy('order')->get()
+                ->map(fn ($l) => ['url' => $l->url, 'label' => $l->title ?? $l->platform ?? ''])->toArray();
+        }
+        if (empty($links)) {
+            return '';
+        }
+
+        $style = in_array($props['style'] ?? 'icons', ['buttons', 'text'], true) ? $props['style'] : 'icons';
+        $items = [];
+        foreach ($links as $link) {
+            $url   = $this->escapeAttr($link['url'] ?? '#');
+            $label = $this->escape($link['label'] ?? '');
+            $shown = match ($style) {
+                'icons' => mb_substr($label, 0, 1),
+                default => $label,
+            };
+            $cls = $style === 'buttons' ? 'tb-btn tb-btn-secondary' : 'tb-social-link';
+            $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"{$cls}\" aria-label=\"{$label}\">{$shown}</a>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-social-icons tb-social-icons-{$style}\" style=\"display:flex;gap:0.5rem;flex-wrap:wrap;\">" . implode('', $items) . "</div>";
+    }
+
     // ── Blog ─────────────────────────────────────────────────────────────────
 
     protected function renderModuleBlogPosts(array $props, string $id): string
@@ -190,10 +307,16 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $title  = $this->escape($props['title'] ?? 'آخرین مطالب');
-        $limit  = max(1, (int) ($props['limit'] ?? 6));
-        $layout = $props['layout'] ?? 'grid';
-        $posts  = Post::published()->latest('published_at')->take($limit)->get();
+        $title        = $this->escape($props['title'] ?? 'آخرین مطالب');
+        $limit        = max(1, (int) ($props['limit'] ?? 6));
+        $layout       = $props['layout'] ?? 'grid';
+        $showExcerpt  = $props['show_excerpt'] ?? true;
+        $showDate     = $props['show_date'] ?? true;
+        $categorySlug = trim((string) ($props['category_slug'] ?? ''));
+
+        $posts = Post::published()
+            ->when($categorySlug !== '', fn ($q) => $q->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug)))
+            ->latest('published_at')->take($limit)->get();
 
         if ($posts->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-module-blog tb-empty-state\">
@@ -205,17 +328,19 @@ class ThemeCanvasRenderer extends BlockRenderer
         $colsClass = $layout === 'list' ? 'tb-grid-cols-1' : 'tb-grid-cols-3';
         $cards = [];
         foreach ($posts as $post) {
-            $url     = route('blog.show', $post->slug);
-            $t       = $this->escape($post->title);
-            $excerpt = $this->escape(Str::limit(strip_tags($post->excerpt ?? $post->body ?? ''), 110));
-            $date    = $post->published_at ? Jalali::formatFa($post->published_at, 'Y/m/d') : '';
-            $imgHtml = !empty($post->featured_image)
+            $url        = route('blog.show', $post->slug);
+            $t          = $this->escape($post->title);
+            $excerpt    = $this->escape(Str::limit(strip_tags($post->excerpt ?? $post->body ?? ''), 110));
+            $date       = $post->published_at ? Jalali::formatFa($post->published_at, 'Y/m/d') : '';
+            $imgHtml    = !empty($post->featured_image)
                 ? "<div class=\"tb-blog-card-img\"><img src=\"" . e(ImageHelper::url($post->featured_image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
                 : "<div class=\"tb-blog-card-img tb-blog-card-noimg\">📰</div>";
+            $dateHtml    = $showDate ? "<p class=\"tb-blog-card-meta\">{$date}</p>" : '';
+            $excerptHtml = $showExcerpt ? "<p class=\"tb-blog-card-excerpt\">{$excerpt}</p>" : '';
             $cards[] = "<a href=\"{$url}\" class=\"tb-blog-card\">{$imgHtml}<div class=\"tb-blog-card-body\">
                 <h3 class=\"tb-blog-card-title\">{$t}</h3>
-                <p class=\"tb-blog-card-meta\">{$date}</p>
-                <p class=\"tb-blog-card-excerpt\">{$excerpt}</p>
+                {$dateHtml}
+                {$excerptHtml}
             </div></a>";
         }
 
@@ -237,14 +362,26 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $title   = $this->escape($props['title'] ?? 'محصولات');
-        $limit   = max(1, (int) ($props['limit'] ?? 8));
-        $columns = max(2, min(4, (int) ($props['columns'] ?? 4)));
-        $source  = $props['source'] ?? 'recent';
+        $title        = $this->escape($props['title'] ?? 'محصولات');
+        $limit        = max(1, (int) ($props['limit'] ?? 8));
+        $columns      = max(2, min(4, (int) ($props['columns'] ?? 4)));
+        $source       = $props['source'] ?? 'recent';
+        $categorySlug = trim((string) ($props['category_slug'] ?? ''));
 
+        // Builder integrity audit (2026-09-11): 'featured' previously
+        // queried `is_featured`, a column that has never existed on
+        // `products` (confirmed: no migration, no model field) — every
+        // real render with source=featured (the canonical DEFAULT for
+        // module:shop_product_slider) crashed with a real SQL error,
+        // silently swallowed by renderBlock()'s catch (that catch's own
+        // missing log entry was fixed alongside this). `is_new` is a real,
+        // existing column with the closest honest semantic match.
         $query = Product::query()->active();
         if ($source === 'featured') {
-            $query->where('is_featured', true);
+            $query->where('is_new', true);
+        }
+        if ($categorySlug !== '') {
+            $query->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug));
         }
         $products = $query->latest()->take($limit)->get();
 
@@ -291,10 +428,38 @@ class ThemeCanvasRenderer extends BlockRenderer
         if (!SiteHelper::shopEnabled()) {
             return '';
         }
-        $title = $this->escape($props['title'] ?? 'دسته‌بندی‌ها');
-        return "<div id=\"tb-{$id}\" class=\"tb-module-shop-categories\">
-            <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
-            <div style=\"text-align:center;\"><a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده فروشگاه</a></div>
+        $title      = $this->escape($props['title'] ?? 'دسته‌بندی‌ها');
+        $style      = in_array($props['style'] ?? 'grid', ['list', 'horizontal'], true) ? $props['style'] : 'grid';
+        $limit      = max(1, (int) ($props['limit'] ?? 6));
+        $showCount  = $props['show_count'] ?? true;
+
+        $categories = \App\Models\ProductCategory::query()
+            ->when($showCount, fn ($q) => $q->withCount('products'))
+            ->orderBy('order')->take($limit)->get();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        if ($categories->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-shop-categories\">
+                {$titleHtml}
+                <div style=\"text-align:center;\"><a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده فروشگاه</a></div>
+            </div>";
+        }
+
+        $wrapStyle = $style === 'horizontal'
+            ? 'display:flex;gap:0.75rem;flex-wrap:wrap;'
+            : ($style === 'list' ? 'display:flex;flex-direction:column;gap:0.5rem;' : 'display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;');
+
+        $cards = [];
+        foreach ($categories as $cat) {
+            $name  = $this->escape($cat->name);
+            $url   = e(route('shop.index', ['category' => $cat->slug]));
+            $count = $showCount ? "<span style=\"color:#6b7280;font-size:0.8rem;\">(" . (int) ($cat->products_count ?? 0) . ")</span>" : '';
+            $cards[] = "<a href=\"{$url}\" class=\"tb-shop-category-link\" style=\"display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.65rem 1rem;border:1px solid #e5e7eb;border-radius:0.5rem;text-decoration:none;color:inherit;\">{$name}{$count}</a>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-shop-categories tb-module-shop-categories-{$style}\">
+            {$titleHtml}
+            <div style=\"{$wrapStyle}\">" . implode('', $cards) . "</div>
         </div>";
     }
 
@@ -304,14 +469,25 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
         $label   = $this->escape($props['label'] ?? 'سبد خرید');
+        $style   = in_array($props['style'] ?? 'button', ['icon', 'full'], true) ? $props['style'] : 'button';
         $cartUrl = route('shop.cart');
         $count   = 0;
+        $total   = 0;
         foreach (session('cart', []) as $item) {
             $count += (int) ($item['quantity'] ?? 0);
+            $total += (float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? 0);
         }
         $badge = $count > 0
             ? "<span style=\"background:#ef4444;color:#fff;font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:999px;\">{$count}</span>"
             : '';
+
+        if ($style === 'icon') {
+            return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link tb-cart-link-icon\" aria-label=\"{$label}\">🛒{$badge}</a>";
+        }
+        if ($style === 'full') {
+            $priceHtml = $total > 0 ? " — " . CurrencyHelper::formatPrice($total) . ' ' . CurrencyHelper::unitLabel() : '';
+            return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link tb-cart-link-full\">🛒 {$label}{$priceHtml} {$badge}</a>";
+        }
         return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link\" aria-label=\"{$label}\">🛒 {$label} {$badge}</a>";
     }
 
@@ -325,7 +501,9 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $title   = $this->escape($props['title'] ?? 'دوره‌های آموزشی');
         $limit   = max(1, (int) ($props['limit'] ?? 6));
+        $layout  = ($props['layout'] ?? 'grid') === 'list' ? 'list' : 'grid';
         $columns = max(2, min(4, (int) ($props['columns'] ?? 3)));
+        $showPrice = $props['show_price'] ?? true;
         $courses = Course::active()->latest()->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
@@ -340,7 +518,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             </div>";
         }
 
-        $colsClass = "tb-grid-cols-{$columns}";
+        $colsClass = $layout === 'list' ? 'tb-grid-cols-1' : "tb-grid-cols-{$columns}";
         $cards = [];
         foreach ($courses as $course) {
             $url     = route('courses.show', $course->slug);
@@ -352,12 +530,13 @@ class ThemeCanvasRenderer extends BlockRenderer
             $imgHtml = $course->thumbnail
                 ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($course->thumbnail)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
                 : "<div class=\"tb-product-card-img tb-product-card-noimg\" style=\"font-size:2rem;\">🎓</div>";
+            $priceHtml = $showPrice ? "<div class=\"tb-product-price\">{$price}</div>" : '';
             $cards[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"text-align:right;\">
                 {$imgHtml}
                 <div class=\"tb-product-card-inner\">
                     <h3 class=\"tb-product-title\">{$t}</h3>
                     <p style=\"font-size:0.85rem;color:#6b7280;margin:0.25rem 0;\">{$excerpt}</p>
-                    <div class=\"tb-product-price\">{$price}</div>
+                    {$priceHtml}
                 </div>
             </a>";
         }
@@ -396,6 +575,17 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
         $label = $this->escape($props['label'] ?? 'یادگیری من');
         $url   = route('courses.my-learning');
+        $style = $props['style'] ?? 'button';
+
+        if ($style === 'link') {
+            return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-link\" style=\"text-decoration:underline;\">📚 {$label}</a>";
+        }
+        if ($style === 'card') {
+            return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-module-my-learning-card\" style=\"display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem;border:1px solid #e5e7eb;border-radius:0.75rem;text-decoration:none;color:inherit;\">
+                <span style=\"font-size:1.5rem;\">📚</span>
+                <span style=\"font-weight:700;\">{$label}</span>
+            </a>";
+        }
         return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-primary\">📚 {$label}</a>";
     }
 
@@ -442,11 +632,27 @@ class ThemeCanvasRenderer extends BlockRenderer
         if (!SiteHelper::moduleEnabled('subscription')) {
             return '';
         }
-        $label = $this->escape($props['label'] ?? 'کاربر فعال');
-        return "<div id=\"tb-{$id}\" class=\"tb-module-stats\">
+        $label     = $this->escape($props['label'] ?? 'کاربر فعال');
+        $showCount = $props['show_count'] ?? true;
+        $style     = ($props['style'] ?? 'badge') === 'card' ? 'card' : 'badge';
+
+        $countHtml = '';
+        if ($showCount && class_exists(\App\Models\Subscription::class)) {
+            $count = \App\Models\Subscription::where('status', \App\Models\Subscription::STATUS_ACTIVE)->count();
+            $countHtml = "<strong>" . number_format($count) . "</strong> ";
+        }
+
+        if ($style === 'card') {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-stats tb-module-stats-card\" style=\"text-align:center;padding:1.5rem;border:1px solid #e5e7eb;border-radius:0.75rem;\">
+                <div style=\"font-size:1.75rem;color:#4f46e5;\">👥</div>
+                <div style=\"font-size:1.25rem;margin-top:0.25rem;\">{$countHtml}{$label}</div>
+            </div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-stats tb-module-stats-badge\">
             <div style=\"display:inline-flex;align-items:center;gap:0.5rem;background:#f3f4f6;border-radius:999px;padding:0.4rem 1rem;font-size:0.9rem;\">
                 <span style=\"color:#4f46e5;font-size:1rem;\">👥</span>
-                <span>{$label}</span>
+                <span>{$countHtml}{$label}</span>
             </div>
         </div>";
     }
@@ -466,6 +672,10 @@ class ThemeCanvasRenderer extends BlockRenderer
         if ($address && ($props['show_address'] ?? true)) {
             $items[] = "<p class=\"tb-text\"><strong>📍 آدرس:</strong> " . $this->escape($address) . "</p>";
         }
+        if ($address && ($props['show_map'] ?? false)) {
+            $mapSrc = 'https://maps.google.com/maps?q=' . urlencode($address) . '&output=embed';
+            $items[] = "<div class=\"tb-contact-map\"><iframe src=\"" . $this->escapeAttr($mapSrc) . "\" loading=\"lazy\" style=\"width:100%;height:280px;border:0;\" title=\"نقشه\"></iframe></div>";
+        }
         $items[] = "<p class=\"tb-text\"><a href=\"" . e(route('contact.show')) . "\" class=\"tb-btn tb-btn-primary\" style=\"margin-top:0.5rem;\">ارسال پیام</a></p>";
 
         return "<div id=\"tb-{$id}\" class=\"tb-module-contact\">" . implode('', $items) . "</div>";
@@ -476,7 +686,9 @@ class ThemeCanvasRenderer extends BlockRenderer
     protected function renderModuleFaqDynamic(array $props, string $id): string
     {
         $title = $this->escape($props['title'] ?? 'سوالات متداول');
-        $items = $props['items'] ?? [];
+        $limit = max(1, (int) ($props['limit'] ?? 10));
+        $style = ($props['style'] ?? 'accordion') === 'list' ? 'list' : 'accordion';
+        $items = array_slice(is_array($props['items'] ?? null) ? $props['items'] : [], 0, $limit);
 
         if (empty($items)) {
             return "<div id=\"tb-{$id}\" class=\"tb-faq\">
@@ -489,13 +701,18 @@ class ThemeCanvasRenderer extends BlockRenderer
         foreach ($items as $item) {
             $q = $this->escape($item['question'] ?? $item['title'] ?? '');
             $a = $this->sanitizeHtml($item['answer'] ?? $item['content'] ?? '');
-            $rows[] = "<details class=\"tb-faq-item\">
-                <summary class=\"tb-faq-question\">{$q}</summary>
-                <div class=\"tb-faq-answer\">{$a}</div>
-            </details>";
+            $rows[] = $style === 'list'
+                ? "<div class=\"tb-faq-item tb-faq-item-list\">
+                    <h3 class=\"tb-faq-question\">{$q}</h3>
+                    <div class=\"tb-faq-answer\">{$a}</div>
+                </div>"
+                : "<details class=\"tb-faq-item\">
+                    <summary class=\"tb-faq-question\">{$q}</summary>
+                    <div class=\"tb-faq-answer\">{$a}</div>
+                </details>";
         }
 
-        return "<div id=\"tb-{$id}\" class=\"tb-faq\">" . implode('', $rows) . "</div>";
+        return "<div id=\"tb-{$id}\" class=\"tb-faq tb-faq-{$style}\">" . implode('', $rows) . "</div>";
     }
 
     // ── Support ───────────────────────────────────────────────────────────────
@@ -536,19 +753,29 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
+        $style = in_array($props['style'] ?? 'horizontal', ['vertical', 'icons-only'], true) ? $props['style'] : 'horizontal';
+        $color = in_array($props['color'] ?? 'brand', ['white', 'dark'], true) ? $props['color'] : 'brand';
+        $size  = in_array($props['size'] ?? 'md', ['sm', 'lg'], true) ? $props['size'] : 'md';
+
+        $colorCss = ['brand' => 'var(--tb-primary,#4f46e5)', 'white' => '#ffffff', 'dark' => '#111827'][$color];
+        $fontSize = ['sm' => '0.85rem', 'md' => '1rem', 'lg' => '1.25rem'][$size];
+        $padding  = ['sm' => '0.35rem 0.6rem', 'md' => '0.5rem 0.85rem', 'lg' => '0.65rem 1.1rem'][$size];
+        $wrapStyle = 'display:flex;gap:0.5rem;flex-wrap:wrap;' . ($style === 'vertical' ? 'flex-direction:column;align-items:flex-start;' : 'align-items:center;');
+
         $items = [];
         foreach ($links as $link) {
             $url   = $this->escapeAttr($link['url'] ?? '#');
             $label = $this->escape($link['label'] ?? '');
-            $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"tb-social-link\" aria-label=\"{$label}\">{$label}</a>";
+            $shown = $style === 'icons-only' ? mb_substr($label, 0, 1) : $label;
+            $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"tb-social-link\" aria-label=\"{$label}\" style=\"color:{$colorCss};font-size:{$fontSize};padding:{$padding};border:1px solid currentColor;border-radius:0.5rem;text-decoration:none;\">{$shown}</a>";
         }
 
-        return "<div id=\"tb-{$id}\" class=\"tb-social-icons\">" . implode('', $items) . "</div>";
+        return "<div id=\"tb-{$id}\" class=\"tb-social-icons tb-social-icons-{$style}\" style=\"{$wrapStyle}\">" . implode('', $items) . "</div>";
     }
 
     protected function renderModuleNotificationsBar(array $props, string $id): string
     {
-        $style   = $props['style'] ?? 'top-bar';
+        $style   = ($props['style'] ?? 'top-bar') === 'floating' ? 'floating' : 'top-bar';
         $dismiss = ($props['show_dismiss'] ?? true) ? "<button onclick=\"this.closest('.tb-notifications-bar').remove()\" style=\"background:transparent;border:none;cursor:pointer;font-size:1.1rem;color:inherit;padding:0 0.25rem;\" aria-label=\"بستن\">×</button>" : '';
 
         if (!class_exists(\App\Models\SiteNotification::class)) {
@@ -567,7 +794,11 @@ class ThemeCanvasRenderer extends BlockRenderer
             ? "<a href=\"" . $this->escapeAttr($link) . "\" style=\"color:inherit;text-decoration:underline;\">{$text}</a>"
             : $text;
 
-        return "<div id=\"tb-{$id}\" class=\"tb-notifications-bar\" style=\"background:#4f46e5;color:#fff;padding:0.6rem 1rem;text-align:center;display:flex;justify-content:center;align-items:center;gap:0.75rem;\">
+        $positionStyle = $style === 'floating'
+            ? 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);width:min(92vw,32rem);border-radius:0.75rem;box-shadow:0 8px 24px rgba(0,0,0,0.18);z-index:9998;'
+            : '';
+
+        return "<div id=\"tb-{$id}\" class=\"tb-notifications-bar tb-notifications-bar-{$style}\" style=\"background:#4f46e5;color:#fff;padding:0.6rem 1rem;text-align:center;display:flex;justify-content:center;align-items:center;gap:0.75rem;{$positionStyle}\">
             <span>{$inner}</span>{$dismiss}
         </div>";
     }
@@ -604,11 +835,29 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $title    = $this->escape($props['title'] ?? 'دوستانت را دعوت کن');
         $subtitle = $this->escape($props['subtitle'] ?? 'با معرفی دوستان جایزه بگیر');
+        $style    = in_array($props['style'] ?? 'banner', ['card', 'minimal'], true) ? $props['style'] : 'banner';
+        $showLink = $props['show_link'] ?? true;
+        $link     = $showLink
+            ? "<a href=\"" . e(route('account.referrals.index')) . "\" class=\"tb-btn tb-btn-primary\">مشاهده لینک معرفی</a>"
+            : '';
 
-        return "<div id=\"tb-{$id}\" class=\"tb-module-referral\" style=\"background:#fef9c3;border:1px solid #eab308;border-radius:0.75rem;padding:1.5rem;text-align:center;\">
+        if ($style === 'minimal') {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-referral tb-module-referral-minimal\" style=\"display:flex;align-items:center;gap:0.75rem;padding:0.75rem 0;\">
+                <span>🎁 <strong>{$title}</strong> — {$subtitle}</span>{$link}
+            </div>";
+        }
+        if ($style === 'card') {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-referral tb-module-referral-card\" style=\"background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;\">
+                <h3 style=\"font-weight:700;margin:0 0 0.5rem;\">🎁 {$title}</h3>
+                <p style=\"color:#6b7280;margin:0 0 1rem;\">{$subtitle}</p>
+                {$link}
+            </div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-referral tb-module-referral-banner\" style=\"background:#fef9c3;border:1px solid #eab308;border-radius:0.75rem;padding:1.5rem;text-align:center;\">
             <h3 style=\"font-weight:700;margin:0 0 0.5rem;\">🎁 {$title}</h3>
             <p style=\"color:#713f12;margin:0 0 1rem;\">{$subtitle}</p>
-            <a href=\"" . e(route('account.referrals.index')) . "\" class=\"tb-btn tb-btn-primary\">مشاهده لینک معرفی</a>
+            {$link}
         </div>";
     }
 
@@ -620,7 +869,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $phone = \App\Models\Setting::get('whatsapp_phone', '');
+        $phone = trim((string) ($props['phone'] ?? '')) ?: \App\Models\Setting::get('whatsapp_phone', '');
         if (!$phone) {
             return '';
         }
@@ -668,8 +917,15 @@ class ThemeCanvasRenderer extends BlockRenderer
         $titleHtml = ($showTitle && $title) ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
         $src       = $this->escapeAttr(route('forms.show', $form->slug));
         $frameTitle = $this->escapeAttr($form->title ?? 'فرم');
+        $style     = in_array($props['style'] ?? 'card', ['minimal', 'full'], true) ? $props['style'] : 'card';
 
-        return "<div id=\"tb-{$id}\" class=\"tb-module-form-embed\">
+        $wrapStyle = match ($style) {
+            'minimal' => '',
+            'full'    => 'width:100%;',
+            default   => 'max-width:40rem;margin:0 auto;padding:1.5rem;border:1px solid #e5e7eb;border-radius:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);',
+        };
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-form-embed tb-module-form-embed-{$style}\" style=\"{$wrapStyle}\">
             {$titleHtml}
             <iframe src=\"{$src}\" loading=\"lazy\" style=\"width:100%;min-height:520px;border:0;\" title=\"{$frameTitle}\"></iframe>
         </div>";
@@ -686,6 +942,7 @@ class ThemeCanvasRenderer extends BlockRenderer
         $title      = $this->escape($props['title'] ?? 'نظرات مشتریان');
         $limit      = max(1, (int) ($props['limit'] ?? 6));
         $showAvatar = $props['show_avatar'] ?? true;
+        $style      = ($props['style'] ?? 'cards') === 'minimal' ? 'minimal' : 'cards';
 
         if (!class_exists(\App\Models\ProductReview::class)) {
             return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
@@ -713,12 +970,15 @@ class ThemeCanvasRenderer extends BlockRenderer
             $avatar      = $showAvatar ? "<div class=\"tb-review-avatar\">" . mb_substr($name, 0, 1) . "</div>" : '';
             $productName = $review->product->title ?? '';
             $productLine = $productName ? "<p class=\"tb-review-product\">" . $this->escape($productName) . "</p>" : '';
-            $cards[] = "<div class=\"tb-testimonial-card\">{$avatar}<div class=\"tb-testimonial-rating\">{$stars}</div><p class=\"tb-testimonial-text\">{$body}</p><p class=\"tb-testimonial-author\">— {$name}</p>{$productLine}</div>";
+            $cards[] = $style === 'minimal'
+                ? "<div class=\"tb-review-minimal\" style=\"padding:0.75rem 0;border-bottom:1px solid #e5e7eb;\">{$avatar}<span class=\"tb-testimonial-rating\">{$stars}</span> <strong>{$name}</strong>: <span class=\"tb-testimonial-text\">{$body}</span>{$productLine}</div>"
+                : "<div class=\"tb-testimonial-card\">{$avatar}<div class=\"tb-testimonial-rating\">{$stars}</div><p class=\"tb-testimonial-text\">{$body}</p><p class=\"tb-testimonial-author\">— {$name}</p>{$productLine}</div>";
         }
 
-        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">
+        $wrapClass = $style === 'minimal' ? 'tb-reviews-minimal-list' : 'tb-testimonials-grid';
+        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews tb-module-reviews-{$style}\">
             <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
-            <div class=\"tb-testimonials-grid\">" . implode('', $cards) . "</div>
+            <div class=\"{$wrapClass}\">" . implode('', $cards) . "</div>
         </div>";
     }
 
@@ -768,10 +1028,461 @@ class ThemeCanvasRenderer extends BlockRenderer
 
     // ── Generic placeholder ───────────────────────────────────────────────────
 
+    // ── Account / Advertisement / Business card / Content / Invoice / Search ───
+    // Builder integrity audit (2026-09-11): 8 real implementations for
+    // canonical types that previously had no dispatch branch (§ above).
+
+    protected function renderModuleAccountQuickLinks(array $props, string $id): string
+    {
+        if (!auth()->check()) {
+            return '';
+        }
+        $style      = in_array($props['style'] ?? 'buttons', ['list', 'dropdown'], true) ? $props['style'] : 'buttons';
+        $showNotif  = $props['show_notifications'] ?? true;
+        $showAvatar = $props['show_avatar'] ?? true;
+
+        $links = [
+            ['url' => route('account.dashboard'), 'label' => 'داشبورد'],
+            ['url' => route('account.orders.index'), 'label' => 'سفارش‌ها'],
+            ['url' => route('account.profile.index'), 'label' => 'پروفایل'],
+        ];
+        if ($showNotif) {
+            $links[] = ['url' => route('account.notifications.index'), 'label' => 'اعلان‌ها'];
+        }
+
+        $avatarHtml = '';
+        if ($showAvatar) {
+            $user = auth()->user();
+            $name = $this->escape($user?->name ?: 'کاربر');
+            $avatarUrl = $user?->avatar ? ImageHelper::url($user->avatar) : null;
+            $avatarHtml = $avatarUrl
+                ? "<img src=\"" . $this->escapeAttr($avatarUrl) . "\" alt=\"{$name}\" style=\"width:2rem;height:2rem;border-radius:999px;object-fit:cover;\">"
+                : "<span style=\"display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:999px;background:#4f46e5;color:#fff;font-size:0.85rem;\">" . mb_substr($name, 0, 1) . "</span>";
+        }
+
+        $items = array_map(
+            fn ($l) => "<a href=\"" . $this->escapeAttr($l['url']) . "\" class=\"tb-btn tb-btn-secondary\">" . $this->escape($l['label']) . "</a>",
+            $links
+        );
+
+        $wrapStyle = $style === 'list'
+            ? 'display:flex;flex-direction:column;gap:0.5rem;align-items:flex-start;'
+            : 'display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;';
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-account-links tb-module-account-links-{$style}\" style=\"{$wrapStyle}\">{$avatarHtml}" . implode('', $items) . "</div>";
+    }
+
+    protected function renderModuleAdvertisementZone(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('advertisements') || !class_exists(\App\Models\Advertisement::class)) {
+            return '';
+        }
+        $zone = trim((string) ($props['zone_name'] ?? 'banner-main'));
+        $position = $props['position'] ?? 'banner';
+
+        $ad = \App\Models\Advertisement::active()->position($zone)->orderBy('order')->first();
+        if (!$ad) {
+            return '';
+        }
+
+        $title = $this->escape($ad->title ?? '');
+        $link  = $this->escapeAttr($ad->link ?? '#');
+        $img   = !empty($ad->image_path)
+            ? "<img src=\"" . e(ImageHelper::url($ad->image_path)) . "\" alt=\"{$title}\" loading=\"lazy\" style=\"max-width:100%;display:block;\">"
+            : "<p class=\"tb-text\">" . $this->escape($ad->content ?? '') . "</p>";
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-advertisement tb-module-advertisement-{$position}\">
+            <a href=\"{$link}\" target=\"_blank\" rel=\"noopener noreferrer\">{$img}</a>
+        </div>";
+    }
+
+    protected function renderModuleBusinessCardEmbed(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('business_card') || !class_exists(\App\Models\BusinessCard::class)) {
+            return '';
+        }
+        $slug = trim((string) ($props['card_slug'] ?? ''));
+        if ($slug === '') {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-business-card\"><p class=\"tb-text\">کارت ویزیتی انتخاب نشده است.</p></div>";
+        }
+
+        $card = \App\Models\BusinessCard::where('slug', $slug)->where('is_active', true)->first();
+        if (!$card) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-business-card\"><p class=\"tb-text\">کارت ویزیت یافت نشد.</p></div>";
+        }
+
+        $style   = ($props['style'] ?? 'full') === 'compact' ? 'compact' : 'full';
+        $url     = route('business-card.show', $card->slug);
+        $name    = $this->escape($card->name ?? '');
+        $title   = $this->escape($card->title ?? '');
+        $company = $this->escape($card->company ?? '');
+        $avatar  = !empty($card->avatar)
+            ? "<img src=\"" . e(ImageHelper::url($card->avatar)) . "\" alt=\"{$name}\" style=\"width:3.5rem;height:3.5rem;border-radius:999px;object-fit:cover;\">"
+            : '';
+
+        $subtitle = $style === 'compact' ? '' : "<p class=\"tb-text\" style=\"margin:0.15rem 0 0;color:#6b7280;\">{$title} " . ($company ? "— {$company}" : '') . "</p>";
+
+        return "<a id=\"tb-{$id}\" href=\"" . $this->escapeAttr($url) . "\" class=\"tb-module-business-card\" style=\"display:flex;align-items:center;gap:0.85rem;padding:1rem;border:1px solid #e5e7eb;border-radius:0.75rem;text-decoration:none;color:inherit;max-width:24rem;\">
+            {$avatar}
+            <span><strong>{$name}</strong>{$subtitle}</span>
+        </a>";
+    }
+
+    protected function renderModuleContentCards(array $props, string $id): string
+    {
+        if (!class_exists(\App\Models\SiteContent::class)) {
+            return '';
+        }
+        $title       = $this->escape($props['title'] ?? 'مطالب');
+        $limit       = max(1, (int) ($props['limit'] ?? 3));
+        $style       = in_array($props['style'] ?? 'cards', ['grid', 'list'], true) ? $props['style'] : 'cards';
+        $showExcerpt = $props['show_excerpt'] ?? true;
+
+        $contents = \App\Models\SiteContent::query()
+            ->where('status', \App\Models\SiteContent::STATUS_PUBLISHED)
+            ->where('type', '!=', \App\Models\SiteContent::TYPE_HELP)
+            ->latest('published_at')
+            ->take($limit)
+            ->get();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        if ($contents->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-content-cards\">{$titleHtml}</div>";
+        }
+
+        $colsClass = $style === 'list' ? 'tb-grid-cols-1' : 'tb-grid-cols-3';
+        $cards = [];
+        foreach ($contents as $content) {
+            $url     = route('content.show', $content->slug);
+            $t       = $this->escape($content->title);
+            $excerpt = $showExcerpt ? "<p class=\"tb-blog-card-excerpt\">" . $this->escape(Str::limit(strip_tags($content->excerpt ?? $content->body ?? ''), 110)) . "</p>" : '';
+            $cards[] = "<a href=\"" . $this->escapeAttr($url) . "\" class=\"tb-blog-card\"><div class=\"tb-blog-card-body\"><h3 class=\"tb-blog-card-title\">{$t}</h3>{$excerpt}</div></a>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-content-cards\">
+            {$titleHtml}
+            <div class=\"tb-grid {$colsClass} tb-gap-lg\">" . implode('', $cards) . "</div>
+        </div>";
+    }
+
+    protected function renderModuleInvoiceQuickPay(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('invoice')) {
+            return '';
+        }
+        $title       = $this->escape($props['title'] ?? 'پرداخت فاکتور');
+        $placeholder = $this->escapeAttr($props['placeholder'] ?? 'شماره فاکتور را وارد کنید');
+        $action      = route('invoice.show', ['invoiceNumber' => '__NUMBER__']);
+        $actionBase  = $this->escapeAttr(str_replace('__NUMBER__', '', $action));
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-invoice-pay\">
+            <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
+            <form method=\"get\" action=\"#\" onsubmit=\"window.location.href='{$actionBase}'+encodeURIComponent(this.elements['invoice_number'].value);return false;\" style=\"display:flex;gap:0.5rem;max-width:24rem;\">
+                <input type=\"text\" name=\"invoice_number\" placeholder=\"{$placeholder}\" required style=\"flex:1;padding:0.6rem 0.85rem;border:1px solid #d1d5db;border-radius:0.5rem;\">
+                <button type=\"submit\" class=\"tb-btn tb-btn-primary\">مشاهده و پرداخت</button>
+            </form>
+        </div>";
+    }
+
+    protected function renderModuleShopCountdown(array $props, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $endDate = trim((string) ($props['end_date'] ?? ''));
+        if ($endDate === '' || !strtotime($endDate) || strtotime($endDate) <= time()) {
+            return '';
+        }
+        $promoText = $this->escape($props['promo_text'] ?? 'پیشنهاد ویژه — فرصت محدود!');
+        $bgColor   = $this->escapeAttr($props['bg_color'] ?? '#ef4444');
+        $endIso    = $this->escapeAttr(date('c', strtotime($endDate)));
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-shop-countdown\" style=\"background:{$bgColor};color:#fff;padding:1.25rem;border-radius:0.75rem;text-align:center;\">
+            <p style=\"margin:0 0 0.5rem;font-weight:700;\">{$promoText}</p>
+            <div class=\"tb-countdown-timer\" data-end=\"{$endIso}\" style=\"font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;\">--:--:--:--</div>
+            <script>(function(){var el=document.currentScript.previousElementSibling;var end=new Date(el.dataset.end).getTime();function tick(){var d=end-Date.now();if(d<=0){el.textContent='به پایان رسید';return;}var days=Math.floor(d/86400000),h=Math.floor(d/3600000%24),m=Math.floor(d/60000%60),s=Math.floor(d/1000%60);el.textContent=days+'روز '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');setTimeout(tick,1000);}tick();})();</script>
+        </div>";
+    }
+
+    protected function renderModuleShopSearchBox(array $props, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $placeholder = $this->escapeAttr($props['placeholder'] ?? 'جستجو در محصولات...');
+        $style       = ($props['style'] ?? 'bar') === 'box' ? 'box' : 'bar';
+        $action      = $this->escapeAttr(route('shop.index'));
+        $boxStyle    = $style === 'box' ? 'padding:1.25rem;border:1px solid #e5e7eb;border-radius:0.75rem;' : '';
+
+        return "<form id=\"tb-{$id}\" method=\"get\" action=\"{$action}\" class=\"tb-module-shop-search tb-module-shop-search-{$style}\" style=\"display:flex;gap:0.5rem;max-width:28rem;{$boxStyle}\">
+            <input type=\"text\" name=\"q\" placeholder=\"{$placeholder}\" style=\"flex:1;padding:0.6rem 0.85rem;border:1px solid #d1d5db;border-radius:0.5rem;\">
+            <button type=\"submit\" class=\"tb-btn tb-btn-secondary\">🔍</button>
+        </form>";
+    }
+
+    protected function renderModuleSiteSearch(array $props, string $id): string
+    {
+        if (!SiteHelper::moduleEnabled('advanced_search')) {
+            return '';
+        }
+        $placeholder = $this->escapeAttr($props['placeholder'] ?? 'جستجو در سایت...');
+        $style       = in_array($props['style'] ?? 'bar', ['card', 'hero'], true) ? $props['style'] : 'bar';
+        $showSuggest = $props['show_suggestions'] ?? true;
+        $action      = $this->escapeAttr(route('search.index'));
+        $wrapStyle   = $style === 'card'
+            ? 'padding:1.5rem;border:1px solid #e5e7eb;border-radius:0.75rem;'
+            : ($style === 'hero' ? 'padding:2.5rem 1rem;text-align:center;' : '');
+
+        if (!$showSuggest) {
+            return "<form id=\"tb-{$id}\" method=\"get\" action=\"{$action}\" class=\"tb-module-site-search tb-module-site-search-{$style}\" style=\"{$wrapStyle}\">
+                <div style=\"display:flex;gap:0.5rem;max-width:32rem;margin:0 auto;\">
+                    <input type=\"text\" name=\"q\" placeholder=\"{$placeholder}\" style=\"flex:1;padding:0.7rem 1rem;border:1px solid #d1d5db;border-radius:0.5rem;\">
+                    <button type=\"submit\" class=\"tb-btn tb-btn-primary\">جستجو</button>
+                </div>
+            </form>";
+        }
+
+        $suggestUrl = $this->escapeAttr(route('search.suggest'));
+        return "<form id=\"tb-{$id}\" method=\"get\" action=\"{$action}\" class=\"tb-module-site-search tb-module-site-search-{$style}\" style=\"{$wrapStyle}\">
+            <div style=\"position:relative;display:flex;gap:0.5rem;max-width:32rem;margin:0 auto;\">
+                <input type=\"text\" name=\"q\" placeholder=\"{$placeholder}\" autocomplete=\"off\" class=\"tb-site-search-input\" style=\"flex:1;padding:0.7rem 1rem;border:1px solid #d1d5db;border-radius:0.5rem;\">
+                <button type=\"submit\" class=\"tb-btn tb-btn-primary\">جستجو</button>
+                <div class=\"tb-site-search-suggestions\" style=\"display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:0.5rem;margin-top:0.25rem;box-shadow:0 4px 12px rgba(0,0,0,0.08);z-index:20;max-height:16rem;overflow-y:auto;\"></div>
+            </div>
+            <script>(function(){
+                var form = document.getElementById('tb-{$id}');
+                var input = form.querySelector('.tb-site-search-input');
+                var box = form.querySelector('.tb-site-search-suggestions');
+                var timer = null;
+                input.addEventListener('input', function(){
+                    clearTimeout(timer);
+                    var q = input.value.trim();
+                    if (q.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+                    timer = setTimeout(function(){
+                        fetch('{$suggestUrl}?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+                            .then(function(r){ return r.ok ? r.json() : []; })
+                            .then(function(items){
+                                items = Array.isArray(items) ? items : (items.results || items.data || []);
+                                if (!items.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+                                box.innerHTML = items.slice(0, 8).map(function(it){
+                                    var label = (typeof it === 'string') ? it : (it.title || it.label || it.name || '');
+                                    var url = (typeof it === 'object' && it.url) ? it.url : null;
+                                    var esc = String(label).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                                    return url
+                                        ? '<a href=\"' + url + '\" style=\"display:block;padding:0.5rem 0.85rem;color:inherit;text-decoration:none;border-bottom:1px solid #f3f4f6;\">' + esc + '</a>'
+                                        : '<div style=\"padding:0.5rem 0.85rem;border-bottom:1px solid #f3f4f6;\">' + esc + '</div>';
+                                }).join('');
+                                box.style.display = 'block';
+                            })
+                            .catch(function(){ box.style.display = 'none'; });
+                    }, 250);
+                });
+                document.addEventListener('click', function(e){ if (!form.contains(e.target)) { box.style.display = 'none'; } });
+            })();</script>
+        </form>";
+    }
+
     protected function renderModuleGenericPlaceholder(string $type, array $props, string $id): string
     {
         // Silent in production — module may not be enabled
         return '';
+    }
+
+    // ── Carousel runtime (real slider/carousel behavior) ────────────────────────
+    //
+    // Builder integrity audit (2026-09-11): the 'slider' bare type had an
+    // autoplay/interval schema but zero renderer (fell to renderFallback(),
+    // a static wrapper div — the props were dead). 'testimonials_slider'
+    // had a real canonical renderer, but that renderer is a static grid
+    // (`.tb-testimonials-grid`), not a slider, despite the name. No
+    // slider/carousel JS or CSS existed anywhere in either repository.
+    // This is the one canonical carousel runtime for every slider-shaped
+    // Canvas type on this host — renderSlider(), renderTestimonialsSlider()
+    // (an intentional host override of the canonical static-grid version,
+    // matching this file's existing override pattern), and
+    // renderProductSlider() all call it. No second carousel implementation
+    // belongs anywhere else in this class.
+
+    /**
+     * @param string[] $slidesHtml Pre-rendered inner HTML for each slide.
+     */
+    private function renderCarousel(array $slidesHtml, string $id, bool $autoplay, int $interval, string $extraClass = ''): string
+    {
+        $slidesHtml = array_values(array_filter($slidesHtml, fn ($s) => trim((string) $s) !== ''));
+        if (empty($slidesHtml)) {
+            return '';
+        }
+        if (count($slidesHtml) === 1) {
+            return "<div id=\"tb-{$id}\" class=\"tb-carousel-single {$extraClass}\">{$slidesHtml[0]}</div>";
+        }
+
+        $interval = max(1000, $interval);
+        $slides = [];
+        $dots = [];
+        foreach ($slidesHtml as $i => $html) {
+            $slides[] = "<div class=\"tb-carousel-slide\" style=\"flex:0 0 100%;min-width:0;\">{$html}</div>";
+            $num = $i + 1;
+            $dots[] = "<button type=\"button\" class=\"tb-carousel-dot\" aria-label=\"اسلاید {$num}\" style=\"width:0.55rem;height:0.55rem;padding:0;border-radius:999px;border:0;background:#d1d5db;cursor:pointer;\"></button>";
+        }
+
+        $autoplayAttr = $autoplay ? 'true' : 'false';
+
+        return "<div id=\"tb-{$id}\" class=\"tb-carousel {$extraClass}\" data-autoplay=\"{$autoplayAttr}\" data-interval=\"{$interval}\" style=\"position:relative;\">
+            <div class=\"tb-carousel-viewport\" style=\"overflow:hidden;\">
+                <div class=\"tb-carousel-track\" style=\"display:flex;transition:transform .45s ease;\">" . implode('', $slides) . "</div>
+            </div>
+            <button type=\"button\" class=\"tb-carousel-prev\" aria-label=\"قبلی\" style=\"position:absolute;top:50%;right:0.25rem;transform:translateY(-50%);width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:1.1rem;line-height:1;z-index:2;\">‹</button>
+            <button type=\"button\" class=\"tb-carousel-next\" aria-label=\"بعدی\" style=\"position:absolute;top:50%;left:0.25rem;transform:translateY(-50%);width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:1.1rem;line-height:1;z-index:2;\">›</button>
+            <div class=\"tb-carousel-dots\" style=\"display:flex;justify-content:center;gap:0.4rem;margin-top:0.85rem;\">" . implode('', $dots) . "</div>
+            <script>(function(){
+                function init(root){
+                    if (!root || root.dataset.tbCarouselInit) return;
+                    root.dataset.tbCarouselInit = '1';
+                    var track = root.querySelector('.tb-carousel-track');
+                    var slides = Array.prototype.slice.call(root.querySelectorAll('.tb-carousel-slide'));
+                    var dots = Array.prototype.slice.call(root.querySelectorAll('.tb-carousel-dot'));
+                    var prev = root.querySelector('.tb-carousel-prev');
+                    var next = root.querySelector('.tb-carousel-next');
+                    var idx = 0, timer = null;
+                    function paint(){
+                        track.style.transform = 'translateX(' + (idx * 100) + '%)';
+                        dots.forEach(function(d, j){ d.style.background = (j === idx) ? 'var(--tb-primary,#4f46e5)' : '#d1d5db'; d.setAttribute('aria-current', j === idx ? 'true' : 'false'); });
+                    }
+                    function go(i){ idx = ((i % slides.length) + slides.length) % slides.length; paint(); }
+                    function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+                    function start(){ stop(); if (root.dataset.autoplay === 'true' && slides.length > 1) { timer = setInterval(function(){ go(idx + 1); }, parseInt(root.dataset.interval, 10) || 5000); } }
+                    if (prev) prev.addEventListener('click', function(){ go(idx - 1); start(); });
+                    if (next) next.addEventListener('click', function(){ go(idx + 1); start(); });
+                    dots.forEach(function(d, j){ d.addEventListener('click', function(){ go(j); start(); }); });
+                    var touchX = null;
+                    root.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
+                    root.addEventListener('touchend', function(e){
+                        if (touchX === null) return;
+                        var dx = e.changedTouches[0].clientX - touchX;
+                        if (Math.abs(dx) > 40) { go(dx > 0 ? idx - 1 : idx + 1); start(); }
+                        touchX = null;
+                    }, {passive:true});
+                    paint();
+                    start();
+                }
+                init(document.getElementById('tb-{$id}'));
+            })();</script>
+        </div>";
+    }
+
+    protected function renderSlider(array $props, string $inner, string $id): string
+    {
+        // $inner already holds every child slide's rendered HTML
+        // concatenated (renderBlockUnsafe() pre-renders props['slides']
+        // into $inner for container types) — but the carousel needs each
+        // slide as a separate track item, so slides are re-rendered here
+        // individually instead of relying on the flat $inner string.
+        $slides = $props['slides'] ?? [];
+        $slidesHtml = array_map(fn (array $slide) => $this->renderBlock($slide), is_array($slides) ? $slides : []);
+
+        if (empty($slidesHtml)) {
+            return '';
+        }
+
+        return $this->renderCarousel(
+            $slidesHtml,
+            $id,
+            (bool) ($props['autoplay'] ?? true),
+            (int) ($props['interval'] ?? 5000),
+            'tb-slider'
+        );
+    }
+
+    /**
+     * Host override of the canonical (static-grid) renderTestimonialsSlider
+     * — see the "Carousel runtime" doc comment above for why this
+     * particular type is overridden here rather than fixed in the shared
+     * package.
+     */
+    protected function renderTestimonialsSlider(array $props, string $inner, string $id): string
+    {
+        $title = $this->escape($props['title'] ?? 'نظرات مشتریان');
+
+        $rawItems = $props['items'] ?? '[]';
+        $items = is_array($rawItems) ? $rawItems : (json_decode((string) $rawItems, true) ?? []);
+
+        $slidesHtml = [];
+        foreach ($items as $t) {
+            $name   = $this->escape($t['name'] ?? '');
+            $role   = $this->escape($t['role'] ?? '');
+            $text   = $this->escape($t['text'] ?? '');
+            $rating = max(1, min(5, (int) ($t['rating'] ?? 5)));
+            $stars  = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+            $initials = mb_substr($name, 0, 1, 'UTF-8');
+            $slidesHtml[] = "<div class=\"tb-testimonial-card\" style=\"max-width:36rem;margin:0 auto;text-align:center;\">
+                <div class=\"tb-testimonial-stars\">{$stars}</div>
+                <p class=\"tb-testimonial-text\">«{$text}»</p>
+                <div class=\"tb-testimonial-author\" style=\"display:flex;justify-content:center;align-items:center;gap:0.5rem;\">
+                    <div class=\"tb-testimonial-avatar\">{$initials}</div>
+                    <div><div class=\"tb-testimonial-name\">{$name}</div><div class=\"tb-testimonial-role\">{$role}</div></div>
+                </div>
+            </div>";
+        }
+
+        if (empty($slidesHtml)) {
+            return "<div id=\"tb-{$id}\" class=\"tb-testimonials tb-section\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
+        }
+
+        $carousel = $this->renderCarousel(
+            $slidesHtml,
+            $id . '-track',
+            (bool) ($props['autoplay'] ?? true),
+            (int) ($props['interval'] ?? 5000),
+            'tb-testimonials-slider'
+        );
+
+        return "<div id=\"tb-{$id}\" class=\"tb-testimonials tb-section\">
+            <div class=\"tb-container\">
+                <div class=\"tb-testimonials-header\"><h2 class=\"tb-features-section-title\">{$title}</h2></div>
+                {$carousel}
+            </div>
+        </div>";
+    }
+
+    protected function renderProductSlider(array $props, string $inner, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $title = $this->escape($props['title'] ?? 'محصولات منتخب');
+        $limit = max(1, (int) ($props['limit'] ?? 6));
+        $products = Product::query()->active()->latest()->take($limit)->get();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        if ($products->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}</div>";
+        }
+
+        $slidesHtml = [];
+        foreach ($products as $product) {
+            $url   = route('shop.show', $product->slug);
+            $t     = $this->escape($product->title);
+            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
+            $imgHtml = $product->image
+                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
+                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
+            $slidesHtml[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"max-width:20rem;margin:0 auto;display:block;\">{$imgHtml}
+                <div class=\"tb-product-card-inner\">
+                    <h3 class=\"tb-product-title\">{$t}</h3>
+                    <div class=\"tb-product-price\">{$price}</div>
+                </div>
+            </a>";
+        }
+
+        $carousel = $this->renderCarousel(
+            $slidesHtml,
+            $id . '-track',
+            (bool) ($props['autoplay'] ?? true),
+            (int) ($props['interval'] ?? 5000),
+            'tb-product-slider'
+        );
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}{$carousel}</div>";
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -16,6 +16,14 @@ import {
     waitForSaveBlocks,
 } from './helpers/canvas.js';
 
+// Real, minimal, valid PNG bytes — the same fixture convention
+// media-library.spec.js already uses. SVG is deliberately excluded from
+// CustomerMediaService's V1 MIME allowlist (ADR-049 §4: "pending an
+// audited canonical sanitizer"), so an SVG upload here would always be
+// rejected with a real 422 — this is current, correct product behavior,
+// not something to work around.
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==', 'base64');
+
 const actionableErrors = (page) => {
     const errors = [];
     let activeBlock = null;
@@ -39,19 +47,46 @@ const actionableErrors = (page) => {
     return { errors, setActiveBlock: (type) => { activeBlock = type; } };
 };
 
+let fixture;
+
+/**
+ * Search the real Media Library (the picker's own search box, backed by
+ * ThemeDesignMediaController::index()'s title/filename LIKE match) for a
+ * known title, wait for the real debounced network response, then click
+ * the matching item by its real UUID testid. Avoids assuming default
+ * listing/pagination order — the harness seeds 30+ other real media rows,
+ * so an un-searched item is not guaranteed to be on the first page.
+ */
+async function selectLibraryMediaByTitle(page, title, uuid) {
+    const searchResponse = page.waitForResponse((r) => r.url().includes('/theme-design/canvas/media?') && r.request().method() === 'GET');
+    await page.getByTestId('tb-media-search').fill(title);
+    await searchResponse;
+    await page.getByTestId(`tb-media-item-${uuid}`).click();
+}
+
 test.describe.serial('Builder final gap closure', () => {
     test.beforeAll(() => {
-        execFileSync('php', [
+        const output = execFileSync('php', [
             'artisan', 'browser-harness:setup', '--universal', '--json',
             `--source-theme-id=${process.env.QA_THEME_ID || ''}`,
             `--source-release-id=${process.env.QA_THEME_RELEASE_ID || ''}`,
             `--source-version=${process.env.QA_THEME_RELEASE_VERSION || '1.0.0'}`,
         ], { cwd: process.cwd(), env: serverEnv(), encoding: 'utf8' });
+
+        // Builder integrity audit (2026-09-11): real CustomerMedia UUIDs
+        // (MEDIA-4 canonical identity) from the harness's own JSON
+        // contract — the picker's testid is strictly img.uuid, no
+        // filename identity exists any more.
+        const jsonLine = output.split('\n').find((l) => l.startsWith('BROWSER_HARNESS_JSON:'));
+        if (!jsonLine) throw new Error(`browser-harness:setup did not print its JSON summary. Output:\n${output}`);
+        fixture = JSON.parse(jsonLine.slice('BROWSER_HARNESS_JSON:'.length));
     });
 
     test('compound gallery and team media use the canonical picker and preserve shapes', async ({ page }) => {
         test.setTimeout(240_000);
         const monitor = actionableErrors(page);
+        const itemB = fixture.universal_media_uuids.about;
+        const itemA = fixture.universal_media_uuids.hero;
         await loginAsAdmin(page);
         await openCanvasEditor(page);
 
@@ -61,45 +96,73 @@ test.describe.serial('Builder final gap closure', () => {
         await expect(page.getByTestId('tb-repeater-items')).toBeVisible();
         await expect(page.getByTestId('tb-prop-items')).toHaveCount(0);
 
+        // Builder integrity audit (2026-09-11): the real Theme content now
+        // seeds 3 real gallery images (not the old fixture's 1), so the
+        // add/pick/upload/reorder/replace/remove sequence below is index-
+        // relative to the actual starting count rather than hardcoded —
+        // it proves the exact same repeater CRUD lifecycle regardless of
+        // how many real items a page starts with. Real wait for each
+        // item's thumbnail to finish its async {media_id}->URL resolution
+        // (mediaSrc()'s single-item lookup, MEDIA-4) before counting — the
+        // preview list populates reactively per item, not all at once the
+        // instant the tree node click resolves.
+        await expect(page.locator('[data-testid^="tb-structured-preview-items-"]').first()).toBeVisible();
+        await page.waitForLoadState('networkidle');
+        const startCount = await page.locator('[data-testid^="tb-structured-preview-items-"]').count();
+        const newIdx1 = startCount;
+        const newIdx2 = startCount + 1;
+
         // Existing library item + real upload + ordering + replacement +
         // removal, all through the visual repeater and shared media modal.
         await page.getByTestId('tb-structured-add-items').click();
-        await page.getByTestId('tb-structured-media-items-1-url').click();
-        await page.getByTestId('tb-media-item-qa-existing-b.svg').click();
+        await page.getByTestId(`tb-structured-media-items-${newIdx1}-url`).click();
+        await selectLibraryMediaByTitle(page, 'QA about', itemB);
         await page.getByTestId('tb-media-confirm').click();
         await page.getByTestId('tb-structured-add-items').click();
-        await page.getByTestId('tb-structured-media-items-2-url').click();
+        await page.getByTestId(`tb-structured-media-items-${newIdx2}-url`).click();
         await page.getByTestId('tb-media-upload-tab').click();
         const upload = page.waitForResponse((response) => response.url().includes('/theme-design/canvas/media/upload') && response.request().method() === 'POST');
         await page.getByTestId('tb-media-file-input').setInputFiles({
-            name: 'qa-compound-gallery.svg',
-            mimeType: 'image/svg+xml',
-            buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#7c3aed"/></svg>'),
+            name: 'qa-compound-gallery.png',
+            mimeType: 'image/png',
+            buffer: png,
         });
-        expect((await upload).ok()).toBeTruthy();
+        const uploadResponse = await upload;
+        expect(uploadResponse.ok()).toBeTruthy();
+        const uploadedGalleryUuid = (await uploadResponse.json()).uuid;
+        expect(uploadedGalleryUuid).toBeTruthy();
         await page.getByTestId('tb-media-confirm').click();
-        const uploadedGalleryUrl = await page.getByTestId('tb-structured-preview-items-2-url').getAttribute('src');
-        expect(uploadedGalleryUrl).toContain('/storage/theme-media/');
-        await page.getByTestId('tb-structured-up-items-2').click();
+        const uploadedGalleryUrl = await page.getByTestId(`tb-structured-preview-items-${newIdx2}-url`).getAttribute('src');
+        expect(uploadedGalleryUrl).toContain('/uploads/customer-media/');
+        expect(uploadedGalleryUrl).toContain(uploadedGalleryUuid);
+        // Moves the just-uploaded item (newIdx2) up to newIdx1, swapping
+        // with the item picked from the library there — the uploaded item
+        // ends up at newIdx1, the picked-from-library one at newIdx2.
+        await page.getByTestId(`tb-structured-up-items-${newIdx2}`).click();
         await page.getByTestId('tb-structured-media-items-0-url').click();
-        await page.getByTestId('tb-media-item-qa-existing-b.svg').click();
+        await selectLibraryMediaByTitle(page, 'QA about', itemB);
         await page.getByTestId('tb-media-confirm').click();
-        await page.getByTestId('tb-structured-remove-items-2').click();
+        // Removes the item at newIdx2 (the library pick, now redundant
+        // with item 0's own replacement) — proves removal, leaving the
+        // uploaded item as the real final addition.
+        await page.getByTestId(`tb-structured-remove-items-${newIdx2}`).click();
 
         const gallerySave = await waitForSaveBlocks(page, () => saveButton(page).click());
         expect(gallerySave.ok()).toBeTruthy();
         const galleryPayload = gallerySave.request().postDataJSON();
         const savedGallery = galleryPayload.blocks.find((block) => block.type === 'gallery');
-        expect(savedGallery.props.items).toHaveLength(2);
+        expect(savedGallery.props.items).toHaveLength(startCount + 1);
         expect(savedGallery.props.items[0].qa_unknown).toBe('preserve-gallery');
-        expect(savedGallery.props.items[0].url).toMatch(/qa-existing-b\.svg$/);
-        expect(savedGallery.props.items[1].url).toBe(uploadedGalleryUrl);
+        // Canonical MEDIA-4 shape: a real {media_id} reference, not a raw
+        // URL/filename string.
+        expect(savedGallery.props.items[0].url).toEqual({ media_id: itemB });
+        expect(savedGallery.props.items[newIdx1].url).toEqual({ media_id: uploadedGalleryUuid });
 
         await reloadCanvasEditor(page);
         await switchToPage(page, 'home');
         await openTreeTab(page);
         await treeNode(page, 'qa_gallery').click();
-        await expect(page.locator('[data-testid^="tb-structured-preview-items-"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid^="tb-structured-preview-items-"]')).toHaveCount(startCount + 1);
 
         await switchToPage(page, 'about');
         await openTreeTab(page);
@@ -108,19 +171,23 @@ test.describe.serial('Builder final gap closure', () => {
         await expect(page.getByTestId('tb-prop-members')).toHaveCount(0);
         await page.getByTestId('tb-structured-field-members-0-name').fill('عضو ویرایش‌شده');
         await page.getByTestId('tb-structured-media-members-0-image').click();
-        await page.getByTestId('tb-media-item-qa-existing-a.svg').click();
+        await selectLibraryMediaByTitle(page, 'QA hero', itemA);
         await page.getByTestId('tb-media-confirm').click();
         await page.getByTestId('tb-structured-media-members-0-image').click();
         await page.getByTestId('tb-media-upload-tab').click();
         const teamUpload = page.waitForResponse((response) => response.url().includes('/theme-design/canvas/media/upload') && response.request().method() === 'POST');
         await page.getByTestId('tb-media-file-input').setInputFiles({
-            name: 'qa-compound-team.svg',
-            mimeType: 'image/svg+xml',
-            buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><circle cx="90" cy="90" r="90" fill="#0f766e"/></svg>'),
+            name: 'qa-compound-team.png',
+            mimeType: 'image/png',
+            buffer: png,
         });
-        expect((await teamUpload).ok()).toBeTruthy();
+        const teamUploadResponse = await teamUpload;
+        expect(teamUploadResponse.ok()).toBeTruthy();
+        const uploadedTeamUuid = (await teamUploadResponse.json()).uuid;
+        expect(uploadedTeamUuid).toBeTruthy();
         await page.getByTestId('tb-media-confirm').click();
         const uploadedTeamUrl = await page.getByTestId('tb-structured-preview-members-0-image').getAttribute('src');
+        expect(uploadedTeamUrl).toContain(uploadedTeamUuid);
 
         const teamSave = await waitForSaveBlocks(page, () => saveButton(page).click());
         expect(teamSave.ok()).toBeTruthy();
@@ -130,7 +197,7 @@ test.describe.serial('Builder final gap closure', () => {
         const members = JSON.parse(savedTeam.props.members);
         expect(members[0]).toMatchObject({
             name: 'عضو ویرایش‌شده',
-            image: uploadedTeamUrl,
+            image: { media_id: uploadedTeamUuid },
             qa_unknown: 'preserve-team',
         });
 
@@ -162,7 +229,7 @@ test.describe.serial('Builder final gap closure', () => {
         expect(monitor.errors).toEqual([]);
     });
 
-    test('all 96 blocks insert through their real palette UI and survive save reload render', async ({ page }) => {
+    test('all 94 blocks insert through their real palette UI and survive save reload render', async ({ page }) => {
         test.setTimeout(600_000);
         const monitor = actionableErrors(page);
         await loginAsAdmin(page);
@@ -181,9 +248,11 @@ test.describe.serial('Builder final gap closure', () => {
         }
 
         const palette = page.locator('[data-testid^="tb-palette-add-"]');
-        await expect(palette).toHaveCount(96);
+        // Builder integrity audit (2026-09-11): 94, not 96 — see the
+        // matching count update in universal-multipurpose-theme.spec.js.
+        await expect(palette).toHaveCount(94);
         const expectedTypes = (await palette.evaluateAll((buttons) => buttons.map((button) => button.dataset.testid.replace('tb-palette-add-', '')))).sort();
-        expect(new Set(expectedTypes).size).toBe(96);
+        expect(new Set(expectedTypes).size).toBe(94);
 
         const treeNodes = page.locator('[data-testid^="tb-tree-node-"]');
         for (let index = 0; index < expectedTypes.length; index += 1) {
@@ -204,13 +273,13 @@ test.describe.serial('Builder final gap closure', () => {
         const saveResponse = await waitForSaveBlocks(page, () => saveButton(page).click());
         expect(saveResponse.ok()).toBeTruthy();
         const savedBlocks = saveResponse.request().postDataJSON().blocks;
-        expect(savedBlocks).toHaveLength(96);
+        expect(savedBlocks).toHaveLength(94);
         expect(savedBlocks.map((block) => block.type).sort()).toEqual(expectedTypes);
 
         await reloadCanvasEditor(page);
         await switchToPage(page, 'ui-96-gate');
         await openTreeTab(page);
-        await expect(treeNodes).toHaveCount(96);
+        await expect(treeNodes).toHaveCount(94);
         const reloadedTypes = (await treeNodes.evaluateAll((nodes) => nodes.map((node) => node.dataset.blockType))).sort();
         expect(reloadedTypes).toEqual(expectedTypes);
 
@@ -218,7 +287,7 @@ test.describe.serial('Builder final gap closure', () => {
         await expect(frame.locator('body')).not.toContainText('[invalid]');
         await expect(frame.locator('[data-reason="invalid_schema"]')).toHaveCount(0);
         await expect(frame.locator('[data-reason="render_error"]')).toHaveCount(0);
-        expect(expectedTypes.filter((type) => type.startsWith('module:'))).toHaveLength(34);
+        expect(expectedTypes.filter((type) => type.startsWith('module:'))).toHaveLength(32);
         expect(expectedTypes.filter((type) => !type.startsWith('module:'))).toHaveLength(62);
         expect(monitor.errors).toEqual([]);
     });

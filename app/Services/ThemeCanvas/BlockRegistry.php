@@ -142,10 +142,21 @@ final class BlockRegistry
                 'name'     => 'ویدیو',
                 'category' => self::CATEGORY_CONTENT,
                 'schema'   => [
-                    'url'     => ['type' => 'string', 'label' => 'آدرس ویدیو', 'default' => ''],
+                    // Builder integrity audit (2026-09-11): this block had a
+                    // schema field but zero renderer anywhere — registered,
+                    // insertable, always rendered empty. Now resolved
+                    // through the same canonical customer-media path as
+                    // every other media-capable prop (CustomerMediaResolver
+                    // + type:'image' marker — see its isMediaControl() doc),
+                    // not a new media identity/lookup of its own.
+                    'url'     => ['type' => 'image', 'label' => 'فایل ویدیو', 'default' => ''],
+                    'poster'  => ['type' => 'image', 'label' => 'تصویر پیش‌نمایش', 'default' => ''],
                     'caption' => ['type' => 'string', 'label' => 'کپشن', 'default' => ''],
+                    'autoplay'=> ['type' => 'boolean', 'label' => 'پخش خودکار (بی‌صدا)', 'default' => false],
+                    'loop'    => ['type' => 'boolean', 'label' => 'تکرار', 'default' => false],
+                    'controls'=> ['type' => 'boolean', 'label' => 'نمایش کنترل‌ها', 'default' => true],
                 ],
-                'defaultProps' => ['url' => '', 'caption' => ''],
+                'defaultProps' => ['url' => '', 'poster' => '', 'caption' => '', 'autoplay' => false, 'loop' => false, 'controls' => true],
             ],
             'button' => [
                 'name'     => 'دکمه',
@@ -209,8 +220,19 @@ final class BlockRegistry
             'product_slider' => [
                 'name'         => 'اسلایدر محصولات',
                 'category'     => self::CATEGORY_ECOMMERCE,
-                'schema'       => ['limit' => ['type' => 'number', 'label' => 'تعداد', 'default' => 6]],
-                'defaultProps' => ['limit' => 6],
+                // Builder integrity audit (2026-09-11): registered,
+                // insertable, no dedicated renderer anywhere (fell to the
+                // silent generic fallback). Now real — see
+                // ThemeCanvasRenderer::renderProductSlider(), reusing the
+                // same live Product query as renderModuleProductGrid() and
+                // the shared carousel runtime.
+                'schema'       => [
+                    'title'    => ['type' => 'string',  'label' => 'عنوان', 'default' => 'محصولات منتخب'],
+                    'limit'    => ['type' => 'number',  'label' => 'تعداد', 'default' => 6],
+                    'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
+                    'interval' => ['type' => 'number',  'label' => 'فاصله (ms)',  'default' => 5000],
+                ],
+                'defaultProps' => ['title' => 'محصولات منتخب', 'limit' => 6, 'autoplay' => true, 'interval' => 5000],
             ],
 
             // ─── MARKETING ───────────────────────────────────────────────────
@@ -301,8 +323,11 @@ final class BlockRegistry
                     'title'         => ['type' => 'string', 'label' => 'عنوان بخش',    'default' => 'محصولات'],
                     'limit'         => ['type' => 'number', 'label' => 'تعداد محصول',  'default' => 8],
                     'columns'       => ['type' => 'select', 'label' => 'ستون',          'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '4'],
-                    'source'        => ['type' => 'select', 'label' => 'منبع',          'options' => ['recent' => 'جدیدترین', 'featured' => 'ویژه', 'bestselling' => 'پرفروش'], 'default' => 'recent'],
-                    'category_slug' => ['type' => 'string', 'label' => 'دسته‌بندی',     'default' => ''],
+                    // 'bestselling' removed 2026-09-11: no sales-count tracking
+                    // exists on Product to back it honestly (see 'category_slug'
+                    // below, which IS backed by Product::category()).
+                    'source'        => ['type' => 'select', 'label' => 'منبع',          'options' => ['recent' => 'جدیدترین', 'featured' => 'ویژه'], 'default' => 'recent'],
+                    'category_slug' => ['type' => 'string', 'label' => 'دسته‌بندی (slug)', 'default' => ''],
                 ],
                 'defaultProps' => ['title' => 'محصولات', 'limit' => 8, 'columns' => '4', 'source' => 'recent', 'category_slug' => ''],
             ],
@@ -314,10 +339,13 @@ final class BlockRegistry
                     'title'            => ['type' => 'string',  'label' => 'عنوان بخش',  'default' => 'دوره‌های آموزشی'],
                     'limit'            => ['type' => 'number',  'label' => 'تعداد دوره', 'default' => 6],
                     'columns'          => ['type' => 'select',  'label' => 'ستون',        'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '3'],
+                    'layout'           => ['type' => 'select',  'label' => 'چیدمان',      'options' => ['grid' => 'گرید', 'list' => 'لیست'], 'default' => 'grid'],
                     'show_price'       => ['type' => 'boolean', 'label' => 'نمایش قیمت', 'default' => true],
-                    'show_instructor'  => ['type' => 'boolean', 'label' => 'نمایش مدرس', 'default' => true],
+                    // 'show_instructor' removed 2026-09-11: Course has no
+                    // instructor field/relation on this host — fabricating an
+                    // instructor name is not an option (Constitution §11).
                 ],
-                'defaultProps' => ['title' => 'دوره‌های آموزشی', 'limit' => 6, 'columns' => '3', 'show_price' => true, 'show_instructor' => true],
+                'defaultProps' => ['title' => 'دوره‌های آموزشی', 'limit' => 6, 'columns' => '3', 'layout' => 'grid', 'show_price' => true],
             ],
             'module:pricing_table' => [
                 'name'     => 'جدول اشتراک / تعرفه',
@@ -325,11 +353,15 @@ final class BlockRegistry
                 'requires' => 'subscription',
                 'schema'   => [
                     'title'               => ['type' => 'string',  'label' => 'عنوان بخش',           'default' => 'پلن‌های اشتراک'],
-                    'subtitle'            => ['type' => 'string',  'label' => 'زیرعنوان',            'default' => ''],
-                    'highlight_plan'      => ['type' => 'string',  'label' => 'پلن برجسته (slug)',   'default' => ''],
-                    'show_annual_toggle'  => ['type' => 'boolean', 'label' => 'کلید ماهانه/سالانه', 'default' => false],
+                    'subtitle'            => ['type' => 'string',  'label' => 'زیرعنوان',            'default' => 'پلنی که مناسب شماست را انتخاب کنید'],
+                    // 'highlight_plan' / 'show_annual_toggle' removed
+                    // 2026-09-11: real plan-highlighting/annual-billing logic
+                    // is a commercial/pricing change requiring its own owner
+                    // sign-off (Governance §2, Constitution §9) — out of
+                    // scope for a Builder-integrity pass. This block links to
+                    // the real pricing page rather than faking a toggle.
                 ],
-                'defaultProps' => ['title' => 'پلن‌های اشتراک', 'subtitle' => '', 'highlight_plan' => '', 'show_annual_toggle' => false],
+                'defaultProps' => ['title' => 'پلن‌های اشتراک', 'subtitle' => 'پلنی که مناسب شماست را انتخاب کنید'],
             ],
             'module:contact_quick' => [
                 'name'     => 'فرم تماس سریع',
@@ -349,10 +381,26 @@ final class BlockRegistry
                 'requires' => null,
                 'schema'   => [
                     'title' => ['type' => 'string', 'label' => 'عنوان', 'default' => 'سوالات متداول'],
+                    // 'items' added 2026-09-11: the renderer always read
+                    // $props['items'], but no schema field ever exposed it in
+                    // the editor — the block could never actually be
+                    // populated through the UI. Real repeater now closes
+                    // that gap; 'limit'/'style' (already declared) are now
+                    // actually consumed by the renderer too.
+                    'items' => [
+                        'type' => 'repeater',
+                        'label' => 'سوالات',
+                        'storage' => 'array',
+                        'default' => [],
+                        'fields' => [
+                            'question' => ['type' => 'string', 'label' => 'سوال', 'default' => ''],
+                            'answer'   => ['type' => 'textarea', 'label' => 'پاسخ', 'default' => ''],
+                        ],
+                    ],
                     'limit' => ['type' => 'number', 'label' => 'تعداد', 'default' => 10],
                     'style' => ['type' => 'select', 'label' => 'استایل', 'options' => ['accordion' => 'آکوردئون', 'list' => 'لیست'], 'default' => 'accordion'],
                 ],
-                'defaultProps' => ['title' => 'سوالات متداول', 'limit' => 10, 'style' => 'accordion'],
+                'defaultProps' => ['title' => 'سوالات متداول', 'items' => [], 'limit' => 10, 'style' => 'accordion'],
             ],
             'module:support_button' => [
                 'name'     => 'دکمه پشتیبانی',
@@ -377,7 +425,11 @@ final class BlockRegistry
                 'schema'   => [
                     'title'       => ['type' => 'string',  'label' => 'عنوان',       'default' => 'نظرات مشتریان'],
                     'limit'       => ['type' => 'number',  'label' => 'تعداد',       'default' => 6],
-                    'style'       => ['type' => 'select',  'label' => 'استایل',      'options' => ['cards' => 'کارت', 'minimal' => 'مینیمال', 'carousel' => 'چرخشی'], 'default' => 'cards'],
+                    // 'carousel' removed 2026-09-11: no working carousel
+                    // runtime is wired for this block (unlike the real
+                    // slider JS backing testimonials_slider) — 'cards' and
+                    // 'minimal' are both real, distinct layouts below.
+                    'style'       => ['type' => 'select',  'label' => 'استایل',      'options' => ['cards' => 'کارت', 'minimal' => 'مینیمال'], 'default' => 'cards'],
                     'show_avatar' => ['type' => 'boolean', 'label' => 'نمایش آواتار', 'default' => true],
                 ],
                 'defaultProps' => ['title' => 'نظرات مشتریان', 'limit' => 6, 'style' => 'cards', 'show_avatar' => true],
@@ -558,11 +610,22 @@ final class BlockRegistry
                 'name'     => 'اسلایدر نظرات مشتریان',
                 'category' => self::CATEGORY_DYNAMIC,
                 'schema'   => [
-                    'title'   => ['type' => 'string',  'label' => 'عنوان',        'default' => 'نظرات مشتریان'],
-                    'columns' => ['type' => 'select',  'label' => 'ستون',         'options' => ['1' => '۱', '2' => '۲', '3' => '۳'], 'default' => '3'],
-                    'items'   => ['type' => 'textarea','label' => 'نظرات (JSON)', 'default' => '[{"name":"رضا","role":"مدیر","text":"عالی بود!","rating":5}]'],
+                    'title'    => ['type' => 'string',  'label' => 'عنوان',        'default' => 'نظرات مشتریان'],
+                    // 'columns' removed 2026-09-11: real carousel runtime
+                    // (see ThemeCanvasRenderer::renderTestimonialsSlider)
+                    // shows exactly one slide at a time — a column count
+                    // has no meaning here and was never consumed.
+                    'items'    => ['type' => 'textarea','label' => 'نظرات (JSON)', 'default' => '[{"name":"رضا","role":"مدیر","text":"عالی بود!","rating":5}]'],
+                    // autoplay/interval added 2026-09-11: the canonical
+                    // shared renderer (saas-platform preview) renders this
+                    // type as a static grid, not an actual slider — this
+                    // host overrides it with a real carousel runtime
+                    // (see ThemeCanvasRenderer::renderTestimonialsSlider),
+                    // so these controls now have real effect here.
+                    'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
+                    'interval' => ['type' => 'number',  'label' => 'فاصله (ms)',  'default' => 5000],
                 ],
-                'defaultProps' => ['title' => 'نظرات مشتریان', 'columns' => '3', 'items' => '[{"name":"رضا","role":"مدیر","text":"عالی بود!","rating":5}]'],
+                'defaultProps' => ['title' => 'نظرات مشتریان', 'items' => '[{"name":"رضا","role":"مدیر","text":"عالی بود!","rating":5}]', 'autoplay' => true, 'interval' => 5000],
             ],
             'trust_badges' => [
                 'name'     => 'نشان‌های اعتماد',
@@ -698,6 +761,16 @@ final class BlockRegistry
         // not silently resurrect it from the canonical registry, which
         // still defines it for saas-platform's own Builder preview.
         unset(self::$blocks['module:gallery_widget']);
+
+        // Same rule applied to two more canonical-only types with no
+        // backend content model on this host (Builder integrity audit,
+        // 2026-09-11): module:portfolio_grid (no Portfolio model — the
+        // static, editor-entered 'gallery'/'bento_grid' blocks already
+        // cover this use case) and module:services_section (no Service
+        // model — 'services_cards'/'service_cards' already cover it).
+        // Both remain defined canonically for saas-platform's own preview.
+        unset(self::$blocks['module:portfolio_grid']);
+        unset(self::$blocks['module:services_section']);
 
         // Phase 3F-C — registered Theme Builder Extension SDK definitions
         // (ext:*) are bridged in on every call, NOT folded into the

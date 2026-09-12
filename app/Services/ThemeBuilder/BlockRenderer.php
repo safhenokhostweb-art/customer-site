@@ -259,6 +259,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
         $limit = (int) ($props['limit'] ?? 6);
         $title = $this->escape($props['title'] ?? 'آخرین مطالب');
+        // Builder integrity audit (2026-09-11): 'layout' is a real,
+        // customer-site-declared schema field this method never consumed.
+        $layout = ($props['layout'] ?? 'grid') === 'list' ? 'list' : 'grid';
         $posts = Post::published()->latest('published_at')->take($limit)->get();
         if ($posts->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading\">{$title}</h2><div class=\"tb-blog-posts-empty\"><p class=\"tb-text\">هنوز مطلبی منتشر نشده است.</p><a href=\"" . $this->escapeAttr(route('blog.index')) . "\" class=\"tb-btn tb-btn-primary\">وبلاگ</a></div></div>";
@@ -278,7 +281,8 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             }
             $cards[] = "<a href=\"{$url}\" class=\"tb-blog-card\">{$img}<div class=\"tb-blog-card-body\"><h3 class=\"tb-blog-card-title\">{$t}</h3><p class=\"tb-blog-card-meta\">{$date}</p><p class=\"tb-blog-card-excerpt\">{$excerpt}</p></div></a>";
         }
-        $html = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid tb-grid-cols-3 tb-gap-lg tb-blog-grid\">" . implode('', $cards) . "</div>";
+        $colsClass = $layout === 'list' ? 'tb-grid-cols-1' : 'tb-grid-cols-3';
+        $html = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-lg tb-blog-grid\">" . implode('', $cards) . "</div>";
         return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\">{$html}</div>";
     }
 

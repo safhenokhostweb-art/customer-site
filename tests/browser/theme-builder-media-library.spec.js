@@ -88,6 +88,25 @@ async function searchPicker(page, q) {
 }
 
 /**
+ * Builder integrity final gate (2026-09-12): the category filter used a
+ * fixed 200ms sleep instead of this same real network+reactive-state wait
+ * — a genuine timing race under load (5/5 pass in isolation, confirmed
+ * failing only under full-suite contention), not an application defect.
+ * Same real-wait pattern as searchPicker() above, for the category select.
+ */
+async function selectPickerCategory(page, category) {
+    const [response] = await Promise.all([
+        page.waitForResponse((res) => res.url().includes('theme-design/canvas/media') && res.url().includes(`category=${encodeURIComponent(category)}`)),
+        page.locator('[data-testid="tb-media-category"]').selectOption(category),
+    ]);
+    await page.waitForFunction(() => {
+        const el = document.querySelector('[x-data]');
+        return window.Alpine?.$data(el)?.mediaModal?.loading === false;
+    });
+    return response;
+}
+
+/**
  * Publishes and waits for the real condition that matters: the editor's
  * own post-publish `setTimeout(() => window.location.reload(), 800)`
  * (pre-existing behavior, unrelated to this suite) actually completing —
@@ -371,9 +390,19 @@ test.describe('MEDIA-4 Theme Builder media library convergence', () => {
         await searchPicker(page, needle);
         await expect(page.locator('[data-testid^="tb-media-item-"]')).toHaveCount(1);
 
+        // Real reactive-state wait for the debounced clear itself (q=''),
+        // so it can never resolve after — and silently overwrite — the
+        // category-filtered fetch that follows. Alpine state, not a URL
+        // guess: fetchMedia() omits the 'q' param entirely once
+        // mediaModal.q is falsy, so there is no stable query string to
+        // match on for "the cleared request" specifically.
         await page.locator('[data-testid="tb-media-search"]').fill('');
-        await page.locator('[data-testid="tb-media-category"]').selectOption('document');
-        await page.waitForTimeout(200);
+        await page.waitForFunction(() => {
+            const el = document.querySelector('[x-data]');
+            const modal = window.Alpine?.$data(el)?.mediaModal;
+            return modal?.q === '' && modal?.loading === false;
+        });
+        await selectPickerCategory(page, 'document');
         await expect(page.locator('[data-testid^="tb-media-item-"]')).toHaveCount(0);
     });
 

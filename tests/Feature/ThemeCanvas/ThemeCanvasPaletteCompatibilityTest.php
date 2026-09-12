@@ -13,10 +13,17 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
     {
         $registry = BlockRegistry::all();
 
-        self::assertCount(96, $registry);
+        // Builder integrity audit (2026-09-11): module:portfolio_grid and
+        // module:services_section were de-exposed alongside the existing
+        // module:gallery_widget exclusion (no backend model — see
+        // BlockRegistry::all()), dropping module count 34 -> 32 and total
+        // 96 -> 94. Non-module count is unchanged.
+        self::assertCount(94, $registry);
         self::assertCount(62, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
-        self::assertCount(34, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
+        self::assertCount(32, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
+        self::assertArrayNotHasKey('module:portfolio_grid', $registry);
+        self::assertArrayNotHasKey('module:services_section', $registry);
     }
 
     public function test_every_available_non_module_canvas_block_has_a_valid_default_contract(): void

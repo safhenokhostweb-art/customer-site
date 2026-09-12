@@ -22,6 +22,7 @@ class CustomerMediaResolver
         'image' => ['url'],
         'hero_split' => ['image_url'],
         'module:motion' => ['fallback_image'],
+        'video' => ['url', 'poster'],
     ];
 
     /** Block type => {repeater prop key, nested media field key, storage shape}. */

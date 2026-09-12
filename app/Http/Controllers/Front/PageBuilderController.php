@@ -9,12 +9,15 @@ use App\Models\PageRevision;
 use App\Models\PageTemplate;
 use App\Support\CanvasReservedSlugs;
 use App\Services\ThemeBuilder\BlockRenderer;
+use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
+use App\Models\ThemeInstanceRevision;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 /**
  * API and UI for the Visual Page Builder (frontend editing).
@@ -264,6 +267,67 @@ class PageBuilderController extends Controller
         $data = $request->validate(['theme_id' => 'required|string|max:100']);
         $count = app(ThemePageProvisionService::class)->unprotect($data['theme_id']);
         return response()->json(['success' => true, 'unprotected' => $count]);
+    }
+
+    /**
+     * Canonical Theme Canvas install endpoint (called from saas-platform's
+     * ThemeCanvasController::installToSite()). This is the single authority
+     * for making a marketplace theme's data the site's active Canvas
+     * theme — it goes through ThemeInstanceRevisionService::record(), the
+     * same write path a customer's own publish/rollback/import use, so an
+     * install produces a real, provenance-tracked ThemeInstanceRevision and
+     * is subject to the exact same CanvasReservedSlugs collision guard.
+     * There is no separate raw-DB install authority any more; this
+     * replaces the one that used to write settings/pages directly.
+     */
+    public function installTheme(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'theme_id'              => 'required|string|max:100',
+            'theme_name'            => 'required|string|max:255',
+            'source_theme_id'       => 'nullable|string|max:100',
+            'source_theme_version'  => 'nullable|string|max:50',
+            'source_release_id'     => 'nullable|integer',
+            'header_blocks'         => 'nullable|array',
+            'footer_blocks'         => 'nullable|array',
+            'pages'                 => 'required|array',
+            'global_styles'         => 'nullable|array',
+            'extension_assets'      => 'nullable|array',
+        ]);
+
+        $themeData = [
+            'name'             => $data['theme_name'],
+            'slug'             => $data['theme_id'],
+            'header_blocks'    => $data['header_blocks'] ?? [],
+            'footer_blocks'    => $data['footer_blocks'] ?? [],
+            'pages'            => $data['pages'],
+            'global_styles'    => $data['global_styles'] ?? [],
+            'extension_assets' => $data['extension_assets'] ?? [],
+        ];
+
+        try {
+            $revision = app(ThemeInstanceRevisionService::class)->record($themeData, ThemeInstanceRevision::TYPE_INSTALL, [
+                'theme_identifier'      => $data['theme_id'],
+                'theme_name'            => $data['theme_name'],
+                'active_theme_id'       => $data['source_theme_id'] ?? $data['theme_id'],
+                'source_theme_id'       => $data['source_theme_id'] ?? $data['theme_id'],
+                'source_theme_version'  => $data['source_theme_version'] ?? null,
+                'source_release_id'     => $data['source_release_id'] ?? null,
+            ]);
+        } catch (ConflictHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'page_namespace_collision',
+                'message' => $e->getMessage(),
+            ], 409);
+        }
+
+        return response()->json([
+            'success'            => true,
+            'revision_id'        => $revision->id,
+            'revision_number'    => $revision->revision_number,
+            'pages_installed'    => count($data['pages']),
+        ]);
     }
 
     /**

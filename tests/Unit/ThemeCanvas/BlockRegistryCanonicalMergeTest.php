@@ -22,8 +22,13 @@ class BlockRegistryCanonicalMergeTest extends TestCase
         $canonicalTypes = array_keys(CanonicalBlockRegistry::all());
         $hostTypes = array_keys(BlockRegistry::all());
 
-        // Deliberately excluded — see the removal test below.
-        $deliberatelyExcluded = ['module:gallery_widget'];
+        // Deliberately excluded — see the removal test below. Builder
+        // integrity audit (2026-09-11) added two more for the same reason
+        // as module:gallery_widget: no backend content model exists on this
+        // host (Portfolio, Service), so the type could never render real
+        // data — 'gallery'/'bento_grid' and 'services_cards'/'service_cards'
+        // already cover the static/editor-entered equivalent.
+        $deliberatelyExcluded = ['module:gallery_widget', 'module:portfolio_grid', 'module:services_section'];
 
         $missing = array_diff($canonicalTypes, $hostTypes, $deliberatelyExcluded);
 
@@ -40,6 +45,8 @@ class BlockRegistryCanonicalMergeTest extends TestCase
         // local definitions (no backend content type exists for it here) —
         // the merge with the canonical registry must respect that removal.
         $this->assertArrayNotHasKey('module:gallery_widget', BlockRegistry::all());
+        $this->assertArrayNotHasKey('module:portfolio_grid', BlockRegistry::all());
+        $this->assertArrayNotHasKey('module:services_section', BlockRegistry::all());
     }
 
     public function test_empty_output_policy_delegates_to_the_canonical_authority(): void
