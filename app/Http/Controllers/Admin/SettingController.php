@@ -84,12 +84,17 @@ class SettingController extends Controller
                 'required',
                 'file',
                 'max:512',
-                'mimes:ico,png,jpg,jpeg,gif,webp,svg+xml,svg',
+                // SVG intentionally excluded: this app has no canonical SVG
+                // sanitization authority (same policy as CustomerMediaService),
+                // and a raw, unsanitized SVG served directly from the public
+                // disk is a stored-XSS vector (embedded <script>/event
+                // handlers execute if the URL is opened directly).
+                'mimes:ico,png,jpg,jpeg,gif,webp',
             ],
         ], [
             'favicon.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
             'favicon.max'      => 'حجم فایل نباید بیشتر از ۵۱۲ کیلوبایت باشد.',
-            'favicon.mimes'    => 'فرمت قابل‌قبول: ico, png, jpg, gif, webp, svg',
+            'favicon.mimes'    => 'فرمت قابل‌قبول: ico, png, jpg, gif, webp',
         ]);
 
         $file = $request->file('favicon');
@@ -114,12 +119,13 @@ class SettingController extends Controller
                 'required',
                 'file',
                 'max:2048',
-                'mimes:png,jpg,jpeg,gif,webp,svg+xml,svg',
+                // SVG intentionally excluded — see uploadFavicon()'s comment.
+                'mimes:png,jpg,jpeg,gif,webp',
             ],
         ], [
             'logo.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
             'logo.max'      => 'حجم فایل نباید بیشتر از ۲ مگابایت باشد.',
-            'logo.mimes'    => 'فرمت قابل‌قبول: png, jpg, gif, webp, svg',
+            'logo.mimes'    => 'فرمت قابل‌قبول: png, jpg, gif, webp',
         ]);
 
         $file = $request->file('logo');

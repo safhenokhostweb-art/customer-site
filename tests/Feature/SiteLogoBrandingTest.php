@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -104,6 +105,55 @@ class SiteLogoBrandingTest extends TestCase
 
         $response->assertSessionHasErrors('logo');
         $this->assertSame('', Setting::get('site_logo', ''));
+    }
+
+    /**
+     * Security — SVG is intentionally excluded (no canonical sanitization
+     * authority exists in this app for arbitrary user-supplied SVG, same
+     * policy as CustomerMediaService). A raw SVG served straight from the
+     * public disk would execute any embedded <script>/event handler if the
+     * URL is opened directly — classic stored-XSS-via-SVG-upload. Every
+     * active-content vector below must be rejected at the validation layer,
+     * before any file ever reaches disk.
+     */
+    public static function maliciousSvgProvider(): array
+    {
+        return [
+            'inline script' => ['<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'],
+            'onload handler' => ['<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"></svg>'],
+            'javascript: href' => ['<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)"><text>x</text></a></svg>'],
+            'external image reference' => ['<svg xmlns="http://www.w3.org/2000/svg"><image href="https://evil.example/track.png"/></svg>'],
+            'foreignObject with script' => ['<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><script xmlns="http://www.w3.org/1999/xhtml">alert(1)</script></foreignObject></svg>'],
+            'plain benign svg (still rejected — no SVG format at all)' => ['<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>'],
+        ];
+    }
+
+    #[DataProvider('maliciousSvgProvider')]
+    public function test_svg_logo_upload_is_rejected_regardless_of_content(string $svgContent): void
+    {
+        $admin = $this->admin();
+        $file = UploadedFile::fake()->createWithContent('logo.svg', $svgContent);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.settings.logo'), ['logo' => $file]);
+
+        $response->assertSessionHasErrors('logo');
+        $this->assertSame('', Setting::get('site_logo', ''));
+        Storage::disk('public')->assertMissing('logo/logo.svg');
+    }
+
+    #[DataProvider('maliciousSvgProvider')]
+    public function test_svg_favicon_upload_is_rejected_regardless_of_content(string $svgContent): void
+    {
+        $admin = $this->admin();
+        $file = UploadedFile::fake()->createWithContent('favicon.svg', $svgContent);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.settings.favicon'), ['favicon' => $file]);
+
+        $response->assertSessionHasErrors('favicon');
+        $this->assertSame('', Setting::get('site_favicon', ''));
+        Storage::disk('public')->assertMissing('favicon/favicon.svg');
     }
 
     // ── <x-site-brand> component ────────────────────────────────────────
