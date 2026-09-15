@@ -125,6 +125,10 @@
 
 @section('content')
 
+@include('admin.partials.breadcrumb', ['crumbs' => [
+    ['label' => 'داشبورد', 'url' => null],
+]])
+
 @php
     $license             = $license ?? null;
     $localModules        = $localModules ?? [];
