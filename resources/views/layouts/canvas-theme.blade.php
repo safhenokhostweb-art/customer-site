@@ -563,7 +563,7 @@
 
     {{-- ─── Builder Edit Bar (for admin users only) ─── --}}
     @auth
-        @if(auth()->user()->isTenantAdmin() || auth()->user()->is_admin)
+        @if(auth()->user()->isTenantAdmin())
         @php
             // This layout is rendered exclusively by
             // ThemeCanvasPageController::renderPage() — every page reaching

@@ -47,10 +47,10 @@ class CheckSiteLifecycle
             return $next($request);
         }
 
-        // Authenticated admins can still access admin panel paths
-        if ($request->user()?->is_admin && $this->isAdminPath($request)) {
-            return $next($request);
-        }
+        // (Removed: a redundant, unreachable is_admin re-check — any admin
+        // path is already let through unconditionally above, and real
+        // authorization for it is enforced downstream by the route's own
+        // auth/admin middleware, not by this lifecycle gate.)
 
         // All other public routes → suspended/archived page
         $siteName = Setting::get('site_name', 'این سایت');

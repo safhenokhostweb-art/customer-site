@@ -117,7 +117,7 @@ class SubscriptionPaymentController extends Controller
      */
     public function activate(Request $request, Invoice $invoice)
     {
-        abort_if(! auth()->user()?->is_admin, 403);
+        abort_if(! auth()->user()?->isTenantAdmin(), 403);
 
         $planId = $request->validate(['plan_id' => 'required|exists:subscription_plans,id'])['plan_id'];
         $plan   = SubscriptionPlan::findOrFail($planId);
