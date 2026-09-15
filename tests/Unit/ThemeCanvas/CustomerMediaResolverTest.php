@@ -22,6 +22,7 @@ class CustomerMediaResolverTest extends TestCase
         Schema::dropIfExists('customer_media_usages');
         Schema::dropIfExists('customer_media');
         (require database_path('migrations/2026_09_10_100000_create_customer_media_tables.php'))->up();
+        (require database_path('migrations/2026_09_15_100000_add_description_to_customer_media_table.php'))->up();
         Storage::fake('uploads');
         config(['site.platform_site_id' => 301]);
     }

@@ -12,7 +12,7 @@ class CustomerMedia extends Model
     protected $fillable = [
         'site_id', 'uuid', 'disk', 'storage_key', 'original_filename',
         'extension', 'category', 'mime_type', 'size_bytes', 'title',
-        'alt_text', 'caption', 'width', 'height', 'duration_seconds', 'metadata',
+        'alt_text', 'caption', 'description', 'width', 'height', 'duration_seconds', 'metadata',
     ];
 
     protected function casts(): array

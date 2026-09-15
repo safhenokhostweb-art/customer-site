@@ -52,7 +52,7 @@ class ThemeDesignMediaController extends Controller
             ]]]);
         }
 
-        $items = $this->media->paginateForCurrentSite($filters['q'] ?? null, $filters['category'] ?? null, 24);
+        $items = $this->media->paginateForCurrentSite($filters['q'] ?? null, $filters['category'] ?? null, perPage: 24);
 
         $images = $items->getCollection()->map(fn ($item) => [
             'uuid' => $item->uuid,

@@ -71,12 +71,23 @@ class CustomerMediaService
         return CustomerMedia::forSite($this->siteId())->available()->where('uuid', $uuid)->firstOrFail();
     }
 
+    private const SORTS = ['newest', 'oldest', 'name', 'size'];
+
     /**
      * Read access is scoped here too: controllers must never turn a UUID,
      * query parameter, or client-supplied site id into an ownership decision.
+     *
+     * usage/sort are applied in the SAME bounded query — withCount('usages')
+     * is a single aggregated subquery join, never a per-row follow-up query,
+     * so filtering/sorting on it (having/orderBy) stays N+1-free.
      */
-    public function paginateForCurrentSite(?string $search = null, ?string $category = null, int $perPage = 24): LengthAwarePaginator
-    {
+    public function paginateForCurrentSite(
+        ?string $search = null,
+        ?string $category = null,
+        ?string $usage = null,
+        string $sort = 'newest',
+        int $perPage = 24
+    ): LengthAwarePaginator {
         $query = CustomerMedia::forSite($this->siteId())->available()->withCount('usages');
 
         if ($category !== null) {
@@ -88,11 +99,26 @@ class CustomerMediaService
             $query->where(function ($media) use ($escaped) {
                 $media->where('title', 'like', "%{$escaped}%")
                     ->orWhere('original_filename', 'like', "%{$escaped}%")
+                    ->orWhere('alt_text', 'like', "%{$escaped}%")
                     ->orWhere('caption', 'like', "%{$escaped}%");
             });
         }
 
-        return $query->latest('id')->paginate($perPage)->withQueryString();
+        if ($usage === 'used') {
+            $query->has('usages');
+        } elseif ($usage === 'unused') {
+            $query->doesntHave('usages');
+        }
+
+        $sort = in_array($sort, self::SORTS, true) ? $sort : 'newest';
+        match ($sort) {
+            'oldest' => $query->oldest('id'),
+            'name' => $query->orderByRaw('COALESCE(title, original_filename) asc'),
+            'size' => $query->orderByDesc('size_bytes'),
+            default => $query->latest('id'),
+        };
+
+        return $query->paginate(min($perPage, 60))->withQueryString();
     }
 
     public function updateMetadata(CustomerMedia $media, array $metadata): CustomerMedia
@@ -102,6 +128,7 @@ class CustomerMediaService
             'title' => $metadata['title'] ?? null,
             'alt_text' => $metadata['alt_text'] ?? null,
             'caption' => $metadata['caption'] ?? null,
+            'description' => $metadata['description'] ?? null,
         ]);
         $media->save();
 
@@ -175,6 +202,232 @@ class CustomerMediaService
         }
         $media->purged_at = now();
         $media->save();
+    }
+
+    /**
+     * Replace the BINARY content of an existing media row without changing
+     * its canonical identity (uuid, id) — every existing `{media_id}`
+     * reference (Builder blocks, theme revisions, usage ledger rows) keeps
+     * resolving through the same uuid and automatically sees the new file,
+     * because publicUrl()/the resolver always derive the URL from the
+     * row's *current* storage_key at read time. Only same-category
+     * (image→image, video→video, ...) replacement is allowed — every
+     * existing consumer of this media assumes its family (an <img> tag
+     * cannot suddenly resolve to a PDF).
+     *
+     * Safety ordering: the new file is written first; the DB row is
+     * updated only after that succeeds; the OLD physical file is deleted
+     * last, and only after the DB commit — so a failure at any point
+     * leaves either the untouched original (new upload failed) or a
+     * correctly-updated record (old-file cleanup failed, orphaning at
+     * worst one now-unreferenced file, never data loss).
+     */
+    public function replace(CustomerMedia $media, UploadedFile $file): CustomerMedia
+    {
+        $this->assertOwned($media);
+        [$category, $extension, $mime] = $this->validate($file);
+
+        if ($category !== $media->category) {
+            throw ValidationException::withMessages([
+                'file' => 'نوع فایل جایگزین باید با نوع رسانه اصلی («' . $media->category . '») سازگار باشد.',
+            ]);
+        }
+
+        $oldDisk = $media->disk;
+        $oldKey = $media->storage_key;
+        // A random suffix guarantees the new key always differs from the
+        // old one, even for a same-extension replacement within the same
+        // month — otherwise the storage_key (and therefore the public URL)
+        // would be byte-identical to before, and any browser/CDN cache
+        // holding that URL would keep serving the OLD binary indefinitely.
+        $newKey = sprintf('customer-media/%d/%s/%s-%s.%s', $media->site_id, now()->format('Y/m'), $media->uuid, Str::random(8), $extension);
+
+        if (! Storage::disk($oldDisk)->putFileAs(dirname($newKey), $file, basename($newKey), ['visibility' => 'public'])) {
+            throw new \RuntimeException('Customer media storage write failed.');
+        }
+
+        try {
+            [$width, $height] = $category === 'image' ? $this->imageDimensions($file) + [null, null] : [null, null];
+            $media->fill([
+                'storage_key' => $newKey, 'extension' => $extension, 'mime_type' => $mime,
+                'original_filename' => $file->getClientOriginalName(), 'size_bytes' => $file->getSize(),
+                'width' => $width, 'height' => $height,
+            ]);
+            $media->save();
+        } catch (\Throwable $exception) {
+            Storage::disk($oldDisk)->delete($newKey);
+            throw $exception;
+        }
+
+        if ($newKey !== $oldKey) {
+            Storage::disk($oldDisk)->delete($oldKey);
+        }
+
+        return $media->fresh();
+    }
+
+    private const MAX_IMAGE_PIXELS = 40_000_000; // ~ 8000x5000; bounds decode-time memory regardless of declared file size.
+    private const IMAGE_OPERATIONS = ['rotate', 'crop', 'resize'];
+
+    /**
+     * Safe, bounded in-place image editing (rotate/crop/resize). Operates
+     * only on category==='image' rows and re-encodes to the SAME mime/
+     * extension — canonical identity (uuid/row id) is always preserved,
+     * exactly like replace(). The storage_key is still regenerated (not
+     * kept byte-identical) for the same reason replace() does that: a
+     * browser/CDN cache holding the old URL must not keep serving the
+     * pre-edit image indefinitely.
+     *
+     * Decompression-bomb guard: pixel count is checked via getimagesize()
+     * BEFORE any imagecreatefromXXX() call, which is where GD would
+     * otherwise allocate a full truecolor buffer for whatever dimensions
+     * the file declares.
+     */
+    public function editImage(CustomerMedia $media, string $operation, array $params): CustomerMedia
+    {
+        $this->assertOwned($media);
+        if ($media->category !== 'image') {
+            throw ValidationException::withMessages(['operation' => 'ویرایش فقط برای تصاویر ممکن است.']);
+        }
+        if (! in_array($operation, self::IMAGE_OPERATIONS, true)) {
+            throw ValidationException::withMessages(['operation' => 'عملیات ویرایش نامعتبر است.']);
+        }
+
+        $disk = Storage::disk($media->disk);
+        $realPath = $disk->path($media->storage_key);
+        $size = @getimagesize($realPath);
+        if (! is_array($size)) {
+            throw new \RuntimeException('Image could not be read for editing.');
+        }
+        [$sourceWidth, $sourceHeight] = $size;
+        if ($sourceWidth * $sourceHeight > self::MAX_IMAGE_PIXELS) {
+            throw ValidationException::withMessages(['file' => 'ابعاد تصویر بیش از حد مجاز برای ویرایش است.']);
+        }
+
+        $source = $this->loadGdImage($realPath, $media->mime_type);
+        if ($source === null) {
+            throw new \RuntimeException('Image could not be decoded for editing.');
+        }
+
+        try {
+            $edited = match ($operation) {
+                'rotate' => $this->gdRotate($source, (int) ($params['degrees'] ?? 0)),
+                'crop' => $this->gdCrop($source, $params, $sourceWidth, $sourceHeight),
+                'resize' => $this->gdResize($source, $params, $sourceWidth, $sourceHeight),
+            };
+        } finally {
+            imagedestroy($source);
+        }
+
+        if ($edited === null) {
+            throw ValidationException::withMessages(['params' => 'پارامترهای ویرایش تصویر نامعتبر است.']);
+        }
+
+        $oldKey = $media->storage_key;
+        $newKey = sprintf('customer-media/%d/%s/%s-%s.%s', $media->site_id, now()->format('Y/m'), $media->uuid, Str::random(8), $media->extension);
+
+        try {
+            $encoded = $this->encodeGdImage($edited, $media->mime_type);
+            // Write the NEW key first; the old one is never touched until
+            // the new binary and the DB row both succeed, so a failure at
+            // any point leaves the existing image fully intact.
+            if (! $disk->put($newKey, $encoded, ['visibility' => 'public'])) {
+                throw new \RuntimeException('Edited image write failed; original preserved.');
+            }
+
+            $media->storage_key = $newKey;
+            $media->width = imagesx($edited);
+            $media->height = imagesy($edited);
+            $media->size_bytes = strlen($encoded);
+            $media->save();
+        } catch (\Throwable $exception) {
+            $disk->delete($newKey);
+            throw $exception;
+        } finally {
+            imagedestroy($edited);
+        }
+
+        $disk->delete($oldKey);
+
+        return $media->fresh();
+    }
+
+    private function loadGdImage(string $path, string $mime): ?\GdImage
+    {
+        $image = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($path),
+            'image/png' => @imagecreatefrompng($path),
+            'image/gif' => @imagecreatefromgif($path),
+            'image/webp' => @imagecreatefromwebp($path),
+            default => false,
+        };
+        return $image instanceof \GdImage ? $image : null;
+    }
+
+    private function encodeGdImage(\GdImage $image, string $mime): string
+    {
+        ob_start();
+        $ok = match ($mime) {
+            'image/jpeg' => imagejpeg($image, null, 90),
+            'image/png' => imagepng($image, null, 6),
+            'image/gif' => imagegif($image),
+            'image/webp' => imagewebp($image, null, 90),
+            default => false,
+        };
+        $data = ob_get_clean();
+        if (! $ok || $data === false) {
+            throw new \RuntimeException('Image encoding failed.');
+        }
+        return $data;
+    }
+
+    private function gdRotate(\GdImage $source, int $degrees): ?\GdImage
+    {
+        if (! in_array($degrees, [90, 180, 270, -90, -180, -270], true)) {
+            return null;
+        }
+        // imagerotate() rotates counter-clockwise for a positive angle;
+        // negate so "rotate(90)" reads as a clockwise turn to the caller.
+        $rotated = imagerotate($source, -$degrees, 0);
+        if ($rotated === false) {
+            return null;
+        }
+        imagesavealpha($rotated, true);
+        return $rotated;
+    }
+
+    private function gdCrop(\GdImage $source, array $params, int $sourceWidth, int $sourceHeight): ?\GdImage
+    {
+        $x = (int) ($params['x'] ?? -1);
+        $y = (int) ($params['y'] ?? -1);
+        $width = (int) ($params['width'] ?? 0);
+        $height = (int) ($params['height'] ?? 0);
+        if ($x < 0 || $y < 0 || $width <= 0 || $height <= 0 || $x + $width > $sourceWidth || $y + $height > $sourceHeight) {
+            return null;
+        }
+        $cropped = imagecrop($source, ['x' => $x, 'y' => $y, 'width' => $width, 'height' => $height]);
+        return $cropped === false ? null : $cropped;
+    }
+
+    private function gdResize(\GdImage $source, array $params, int $sourceWidth, int $sourceHeight): ?\GdImage
+    {
+        $maxWidth = (int) ($params['max_width'] ?? 0);
+        $maxHeight = (int) ($params['max_height'] ?? 0);
+        if ($maxWidth <= 0 || $maxHeight <= 0) {
+            return null;
+        }
+        $ratio = min($maxWidth / $sourceWidth, $maxHeight / $sourceHeight, 1);
+        $targetWidth = max(1, (int) round($sourceWidth * $ratio));
+        $targetHeight = max(1, (int) round($sourceHeight * $ratio));
+
+        $target = imagecreatetruecolor($targetWidth, $targetHeight);
+        imagesavealpha($target, true);
+        imagealphablending($target, false);
+        imagefill($target, 0, 0, imagecolorallocatealpha($target, 0, 0, 0, 127));
+        imagealphablending($target, true);
+        imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+
+        return $target;
     }
 
     private function validate(UploadedFile $file): array

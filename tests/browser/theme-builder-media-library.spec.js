@@ -46,17 +46,19 @@ function attachDiagnostics(page, state) {
     page.on('response', (r) => { if (r.status() >= 500) state.errors.push(`response ${r.status()}: ${r.url()}`); });
 }
 
-/** Uploads `title` through the main Media Library (وبسایت → کتابخانه رسانه) and returns its uuid. */
+/**
+ * Uploads `title` (used as filename) through the main Media Library
+ * (وبسایت → کتابخانه رسانه) and returns its uuid. Media Library 2.0's
+ * upload has no title-at-upload-time field (metadata is set afterwards, in
+ * Details) — the filename is the searchable/identifying handle here.
+ */
 async function uploadThroughMainLibrary(page, title) {
     await page.goto(`${BASE_URL}/admin/media`, { waitUntil: 'domcontentloaded' });
-    await page.locator('input[name=file]').setInputFiles({ name: `${title}.png`, mimeType: 'image/png', buffer: png });
-    await page.locator('input[name=title]').fill(title);
-    await page.getByRole('button', { name: 'بارگذاری رسانه' }).click();
-    const card = page.locator('article.media-card', { hasText: title });
+    await page.locator('input[name="files"]').setInputFiles({ name: `${title}.png`, mimeType: 'image/png', buffer: png });
+    await expect(page.locator('.upload-row', { hasText: `${title}.png` }).locator('.upload-status')).toHaveText('موفق', { timeout: 15000 });
+    const card = page.locator('article.media-card', { hasText: `${title}.png` });
     await expect(card).toBeVisible();
-    await card.getByRole('link', { name: 'جزئیات' }).click();
-    const uuid = (await page.url()).split('/media/')[1];
-    return uuid;
+    return card.getAttribute('data-uuid');
 }
 
 async function openPickerFor(page, propKey) {
@@ -204,8 +206,7 @@ test.describe('MEDIA-4 Theme Builder media library convergence', () => {
         await expect(page.locator('[data-testid^="tb-media-item-"]')).toHaveCount(1);
 
         await page.goto(`${BASE_URL}/admin/media`, { waitUntil: 'domcontentloaded' });
-        await page.locator('input[name=q]').fill(title);
-        await page.getByRole('button', { name: 'فیلتر' }).click();
+        await page.locator('input[name="q"]').fill(title);
         await expect(page.locator('article.media-card')).toHaveCount(1);
     });
 

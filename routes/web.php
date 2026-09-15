@@ -344,9 +344,12 @@ Route::middleware('install.check')->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'force.password.change'])->group(function () {
         Route::get('media', [CustomerMediaController::class, 'index'])->name('media.index');
         Route::post('media', [CustomerMediaController::class, 'store'])->name('media.store');
+        Route::post('media/batch-delete', [CustomerMediaController::class, 'batchDestroy'])->name('media.batch-destroy');
         Route::get('media/{media}', [CustomerMediaController::class, 'show'])->name('media.show');
         Route::patch('media/{media}', [CustomerMediaController::class, 'update'])->name('media.update');
         Route::delete('media/{media}', [CustomerMediaController::class, 'destroy'])->name('media.destroy');
+        Route::post('media/{media}/replace', [CustomerMediaController::class, 'replace'])->name('media.replace');
+        Route::post('media/{media}/edit-image', [CustomerMediaController::class, 'editImage'])->name('media.edit-image');
     });
 
     // Admin panel (Persian)

@@ -24,7 +24,8 @@
             <form method="POST" action="{{ route('admin.media.update', $item->uuid) }}" style="display:grid;gap:12px;">@csrf @method('PATCH')
                 <label>عنوان<input name="title" value="{{ old('title', $item->title) }}" maxlength="255" style="width:100%;margin-top:5px;padding:9px;border:1px solid #d1d5db;border-radius:7px;"></label>
                 <label>متن جایگزین<input name="alt_text" value="{{ old('alt_text', $item->alt_text) }}" maxlength="500" style="width:100%;margin-top:5px;padding:9px;border:1px solid #d1d5db;border-radius:7px;"></label>
-                <label>توضیح<textarea name="caption" rows="4" style="width:100%;margin-top:5px;padding:9px;border:1px solid #d1d5db;border-radius:7px;">{{ old('caption', $item->caption) }}</textarea></label>
+                <label>عنوان کوتاه (caption)<textarea name="caption" rows="2" style="width:100%;margin-top:5px;padding:9px;border:1px solid #d1d5db;border-radius:7px;">{{ old('caption', $item->caption) }}</textarea></label>
+                <label>توضیح کامل<textarea name="description" rows="4" style="width:100%;margin-top:5px;padding:9px;border:1px solid #d1d5db;border-radius:7px;">{{ old('description', $item->description) }}</textarea></label>
                 <button class="btn btn-primary" type="submit">ذخیره اطلاعات</button>
             </form>
             <hr style="border:0;border-top:1px solid #e5e7eb;margin:18px 0;">

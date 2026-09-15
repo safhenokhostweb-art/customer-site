@@ -6,6 +6,7 @@ use App\Models\CustomerMedia;
 use App\Services\CustomerMediaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -23,8 +24,32 @@ class CustomerMediaServiceTest extends TestCase
         Schema::dropIfExists('customer_media_usages');
         Schema::dropIfExists('customer_media');
         (require database_path('migrations/2026_09_10_100000_create_customer_media_tables.php'))->up();
+        (require database_path('migrations/2026_09_15_100000_add_description_to_customer_media_table.php'))->up();
         Storage::fake('uploads');
         config(['site.platform_site_id' => 101]);
+    }
+
+    /**
+     * BASELINE ZERO PASS (test-pollution fix): this class deliberately
+     * doesn't use RefreshDatabase (see setUp()'s own comment — its raw
+     * migration invocation is a real MySQL-only schema, not something
+     * RefreshDatabase's transaction wrapping was doing anyway here) so
+     * every row it inserts is a real, committed INSERT with no wrapping
+     * transaction to roll it back. Left uncleaned, that data (e.g.
+     * site-a.jpg/site-b.jpg from the tenant-isolation test) survived as
+     * real rows for the rest of any full suite run — exactly what made
+     * Tests\Feature\ThemeCanvas\ThemeMediaConvergenceTest's
+     * `CustomerMedia::count()` assertion fail only in full-suite context,
+     * never in isolation. Deleting (not dropping) the rows here keeps the
+     * schema itself intact for every other RefreshDatabase-based test that
+     * expects these tables to already exist from the one-time migrate:fresh
+     * RefreshDatabase itself ran earlier in the process.
+     */
+    protected function tearDown(): void
+    {
+        \Illuminate\Support\Facades\DB::table('customer_media_usages')->delete();
+        \Illuminate\Support\Facades\DB::table('customer_media')->delete();
+        parent::tearDown();
     }
 
     public function test_upload_creates_a_tenant_scoped_canonical_record_and_safe_key(): void
@@ -186,5 +211,136 @@ class CustomerMediaServiceTest extends TestCase
         }
 
         $this->assertSame(101, $service->findForCurrentSite($siteAMedia->uuid)->site_id);
+    }
+
+    public function test_metadata_update_persists_description_alongside_title_alt_and_caption(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('meta.jpg'));
+
+        $service->updateMetadata($media, [
+            'title' => 'Title', 'alt_text' => 'Alt', 'caption' => 'Caption', 'description' => 'Full description',
+        ]);
+
+        $this->assertDatabaseHas('customer_media', [
+            'id' => $media->id, 'title' => 'Title', 'alt_text' => 'Alt',
+            'caption' => 'Caption', 'description' => 'Full description',
+        ]);
+    }
+
+    public function test_library_query_supports_usage_filter_and_sort_without_scaling_per_row(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $unused = $service->upload(UploadedFile::fake()->image('z-unused.jpg'));
+        $used = $service->upload(UploadedFile::fake()->image('a-used.jpg'));
+        $service->registerUsage($used, 'theme_instance_revision', 1, '.media_id');
+
+        $unusedOnly = $service->paginateForCurrentSite(usage: 'unused');
+        $this->assertCount(1, $unusedOnly);
+        $this->assertSame($unused->uuid, $unusedOnly->first()->uuid);
+
+        $usedOnly = $service->paginateForCurrentSite(usage: 'used');
+        $this->assertCount(1, $usedOnly);
+        $this->assertSame($used->uuid, $usedOnly->first()->uuid);
+
+        $byName = $service->paginateForCurrentSite(sort: 'name');
+        $this->assertSame($used->uuid, $byName->first()->uuid, 'a-used.jpg sorts before z-unused.jpg');
+
+        // A single withCount() aggregate query, not one usage query per row.
+        DB::enableQueryLog();
+        $service->paginateForCurrentSite();
+        $queryCount = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        $this->assertLessThanOrEqual(2, $queryCount, 'Listing must not run one query per media row.');
+    }
+
+    public function test_replace_preserves_uuid_and_swaps_the_resolved_binary(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('original.jpg', 100, 100));
+        $originalUuid = $media->uuid;
+        $originalKey = $media->storage_key;
+
+        $replaced = $service->replace($media, UploadedFile::fake()->image('new.png', 300, 200));
+
+        $this->assertSame($originalUuid, $replaced->uuid);
+        $this->assertSame($media->id, $replaced->id);
+        $this->assertSame(300, $replaced->width);
+        $this->assertSame(200, $replaced->height);
+        $this->assertNotSame($originalKey, $replaced->storage_key);
+        Storage::disk('uploads')->assertMissing($originalKey);
+        Storage::disk('uploads')->assertExists($replaced->storage_key);
+        // Any existing consumer resolving through the same uuid must now see the new binary.
+        $this->assertSame($replaced->storage_key, $service->findForCurrentSite($originalUuid)->storage_key);
+    }
+
+    public function test_replace_with_the_same_extension_still_changes_the_storage_key_for_cache_busting(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('same-ext.png'));
+        $originalKey = $media->storage_key;
+
+        $replaced = $service->replace($media, UploadedFile::fake()->image('same-ext-again.png'));
+
+        $this->assertNotSame($originalKey, $replaced->storage_key, 'A same-extension replace must still bust any cache holding the old URL.');
+    }
+
+    public function test_replace_with_incompatible_family_is_rejected_and_original_is_untouched(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('image.jpg'));
+        $originalKey = $media->storage_key;
+
+        $this->expectException(ValidationException::class);
+        try {
+            $service->replace($media, UploadedFile::fake()->create('doc.pdf', 10, 'application/pdf'));
+        } finally {
+            $this->assertSame($originalKey, $media->fresh()->storage_key);
+            Storage::disk('uploads')->assertExists($originalKey);
+        }
+    }
+
+    public function test_image_rotate_and_resize_preserve_identity_and_update_dimensions(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('edit.jpg', 200, 100));
+        $originalUuid = $media->uuid;
+        $originalKey = $media->storage_key;
+
+        $rotated = $service->editImage($media, 'rotate', ['degrees' => 90]);
+        $this->assertSame($originalUuid, $rotated->uuid);
+        // The storage key (and therefore the public URL) DOES change on
+        // every edit, same reasoning as replace(): a cache holding the old
+        // URL must not keep serving the pre-edit image. Canonical identity
+        // is the uuid, not the storage key.
+        $this->assertNotSame($originalKey, $rotated->storage_key);
+        Storage::disk('uploads')->assertMissing($originalKey);
+        Storage::disk('uploads')->assertExists($rotated->storage_key);
+        $this->assertSame(100, $rotated->width);
+        $this->assertSame(200, $rotated->height);
+
+        // rotated is 100x200 (portrait); constrained to fit within 50x50 the
+        // HEIGHT is the binding dimension (ratio 0.25), giving 25x50.
+        $resized = $service->editImage($rotated->fresh(), 'resize', ['max_width' => 50, 'max_height' => 50]);
+        $this->assertSame(25, $resized->width);
+        $this->assertSame(50, $resized->height);
+    }
+
+    public function test_image_crop_out_of_bounds_is_rejected(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->image('crop.jpg', 100, 100));
+
+        $this->expectException(ValidationException::class);
+        $service->editImage($media, 'crop', ['x' => 50, 'y' => 50, 'width' => 100, 'height' => 100]);
+    }
+
+    public function test_image_editing_is_rejected_for_non_image_categories(): void
+    {
+        $service = app(CustomerMediaService::class);
+        $media = $service->upload(UploadedFile::fake()->create('doc.pdf', 100, 'application/pdf'));
+
+        $this->expectException(ValidationException::class);
+        $service->editImage($media, 'rotate', ['degrees' => 90]);
     }
 }
