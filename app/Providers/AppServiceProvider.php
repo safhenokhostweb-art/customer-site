@@ -19,12 +19,20 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use SaaSPlatform\CoreUtils\Contracts\SiteContextContract;
 use SaaSPlatform\CoreUtils\Contracts\TenantContextContract;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // TEST-HARNESS-DB-01 follow-up: never bound in this app — see
+        // App\Services\SiteContext's own docblock. Real bug (500s), not
+        // test-only: any shared-package code resolving SiteContextContract
+        // (e.g. Forms module's SiteTenantScope) threw
+        // BindingResolutionException with no binding at all.
+        $this->app->singleton(SiteContextContract::class, \App\Services\SiteContext::class);
+
         $this->app->bind(
             \SaaSPlatform\Modules\Forms\Contracts\FormServiceInterface::class,
             \SaaSPlatform\Modules\Forms\Services\FormService::class
