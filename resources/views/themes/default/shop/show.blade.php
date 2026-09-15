@@ -2,7 +2,15 @@
 
 @php
     $canonical = $product->canonical_url ? (str_starts_with($product->canonical_url, 'http') ? $product->canonical_url : url($product->canonical_url)) : route('shop.show', $product->slug);
-    $ogImage = $product->og_image ? \App\Helpers\ImageHelper::url($product->og_image) : \App\Helpers\Seo::imageUrl($product);
+    // Blade's two-argument @section('name', $value) treats a null $value
+    // identically to the zero-argument block form ($content === null in
+    // ManagesLayouts::startSection()) — it calls ob_start() and pushes
+    // onto the section stack expecting a matching @endsection, which this
+    // single-line call never provides. Seo::imageUrl() is ?string, so a
+    // product with no image left this ob_start() open for the rest of the
+    // request. Coalescing to '' keeps the same "no image" meaning while
+    // staying on the inline-value (non-buffering) code path.
+    $ogImage = ($product->og_image ? \App\Helpers\ImageHelper::url($product->og_image) : \App\Helpers\Seo::imageUrl($product)) ?? '';
 @endphp
 @section('title', \App\Helpers\Seo::title($product))
 @section('meta_description', \App\Helpers\Seo::description($product))

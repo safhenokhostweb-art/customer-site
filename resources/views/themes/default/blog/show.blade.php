@@ -2,7 +2,14 @@
 
 @section('title', \App\Helpers\Seo::title($post))
 @section('meta_description', $post->seoDescription())
-@section('meta_image', \App\Helpers\Seo::imageUrl($post))
+{{-- Blade's two-argument @section('name', $value) treats a null $value
+     identically to the zero-argument block form (ManagesLayouts::startSection()
+     checks $content === null) — it opens a buffer expecting a matching
+     @endsection, which this single-line call never provides. Seo::imageUrl()
+     is ?string, so a post with no image left that buffer open for the rest
+     of the request. Coalescing to '' keeps the same "no image" meaning
+     while staying on the inline-value (non-buffering) path. --}}
+@section('meta_image', \App\Helpers\Seo::imageUrl($post) ?? '')
 @section('canonical', $post->effectiveCanonicalUrl())
 @section('og_type', 'article')
 @push('json-ld')
