@@ -122,6 +122,33 @@ class MenuController extends Controller
         ));
     }
 
+    /**
+     * Menu page picker (Phase D): the "internal_page" destination type
+     * already existed end-to-end (MenuItem::resolveUrl(), reference_id
+     * validated against exists:pages,id) — the only real gap was a plain
+     * <select> dumping every page by title with no search. This backs a
+     * real search-as-you-type UI instead of adding any new data model.
+     */
+    public function searchPages(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        $query = Page::published()->orderBy('title');
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('title', 'like', '%' . $q . '%')
+                    ->orWhere('slug', 'like', '%' . $q . '%');
+            });
+        }
+
+        return response()->json([
+            'pages' => $query->limit(20)->get(['id', 'title', 'slug'])->map(fn ($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'slug' => $p->slug,
+            ]),
+        ]);
+    }
+
     public function update(Request $request, Menu $menu): RedirectResponse
     {
         $rules = [

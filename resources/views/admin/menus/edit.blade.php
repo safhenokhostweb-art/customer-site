@@ -158,12 +158,7 @@
                     </div>
                     <div class="form-group" id="new-ref-page" style="display: none;">
                         <label class="form-label">صفحه</label>
-                        <select name="reference_id_page">
-                            <option value="">—</option>
-                            @foreach($pages as $p)
-                                <option value="{{ $p->id }}">{{ $p->title }}</option>
-                            @endforeach
-                        </select>
+                        @include('admin.menus.partials.page-picker', ['name' => 'reference_id_page', 'selected' => null, 'uid' => 'new'])
                     </div>
                     <div class="form-group" id="new-ref-category" style="display: none;">
                         <label class="form-label">دسته محصول</label>
@@ -254,6 +249,88 @@ document.addEventListener('DOMContentLoaded', function() {
         sel.addEventListener('change', sync);
         sync();
     });
+
+    // Menu page picker (Phase D): search-as-you-type instead of a giant
+    // <select> of every page. One instance per .js-page-picker element —
+    // the "add item" form has one, and every existing item's edit panel
+    // (item-sortable.blade.php) has its own, keyed by item id.
+    function initPagePicker(root) {
+        if (!root || root.dataset.ppInit) return;
+        root.dataset.ppInit = '1';
+        var searchUrl = root.getAttribute('data-search-url');
+        var valueInput = root.querySelector('.page-picker-value');
+        var selectedBox = root.querySelector('.page-picker-selected');
+        var selectedTitle = root.querySelector('.page-picker-selected-title');
+        var selectedSlug = root.querySelector('.page-picker-selected-slug');
+        var searchBox = root.querySelector('.page-picker-search');
+        var input = root.querySelector('.page-picker-input');
+        var results = root.querySelector('.page-picker-results');
+        var emptyMsg = root.querySelector('.page-picker-empty');
+        var clearBtn = root.querySelector('.page-picker-clear');
+        var debounceTimer = null;
+        var activeController = null;
+
+        function showSelected(id, title, slug) {
+            valueInput.value = id;
+            selectedTitle.textContent = title;
+            selectedSlug.textContent = '/' + slug;
+            selectedBox.style.display = 'flex';
+            searchBox.style.display = 'none';
+        }
+        function showSearch() {
+            valueInput.value = '';
+            selectedBox.style.display = 'none';
+            searchBox.style.display = 'block';
+            input.value = '';
+            results.style.display = 'none';
+            input.focus();
+        }
+        function renderResults(pages) {
+            results.innerHTML = '';
+            if (!pages.length) {
+                emptyMsg.style.display = 'block';
+                results.style.display = 'none';
+                return;
+            }
+            emptyMsg.style.display = 'none';
+            pages.forEach(function(p) {
+                var item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'page-picker-result';
+                item.style.cssText = 'display:block;width:100%;text-align:right;padding:0.45rem 0.6rem;border:0;background:#fff;cursor:pointer;border-bottom:1px solid #f1f5f9;';
+                item.innerHTML = '<span style="font-weight:600;">' + p.title.replace(/</g, '&lt;') + '</span> <span style="color:#94a3b8;font-size:0.75rem;">/' + p.slug.replace(/</g, '&lt;') + '</span>';
+                item.addEventListener('mouseenter', function() { item.style.background = '#f8fafc'; });
+                item.addEventListener('mouseleave', function() { item.style.background = '#fff'; });
+                item.addEventListener('click', function() { showSelected(p.id, p.title, p.slug); });
+                results.appendChild(item);
+            });
+            results.style.display = 'block';
+        }
+
+        input.addEventListener('input', function() {
+            var q = input.value.trim();
+            if (debounceTimer) clearTimeout(debounceTimer);
+            if (activeController) activeController.abort();
+            debounceTimer = setTimeout(function() {
+                activeController = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                fetch(searchUrl + '?q=' + encodeURIComponent(q), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: activeController ? activeController.signal : undefined,
+                })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { renderResults(data.pages || []); })
+                    .catch(function(e) { if (e.name !== 'AbortError') { results.style.display = 'none'; } });
+            }, 250);
+        });
+        input.addEventListener('focus', function() {
+            if (input.value.trim() !== '' && results.children.length) results.style.display = 'block';
+        });
+        document.addEventListener('click', function(e) {
+            if (!root.contains(e.target)) results.style.display = 'none';
+        });
+        clearBtn.addEventListener('click', showSearch);
+    }
+    document.querySelectorAll('.js-page-picker').forEach(initPagePicker);
 
     function mountSortable(ol) {
         if (typeof Sortable === 'undefined') return;

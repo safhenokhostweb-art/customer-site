@@ -405,6 +405,7 @@ Route::middleware('install.check')->group(function () {
             Route::post('settings/favicon', [AdminSettingController::class, 'uploadFavicon'])->name('settings.favicon');
             Route::post('settings/logo', [AdminSettingController::class, 'uploadLogo'])->name('settings.logo');
             Route::delete('settings/logo', [AdminSettingController::class, 'removeLogo'])->name('settings.logo-remove');
+            Route::get('menus/pages/search', [AdminMenuController::class, 'searchPages'])->name('menus.pages.search');
             Route::get('menus/{menu}/preview', [AdminMenuController::class, 'preview'])->name('menus.preview');
             Route::post('menus/{menu}/publish', [AdminMenuController::class, 'publish'])->name('menus.publish');
             Route::post('menus/{menu}/preview-token', [AdminMenuController::class, 'regeneratePreviewLink'])->name('menus.preview-token');

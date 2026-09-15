@@ -60,7 +60,11 @@
                     </select>
                 </div>
                 <div class="form-group ref-page-{{ $item->id }}" style="display:none;"><label>صفحه</label>
-                    <select name="reference_id"><option value="">—</option>@foreach($pages as $p)<option value="{{ $p->id }}" {{ (int)$item->reference_id === (int)$p->id && $item->type === 'internal_page' ? 'selected' : '' }}>{{ $p->title }}</option>@endforeach</select>
+                    @include('admin.menus.partials.page-picker', [
+                        'name' => 'reference_id',
+                        'selected' => $item->type === 'internal_page' ? $pages->firstWhere('id', $item->reference_id) : null,
+                        'uid' => 'item-' . $item->id,
+                    ])
                 </div>
                 <div class="form-group ref-cat-{{ $item->id }}" style="display:none;"><label>دسته محصول</label>
                     <select name="reference_id_category"><option value="">—</option>@foreach($productCategories as $c)<option value="{{ $c->id }}" {{ (int)$item->reference_id === (int)$c->id && $item->type === 'category' ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach</select>
