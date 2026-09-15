@@ -17,7 +17,11 @@ class ProvisionSecretMiddleware
             return response()->json(['error' => 'Provisioning not configured'], 403);
         }
 
-        if ($request->header('X-Provision-Secret') !== $secret) {
+        // hash_equals() — a plain !== comparison is timing-unsafe and lets
+        // an attacker who can measure response latency recover the shared
+        // secret byte-by-byte. $secret (the known value) is the first
+        // argument per hash_equals()'s own contract.
+        if (! hash_equals($secret, (string) $request->header('X-Provision-Secret', ''))) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
