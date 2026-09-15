@@ -199,20 +199,39 @@ class SmartImageUploadService
         imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, $dstW, $dstH, $srcW, $srcH);
         imagedestroy($src);
 
+        // BASELINE ZERO PASS: these GD functions write the encoded image
+        // straight to the output buffer when given a null "to file" arg —
+        // ob_start()/ob_get_clean() around them is how that gets captured
+        // as a string instead of echoed. Without try/finally, any warning
+        // PHPUnit's error handler promotes to an exception (or any other
+        // exception from a malformed/edge-case source image) skips
+        // ob_get_clean() entirely and leaves the buffer open for the rest
+        // of the request — PHPUnit's "did not close its own output
+        // buffers" risky-test warning on tests exercising real image
+        // rendering paths (shop/blog product images).
+        $obLevel = ob_get_level();
         ob_start();
-        $canWebp = $useWebp && function_exists('imagewebp');
-        if ($canWebp) {
-            imagewebp($dst, null, $quality);
-        } elseif ($mime === 'image/png') {
-            // PNG quality: 0-9 (invert: 9 = max compression)
-            $pngQ = (int) round((100 - $quality) / 10);
-            imagepng($dst, null, max(0, min(9, $pngQ)));
-        } elseif ($mime === 'image/gif') {
-            imagegif($dst);
-        } else {
-            imagejpeg($dst, null, $quality);
+        try {
+            $canWebp = $useWebp && function_exists('imagewebp');
+            if ($canWebp) {
+                imagewebp($dst, null, $quality);
+            } elseif ($mime === 'image/png') {
+                // PNG quality: 0-9 (invert: 9 = max compression)
+                $pngQ = (int) round((100 - $quality) / 10);
+                imagepng($dst, null, max(0, min(9, $pngQ)));
+            } elseif ($mime === 'image/gif') {
+                imagegif($dst);
+            } else {
+                imagejpeg($dst, null, $quality);
+            }
+            $data = ob_get_clean();
+        } finally {
+            // Guarantee the buffer this method opened is always closed,
+            // even if one of the image* calls above threw.
+            while (ob_get_level() > $obLevel) {
+                ob_end_clean();
+            }
         }
-        $data = ob_get_clean();
         imagedestroy($dst);
 
         if (!$data) {
