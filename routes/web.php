@@ -476,7 +476,6 @@ Route::middleware('install.check')->group(function () {
                 Route::post('/{bundleId}/purchase',    [AdminThemeBundleController::class, 'purchase'])->name('purchase');
             });
         });
-        Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
 
         // Unified Notification Center
         Route::prefix('notification-center')->name('notification-center.')->group(function () {
@@ -606,8 +605,8 @@ Route::middleware('install.check')->group(function () {
         // tenant route, loaded via SeoAdvancedServiceProvider's routes/site.php
         // (seo-advanced.site.report) — see AdminMenu::MENU_ROUTES['seo_advanced'].
         Route::middleware('module:analytics')->group(function () {
-            Route::get('analytics', [PlatformModuleController::class, 'show'])
-                ->name('analytics.index')->defaults('slug', 'analytics');
+            Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])
+                ->name('analytics.index');
         });
         Route::middleware('module:announcements')->group(function () {
             Route::get('announcements', [PlatformModuleController::class, 'show'])

@@ -17,10 +17,11 @@ class PlatformModuleController extends Controller
      * توضیحات راهنما برای هر ماژول پلتفرمی.
      */
     private const MODULE_GUIDES = [
-        'analytics' => [
-            'title' => 'تحلیل پیشرفته',
-            'description' => 'گزارش‌ها و داشبوردهای تحلیلی سطح بالای سایت (بازدید، فروش، نرخ تبدیل و …).',
-        ],
+        // 'analytics' removed: superseded by the real AnalyticsDashboardController
+        // route (admin.analytics.index, gated by module:analytics in routes/web.php)
+        // — see AdminMenu::MENU_ROUTES['analytics']. The old generic guide page
+        // here was a second, unguarded-by-mistake authority for the same route
+        // name; same pattern as the 'crm' removal below.
         'announcements' => [
             'title' => 'اعلان‌ها و اخبار',
             'description' => 'مدیریت اعلان‌ها و اخبار ارسال‌شده از پلتفرم برای نمایش در سایت یا پنل کاربری.',
