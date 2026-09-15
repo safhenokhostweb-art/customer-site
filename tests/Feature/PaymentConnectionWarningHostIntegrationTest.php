@@ -30,6 +30,13 @@ class PaymentConnectionWarningHostIntegrationTest extends TestCase
     public function test_untrusted_country_header_is_fail_open_in_customer_host(): void
     {
         config([
+            // TEST-HARNESS-DB-01: the feature is disabled by default
+            // (PAYMENT_CONNECTION_WARNING_ENABLED env, safe default — see
+            // core-utils's own payment-connection-warning.php config) —
+            // PaymentConnectionAdvisor::advise() short-circuits to
+            // status=disabled before ever reaching the fail-open logic this
+            // test exercises unless explicitly turned on here too.
+            'payment-connection-warning.enabled' => true,
             'payment-connection-warning.trusted_proxy_cidr_file' => '',
             'payment-connection-warning.trusted_proxy_cidrs' => ['185.143.232.0/22'],
         ]);
