@@ -44,3 +44,10 @@ cursor-rules-sync.local.json
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# CodeGPT extension config — contains a live API key, must never be tracked
+.codegpt/
+
+# Personal isolated-cert-DB PHPUnit config (never shared, points at a
+# machine-local dedicated test database) — never tracked.
+phpunit.cert.xml
