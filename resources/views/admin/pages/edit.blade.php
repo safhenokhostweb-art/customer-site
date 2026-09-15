@@ -1,10 +1,14 @@
 @extends('admin.layout')
-@section('title', 'ویرایش صفحه')
-@section('header', 'ویرایش صفحه')
+@section('title', 'تنظیمات صفحه')
+@section('header', 'تنظیمات صفحه')
 @section('content')
+@php $usesBuilder = $page->usesBuilder(); @endphp
 <div class="admin-page">
     <div class="admin-page-head">
-        <h1 class="admin-page-title">ویرایش صفحه</h1>
+        <h1 class="admin-page-title">تنظیمات صفحه: {{ $page->title }}</h1>
+        <div class="admin-page-tools">
+            <a href="{{ route('builder.page.edit', $page) }}" class="btn btn-primary btn-sm">ویرایش محتوای صفحه در قالب‌ساز</a>
+        </div>
     </div>
     @include('admin.partials.ai-seo-widget', [
         'aiWidgetId'   => 'pageEdit',
@@ -29,7 +33,26 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">محتوا</label>
-                    <textarea id="page-body-editor" name="body" class="w-full min-h-[220px]">{{ old('body', $page->body) }}</textarea>
+                    @if($usesBuilder)
+                        {{-- Builder Commercial Hardening (Phase B): once a page has
+                             real content in builder_content_v2, the public renderer
+                             (Page::usesBuilder()) ignores `body` permanently — this
+                             textarea used to still accept edits here with zero
+                             visible effect (a silent no-op control). The one
+                             canonical content editor for this page is now the
+                             Builder; PageController::update() also refuses to
+                             persist `body` for a builder-type page server-side, not
+                             just here in the UI. --}}
+                        <div class="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+                            محتوای این صفحه از طریق
+                            <a href="{{ route('builder.page.edit', $page) }}" class="font-semibold underline">قالب‌ساز بصری</a>
+                            مدیریت می‌شود. این فیلد قدیمی دیگر روی نمایش عمومی صفحه اثری ندارد.
+                        </div>
+                    @else
+                        <textarea id="page-body-editor" name="body" class="w-full min-h-[220px]">{{ old('body', $page->body) }}</textarea>
+                        <p class="admin-field-hint">برای طراحی بصری با عناصر (تصویر، ستون، اسلایدر و ...) می‌توانید هر زمان به
+                            <a href="{{ route('builder.page.edit', $page) }}">قالب‌ساز</a> بروید؛ محتوای فعلی به‌صورت یک بلوک واقعی وارد می‌شود.</p>
+                    @endif
                 </div>
                 <div class="form-group">
                     <label class="form-label">ترتیب</label>

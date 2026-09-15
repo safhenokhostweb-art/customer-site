@@ -33,7 +33,13 @@ return [
         'image' => [
             'type' => 'image',
             'props' => [
-                'url' => ['required' => false, 'type' => 'string'],
+                // BLD-14 follow-up: this predates MEDIA-4's canonical
+                // {media_id} shape and was declared 'string' back when a
+                // plain URL was the only representation — now stale.
+                // CustomerMediaResolver::resolveValue()/assertType('media')
+                // both already accept either shape; the schema should say
+                // so too, not silently reject the canonical form.
+                'url' => ['required' => false, 'type' => 'media'],
                 'alt' => ['required' => false, 'type' => 'string'],
                 'caption' => ['required' => false, 'type' => 'string'],
             ],
@@ -336,7 +342,7 @@ return [
             'type' => 'client_logos',
             'props' => [
                 'title' => ['required' => false, 'type' => 'string'],
-                'logos' => ['required' => false, 'type' => 'array'],
+                'logos' => ['required' => false, 'type' => 'json_array'],
             ],
             'styles'   => ['layout', 'typography', 'background', 'effects'],
             'children' => 'none',
@@ -372,7 +378,7 @@ return [
                 'title'      => ['required' => false, 'type' => 'string'],
                 'subtitle'   => ['required' => false, 'type' => 'string'],
                 'background' => ['required' => false, 'type' => 'string'],
-                'stats'      => ['required' => false, 'type' => 'array'],
+                'stats'      => ['required' => false, 'type' => 'json_array'],
             ],
             'styles'   => ['layout', 'typography', 'background', 'effects'],
             'children' => 'none',
@@ -380,10 +386,20 @@ return [
         'trust_badges' => [
             'type' => 'trust_badges',
             'props' => [
-                'title'    => ['required' => false, 'type' => 'string'],
-                'subtitle' => ['required' => false, 'type' => 'string'],
-                'columns'  => ['required' => false, 'type' => 'integer'],
-                'items'    => ['required' => false, 'type' => 'array'],
+                'title'      => ['required' => false, 'type' => 'string'],
+                'subtitle'   => ['required' => false, 'type' => 'string'],
+                'columns'    => ['required' => false, 'type' => 'integer'],
+                // Pre-existing drift bug fixed here: this entry declared
+                // 'items', but BlockRegistry's actual field (and every
+                // renderer's read path, e.g. renderTrustBadges()'s
+                // $props['badges']) has always been 'badges' — 'items' never
+                // matched anything and silently did nothing. Now that
+                // trust_badges.badges is a real Canvas repeater (storage:
+                // array), it needs the same 'json_array' override its
+                // siblings (client_logos.logos, stats_row.stats) already
+                // have, so legacy JSON-string-saved data keeps validating
+                // alongside newly-authored real arrays.
+                'badges'     => ['required' => false, 'type' => 'json_array'],
             ],
             'styles'   => ['layout', 'typography', 'background', 'effects'],
             'children' => 'none',
@@ -598,5 +614,11 @@ return [
         'string_prop_max_length' => 65535,
         'url_max_length' => 2048,
         'children_max_depth' => 20,
+        // TEST-HARNESS-DB-01 (Builder nested-save data-integrity fix):
+        // ElementSchemaRegistry::validate() already bounds recursion depth;
+        // this separately bounds total tree size (a wide-but-shallow tree
+        // could still be huge) for the same reason — an oversized save
+        // payload should be rejected quickly, not accepted and processed.
+        'total_blocks_max' => 500,
     ],
 ];

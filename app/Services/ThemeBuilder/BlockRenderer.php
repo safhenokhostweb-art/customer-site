@@ -170,15 +170,49 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         if (self::isContainerType($type) && !empty($children)) {
             $inner = $this->renderBlocks($children);
         }
-        if ($type === 'tabs' && !empty($props['tabs'])) {
-            $inner = $this->renderTabs($props['tabs']);
+        // BLD-01 (Full Product Commercial Audit, TASK 1/3): `accordion` is
+        // rendered correctly right here — but the generic dispatch a few
+        // lines below (`$method = 'render'.Str::studly($type);
+        // $this->{$method}($props, $inner, $id)`) used to ALSO resolve to
+        // this exact same inherited method and re-invoke it with
+        // `($props, $inner, $id)`. PHP silently discards the two extra
+        // positional args against `renderAccordion(array $items)`'s
+        // single-array signature, so the WHOLE `$props` array (not
+        // `$props['items']`) was rebound to the method's only parameter —
+        // discarding the correct `$inner` computed here and rendering one
+        // phantom untitled panel instead. Returning the already-correct
+        // `$inner` immediately, the same way a container type's children
+        // are returned as `$inner`, is the fix — it still passes through
+        // `renderBlock()`'s uniform applyBlockStyle()/wrapEditorMode()
+        // wrapping unchanged.
+        //
+        // TASK 2A (tabs container authoring fix): `tabs` no longer has a
+        // special case here — it is a real structural container now (see
+        // isContainerType() above, delegating to the shared
+        // BlockRegistry::isContainerType()), so it must fall through to the
+        // generic dispatch below like every other container, where the
+        // inherited SaaSPlatform\ThemeRuntime\BlockRenderer::renderTabs()
+        // receives the standard ($props, $inner, $id) — $inner already
+        // holding every real tab_panel child's rendered HTML. The special
+        // case that used to live here (`return $this->renderTabs($props['tabs'])`)
+        // called the OLD single-array `renderTabs(array $tabs)` signature,
+        // which the shared package no longer has — it silently discarded
+        // `$inner` and returned empty for any block using the new
+        // tab_panel-children shape, dropping real content on this host's
+        // live render path. Legacy `props.tabs`-only content (no tab_panel
+        // children yet) is still read correctly: it falls through to the
+        // shared renderTabs()'s own read-compat fallback (triggered when
+        // `$inner === ''`), the exact same one path this fix converges on.
+        if ($type === 'accordion') {
+            return !empty($props['items']) ? $this->renderAccordion($props['items']) : '';
         }
-        if ($type === 'accordion' && !empty($props['items'])) {
-            $inner = $this->renderAccordion($props['items']);
-        }
-        if ($type === 'slider' && !empty($props['slides'])) {
-            $inner = $this->renderBlocks($props['slides']);
-        }
+        // Builder integrity fix (2026-09-12): a `slider` slide is plain
+        // {image,title,subtitle,link} data, not a self-describing block —
+        // treating it as one here fed each slide through schema validation
+        // (which requires a `type` key) and logged a spurious "failed
+        // schema validation" warning per slide, for a value ($inner) that
+        // renderSlider() never even consumed. See ThemeCanvasRenderer::
+        // renderSlider() for the actual (fixed) slide rendering.
 
         if (\App\Builder\ElementRegistry::has($type)) {
             $context = array_merge($this->context, [

@@ -91,6 +91,18 @@ class PageController extends Controller
         $data['is_published'] = $request->boolean('is_published');
         $data['show_in_menu'] = $request->boolean('show_in_menu');
 
+        // Builder Commercial Hardening (Phase B): once a page uses the
+        // canonical Page Builder, the public renderer (Page::usesBuilder())
+        // ignores `body` permanently — persisting a submitted `body` value
+        // here would be a real, silent no-op edit (the admin sees "saved"
+        // but nothing on the public page ever changes). The view already
+        // hides this field for a builder-type page; this is the
+        // server-side half of that guard, so a stale cached form or a
+        // direct POST can never reintroduce the bug.
+        if ($page->usesBuilder()) {
+            unset($data['body']);
+        }
+
         if ($data['builder_header_override'] === BuilderLayoutService::PAGE_OVERRIDE_NONE) {
             $data['builder_disable_header'] = true;
             $data['builder_header_template_override'] = null;

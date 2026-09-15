@@ -302,10 +302,29 @@
                     </div>
                 </div>
                 <div style="border-top:1px solid #334155;padding-top:12px">
-                    <a href="{{ $adminUrl }}" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg text-[11px] text-slate-400 hover:text-white transition" style="border:1px solid #334155">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                        ویرایش در پنل ادمین
-                    </a>
+                    <label class="block text-[10px] font-semibold text-slate-400 mb-1">ترتیب نمایش در منو</label>
+                    <input x-model.number="pageSettings.order" type="number" min="0" class="inp" @change="savePageSettings()">
+                </div>
+                <div style="border-top:1px solid #334155;padding-top:12px">
+                    <p class="text-[10px] font-semibold text-slate-400 mb-2">هدر و فوتر این صفحه</p>
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">هدر</label>
+                            <select x-model="pageSettings.builder_header_override" class="inp" @change="savePageSettings()">
+                                <template x-for="(label, value) in HEADER_OPTIONS" :key="value">
+                                    <option :value="value" x-text="label"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">فوتر</label>
+                            <select x-model="pageSettings.builder_footer_override" class="inp" @change="savePageSettings()">
+                                <template x-for="(label, value) in FOOTER_OPTIONS" :key="value">
+                                    <option :value="value" x-text="label"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -808,7 +827,15 @@ const PAGE_META = {
     show_in_menu: {{ $pageShowInMenu ? 'true' : 'false' }},
     meta_title:   @json($pageMetaTitle),
     meta_description: @json($pageMetaDesc),
+    order:        {{ (int) ($pageOrder ?? 0) }},
+    builder_header_override: @json($pageHeaderOverride ?? ''),
+    builder_footer_override: @json($pageFooterOverride ?? ''),
 };
+// UI-C5: header/footer template choices — same options admin.pages.edit
+// (the legacy settings form) used, now also available from the one
+// canonical Page Builder settings tab.
+const HEADER_OPTIONS = @json($headerOptions ?? []);
+const FOOTER_OPTIONS = @json($footerOptions ?? []);
 const BLOCK_EMOJIS = {
     "hero":"🌟","section":"📦","row":"⇄","column":"▤","grid":"🔲","columns":"▥",
     "tabs":"📑","accordion":"🪗","slider":"🎠","heading":"🔠","text":"📄",

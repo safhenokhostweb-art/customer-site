@@ -863,7 +863,35 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                 </div>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fieldDef.type !== 'image'">
+                                                        <template x-if="fieldDef.type === 'repeater'">
+                                                            <div class="space-y-2 rounded-lg border border-slate-200 bg-white p-2" :data-testid="`tb-nested-repeater-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <template x-for="(nestedItem, nestedIndex) in nestedItems(propKey, itemIndex, fieldKey)" :key="nestedIndex">
+                                                                    <div class="rounded border border-slate-200 bg-slate-50 p-2 space-y-2">
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="text-[10px] font-semibold text-slate-500" x-text="`${fieldDef.label || fieldKey} ${nestedIndex + 1}`"></span>
+                                                                            <div class="flex gap-1">
+                                                                                <button type="button" @click="moveNestedItem(propKey, itemIndex, fieldKey, nestedIndex, -1, schemaDef)" :disabled="nestedIndex === 0" :data-testid="`tb-nested-up-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}`" class="px-1.5 py-0.5 rounded border border-slate-200 text-[10px] disabled:opacity-30" :aria-label="`انتقال به بالا`">↑</button>
+                                                                                <button type="button" @click="moveNestedItem(propKey, itemIndex, fieldKey, nestedIndex, 1, schemaDef)" :disabled="nestedIndex >= nestedItems(propKey, itemIndex, fieldKey).length - 1" :data-testid="`tb-nested-down-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}`" class="px-1.5 py-0.5 rounded border border-slate-200 text-[10px] disabled:opacity-30" :aria-label="`انتقال به پایین`">↓</button>
+                                                                                <button type="button" @click="removeNestedItem(propKey, itemIndex, fieldKey, nestedIndex, schemaDef)" :data-testid="`tb-nested-remove-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}`" class="px-1.5 py-0.5 rounded border border-red-200 text-red-600 text-[10px]" :aria-label="`حذف`">حذف</button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <template x-for="(nestedFieldDef, nestedFieldKey) in fieldDef.fields" :key="nestedFieldKey">
+                                                                            <div class="space-y-1">
+                                                                                <label class="block text-[10px] font-medium text-slate-600" x-text="nestedFieldDef.label || nestedFieldKey"></label>
+                                                                                <template x-if="nestedFieldDef.type === 'textarea'">
+                                                                                    <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type !== 'textarea'">
+                                                                                    <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                </template>
+                                                                            </div>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+                                                                <button type="button" @click="addNestedItem(propKey, itemIndex, fieldKey, fieldDef, schemaDef)" :data-testid="`tb-nested-add-${propKey}-${itemIndex}-${fieldKey}`" class="w-full px-2 py-1.5 rounded border border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-[11px] font-medium">+ افزودن <span x-text="fieldDef.label || fieldKey"></span></button>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
                                                                     <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
@@ -992,7 +1020,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                                         فرزندان (<span x-text="selectedBlock?.children?.length ?? 0"></span>)
                                     </span>
-                                    <button @click="showAddChildModal = true" data-testid="tb-open-add-child-modal"
+                                    <button x-show="selectedBlock?.type === 'tabs'" @click="addTab()" data-testid="tb-add-tab"
+                                        class="text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium transition flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                        افزودن تب
+                                    </button>
+                                    <button x-show="selectedBlock?.type !== 'tabs'" @click="showAddChildModal = true" data-testid="tb-open-add-child-modal"
                                         class="text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium transition flex items-center gap-1">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                         افزودن
@@ -1002,21 +1035,21 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     <template x-for="(child, ci) in (selectedBlock?.children ?? [])" :key="child.id">
                                         <div class="flex items-center gap-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs group">
                                             <span :class="blockCategoryColor(child.type)" class="w-1.5 h-1.5 rounded-full shrink-0"></span>
-                                            <span class="flex-1 truncate text-slate-700" x-text="child.props?.label ? (blockLabel(child.type) + ': ' + child.props.label) : blockLabel(child.type)"></span>
+                                            <span class="flex-1 truncate text-slate-700" x-text="child.props?.label ? (blockLabel(child.type) + ': ' + child.props.label) : blockLabel(child.type)" :data-testid="'tb-child-label-' + child.id"></span>
                                             <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
-                                                <button @click="selectBlock([...selectedPath, ci])"
+                                                <button @click="selectBlock([...selectedPath, ci])" :data-testid="'tb-child-edit-' + child.id"
                                                     class="w-5 h-5 flex items-center justify-center rounded text-indigo-500 hover:bg-indigo-50" title="ویرایش">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </button>
-                                                <button @click="moveChildUp(ci)" :disabled="ci === 0"
+                                                <button @click="moveChildUp(ci)" :disabled="ci === 0" :data-testid="'tb-child-up-' + child.id"
                                                     class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-30" title="بالاتر">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
                                                 </button>
-                                                <button @click="moveChildDown(ci)" :disabled="ci >= (selectedBlock?.children?.length ?? 0) - 1"
+                                                <button @click="moveChildDown(ci)" :disabled="ci >= (selectedBlock?.children?.length ?? 0) - 1" :data-testid="'tb-child-down-' + child.id"
                                                     class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 disabled:opacity-30" title="پایین‌تر">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                                                 </button>
-                                                <button @click="removeChild(ci)"
+                                                <button @click="removeChild(ci)" :data-testid="'tb-child-remove-' + child.id"
                                                     class="w-5 h-5 flex items-center justify-center rounded text-red-400 hover:bg-red-50" title="حذف">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </button>
@@ -1540,6 +1573,46 @@ function canvasEditor() {
             [items[itemIndex], items[target]] = [items[target], items[itemIndex]];
             this.persistStructuredItems(propKey, schemaDef, items);
         },
+        // BLD-11..13: one explicit, bounded extra repeater level for the one
+        // genuinely nested field (nav_footer.columns[].links) — deliberately
+        // not a generic recursive mechanism; these operate on
+        // structuredItems()[itemIndex][fieldKey] directly.
+        nestedItems(propKey, itemIndex, fieldKey) {
+            const items = this.structuredItems(propKey);
+            const raw = items?.[itemIndex]?.[fieldKey];
+            return Array.isArray(raw) ? raw : [];
+        },
+        persistNestedItems(propKey, itemIndex, fieldKey, nestedItems, schemaDef) {
+            const items = this.structuredItems(propKey).map(it => ({ ...it }));
+            if (!items[itemIndex]) return;
+            items[itemIndex] = { ...items[itemIndex], [fieldKey]: nestedItems };
+            this.persistStructuredItems(propKey, schemaDef, items);
+        },
+        addNestedItem(propKey, itemIndex, fieldKey, nestedSchemaDef, schemaDef) {
+            const item = {};
+            for (const [k, def] of Object.entries(nestedSchemaDef?.fields ?? {})) {
+                item[k] = def?.default ?? '';
+            }
+            this.persistNestedItems(propKey, itemIndex, fieldKey, [...this.nestedItems(propKey, itemIndex, fieldKey), item], schemaDef);
+        },
+        updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, value, schemaDef) {
+            const nested = this.nestedItems(propKey, itemIndex, fieldKey).map(it => ({ ...it }));
+            if (!nested[nestedIndex]) return;
+            nested[nestedIndex][nestedFieldKey] = value;
+            this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
+        },
+        removeNestedItem(propKey, itemIndex, fieldKey, nestedIndex, schemaDef) {
+            const nested = [...this.nestedItems(propKey, itemIndex, fieldKey)];
+            nested.splice(nestedIndex, 1);
+            this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
+        },
+        moveNestedItem(propKey, itemIndex, fieldKey, nestedIndex, direction, schemaDef) {
+            const nested = [...this.nestedItems(propKey, itemIndex, fieldKey)];
+            const target = nestedIndex + direction;
+            if (target < 0 || target >= nested.length) return;
+            [nested[nestedIndex], nested[target]] = [nested[target], nested[nestedIndex]];
+            this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
+        },
         isMediaControl(schemaDef, propKey, blockType) {
             // MEDIA-4: every real media-capable prop's canonical schema
             // (BlockRegistry) now declares type:'image' — background_image,
@@ -1665,6 +1738,34 @@ function canvasEditor() {
         addChildBlock(type) {
             if (!this.selectedPath || !this.isContainerType(this.selectedBlock?.type)) return;
             this.addBlock(type, -1, this.selectedPath);
+        },
+
+        // TASK 2A (tabs container authoring fix): a bounded, tabs-specific
+        // shortcut over the exact same canonical mechanism addChildBlock()
+        // above already uses (makeBlock('tab_panel') + push into
+        // selectedBlock.children) — no second content tree, no new prop
+        // shape. It exists only so adding a tab doesn't require opening the
+        // full cross-category block palette and finding "Tab Panel" in it;
+        // a customer just needs an obvious "Add Tab" action. Each new tab
+        // gets a distinct default title (تب ۱, تب ۲, ...) instead of the
+        // generic schema default every tab_panel added via the normal
+        // palette would otherwise share. Deliberately does NOT move
+        // selection onto the new tab_panel the way addChildBlock()/
+        // addBlock() do for every other container's child — staying on the
+        // `tabs` container itself is what lets "افزودن تب" be clicked
+        // repeatedly to add Tab A, Tab B, Tab C in one flow, instead of
+        // forcing a reselect of the tabs container between each add. A
+        // specific tab is selected for editing separately, via its own
+        // row's "ویرایش" button.
+        addTab() {
+            if (!this.selectedPath || this.selectedBlock?.type !== 'tabs') return;
+            this.pushHistory();
+            const block = this.makeBlock('tab_panel');
+            block.props.title = 'تب ' + ((this.selectedBlock.children?.length ?? 0) + 1);
+            if (!this.selectedBlock.children) this.selectedBlock.children = [];
+            this.selectedBlock.children.push(block);
+            this.isDirty = true;
+            this.autoSaveAndReload();
         },
 
         removeSelected() {

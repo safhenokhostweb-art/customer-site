@@ -8,7 +8,34 @@ use App\Models\Setting;
 
 /**
  * Resolves header and footer blocks for the site layout.
- * Priority: Page override (if exists) → Site setting → Platform themeBuilder().
+ *
+ * THEME-03 (Full Product Commercial Audit, TASK 2A) — canonical authority
+ * migration: Header/Footer content now comes exclusively from the
+ * installed Theme's own selectable variants (`active_canvas_theme_data`'s
+ * `header_variants`/`footer_variants`, written by `ThemeInstanceRevisionService`
+ * — see `Theme::getHeaderVariants()` on the saas-platform side for the
+ * matching authoring-time contract). `config/builder-headers.php` and
+ * `config/builder-footers.php` (a second, independently-authored static
+ * content library) are no longer read here — that was the competing
+ * authority this migration closes. Those config files are NOT deleted:
+ * `PageBuilderController::templates()` still legitimately uses them as a
+ * one-time "insert a starter block structure" library (the same role
+ * Elementor's Block Library plays), a genuinely different responsibility
+ * from "what renders live as this page's header," which is what this
+ * service alone decides now.
+ *
+ * Resolution cascade (both header and footer):
+ *   Page variant reference (a stable variant `key`, stored on the Page —
+ *     never literal block content)
+ *   → Site-level default variant reference (`Setting`)
+ *   → the Theme's own designated default variant
+ *   → legacy platform-pushed config (only when no Theme is installed at
+ *     all — the one pre-existing behavior this migration preserves rather
+ *     than breaks for that edge case)
+ *
+ * A reference that doesn't match any current variant (a stale key from a
+ * since-changed Theme) fails safe to the Theme's default variant — never
+ * an exception, never blank chrome.
  */
 class BuilderLayoutService
 {
@@ -18,6 +45,80 @@ class BuilderLayoutService
 
     public const PAGE_OVERRIDE_NONE = '__none__';
 
+    private ?array $activeThemeData = null;
+
+    /**
+     * `active_canvas_theme_data`, decoded once per request. Empty array
+     * when no Theme is currently installed (the setting is unset/blank).
+     */
+    private function activeThemeData(): array
+    {
+        if ($this->activeThemeData !== null) {
+            return $this->activeThemeData;
+        }
+        $raw = Setting::get('active_canvas_theme_data');
+        $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : (is_array($raw) ? $raw : null);
+        return $this->activeThemeData = is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * The installed Theme's selectable Header variants. Always returns at
+     * least one real (never fabricated) variant when a Theme is installed:
+     * either the Theme's own authored `header_variants`, or — for a Theme
+     * that never authored more than one — its single `header_blocks`
+     * synthesized into one implicit default variant, mirroring
+     * `Theme::getHeaderVariants()` on the authoring side exactly. Empty
+     * only when no Theme is installed at all.
+     *
+     * @return list<array{key:string,label:string,blocks:array,is_default:bool}>
+     */
+    public function getHeaderVariants(): array
+    {
+        $themeData = $this->activeThemeData();
+        $variants = $themeData['header_variants'] ?? [];
+        if (!empty($variants)) {
+            return $variants;
+        }
+        if (!empty($themeData['header_blocks'])) {
+            return [['key' => 'default', 'label' => 'پیش‌فرض', 'blocks' => $themeData['header_blocks'], 'is_default' => true]];
+        }
+        return [];
+    }
+
+    /** @see getHeaderVariants() — identical contract, for footers. */
+    public function getFooterVariants(): array
+    {
+        $themeData = $this->activeThemeData();
+        $variants = $themeData['footer_variants'] ?? [];
+        if (!empty($variants)) {
+            return $variants;
+        }
+        if (!empty($themeData['footer_blocks'])) {
+            return [['key' => 'default', 'label' => 'پیش‌فرض', 'blocks' => $themeData['footer_blocks'], 'is_default' => true]];
+        }
+        return [];
+    }
+
+    private function defaultVariant(array $variants): ?array
+    {
+        foreach ($variants as $variant) {
+            if (!empty($variant['is_default'])) {
+                return $variant;
+            }
+        }
+        return $variants[0] ?? null;
+    }
+
+    private function findVariant(array $variants, string $key): ?array
+    {
+        foreach ($variants as $variant) {
+            if (($variant['key'] ?? null) === $key) {
+                return $variant;
+            }
+        }
+        return null;
+    }
+
     /**
      * Resolve header blocks. Pass current Page for page-level override.
      */
@@ -26,21 +127,34 @@ class BuilderLayoutService
         if ($page && $page->builder_disable_header) {
             return [];
         }
-        $templateKey = null;
+
+        $variants = $this->getHeaderVariants();
+        if (empty($variants)) {
+            // No Theme installed at all — the one pre-existing behavior
+            // this migration preserves rather than breaks.
+            return PlatformUx::themeBuilder()['header_blocks'] ?? [];
+        }
+
+        $key = null;
         if ($page && $page->builder_header_template_override !== null && $page->builder_header_template_override !== '') {
-            $templateKey = $page->builder_header_template_override;
+            $key = $page->builder_header_template_override;
         }
-        if ($templateKey === null || $templateKey === '') {
-            $templateKey = Setting::get(self::SETTING_HEADER_TEMPLATE, '');
+        if ($key === null || $key === '') {
+            $key = Setting::get(self::SETTING_HEADER_TEMPLATE, '');
         }
-        if ($templateKey !== '' && $templateKey !== null) {
-            $templates = config('builder-headers.templates', []);
-            if (isset($templates[$templateKey]['blocks'])) {
-                return $templates[$templateKey]['blocks'];
+
+        if ($key !== '' && $key !== null) {
+            $variant = $this->findVariant($variants, $key);
+            if ($variant !== null) {
+                return $variant['blocks'];
             }
+            // Stale/missing reference (the Theme changed, or the variant
+            // was removed since the Page/Site referenced it) — fail safe
+            // to the Theme's own default variant, never an exception and
+            // never blank chrome.
         }
-        $tb = PlatformUx::themeBuilder();
-        return $tb['header_blocks'] ?? [];
+
+        return $this->defaultVariant($variants)['blocks'] ?? [];
     }
 
     /**
@@ -51,21 +165,28 @@ class BuilderLayoutService
         if ($page && $page->builder_disable_footer) {
             return [];
         }
-        $templateKey = null;
+
+        $variants = $this->getFooterVariants();
+        if (empty($variants)) {
+            return PlatformUx::themeBuilder()['footer_blocks'] ?? [];
+        }
+
+        $key = null;
         if ($page && $page->builder_footer_template_override !== null && $page->builder_footer_template_override !== '') {
-            $templateKey = $page->builder_footer_template_override;
+            $key = $page->builder_footer_template_override;
         }
-        if ($templateKey === null || $templateKey === '') {
-            $templateKey = Setting::get(self::SETTING_FOOTER_TEMPLATE, '');
+        if ($key === null || $key === '') {
+            $key = Setting::get(self::SETTING_FOOTER_TEMPLATE, '');
         }
-        if ($templateKey !== '' && $templateKey !== null) {
-            $templates = config('builder-footers.templates', []);
-            if (isset($templates[$templateKey]['blocks'])) {
-                return $templates[$templateKey]['blocks'];
+
+        if ($key !== '' && $key !== null) {
+            $variant = $this->findVariant($variants, $key);
+            if ($variant !== null) {
+                return $variant['blocks'];
             }
         }
-        $tb = PlatformUx::themeBuilder();
-        return $tb['footer_blocks'] ?? [];
+
+        return $this->defaultVariant($variants)['blocks'] ?? [];
     }
 
     /**
@@ -96,54 +217,54 @@ class BuilderLayoutService
     }
 
     /**
-     * List available header template keys and names for admin dropdown (site settings).
+     * List available header variant keys and labels for admin dropdown
+     * (site-level default settings).
      */
     public function getHeaderTemplateOptions(): array
     {
-        $templates = config('builder-headers.templates', []);
-        $out = ['' => '— استفاده از تم پلتفرم —'];
-        foreach ($templates as $key => $t) {
-            $out[$key] = $t['name'] ?? $key;
+        $out = ['' => '— استفاده از پیش‌فرض تم —'];
+        foreach ($this->getHeaderVariants() as $variant) {
+            $out[$variant['key']] = $variant['label'] ?? $variant['key'];
         }
         return $out;
     }
 
     /**
-     * List available footer template keys and names for admin dropdown (site settings).
+     * List available footer variant keys and labels for admin dropdown
+     * (site-level default settings).
      */
     public function getFooterTemplateOptions(): array
     {
-        $templates = config('builder-footers.templates', []);
-        $out = ['' => '— استفاده از تم پلتفرم —'];
-        foreach ($templates as $key => $t) {
-            $out[$key] = $t['name'] ?? $key;
+        $out = ['' => '— استفاده از پیش‌فرض تم —'];
+        foreach ($this->getFooterVariants() as $variant) {
+            $out[$variant['key']] = $variant['label'] ?? $variant['key'];
         }
         return $out;
     }
 
     /**
-     * Options for page-level header override: Use Site Default, No Header, or template 1..10.
+     * Options for page-level header override: Use Site Default, No Header,
+     * or one of the Theme's own selectable variants.
      */
     public function getHeaderOptionsForPage(): array
     {
-        $templates = config('builder-headers.templates', []);
         $out = ['' => 'استفاده از پیش‌فرض سایت'];
-        foreach ($templates as $key => $t) {
-            $out[$key] = $t['name'] ?? $key;
+        foreach ($this->getHeaderVariants() as $variant) {
+            $out[$variant['key']] = $variant['label'] ?? $variant['key'];
         }
         $out[self::PAGE_OVERRIDE_NONE] = 'بدون هدر';
         return $out;
     }
 
     /**
-     * Options for page-level footer override: Use Site Default, No Footer, or template 1..10.
+     * Options for page-level footer override: Use Site Default, No Footer,
+     * or one of the Theme's own selectable variants.
      */
     public function getFooterOptionsForPage(): array
     {
-        $templates = config('builder-footers.templates', []);
         $out = ['' => 'استفاده از پیش‌فرض سایت'];
-        foreach ($templates as $key => $t) {
-            $out[$key] = $t['name'] ?? $key;
+        foreach ($this->getFooterVariants() as $variant) {
+            $out[$variant['key']] = $variant['label'] ?? $variant['key'];
         }
         $out[self::PAGE_OVERRIDE_NONE] = 'بدون فوتر';
         return $out;

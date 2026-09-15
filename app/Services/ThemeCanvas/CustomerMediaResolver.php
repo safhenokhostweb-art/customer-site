@@ -29,6 +29,7 @@ class CustomerMediaResolver
     private const MEDIA_REPEATERS = [
         'gallery' => ['prop' => 'items', 'field' => 'url', 'storage' => 'array'],
         'team_cards' => ['prop' => 'members', 'field' => 'image', 'storage' => 'json'],
+        'slider' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
     ];
 
     public function __construct(private readonly CustomerMediaService $media)

@@ -242,7 +242,11 @@ test.describe('Canvas Extension Bridge — assets', () => {
         await paletteAddButton(page, 'ext:acme:demo_card').click();
         await waitForSaveBlocks(page, () => saveButton(page).click());
         await waitForPublish(page, () => publishButton(page).click());
-        await page.waitForTimeout(900);
+        // TEST-HARNESS-DB-01: removed a fixed 900ms sleep here — the actual
+        // synchronization need (the public page's demo-card.css request
+        // resolving) is already covered deterministically by the
+        // assetResponsePromise wait a few lines below, which does not
+        // depend on a fixed delay.
 
         const assetRequests = [];
         page.on('request', (req) => {

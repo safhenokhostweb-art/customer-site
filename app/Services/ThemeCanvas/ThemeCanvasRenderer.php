@@ -100,17 +100,32 @@ class ThemeCanvasRenderer extends BlockRenderer
     protected function renderModuleBlock(string $type, array $props, string $id): string
     {
         return match (true) {
-            in_array($type, ['module:blog_posts', 'module:blog_featured', 'module:blog_categories'], true)
+            in_array($type, ['module:blog_posts', 'module:blog_featured'], true)
                 => $this->renderModuleBlogPosts($props, $id),
 
-            in_array($type, ['module:shop_product_grid', 'module:shop_product_slider', 'module:products', 'module:product_grid'], true)
+            $type === 'module:blog_categories'
+                => $this->renderModuleBlogCategories($props, $id),
+
+            in_array($type, ['module:shop_product_grid', 'module:products', 'module:product_grid'], true)
                 => $this->renderModuleProductGrid($props, $id),
+
+            $type === 'module:shop_product_slider'
+                => $this->renderModuleProductSlider($props, $id),
 
             $type === 'module:shop_categories'
                 => $this->renderModuleShopCategories($props, $id),
 
             $type === 'module:shop_cart_button'
                 => $this->renderModuleShopCartButton($props, $id),
+
+            $type === 'module:shop_wishlist_icon'
+                => $this->renderModuleShopWishlistIcon($props, $id),
+
+            $type === 'module:loyalty_points_badge'
+                => $this->renderModuleLoyaltyPointsBadge($props, $id),
+
+            $type === 'module:installment_badge'
+                => $this->renderModuleInstallmentBadge($props, $id),
 
             $type === 'module:courses_grid'
                 => $this->renderModuleCoursesGrid($props, $id),
@@ -261,6 +276,118 @@ class ThemeCanvasRenderer extends BlockRenderer
     }
 
     /**
+     * BLD-09 / MOD-04 (Full Product Commercial Audit, TASK 1/3):
+     * `language_switcher` was registered with a real schema and no
+     * renderer anywhere — always empty. A real, working implementation
+     * already exists (`<x-language-switcher>`, backed by the real
+     * `SetLocale` middleware and the named `lang.switch` route) but was
+     * only ever hardcoded into `themes/default/layout.blade.php` — no
+     * site owner could place, move, or remove it without editing the
+     * theme's own Blade file. Reuses that exact canonical component
+     * instead of a second implementation; the hardcoded layout inclusion
+     * is left in place (default/back-compat behavior for themes that
+     * don't opt into the Builder placement), per the "preserve any
+     * required default Theme behavior" scope for this fix.
+     */
+    protected function renderLanguageSwitcher(array $props, string $inner, string $id): string
+    {
+        return "<div id=\"tb-{$id}\" class=\"tb-language-switcher\">" . view('components.language-switcher')->render() . "</div>";
+    }
+
+    /**
+     * BLD-06 (Full Product Commercial Audit, TASK 1/3): `add_to_cart`
+     * (product_id, text) was registered with a real schema and no renderer
+     * anywhere in the class hierarchy — always empty regardless of props.
+     * A real, standalone "Add to Cart" button for one specific product is a
+     * genuine, commercially useful capability (matching WooCommerce's own
+     * Add-to-Cart button widget) distinct from `cart_icon`/
+     * `module:shop_cart_button` (which show the cart's current contents,
+     * not add a specific product to it). Posts through the exact same
+     * `ShopController::addToCart()` endpoint and session-cart contract
+     * every other add-to-cart action in this app already uses.
+     */
+    protected function renderAddToCart(array $props, string $inner, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+
+        $productId = (int) ($props['product_id'] ?? 0);
+        $text = $this->escape($props['text'] ?? 'افزودن به سبد خرید');
+
+        if ($productId <= 0) {
+            return "<div id=\"tb-{$id}\" class=\"tb-add-to-cart tb-empty-state\"><p class=\"tb-text\">محصولی انتخاب نشده است.</p></div>";
+        }
+
+        $product = Product::query()->active()->find($productId);
+        if (!$product) {
+            return "<div id=\"tb-{$id}\" class=\"tb-add-to-cart tb-empty-state\"><p class=\"tb-text\">محصول یافت نشد.</p></div>";
+        }
+
+        // A product with real variants (size/color/...) cannot be safely
+        // added with a single click and no selection — ShopController::
+        // addToCart() itself rejects that (`لطفاً تنوع کالا را انتخاب
+        // کنید`). Link to the real product page instead of rendering a
+        // button that would always fail server-side.
+        if ($product->usesVariants()) {
+            $url = route('shop.show', $product->slug);
+            return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-btn tb-btn-primary tb-add-to-cart-link\">{$text}</a>";
+        }
+
+        $action = e(route('shop.cart.add'));
+        $csrf = csrf_field();
+        $productIdAttr = $this->escapeAttr((string) $product->id);
+
+        return "<form id=\"tb-{$id}\" class=\"tb-add-to-cart\" method=\"post\" action=\"{$action}\">
+            {$csrf}
+            <input type=\"hidden\" name=\"product_id\" value=\"{$productIdAttr}\">
+            <input type=\"hidden\" name=\"quantity\" value=\"1\">
+            <button type=\"submit\" class=\"tb-btn tb-btn-primary\">{$text}</button>
+        </form>";
+    }
+
+    /**
+     * Placeholder re-evaluation, `price_box` (Full Product Commercial
+     * Audit, TASK 2A): the canonical renderer always showed "price will
+     * display once connected to the shop" regardless of `product_id` —
+     * never actually resolved a real price even when one was selected.
+     * Real WooCommerce-style price display: current price, and the
+     * original price struck through when the product is on sale — using
+     * the same `effective_price`/`sale_price` contract `renderAddToCart()`
+     * and the shop pages already use, not a new price calculation.
+     */
+    protected function renderPriceBox(array $props, string $inner, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+
+        $productId = (int) ($props['product_id'] ?? 0);
+        if ($productId <= 0) {
+            return "<div id=\"tb-{$id}\" class=\"tb-price-box tb-empty-state\"><p class=\"tb-text\">محصولی انتخاب نشده است.</p></div>";
+        }
+
+        $product = Product::query()->active()->find($productId);
+        if (!$product) {
+            return "<div id=\"tb-{$id}\" class=\"tb-price-box tb-empty-state\"><p class=\"tb-text\">محصول یافت نشد.</p></div>";
+        }
+
+        $unit = CurrencyHelper::unitLabel();
+        $current = CurrencyHelper::formatPrice($product->effective_price) . ' ' . $unit;
+        $onSale = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
+
+        if ($onSale) {
+            $original = CurrencyHelper::formatPrice($product->price) . ' ' . $unit;
+            return "<div id=\"tb-{$id}\" class=\"tb-price-box\">
+                <span class=\"tb-price-box-original\" style=\"text-decoration:line-through;color:#9ca3af;font-size:0.9em;margin-inline-end:0.5rem;\">{$original}</span>
+                <span class=\"tb-price-box-current\" style=\"color:#dc2626;font-weight:700;\">{$current}</span>
+            </div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-price-box\"><span class=\"tb-price-box-current\" style=\"font-weight:700;\">{$current}</span></div>";
+    }
+
+    /**
      * Builder integrity audit (2026-09-11): customer-site's local
      * 'social_icons' schema (BlockRegistry::all()) declares only a
      * 'style' select — no 'links' field, unlike the canonical shared
@@ -271,11 +398,23 @@ class ThemeCanvasRenderer extends BlockRenderer
      * module:social_links_bar already uses and honors all 3 real style
      * variants, matching the local schema's actual intent instead of the
      * canonical one it silently inherited from.
+     *
+     * BLD-11..13 (Full Product Commercial Audit, TASK 2A-CONTINUATION): an
+     * explicit `links` prop now wins over the global model — this override
+     * previously ignored it unconditionally, so real per-block authored
+     * data (e.g. `nav_footer.social_links`, now a real authored repeater —
+     * see renderNavFooter()'s `renderSocialIcons(['links' => $socialLinks],
+     * ...)` call) could never actually reach the render, a duplicate-
+     * authority gap the audit forbids. The site-wide SocialLink model
+     * remains the fallback only when no explicit links were supplied (the
+     * standalone `social_icons` block's own schema truly has none, per the
+     * original docblock above).
      */
     protected function renderSocialIcons(array $props, string $inner, string $id): string
     {
-        $links = [];
-        if (class_exists(\App\Models\SocialLink::class)) {
+        $links = (is_array($props['links'] ?? null) && !empty($props['links'])) ? $props['links'] : [];
+
+        if (empty($links) && class_exists(\App\Models\SocialLink::class)) {
             $links = \App\Models\SocialLink::orderBy('order')->get()
                 ->map(fn ($l) => ['url' => $l->url, 'label' => $l->title ?? $l->platform ?? ''])->toArray();
         }
@@ -283,7 +422,8 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $style = in_array($props['style'] ?? 'icons', ['buttons', 'text'], true) ? $props['style'] : 'icons';
+        $requestedStyle = $props['style'] ?? 'icons';
+        $style = in_array($requestedStyle, ['buttons', 'text'], true) ? $requestedStyle : 'icons';
         $items = [];
         foreach ($links as $link) {
             $url   = $this->escapeAttr($link['url'] ?? '#');
@@ -351,6 +491,66 @@ class ThemeCanvasRenderer extends BlockRenderer
             <div style=\"text-align:center;margin-top:1.5rem;\">
                 <a href=\"" . e(route('blog.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده همه مطالب</a>
             </div>
+        </div>";
+    }
+
+    /**
+     * BLD-02 (Full Product Commercial Audit, TASK 1/3): `module:blog_categories`
+     * used to be dispatched into renderModuleBlogPosts(), which queries
+     * `Post`, never `Category`, and ignores this type's own `style` field
+     * entirely — a schema/renderer contract mismatch, not a real taxonomy
+     * widget. This queries real categories with real post counts.
+     */
+    protected function renderModuleBlogCategories(array $props, string $id): string
+    {
+        if (!SiteHelper::blogEnabled()) {
+            return '';
+        }
+
+        $title = $this->escape($props['title'] ?? 'دسته‌بندی‌ها');
+        $requestedStyle = $props['style'] ?? 'cards';
+        $style = in_array($requestedStyle, ['cards', 'list', 'badges'], true) ? $requestedStyle : 'cards';
+        $limit = max(1, (int) ($props['limit'] ?? 8));
+
+        $categories = \App\Models\Category::withCount(['posts' => fn ($q) => $q->published()])
+            ->orderBy('order')
+            ->take($limit)
+            ->get()
+            ->filter(fn ($c) => $c->posts_count > 0)
+            ->values();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+
+        if ($categories->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-blog-categories tb-empty-state\">
+                {$titleHtml}
+                <p class=\"tb-text\">هنوز دسته‌بندی‌ای با مطلب منتشرشده وجود ندارد.</p>
+            </div>";
+        }
+
+        $items = [];
+        foreach ($categories as $category) {
+            $url = route('blog.category', $category->slug);
+            $name = $this->escape($category->name);
+            $count = (int) $category->posts_count;
+            $items[] = match ($style) {
+                'list' => "<li><a href=\"{$url}\" class=\"tb-blog-category-list-item\">{$name} <span class=\"tb-blog-category-count\">({$count})</span></a></li>",
+                'badges' => "<a href=\"{$url}\" class=\"tb-blog-category-badge\">{$name} <span class=\"tb-blog-category-count\">{$count}</span></a>",
+                default => "<a href=\"{$url}\" class=\"tb-blog-category-card\"><span class=\"tb-blog-category-name\">{$name}</span><span class=\"tb-blog-category-count\">{$count} مطلب</span></a>",
+            };
+        }
+
+        $wrapClass = match ($style) {
+            'list' => 'tb-blog-category-list',
+            'badges' => 'tb-blog-category-badges',
+            default => 'tb-blog-category-cards',
+        };
+        $wrapTag = $style === 'list' ? 'ul' : 'div';
+        $inner = implode('', $items);
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-blog-categories\">
+            {$titleHtml}
+            <{$wrapTag} class=\"{$wrapClass}\">{$inner}</{$wrapTag}>
         </div>";
     }
 
@@ -423,13 +623,72 @@ class ThemeCanvasRenderer extends BlockRenderer
         </div>";
     }
 
+    /**
+     * BLD-03 (Full Product Commercial Audit, TASK 1/3): `module:shop_product_slider`
+     * used to be dispatched into renderModuleProductGrid() alongside the
+     * plain grid type — its `autoplay` field had no effect and it rendered
+     * a static grid, not a slider, despite its own name/schema. Reuses the
+     * grid's real source-filtering query (including the documented
+     * featured→is_new mapping) but outputs through the existing
+     * renderCarousel() runtime, matching the real autoplay/interval props.
+     */
+    protected function renderModuleProductSlider(array $props, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+
+        $title = $this->escape($props['title'] ?? 'محصولات پیشنهادی');
+        $limit = max(1, (int) ($props['limit'] ?? 6));
+        $source = $props['source'] ?? 'featured';
+
+        $query = Product::query()->active();
+        if ($source === 'featured') {
+            $query->where('is_new', true);
+        }
+        $products = $query->latest()->take($limit)->get();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+
+        if ($products->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}</div>";
+        }
+
+        $slidesHtml = [];
+        foreach ($products as $product) {
+            $url   = route('shop.show', $product->slug);
+            $t     = $this->escape($product->title);
+            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
+            $imgHtml = $product->image
+                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
+                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
+            $slidesHtml[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"max-width:20rem;margin:0 auto;display:block;\">{$imgHtml}
+                <div class=\"tb-product-card-inner\">
+                    <h3 class=\"tb-product-title\">{$t}</h3>
+                    <div class=\"tb-product-price\">{$price}</div>
+                </div>
+            </a>";
+        }
+
+        $carousel = $this->renderCarousel(
+            $slidesHtml,
+            $id . '-track',
+            (bool) ($props['autoplay'] ?? true),
+            (int) ($props['interval'] ?? 5000),
+            'tb-product-slider'
+        );
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}{$carousel}</div>";
+    }
+
     protected function renderModuleShopCategories(array $props, string $id): string
     {
         if (!SiteHelper::shopEnabled()) {
             return '';
         }
         $title      = $this->escape($props['title'] ?? 'دسته‌بندی‌ها');
-        $style      = in_array($props['style'] ?? 'grid', ['list', 'horizontal'], true) ? $props['style'] : 'grid';
+        $requestedStyle = $props['style'] ?? 'grid';
+        $style      = in_array($requestedStyle, ['list', 'horizontal'], true) ? $requestedStyle : 'grid';
         $limit      = max(1, (int) ($props['limit'] ?? 6));
         $showCount  = $props['show_count'] ?? true;
 
@@ -469,7 +728,8 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
         $label   = $this->escape($props['label'] ?? 'سبد خرید');
-        $style   = in_array($props['style'] ?? 'button', ['icon', 'full'], true) ? $props['style'] : 'button';
+        $requestedStyle = $props['style'] ?? 'button';
+        $style   = in_array($requestedStyle, ['icon', 'full'], true) ? $requestedStyle : 'button';
         $cartUrl = route('shop.cart');
         $count   = 0;
         $total   = 0;
@@ -489,6 +749,141 @@ class ThemeCanvasRenderer extends BlockRenderer
             return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link tb-cart-link-full\">🛒 {$label}{$priceHtml} {$badge}</a>";
         }
         return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link\" aria-label=\"{$label}\">🛒 {$label} {$badge}</a>";
+    }
+
+    /**
+     * MOD-01 (Full Product Commercial Audit, TASK 2A): reuses the real,
+     * already-working `ShopWishlistService` (dual guest-session/auth-user
+     * identity, exactly like the cart) for wishlist mode, and the real
+     * `session('shop_compare')` list for compare mode — no new backend
+     * logic, same pattern as renderModuleShopCartButton() above.
+     */
+    protected function renderModuleShopWishlistIcon(array $props, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $mode = ($props['mode'] ?? 'wishlist') === 'compare' ? 'compare' : 'wishlist';
+        $requestedStyle = $props['style'] ?? 'icon';
+        $style = in_array($requestedStyle, ['icon', 'full'], true) ? $requestedStyle : 'icon';
+
+        if ($mode === 'compare') {
+            $label = $this->escape($props['label'] ?? 'مقایسه');
+            $url = route('shop.compare');
+            $count = count(array_unique(array_map('intval', (array) session('shop_compare', []))));
+            $icon = '⚖️';
+        } else {
+            $label = $this->escape($props['label'] ?? 'علاقه‌مندی‌ها');
+            $url = route('shop.wishlist');
+            $count = app(\App\Services\ShopWishlistService::class)->wishlist()->items()->count();
+            $icon = '❤️';
+        }
+
+        $badge = $count > 0
+            ? "<span style=\"background:#ef4444;color:#fff;font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:999px;\">{$count}</span>"
+            : '';
+
+        if ($style === 'icon') {
+            return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-wishlist-link tb-wishlist-link-icon\" aria-label=\"{$label}\">{$icon}{$badge}</a>";
+        }
+        return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-wishlist-link\" aria-label=\"{$label}\">{$icon} {$label} {$badge}</a>";
+    }
+
+    /**
+     * MOD-02 (Full Product Commercial Audit, TASK 2A-CONTINUATION): reuses
+     * the real, already-working InstallmentService/InstallmentPlan backend
+     * (eligiblePlans()/calculate(), the same code the public installment
+     * flow itself uses — InstallmentController::plans()/apply()) — no new
+     * rate/amount/eligibility calculation invented here. `product_id` is a
+     * real author-selected product, same contract as renderAddToCart()/
+     * renderPriceBox() above (an empty-state message, never a fabricated
+     * price, when unselected or the product can't be found). When the
+     * product's current price has no eligible active plan at all (no plans
+     * configured, or the amount falls outside every plan's min/max range),
+     * this renders a real "not available for this product" empty state
+     * rather than an empty/broken badge.
+     */
+    protected function renderModuleInstallmentBadge(array $props, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+
+        $productId = (int) ($props['product_id'] ?? 0);
+        if ($productId <= 0) {
+            return "<div id=\"tb-{$id}\" class=\"tb-installment-badge tb-empty-state\"><p class=\"tb-text\">محصولی انتخاب نشده است.</p></div>";
+        }
+
+        $product = Product::query()->active()->find($productId);
+        if (!$product) {
+            return "<div id=\"tb-{$id}\" class=\"tb-installment-badge tb-empty-state\"><p class=\"tb-text\">محصول یافت نشد.</p></div>";
+        }
+
+        $amount = (int) $product->effective_price;
+        $plans = app(\App\Services\InstallmentService::class)->eligiblePlans($amount);
+
+        if ($plans->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-installment-badge tb-empty-state\"><p class=\"tb-text\">خرید اقساطی برای این محصول در دسترس نیست.</p></div>";
+        }
+
+        $applyUrl = route('installments.apply', ['product_id' => $product->id]);
+        $requestedStyle = $props['style'] ?? 'badge';
+        $style = in_array($requestedStyle, ['badge', 'full'], true) ? $requestedStyle : 'badge';
+        $unit = CurrencyHelper::unitLabel();
+
+        if ($style === 'badge') {
+            $cheapest = $plans->sortBy(fn ($p) => $p->calculate($amount)['monthly_payment'])->first();
+            $monthly = CurrencyHelper::formatPrice($cheapest->calculate($amount)['monthly_payment']) . ' ' . $unit;
+            return "<a id=\"tb-{$id}\" href=\"" . e($applyUrl) . "\" class=\"tb-installment-badge tb-installment-badge-compact\">"
+                . "<span class=\"tb-installment-badge-icon\">💳</span>"
+                . "<span>خرید اقساطی از {$monthly}/ماه</span></a>";
+        }
+
+        $rows = '';
+        foreach ($plans as $plan) {
+            $calc = $plan->calculate($amount);
+            $name = $this->escape($plan->name);
+            $months = (int) $calc['months'];
+            $monthly = CurrencyHelper::formatPrice($calc['monthly_payment']) . ' ' . $unit;
+            $down = CurrencyHelper::formatPrice($calc['down_payment']) . ' ' . $unit;
+            $rows .= "<div class=\"tb-installment-plan-row\">"
+                . "<span class=\"tb-installment-plan-name\">{$name}</span>"
+                . "<span class=\"tb-installment-plan-detail\">{$months} قسط {$monthly} (پیش‌پرداخت {$down})</span></div>";
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-installment-badge tb-installment-badge-full\">"
+            . "<div class=\"tb-installment-plans-list\">{$rows}</div>"
+            . "<a href=\"" . e($applyUrl) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده و ثبت خرید اقساطی</a></div>";
+    }
+
+    /**
+     * MOD-03: real balance via MembershipPointsService::getBalance(), same
+     * icon/badge/link shape as renderModuleShopWishlistIcon(). Points are
+     * tied to a real authenticated user_id (never a guest session), so a
+     * guest sees nothing here — never a fabricated zero balance.
+     */
+    protected function renderModuleLoyaltyPointsBadge(array $props, string $id): string
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return '';
+        }
+
+        $requestedStyle = $props['style'] ?? 'icon';
+        $style = in_array($requestedStyle, ['icon', 'full'], true) ? $requestedStyle : 'icon';
+        $label = $this->escape($props['label'] ?? 'امتیاز من');
+        $url = route('account.points.index');
+        $balance = app(\App\Services\MembershipPointsService::class)->getBalance($user);
+        $icon = '⭐';
+
+        $badge = $balance > 0
+            ? "<span style=\"background:#f59e0b;color:#fff;font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:999px;\">{$balance}</span>"
+            : '';
+
+        if ($style === 'icon') {
+            return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-loyalty-points-link tb-loyalty-points-link-icon\" aria-label=\"{$label}\">{$icon}{$badge}</a>";
+        }
+        return "<a id=\"tb-{$id}\" href=\"{$url}\" class=\"tb-loyalty-points-link\" aria-label=\"{$label}\">{$icon} {$label} {$badge}</a>";
     }
 
     // ── Courses ───────────────────────────────────────────────────────────────
@@ -753,9 +1148,12 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $style = in_array($props['style'] ?? 'horizontal', ['vertical', 'icons-only'], true) ? $props['style'] : 'horizontal';
-        $color = in_array($props['color'] ?? 'brand', ['white', 'dark'], true) ? $props['color'] : 'brand';
-        $size  = in_array($props['size'] ?? 'md', ['sm', 'lg'], true) ? $props['size'] : 'md';
+        $requestedStyle = $props['style'] ?? 'horizontal';
+        $style = in_array($requestedStyle, ['vertical', 'icons-only'], true) ? $requestedStyle : 'horizontal';
+        $requestedColor = $props['color'] ?? 'brand';
+        $color = in_array($requestedColor, ['white', 'dark'], true) ? $requestedColor : 'brand';
+        $requestedSize = $props['size'] ?? 'md';
+        $size  = in_array($requestedSize, ['sm', 'lg'], true) ? $requestedSize : 'md';
 
         $colorCss = ['brand' => 'var(--tb-primary,#4f46e5)', 'white' => '#ffffff', 'dark' => '#111827'][$color];
         $fontSize = ['sm' => '0.85rem', 'md' => '1rem', 'lg' => '1.25rem'][$size];
@@ -835,7 +1233,8 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $title    = $this->escape($props['title'] ?? 'دوستانت را دعوت کن');
         $subtitle = $this->escape($props['subtitle'] ?? 'با معرفی دوستان جایزه بگیر');
-        $style    = in_array($props['style'] ?? 'banner', ['card', 'minimal'], true) ? $props['style'] : 'banner';
+        $requestedStyle = $props['style'] ?? 'banner';
+        $style    = in_array($requestedStyle, ['card', 'minimal'], true) ? $requestedStyle : 'banner';
         $showLink = $props['show_link'] ?? true;
         $link     = $showLink
             ? "<a href=\"" . e(route('account.referrals.index')) . "\" class=\"tb-btn tb-btn-primary\">مشاهده لینک معرفی</a>"
@@ -917,7 +1316,8 @@ class ThemeCanvasRenderer extends BlockRenderer
         $titleHtml = ($showTitle && $title) ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
         $src       = $this->escapeAttr(route('forms.show', $form->slug));
         $frameTitle = $this->escapeAttr($form->title ?? 'فرم');
-        $style     = in_array($props['style'] ?? 'card', ['minimal', 'full'], true) ? $props['style'] : 'card';
+        $requestedStyle = $props['style'] ?? 'card';
+        $style     = in_array($requestedStyle, ['minimal', 'full'], true) ? $requestedStyle : 'card';
 
         $wrapStyle = match ($style) {
             'minimal' => '',
@@ -1037,7 +1437,8 @@ class ThemeCanvasRenderer extends BlockRenderer
         if (!auth()->check()) {
             return '';
         }
-        $style      = in_array($props['style'] ?? 'buttons', ['list', 'dropdown'], true) ? $props['style'] : 'buttons';
+        $requestedStyle = $props['style'] ?? 'buttons';
+        $style      = in_array($requestedStyle, ['list', 'dropdown'], true) ? $requestedStyle : 'buttons';
         $showNotif  = $props['show_notifications'] ?? true;
         $showAvatar = $props['show_avatar'] ?? true;
 
@@ -1135,7 +1536,8 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
         $title       = $this->escape($props['title'] ?? 'مطالب');
         $limit       = max(1, (int) ($props['limit'] ?? 3));
-        $style       = in_array($props['style'] ?? 'cards', ['grid', 'list'], true) ? $props['style'] : 'cards';
+        $requestedStyle = $props['style'] ?? 'cards';
+        $style       = in_array($requestedStyle, ['grid', 'list'], true) ? $requestedStyle : 'cards';
         $showExcerpt = $props['show_excerpt'] ?? true;
 
         $contents = \App\Models\SiteContent::query()
@@ -1226,7 +1628,8 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
         $placeholder = $this->escapeAttr($props['placeholder'] ?? 'جستجو در سایت...');
-        $style       = in_array($props['style'] ?? 'bar', ['card', 'hero'], true) ? $props['style'] : 'bar';
+        $requestedStyle = $props['style'] ?? 'bar';
+        $style       = in_array($requestedStyle, ['card', 'hero'], true) ? $requestedStyle : 'bar';
         $showSuggest = $props['show_suggestions'] ?? true;
         $action      = $this->escapeAttr(route('search.index'));
         $wrapStyle   = $style === 'card'
@@ -1370,15 +1773,58 @@ class ThemeCanvasRenderer extends BlockRenderer
         </div>";
     }
 
+    /**
+     * Builder integrity fix (2026-09-12): a `slider` slide is a plain data
+     * record ({image, title, subtitle, link} — config/builder-elements.php
+     * 'slider'.schema.slides.item_schema), never a self-describing Builder
+     * block. The previous implementation fed each slide into
+     * `renderBlock()`/`ElementSchemaRegistry::validate()` as if it were one
+     * — validation requires a `type` key slides don't have, so every slide
+     * silently rendered as an `[invalid] text` placeholder instead of its
+     * actual content. Slides are built directly from their own fields here,
+     * matching the pattern `renderTestimonialsSlider()`/`renderProductSlider()`
+     * already use correctly for their own repeater/query data.
+     */
     protected function renderSlider(array $props, string $inner, string $id): string
     {
-        // $inner already holds every child slide's rendered HTML
-        // concatenated (renderBlockUnsafe() pre-renders props['slides']
-        // into $inner for container types) — but the carousel needs each
-        // slide as a separate track item, so slides are re-rendered here
-        // individually instead of relying on the flat $inner string.
         $slides = $props['slides'] ?? [];
-        $slidesHtml = array_map(fn (array $slide) => $this->renderBlock($slide), is_array($slides) ? $slides : []);
+        if (!is_array($slides)) {
+            $slides = [];
+        }
+
+        $slidesHtml = [];
+        foreach ($slides as $slide) {
+            if (!is_array($slide)) {
+                continue;
+            }
+
+            // resolveMediaProps() already resolved a canonical {media_id}
+            // shape (via CustomerMediaResolver::MEDIA_REPEATERS['slider'])
+            // to a plain URL string before renderBlock() reached this
+            // method — this method only ever sees a renderable string.
+            $image    = trim((string) ($slide['image'] ?? ''));
+            $title    = $this->escape($slide['title'] ?? '');
+            $subtitle = $this->escape($slide['subtitle'] ?? '');
+            $link     = trim((string) ($slide['link'] ?? ''));
+
+            $imgHtml = $image !== ''
+                ? '<img src="' . $this->escapeAttr($image) . '" alt="' . $this->escapeAttr($slide['title'] ?? '') . '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy">'
+                : '';
+
+            $captionHtml = ($title !== '' || $subtitle !== '')
+                ? '<div class="tb-slide-caption" style="position:relative;z-index:1;padding:2.5rem 1.5rem;color:#fff;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.55);">'
+                    . ($title !== '' ? "<h2 class=\"tb-slide-title\" style=\"margin:0 0 .5rem;font-size:1.75rem;font-weight:700;\">{$title}</h2>" : '')
+                    . ($subtitle !== '' ? "<p class=\"tb-slide-subtitle\" style=\"margin:0;font-size:1.05rem;opacity:.95;\">{$subtitle}</p>" : '')
+                    . '</div>'
+                : '';
+
+            $slideInner = '<div class="tb-slide" style="position:relative;min-height:22rem;display:flex;align-items:center;justify-content:center;background:#111827;overflow:hidden;">'
+                . $imgHtml . $captionHtml . '</div>';
+
+            $slidesHtml[] = $link !== ''
+                ? '<a href="' . $this->escapeUrl($link) . '" class="tb-slide-link" style="display:block;color:inherit;text-decoration:none;">' . $slideInner . '</a>'
+                : $slideInner;
+        }
 
         if (empty($slidesHtml)) {
             return '';

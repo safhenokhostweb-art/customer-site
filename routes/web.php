@@ -231,8 +231,18 @@ Route::middleware('install.check')->group(function () {
         Route::post('/api/revision/{revision}/restore', [PageBuilderController::class, 'restoreRevision'])->name('api.revision.restore');
     });
     // Theme provisioning from saas-platform (uses X-Provision-Secret header, no auth middleware)
+    //
+    // SP-02 (TASK 2-SEC): /api/theme/provision (PageBuilderController::
+    // provisionThemePages() -> ThemePageProvisionService::provision() ->
+    // bare Page::create()) removed. It was a second, independent Theme
+    // page-provision authority reachable only from saas-platform's
+    // ThemePurchaseOrderObserver (marketplace purchase fulfillment) and
+    // bypassed ThemeInstanceRevisionService/CanvasReservedSlugs/revision
+    // history entirely (grep-confirmed no other caller before removal).
+    // That observer now calls the SAME /api/theme/install endpoint below
+    // that manual installs already use, via saas-platform's
+    // ThemeInstallGateway. THEME_INSTALL_MUTATION_AUTHORITIES = 1.
     Route::middleware('provision.secret')->prefix('builder')->name('builder.')->group(function () {
-        Route::post('/api/theme/provision', [PageBuilderController::class, 'provisionThemePages'])->name('api.theme.provision');
         Route::post('/api/theme/unprotect', [PageBuilderController::class, 'unprotectThemePages'])->name('api.theme.unprotect');
         Route::post('/api/theme/install', [PageBuilderController::class, 'installTheme'])->name('api.theme.install');
     });

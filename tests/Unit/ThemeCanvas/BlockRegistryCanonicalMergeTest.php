@@ -28,7 +28,19 @@ class BlockRegistryCanonicalMergeTest extends TestCase
         // host (Portfolio, Service), so the type could never render real
         // data — 'gallery'/'bento_grid' and 'services_cards'/'service_cards'
         // already cover the static/editor-entered equivalent.
-        $deliberatelyExcluded = ['module:gallery_widget', 'module:portfolio_grid', 'module:services_section'];
+        //
+        // TASK 2A: 'products' (BLD-10) and 'team' (placeholder
+        // re-evaluation) are excluded for the identical reason — each is a
+        // duplicate authority for a responsibility a real, production-ready
+        // canonical type already covers (module:shop_product_grid/
+        // product_grid for 'products'; team_cards for 'team', which never
+        // had a backing data model and could only ever render the honest
+        // placeholder hint). See BlockRegistry::all()'s own inline comments
+        // at the two unset() calls for the full reasoning.
+        $deliberatelyExcluded = [
+            'module:gallery_widget', 'module:portfolio_grid', 'module:services_section',
+            'products', 'team',
+        ];
 
         $missing = array_diff($canonicalTypes, $hostTypes, $deliberatelyExcluded);
 
@@ -47,6 +59,13 @@ class BlockRegistryCanonicalMergeTest extends TestCase
         $this->assertArrayNotHasKey('module:gallery_widget', BlockRegistry::all());
         $this->assertArrayNotHasKey('module:portfolio_grid', BlockRegistry::all());
         $this->assertArrayNotHasKey('module:services_section', BlockRegistry::all());
+
+        // TASK 2A: same rule for 'products' (BLD-10) and 'team' — the
+        // canonical package still declares both for its own paused preview
+        // UI, but this host explicitly de-exposes them as duplicate
+        // authorities (module:shop_product_grid/product_grid; team_cards).
+        $this->assertArrayNotHasKey('products', BlockRegistry::all());
+        $this->assertArrayNotHasKey('team', BlockRegistry::all());
     }
 
     public function test_empty_output_policy_delegates_to_the_canonical_authority(): void

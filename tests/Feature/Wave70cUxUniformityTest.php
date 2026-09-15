@@ -103,11 +103,20 @@ class Wave70cUxUniformityTest extends TestCase
 
     public function test_placeholder_platform_module_page_shows_coming_soon_banner(): void
     {
-        // `analytics.index` resolves to PlatformModuleController::show with
-        // a route-default `slug=analytics`. The slug is listed in
-        // PlatformModuleController::MODULE_GUIDES, so the page renders the
-        // placeholder template and must now carry the Coming Soon banner.
-        $response = $this->actingAs($this->admin)->get(route('admin.analytics.index'));
+        // TEST-HARNESS-DB-01: `analytics` is no longer in
+        // PlatformModuleController::MODULE_GUIDES — it was deliberately
+        // removed (see that constant's own comment) once
+        // admin.analytics.index started pointing at the real
+        // AnalyticsDashboardController, which was a second, unguarded
+        // authority for the same route name. This test predates that fix
+        // and still exercised the old (now 404) mapping. 'announcements' is
+        // still a genuine PlatformModuleController::show placeholder route,
+        // but it isn't among the modules SeedsValidLicenseWithShop grants —
+        // EnsureModuleEnabled bypasses module-gating entirely for an owner
+        // site (the platform's own install), which is fine here: this test
+        // is about the placeholder UI, not license gating.
+        config(['site.owner_site' => true]);
+        $response = $this->actingAs($this->admin)->get(route('admin.announcements.index'));
         $response->assertOk();
         $response->assertSee('admin-coming-soon-banner', false);
         $response->assertSee('admin-coming-soon-badge', false);

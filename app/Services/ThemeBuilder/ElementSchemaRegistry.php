@@ -17,27 +17,69 @@ class ElementSchemaRegistry
 
     public function __construct()
     {
-        // Phase 3E-H-B: existing config remains sole authority for every
-        // existing type — `+` keeps the LEFT operand (config) on any key
-        // collision, and by construction (3E-B) an `ext:*` key can never
-        // collide with a bare production key anyway. Only registered
-        // extension definitions (never canonical-adapter/host-only
-        // built-ins) are added, so a currently-unregistered/unknown `ext:*`
-        // type still correctly fails this gate exactly as before.
-        // Canvas is the authoring palette used by tenant administrators.  Its
-        // control definitions are therefore also the only trustworthy shape
-        // for a block created by that palette.  Previously the renderer used
-        // this legacy config-only list, so dozens of visible Canvas blocks
-        // were rejected as "Unknown element type" immediately after insert.
+        // BLD-14 (Full Product Commercial Audit, TASK 1/3) — documented
+        // precedence contract, replacing the prior whole-type `+` merge.
         //
-        // This is deliberately a projection into the existing validator, not
-        // another registry or validator: BlockRegistry remains the owner of
-        // Canvas block metadata and this class remains the sole save/render
-        // validation gate.
-        $this->schemas = $this->canvasSchemas()
-            + $this->productionPaletteSchemas()
-            + config('builder-element-schemas.elements', [])
-            + \App\Builder\Extension\ProductionBuilderAdapter::schemas();
+        // The intended rule has always been two separate concerns that a
+        // single `array1 + array2` cannot express at once:
+        //
+        //   1. TYPE EXISTENCE: a type is known if ANY source declares it.
+        //      Canvas is the authoring palette tenant admins actually use,
+        //      so a Canvas-createable type must never be "Unknown element
+        //      type" here merely because config/builder-element-schemas.php
+        //      hasn't been hand-written for it yet (the original Phase
+        //      3E-H-B bug this file's history already fixed once).
+        //   2. PER-FIELD TYPE CONTRACT: when the SAME field of the SAME
+        //      type is declared by more than one source, the deliberate,
+        //      hand-authored contract in `config('builder-element-schemas')`
+        //      must win — never a coarser, generically-inferred type
+        //      derived from a Canvas UI *control* kind (e.g. a `textarea`
+        //      control being inferred as `string` when the real prop is a
+        //      JSON-encoded array, or a `select` control being inferred as
+        //      the catch-all `mixed`, silently disabling validation).
+        //
+        // The prior `canvasSchemas() + ...` order got (1) right but broke
+        // (2) for every type declared in both places (found via
+        // `client_logos.logos` and `heading.level`, both silently coerced
+        // to a Canvas-inferred type that accepted or rejected the wrong
+        // shape). `mergeSchemaSources()` below keeps (1) as a union while
+        // restoring (2): earlier sources in the list win field-by-field;
+        // later sources only fill in types/fields no earlier source
+        // declares. `ext:*` types never collide with canonical keys by
+        // construction (Phase 3E-B), so their relative position doesn't
+        // matter for (2).
+        $this->schemas = $this->mergeSchemaSources([
+            config('builder-element-schemas.elements', []),
+            \App\Builder\Extension\ProductionBuilderAdapter::schemas(),
+            $this->canvasSchemas(),
+            $this->productionPaletteSchemas(),
+        ]);
+    }
+
+    /**
+     * Merge schema sources with per-field precedence (see the precedence
+     * contract documented in __construct()): the first source in $sources
+     * to declare a given type keeps that type's own `type`/`styles`/
+     * `children`, and wins per-field for `props`; every later source only
+     * contributes props the winning source didn't already declare.
+     */
+    private function mergeSchemaSources(array $sources): array
+    {
+        $merged = [];
+        foreach ($sources as $source) {
+            foreach ($source as $type => $definition) {
+                if (!isset($merged[$type])) {
+                    $merged[$type] = $definition;
+                    continue;
+                }
+                foreach (($definition['props'] ?? []) as $propName => $rule) {
+                    if (!array_key_exists($propName, $merged[$type]['props'] ?? [])) {
+                        $merged[$type]['props'][$propName] = $rule;
+                    }
+                }
+            }
+        }
+        return $merged;
     }
 
     /** @return array<string, array{type:string, props:array, styles:array, children:string}> */
@@ -237,6 +279,23 @@ class ElementSchemaRegistry
                 return is_bool($value);
             case 'array':
                 return is_array($value);
+            case 'json_array':
+                // BLD-14 follow-up: a Canvas `textarea` control authoring a
+                // repeater-shaped value (e.g. client_logos.logos,
+                // stats_row.stats) persists its DEFAULT as a JSON-encoded
+                // string by construction (BlockRegistry's own defaultProps),
+                // while a value built via the structured repeater UI, or
+                // saved after decode/re-encode, may already be a real PHP
+                // array. Every consumer of these props already accepts
+                // both shapes (see e.g. renderClientLogos()'s
+                // `is_array($raw) ? $raw : json_decode(...)`) — this type
+                // makes the validator agree with what the renderer already
+                // does, instead of rejecting one of the two shapes it
+                // actually has to handle.
+                if (is_array($value)) {
+                    return true;
+                }
+                return is_string($value) && json_validate($value) && is_array(json_decode($value, true));
             case 'media':
                 // Canonical: {"media_id": "<uuid>"}. Transitional: a legacy
                 // URL/path string. Never a bare array without media_id —

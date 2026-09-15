@@ -8,6 +8,7 @@ use App\Models\Page;
 use App\Models\PageRevision;
 use App\Models\PageTemplate;
 use App\Support\CanvasReservedSlugs;
+use App\Services\BuilderLayoutService;
 use App\Services\ThemeBuilder\BlockRenderer;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemePageProvisionService;
@@ -29,7 +30,7 @@ class PageBuilderController extends Controller
      * Show the builder UI for a page (full-screen overlay editor).
      * Uses builder_content_v2 when present, else builder_content (v1).
      */
-    public function edit(Page $page)
+    public function edit(Page $page, BuilderLayoutService $layoutService)
     {
         [$blockLabels, $blockSchemas, $byCategory] = $this->buildRegistryData();
 
@@ -42,6 +43,24 @@ class PageBuilderController extends Controller
             $initialBlocks = $raw['sections'];
         } else {
             $initialBlocks = [];
+        }
+
+        // UI-C5: the canonical Page Builder is now the ONE entry point for
+        // every normal Page edit — including a page still on the legacy
+        // TinyMCE `body` editor, which has no blocks yet. Opening an empty
+        // canvas for a page that visibly HAS content on the public site
+        // would look like data loss, not a fresh page. Seed one real,
+        // editable `text` block from the existing body HTML (its renderer
+        // already sanitizes `content` as real HTML — see renderText()) so
+        // the admin sees their actual content immediately, in canonical
+        // form, the very first time they open this page in the builder.
+        // Never runs again once the page has any real blocks.
+        if (empty($initialBlocks) && $page->builder_type === Page::BUILDER_TYPE_LEGACY && trim((string) $page->body) !== '') {
+            $initialBlocks = [[
+                'id' => 'legacy_body_' . $page->id,
+                'type' => 'text',
+                'props' => ['content' => $page->body],
+            ]];
         }
 
         return view('builder.edit', [
@@ -64,6 +83,11 @@ class PageBuilderController extends Controller
             'pageShowInMenu'   => (bool) $page->show_in_menu,
             'pageMetaTitle'    => $page->meta_title ?? '',
             'pageMetaDesc'     => $page->meta_description ?? '',
+            'pageOrder'        => (int) $page->order,
+            'pageHeaderOverride' => $page->builder_disable_header ? BuilderLayoutService::PAGE_OVERRIDE_NONE : ($page->builder_header_template_override ?? ''),
+            'pageFooterOverride' => $page->builder_disable_footer ? BuilderLayoutService::PAGE_OVERRIDE_NONE : ($page->builder_footer_template_override ?? ''),
+            'headerOptions'    => $layoutService->getHeaderOptionsForPage(),
+            'footerOptions'    => $layoutService->getFooterOptionsForPage(),
             'contentType'      => 'page',
             'adminUrl'         => route('admin.pages.edit', $page),
             'listPagesUrl'     => route('builder.api.pages'),
@@ -161,15 +185,72 @@ class PageBuilderController extends Controller
     /**
      * API: Save builder content (flat blocks format: {blocks:[...]}).
      * Automatically creates a revision before overwriting.
+     *
+     * TEST-HARNESS-DB-01 (Builder nested-save data-integrity fix): this used
+     * to validate with `$request->validate(['blocks.*.id'=>..., 'blocks.*.
+     * type'=>..., 'blocks.*.props'=>...])` — Laravel's validator only keeps
+     * input covered by a rule, and nothing here had a rule for nested
+     * `blocks.*.blocks` (a container's own children), so every level of
+     * nesting below the top block was silently dropped before it ever
+     * reached persistence. Real admin content (a heading inside a column
+     * inside a row inside a section) was being lost on save.
+     *
+     * Fixed by validating the RAW nested input through the canonical,
+     * already-recursive block-tree authority
+     * (App\Services\ThemeBuilder\ElementSchemaRegistry::validate() — the
+     * same validator BlockRenderer already uses at render time, and the one
+     * ProductionBuilderAdapterTest already proves converges the Canvas/
+     * extension/legacy-config schema sources into one canonical set), never
+     * Laravel's flat per-field rules. It already bounds recursion depth via
+     * config('builder-element-schemas.limits.children_max_depth'); a total-
+     * block-count bound is added below for the same reason a wide-but-
+     * shallow tree needs bounding too. No new validation authority: this is
+     * the one canonical validator, reused, not duplicated.
      */
     public function update(Request $request, Page $page): JsonResponse
     {
-        $data = $request->validate([
-            'blocks'   => 'required|array',
-            'blocks.*.id'    => 'nullable|string',
-            'blocks.*.type'  => 'nullable|string',
-            'blocks.*.props' => 'sometimes|array',
-        ]);
+        $request->validate(['blocks' => 'required|array']);
+        // Raw input, not validate()'s return — see docblock above for why.
+        $blocks = $request->input('blocks');
+
+        $maxBlocks = config('builder-element-schemas.limits.total_blocks_max', 500);
+        $totalBlocks = self::countBlocksRecursively($blocks);
+        if ($totalBlocks > $maxBlocks) {
+            return response()->json([
+                'success' => false,
+                'errors' => ["Too many blocks ({$totalBlocks}); maximum is {$maxBlocks}."],
+            ], 422);
+        }
+
+        $registry = new \App\Services\ThemeBuilder\ElementSchemaRegistry();
+        $errors = [];
+        foreach ($blocks as $index => $block) {
+            if (!is_array($block)) {
+                $errors[] = "[block {$index}] Block at index {$index} is invalid.";
+                continue;
+            }
+            // ext:* blocks are a separate, already-correct authority
+            // (App\Builder\Extension\ExtensionBlockReconciler + ElementRegistry,
+            // invoked below): unlike a canonical type, an ext:* block can be
+            // legitimately UNKNOWN to this registry right now — its provider
+            // may simply not be booted this request — and the reconciler's
+            // own job is deciding what to do about that (preserve an
+            // existing persisted one unchanged, reject a brand-new one).
+            // Validating it here too would reject the exact "extension
+            // temporarily unavailable, preserve prior content" case that
+            // logic exists for.
+            if (str_starts_with($block['type'] ?? '', 'ext:')) {
+                continue;
+            }
+            if (!$registry->validate($block)) {
+                foreach ($registry->getLastErrors() ?: ["Block at index {$index} is invalid."] as $err) {
+                    $errors[] = "[block {$index}] {$err}";
+                }
+            }
+        }
+        if (!empty($errors)) {
+            return response()->json(['success' => false, 'errors' => $errors], 422);
+        }
 
         // Save revision of previous content before overwriting
         $previousContent = $page->builder_content_v2;
@@ -186,12 +267,29 @@ class PageBuilderController extends Controller
                 ->delete();
         }
 
-        $content = ['blocks' => \App\Builder\Extension\ExtensionBlockReconciler::reconcile($data['blocks'], $previousContent['blocks'] ?? [])];
+        $content = ['blocks' => \App\Builder\Extension\ExtensionBlockReconciler::reconcile($blocks, $previousContent['blocks'] ?? [])];
         $page->update([
             'builder_content_v2' => $content,
             'builder_type'       => Page::BUILDER_TYPE_BUILDER,
         ]);
         return response()->json(['success' => true]);
+    }
+
+    /** Pure in-memory recursive count — no DB/service resolution, cost bounded by the submitted tree size. */
+    private static function countBlocksRecursively(array $blocks): int
+    {
+        $count = 0;
+        foreach ($blocks as $block) {
+            if (!is_array($block)) {
+                continue;
+            }
+            $count++;
+            $children = $block['blocks'] ?? $block['children'] ?? [];
+            if (is_array($children)) {
+                $count += self::countBlocksRecursively($children);
+            }
+        }
+        return $count;
     }
 
     /** List page revisions for the last 7 days. */
@@ -242,24 +340,14 @@ class PageBuilderController extends Controller
     }
 
     /** Provision theme pages into the local pages table (called from saas-platform). */
-    public function provisionThemePages(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'theme_id'    => 'required|string|max:100',
-            'theme_name'  => 'required|string|max:255',
-            'pages'       => 'required|array',
-        ]);
-
-        $service = app(ThemePageProvisionService::class);
-        $result  = $service->provision($data['theme_id'], $data['theme_name'], $data['pages']);
-
-        return response()->json([
-            'success'  => true,
-            'created'  => $result['created'],
-            'skipped'  => $result['skipped'],
-            'pages'    => $result['pages'] ?? [],
-        ]);
-    }
+    // provisionThemePages() — REMOVED (SP-02, TASK 2-SEC). It called
+    // ThemePageProvisionService::provision() (bare Page::create(), its own
+    // hand-rolled slug-uniqueness loop) — a second, independent Theme
+    // page-provision authority alongside installTheme() below, reachable
+    // only from saas-platform's ThemePurchaseOrderObserver (marketplace
+    // purchase fulfillment), which now calls installTheme() via the same
+    // canonical ThemeInstallGateway manual installs use. Confirmed
+    // unreachable from anywhere else before removal.
 
     /** Unprotect pages of a theme (called when theme is unassigned). */
     public function unprotectThemePages(Request $request): JsonResponse
@@ -290,6 +378,11 @@ class PageBuilderController extends Controller
             'source_release_id'     => 'nullable|integer',
             'header_blocks'         => 'nullable|array',
             'footer_blocks'         => 'nullable|array',
+            // THEME-03 (Full Product Commercial Audit, TASK 2A): Theme-
+            // owned selectable Header/Footer variants, additive alongside
+            // the flat header_blocks/footer_blocks above.
+            'header_variants'       => 'nullable|array',
+            'footer_variants'       => 'nullable|array',
             'pages'                 => 'required|array',
             'global_styles'         => 'nullable|array',
             'extension_assets'      => 'nullable|array',
@@ -300,6 +393,8 @@ class PageBuilderController extends Controller
             'slug'             => $data['theme_id'],
             'header_blocks'    => $data['header_blocks'] ?? [],
             'footer_blocks'    => $data['footer_blocks'] ?? [],
+            'header_variants'  => $data['header_variants'] ?? [],
+            'footer_variants'  => $data['footer_variants'] ?? [],
             'pages'            => $data['pages'],
             'global_styles'    => $data['global_styles'] ?? [],
             'extension_assets' => $data['extension_assets'] ?? [],
@@ -444,16 +539,25 @@ class PageBuilderController extends Controller
         ]);
     }
 
-    /** Update page settings (title, slug, SEO, published, show_in_menu). */
+    /**
+     * Update page settings (title, slug, SEO, published, show_in_menu,
+     * order, header/footer override). UI-C5: this is now the ONE canonical
+     * settings-write path for a Page — it absorbed the fields that used to
+     * be exclusive to the legacy admin.pages.edit form (order, header/
+     * footer override) so that form no longer has any unique responsibility.
+     */
     public function updatePageSettings(Request $request, Page $page): JsonResponse
     {
         $data = $request->validate([
-            'title'            => 'sometimes|string|max:255',
-            'slug'             => 'sometimes|string|max:255|unique:pages,slug,' . $page->id,
-            'is_published'     => 'sometimes|boolean',
-            'show_in_menu'     => 'sometimes|boolean',
-            'meta_title'       => 'sometimes|nullable|string|max:255',
-            'meta_description' => 'sometimes|nullable|string|max:500',
+            'title'                    => 'sometimes|string|max:255',
+            'slug'                     => 'sometimes|string|max:255|unique:pages,slug,' . $page->id,
+            'is_published'             => 'sometimes|boolean',
+            'show_in_menu'             => 'sometimes|boolean',
+            'meta_title'               => 'sometimes|nullable|string|max:255',
+            'meta_description'         => 'sometimes|nullable|string|max:500',
+            'order'                    => 'sometimes|integer|min:0',
+            'builder_header_override'  => 'sometimes|nullable|string|max:64',
+            'builder_footer_override'  => 'sometimes|nullable|string|max:64',
         ]);
 
         // Same rejection as createPage(): renaming into a canvas-owned slug
@@ -468,7 +572,29 @@ class PageBuilderController extends Controller
             ], 422);
         }
 
+        if (array_key_exists('builder_header_override', $data)) {
+            if ($data['builder_header_override'] === \App\Services\BuilderLayoutService::PAGE_OVERRIDE_NONE) {
+                $data['builder_disable_header'] = true;
+                $data['builder_header_template_override'] = null;
+            } else {
+                $data['builder_disable_header'] = false;
+                $data['builder_header_template_override'] = $data['builder_header_override'] ?: null;
+            }
+            unset($data['builder_header_override']);
+        }
+        if (array_key_exists('builder_footer_override', $data)) {
+            if ($data['builder_footer_override'] === \App\Services\BuilderLayoutService::PAGE_OVERRIDE_NONE) {
+                $data['builder_disable_footer'] = true;
+                $data['builder_footer_template_override'] = null;
+            } else {
+                $data['builder_disable_footer'] = false;
+                $data['builder_footer_template_override'] = $data['builder_footer_override'] ?: null;
+            }
+            unset($data['builder_footer_override']);
+        }
+
         $page->update($data);
+        $page->refresh();
 
         return response()->json([
             'success' => true,
@@ -478,6 +604,9 @@ class PageBuilderController extends Controller
                 'slug'         => $page->slug,
                 'is_published' => (bool) $page->is_published,
                 'show_in_menu' => (bool) $page->show_in_menu,
+                'order'        => (int) $page->order,
+                'builder_header_override' => $page->builder_disable_header ? \App\Services\BuilderLayoutService::PAGE_OVERRIDE_NONE : ($page->builder_header_template_override ?? ''),
+                'builder_footer_override' => $page->builder_disable_footer ? \App\Services\BuilderLayoutService::PAGE_OVERRIDE_NONE : ($page->builder_footer_template_override ?? ''),
                 'view_url'     => route('page.show', $page->slug),
             ],
         ]);
