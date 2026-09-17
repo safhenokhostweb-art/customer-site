@@ -70,11 +70,18 @@ class BuilderLayoutService
      * `Theme::getHeaderVariants()` on the authoring side exactly. Empty
      * only when no Theme is installed at all.
      *
+     * @param array|null $themeData Pass the caller's own already-loaded
+     *   theme data (same shape as active_canvas_theme_data) to resolve
+     *   against that instead of re-fetching via Setting::get() — needed by
+     *   callers (e.g. ThemeCanvasPageController) that load theme data
+     *   through their own short-TTL cache specifically to see a fresh
+     *   install/publish sooner than the 1-hour Setting cache would.
+     *   Defaults to this service's own activeThemeData() otherwise.
      * @return list<array{key:string,label:string,blocks:array,is_default:bool}>
      */
-    public function getHeaderVariants(): array
+    public function getHeaderVariants(?array $themeData = null): array
     {
-        $themeData = $this->activeThemeData();
+        $themeData = $themeData ?? $this->activeThemeData();
         $variants = $themeData['header_variants'] ?? [];
         if (!empty($variants)) {
             return $variants;
@@ -86,9 +93,9 @@ class BuilderLayoutService
     }
 
     /** @see getHeaderVariants() — identical contract, for footers. */
-    public function getFooterVariants(): array
+    public function getFooterVariants(?array $themeData = null): array
     {
-        $themeData = $this->activeThemeData();
+        $themeData = $themeData ?? $this->activeThemeData();
         $variants = $themeData['footer_variants'] ?? [];
         if (!empty($variants)) {
             return $variants;
@@ -120,15 +127,17 @@ class BuilderLayoutService
     }
 
     /**
-     * Resolve header blocks. Pass current Page for page-level override.
+     * Resolve header blocks. Pass current Page for page-level override, and
+     * $themeData to resolve against a caller-supplied theme data array (see
+     * getHeaderVariants()) instead of this service's own Setting-cached read.
      */
-    public function getHeaderBlocks(?Page $page = null): array
+    public function getHeaderBlocks(?Page $page = null, ?array $themeData = null): array
     {
         if ($page && $page->builder_disable_header) {
             return [];
         }
 
-        $variants = $this->getHeaderVariants();
+        $variants = $this->getHeaderVariants($themeData);
         if (empty($variants)) {
             // No Theme installed at all — the one pre-existing behavior
             // this migration preserves rather than breaks.
@@ -158,15 +167,17 @@ class BuilderLayoutService
     }
 
     /**
-     * Resolve footer blocks. Pass current Page for page-level override.
+     * Resolve footer blocks. Pass current Page for page-level override, and
+     * $themeData to resolve against a caller-supplied theme data array (see
+     * getHeaderVariants()) instead of this service's own Setting-cached read.
      */
-    public function getFooterBlocks(?Page $page = null): array
+    public function getFooterBlocks(?Page $page = null, ?array $themeData = null): array
     {
         if ($page && $page->builder_disable_footer) {
             return [];
         }
 
-        $variants = $this->getFooterVariants();
+        $variants = $this->getFooterVariants($themeData);
         if (empty($variants)) {
             return PlatformUx::themeBuilder()['footer_blocks'] ?? [];
         }

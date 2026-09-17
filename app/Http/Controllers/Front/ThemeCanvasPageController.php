@@ -85,8 +85,19 @@ class ThemeCanvasPageController extends Controller
     {
         $this->prepareRenderer($themeData);
 
-        $headerHtml  = $this->renderer->renderBlocks($themeData['header_blocks'] ?? []);
-        $footerHtml  = $this->renderer->renderBlocks($themeData['footer_blocks'] ?? []);
+        // TASK 3/3 Phase 4: resolve through BuilderLayoutService's real
+        // variant-selection logic (site-level default header/footer choice,
+        // THEME-03's selectable header_variants/footer_variants) instead of
+        // always rendering the theme's flat header_blocks/footer_blocks —
+        // previously the only Theme-owned variants a Canvas-installed
+        // theme ever had were persisted, never actually selectable on the
+        // public site. $themeData is passed through explicitly (not left
+        // to BuilderLayoutService's own Setting::get() fetch) so this stays
+        // on the same short-TTL, install-visible-within-60s data source
+        // loadThemeData() above already uses, not the 1-hour settings cache.
+        $layoutService = app(\App\Services\BuilderLayoutService::class);
+        $headerHtml  = $this->renderer->renderBlocks($layoutService->getHeaderBlocks(null, $themeData));
+        $footerHtml  = $this->renderer->renderBlocks($layoutService->getFooterBlocks(null, $themeData));
         $contentHtml = $this->renderer->renderBlocks($blocks);
 
         // Phase 3F-C — HasAssets bridge for the real public Canvas render,
