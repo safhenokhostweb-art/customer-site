@@ -449,7 +449,10 @@ class PageBuilderController extends Controller
         $blocks = is_array($blocks) ? $blocks : [];
 
         $renderer = app(BlockRenderer::class);
-        $renderer->setContext(['menu_html' => '']);
+        // TASK 3/3 Phase 6.5B — see the matching comment in
+        // ContentBuilderController::preview(): was hardcoded empty, now
+        // real (draft-inclusive) Menu content via the canonical MenuService.
+        $renderer->setContext(['menu_html' => app(\App\Services\MenuService::class)->renderMenuHtml('primary', admin: true)]);
 
         // Builder mode: return per-block HTML array for live iframe canvas
         if ($request->input('mode') === 'builder') {

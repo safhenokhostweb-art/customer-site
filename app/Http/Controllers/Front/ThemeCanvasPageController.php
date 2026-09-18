@@ -124,27 +124,9 @@ class ThemeCanvasPageController extends Controller
     {
         $this->renderer->setThemeData($themeData);
         $this->renderer->setContext([
-            'menu_html'   => $this->buildMenuHtml(),
+            'menu_html'   => $this->menuService->renderMenuHtml('primary', admin: false),
             'site_name'   => SiteHelper::siteName(),
         ]);
-    }
-
-    private function buildMenuHtml(): string
-    {
-        $primaryMenu = $this->menuService->getMenuForLocation('primary');
-
-        if ($primaryMenu) {
-            return view('partials.site-menu', [
-                'menu'    => $primaryMenu,
-                'variant' => 'nav',
-                'items'   => $this->menuService->buildMenuTree($primaryMenu),
-            ])->render();
-        }
-
-        return view('partials.platform-menu', [
-            'location' => 'header',
-            'variant'  => 'nav',
-        ])->render();
     }
 
     // ── Theme data ────────────────────────────────────────────────────────────

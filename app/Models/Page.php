@@ -78,4 +78,27 @@ class Page extends Model
     {
         return $query->where('show_in_menu', true)->orderBy('order');
     }
+
+    /**
+     * TASK 3/3 Phase 6.5B (BLD-22) — MenuService::buildMenuTree() caches
+     * the fully RESOLVED tree, including each internal_page MenuItem's
+     * resolveUrl() output (i.e. this Page's slug at cache-build time), for
+     * up to an hour. Without this hook, renaming a Page's slug left every
+     * Menu referencing it silently serving a stale, wrong (eventually
+     * 404ing) URL until that cache happened to expire — a real regression
+     * a customer would experience as "I renamed a page and now my own menu
+     * link is broken." A model-level hook (not a per-controller fix) is
+     * the canonical place: every current and future write path that
+     * changes a Page's slug (admin Page edit, Builder's own page-settings
+     * API, bulk tools, …) is covered automatically, with no risk of a new
+     * caller forgetting to invalidate the cache by hand.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $page) {
+            if ($page->wasChanged('slug')) {
+                app(\App\Services\MenuService::class)->clearMenuCache();
+            }
+        });
+    }
 }

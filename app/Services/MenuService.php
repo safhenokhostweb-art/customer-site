@@ -203,6 +203,41 @@ class MenuService
         return Menu::forLocation($location, $siteId);
     }
 
+    /**
+     * TASK 3/3 Phase 6.5B — the single canonical place that turns a Menu
+     * location into real, rendered nav HTML (partials.site-menu, falling
+     * back to partials.platform-menu when no customer Menu exists for that
+     * location yet). Previously this logic was duplicated inline only in
+     * ThemeCanvasPageController (the public render), which is why every
+     * OTHER render path (Theme Canvas / Page Builder admin preview) fell
+     * back to an empty string instead of real menu content — a real,
+     * previously-undiscovered preview gap, not by design. Both the real
+     * public render and every admin preview now call this one method.
+     *
+     * $admin=true resolves the location's current menu INCLUDING an unpublished
+     * draft (Menu::forLocation, matching draft-first Theme Canvas preview
+     * semantics — a preview should show what you're about to publish, not
+     * what's already live); $admin=false (public render) only ever resolves
+     * an actually-published menu.
+     */
+    public function renderMenuHtml(string $location = 'primary', bool $admin = false, ?int $siteId = null): string
+    {
+        $menu = $admin ? $this->getMenuForLocationAdmin($location, $siteId) : $this->getMenuForLocation($location, $siteId);
+
+        if ($menu) {
+            return view('partials.site-menu', [
+                'menu'    => $menu,
+                'variant' => 'nav',
+                'items'   => $this->buildMenuTree($menu),
+            ])->render();
+        }
+
+        return view('partials.platform-menu', [
+            'location' => 'header',
+            'variant'  => 'nav',
+        ])->render();
+    }
+
     public function clearMenuCache(?int $menuId = null): void
     {
         if ($menuId !== null) {

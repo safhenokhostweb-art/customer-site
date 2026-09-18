@@ -220,6 +220,13 @@
         .tb-nav-header-link:hover { opacity: 1; }
         .tb-nav-header-link::after { content: ''; position: absolute; inset-inline: 0; bottom: -2px; height: 2px; background: currentColor; transform: scaleX(0); transition: transform 0.2s; transform-origin: center; }
         .tb-nav-header-link:hover::after { transform: scaleX(1); }
+        /* TASK 3/3 Phase 6.5B — nav_source=menu renders real Menu-tree
+           markup (partials/site-menu.blade.php's own .nav-link anchors),
+           not this block's own .tb-nav-header-link anchors. A descendant
+           rule (not a class rename in the shared partial, which other
+           contexts also use) keeps both sources visually consistent. */
+        .tb-nav-header-links > a { text-decoration: none; color: inherit; font-weight: 600; font-size: 0.95rem; opacity: 0.85; padding: 0.4rem 0; }
+        .tb-nav-header-links > a:hover { opacity: 1; }
         .tb-nav-header-actions { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
         .tb-nav-header-search { position: relative; }
         .tb-nav-header-search-input { padding: 0.5rem 2.25rem 0.5rem 0.9rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 999px; font-family: var(--tb-font-body); font-size: 0.85rem; background: rgba(0,0,0,0.03); color: inherit; width: 11rem; max-width: 40vw; }

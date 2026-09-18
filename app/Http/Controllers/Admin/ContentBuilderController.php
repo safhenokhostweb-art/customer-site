@@ -108,7 +108,13 @@ class ContentBuilderController extends Controller
             $blocks = [];
         }
         $renderer = app(BlockRenderer::class);
-        $renderer->setContext(['menu_html' => '']);
+        // TASK 3/3 Phase 6.5B — was hardcoded to '' (empty), so a nav_menu/
+        // nav_header(menu-sourced) block always previewed with no nav
+        // content at all, even when a real primary Menu exists. Now uses
+        // the same canonical MenuService::renderMenuHtml() the real public
+        // render uses (admin: true — a preview should reflect the current
+        // draft Menu, not require it to already be published).
+        $renderer->setContext(['menu_html' => app(\App\Services\MenuService::class)->renderMenuHtml('primary', admin: true)]);
         $html = $renderer->renderBlocks($blocks);
         return response()->json(['html' => $html]);
     }

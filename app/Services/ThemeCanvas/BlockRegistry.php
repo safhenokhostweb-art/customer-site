@@ -935,6 +935,18 @@ final class BlockRegistry
                 'schema'   => [
                     'logo_text'          => ['type' => 'string', 'label' => 'متن لوگو', 'default' => ''],
                     'logo_url'           => ['type' => 'string', 'label' => 'لینک لوگو', 'default' => '/'],
+                    // TASK 3/3 Phase 6.5B (BLD-22) — this Canvas-editor
+                    // schema is a SEPARATE copy from the shared theme-
+                    // runtime package's own BlockRegistry (this class does
+                    // not extend it — see the class docblock context
+                    // above), so the render-side nav_source field added
+                    // there has no effect on the authoring UI unless it is
+                    // also added here. Kept identical: same key, options,
+                    // and default ('custom', so no existing theme/instance
+                    // changes behavior) — see
+                    // BlockRenderer::renderNavHeader() for the render-time
+                    // branch this authors.
+                    'nav_source'         => ['type' => 'select', 'label' => 'منبع لینک‌های ناوبری', 'options' => ['custom' => 'لینک‌های سفارشی این بلوک', 'menu' => 'منوی اصلی سایت (/admin/menus)'], 'default' => 'custom'],
                     'nav_links'          => [
                         'type' => 'repeater', 'label' => 'لینک‌های منو', 'storage' => 'array', 'default' => [],
                         'fields' => [

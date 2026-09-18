@@ -390,8 +390,14 @@ class AdminMenu
             // 1 ─ داشبورد
             'داشبورد' => ['dashboard'],
 
-            // 2 ─ ساختار سایت: صفحات، محتوای ثابت، منو، جستجو
-            'وبسایت' => ['pages', 'media', 'site_content', 'menu', 'advanced_search'],
+            // 2 ─ مدیریت وب‌سایت: صفحات، رسانه، محتوای ثابت، منو و ناوبری،
+            // ظاهر/تم (پیشتر گروه جدای «ظاهر») و جستجو — TASK 3/3 Phase
+            // 6.5B (BLD-23): این‌ها همگی بخش‌های یک گردش‌کار واحد «مدیریت
+            // وب‌سایت» هستند از دید مشتری (صفحه بساز → با سازنده ویرایش کن
+            // → به منو اضافه کن → ظاهر/هدر را انتخاب کن)، نه چند حوزهٔ
+            // نامرتبط؛ ادغام آن‌ها زیر یک گروه، بار شناختی مشتری را کم
+            // می‌کند بدون تغییر هیچ Route/Controller/Authorization.
+            'وبسایت' => ['pages', 'media', 'site_content', 'menu', 'theme_design', 'theme_marketplace', 'theme_bundles', 'advanced_search'],
 
             // 3 ─ فروشگاه: سفارشات (اول)، محصولات، دسته‌بندی، ویژگی‌ها، نظرات، کوپن، قسطی، انبار
             'فروشگاه' => ['orders', 'products', 'product_categories', 'product_attributes', 'shop_product_reviews', 'coupon', 'installments', 'inventory'],
@@ -410,9 +416,6 @@ class AdminMenu
 
             // 8 ─ کسب‌وکار: آمار (اول)، CRM، نظرات، سئو، شبکه‌های اجتماعی، کارت ویزیت
             'کسب‌وکار' => ['analytics_local', 'crm', 'reviews', 'seo_advanced', 'social_links', 'business_card'],
-
-            // 9 ─ ظاهر و قالب
-            'ظاهر' => ['theme_design', 'theme_marketplace', 'theme_bundles'],
 
             // 10 ─ تنظیمات و امنیت: تنظیمات (اول)، کپچا، حذف صفر
             'تنظیمات' => ['settings', 'captcha', 'currency_reform'],
