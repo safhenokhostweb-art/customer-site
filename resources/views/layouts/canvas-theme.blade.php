@@ -142,7 +142,13 @@
         .tb-blog-card-noimg { display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #9ca3af; min-height: 120px; }
         .tb-blog-card-body { padding: 1.25rem; flex: 1; }
         .tb-blog-card-title  { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.4rem; line-height: 1.4; }
-        .tb-blog-card-meta   { font-size: 0.8rem; color: #9ca3af; margin: 0 0 0.4rem; }
+        {{-- TASK 3/3 Phase 6: #9ca3af on this card's #f9fafb-ish background
+             measured 2.42:1 via real axe-core scan (WCAG AA needs 4.5:1) —
+             the same class of failure ADR-032/ThemeTokenNormalizer already
+             fixed once for --tb-text-muted's OWN default; this literal
+             hardcoded gray was a separate, never-converged copy of the
+             same mistake. --}}
+        .tb-blog-card-meta   { font-size: 0.8rem; color: var(--tb-text-muted, #4b5563); margin: 0 0 0.4rem; }
         .tb-blog-card-excerpt { font-size: 0.88rem; color: #6b7280; margin: 0; line-height: 1.6; }
 
         /* ناوبری داخل canvas */
@@ -170,6 +176,27 @@
         .tb-mobile-menu-inner a { padding: 0.5rem 0; color: var(--tb-text, #1f2937); text-decoration: none; font-weight: 500; display: block; }
         .tb-cart-link { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--tb-primary, #4f46e5); color: #fff !important; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
         .tb-cart-link:hover { opacity: 0.9; }
+
+        /* TASK 3/3 Phase 6 (BLD-19) — module:shop_wishlist_icon,
+           module:loyalty_points_badge, module:installment_badge: real,
+           working Phase-3 module integrations that had zero CSS anywhere
+           (only the generic .tb-empty-state rule incidentally applied to
+           the installment badge's own empty state) — rendered as bare
+           unstyled text links. Mirrors the already-styled .tb-cart-link
+           pattern for visual consistency across every commerce-adjacent
+           header/shop control. */
+        .tb-wishlist-link, .tb-loyalty-points-link { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-radius: 999px; background: var(--tb-surface, #fff); border: 1px solid #e5e7eb; color: var(--tb-text, #111827) !important; text-decoration: none; font-weight: 600; font-size: 0.85rem; transition: border-color 0.15s, background 0.15s; }
+        .tb-wishlist-link:hover, .tb-loyalty-points-link:hover { border-color: var(--tb-primary, #4f46e5); background: var(--tb-surface, #f9fafb); }
+        .tb-wishlist-link-icon, .tb-loyalty-points-link-icon { padding: 0.5rem; width: 2.5rem; height: 2.5rem; justify-content: center; }
+        .tb-installment-badge { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .tb-installment-badge-compact { padding: 0.6rem 1rem; border-radius: 0.5rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46 !important; font-weight: 700; font-size: 0.85rem; }
+        .tb-installment-badge-icon { font-size: 1rem; }
+        .tb-installment-badge.tb-empty-state { display: block; }
+        .tb-installment-badge-full { display: block; padding: 1.25rem; border-radius: var(--tb-radius, 0.75rem); background: var(--tb-surface, #fff); border: 1px solid #e5e7eb; }
+        .tb-installment-plans-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+        .tb-installment-plan-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 0.75rem; border-radius: 0.5rem; background: var(--tb-background, #f9fafb); font-size: 0.85rem; }
+        .tb-installment-plan-name { font-weight: 700; }
+        .tb-installment-plan-detail { color: var(--tb-text-muted, #4b5563); }
         .tb-site-footer { border-top: 1px solid #e5e7eb; }
         .tb-site-footer .tb-section { padding-top: 2rem !important; padding-bottom: 2rem !important; }
         @media (max-width: 767px) {
@@ -178,6 +205,48 @@
         }
         @media (min-width: 768px) {
             .tb-mobile-menu { display: none !important; }
+        }
+
+        /* TASK 3/3 Phase 6 (BLD-18) — nav_header / nav_footer: the primary
+           header and footer component every one of the 6+6 presets uses in
+           some combination had ZERO CSS anywhere in this file, rendering
+           as bare unstyled <a> tags with no spacing at all. Fixed once,
+           canonically, for every preset and every page at the same time —
+           see BlockRenderer::renderNavHeader()/renderNavFooter(). */
+        .tb-nav-header-inner { display: flex; align-items: center; gap: 1.5rem; min-height: 4.25rem; flex-wrap: wrap; padding: 0.5rem 0; }
+        .tb-nav-header-logo { font-size: 1.35rem; font-weight: 800; text-decoration: none; color: inherit; letter-spacing: -0.01em; }
+        .tb-nav-header-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; margin-inline-start: auto; }
+        .tb-nav-header-link { text-decoration: none; color: inherit; font-weight: 600; font-size: 0.95rem; opacity: 0.85; padding: 0.4rem 0; position: relative; transition: opacity 0.15s; }
+        .tb-nav-header-link:hover { opacity: 1; }
+        .tb-nav-header-link::after { content: ''; position: absolute; inset-inline: 0; bottom: -2px; height: 2px; background: currentColor; transform: scaleX(0); transition: transform 0.2s; transform-origin: center; }
+        .tb-nav-header-link:hover::after { transform: scaleX(1); }
+        .tb-nav-header-actions { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+        .tb-nav-header-search { position: relative; }
+        .tb-nav-header-search-input { padding: 0.5rem 2.25rem 0.5rem 0.9rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 999px; font-family: var(--tb-font-body); font-size: 0.85rem; background: rgba(0,0,0,0.03); color: inherit; width: 11rem; max-width: 40vw; }
+        .tb-nav-header-search-input::placeholder { color: currentColor; opacity: 0.55; }
+        .tb-nav-header-phone { text-decoration: none; color: inherit; font-weight: 700; font-size: 0.9rem; opacity: 0.9; white-space: nowrap; }
+        .tb-nav-header-icon-link { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; background: rgba(0,0,0,0.05); text-decoration: none; font-size: 1.05rem; transition: background 0.15s; }
+        .tb-nav-header-icon-link:hover { background: rgba(0,0,0,0.1); }
+        .tb-nav-header-cta { padding: 0.55rem 1.25rem; font-size: 0.9rem; white-space: nowrap; }
+        @media (max-width: 1023px) { .tb-nav-header-search-input { width: 8rem; } }
+
+        .tb-nav-footer .tb-container { padding-top: 3.5rem; padding-bottom: 2rem; }
+        .tb-nav-footer-brand { margin-bottom: 2rem; }
+        .tb-nav-footer-logo { font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; }
+        .tb-nav-footer-tagline { font-size: 0.9rem; opacity: 0.75; line-height: 1.7; margin: 0; max-width: 32rem; }
+        .tb-nav-footer-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 2rem; margin-bottom: 2.5rem; }
+        .tb-nav-footer-col-title { font-size: 0.85rem; font-weight: 700; margin: 0 0 1rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.04em; }
+        .tb-nav-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+        .tb-nav-footer-links a { text-decoration: none; color: inherit; opacity: 0.8; font-size: 0.9rem; transition: opacity 0.15s; }
+        .tb-nav-footer-links a:hover { opacity: 1; }
+        .tb-nav-footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-top: 1.75rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .tb-nav-footer-copyright { margin: 0; font-size: 0.85rem; opacity: 0.65; }
+        .tb-nav-footer-legal-link { text-decoration: none; color: inherit; opacity: 0.7; font-size: 0.85rem; margin-inline-start: 1.25rem; }
+        .tb-nav-footer-legal-link:hover { opacity: 1; }
+        @media (max-width: 640px) {
+            .tb-nav-footer .tb-container { padding-top: 2.5rem; }
+            .tb-nav-footer-bottom { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+            .tb-nav-footer-legal-link { margin-inline-start: 0; margin-inline-end: 1rem; }
         }
 
         {{-- FAQ / accordion / tabs now in the shared contract included above. --}}
@@ -404,6 +473,26 @@
         /* ─── NEXUS PRO: Skills bar animation on scroll ─────────────── */
         .tb-skill-bar-fill[data-width] { width:0 !important; }
         .tb-skill-bar-fill.animated { width:var(--skill-w) !important; }
+
+        /* TASK 3/3 Phase 6 — promo_banner/countdown had zero CSS anywhere
+           (BlockRenderer::renderPromoBanner()/renderCountdown() render real
+           markup with no visual treatment at all) — a genuine "missing
+           reusable component" gap, not a composition problem: any Theme
+           using these blocks got unstyled text. Fixed once, canonically,
+           here rather than per-page inline styles. */
+        .tb-promo-banner { text-align:center; padding:0.85rem 1.25rem; }
+        .tb-promo-banner__link { display:inline-block; font-weight:700; font-size:0.95rem; text-decoration:none; letter-spacing:0.01em; }
+        .tb-promo-info    { background:var(--tb-surface,#f9fafb); border-bottom:1px solid #e5e7eb; }
+        .tb-promo-info .tb-promo-banner__link    { color:var(--tb-text,#111827); }
+        .tb-promo-sale     { background:linear-gradient(90deg,var(--tb-primary,#4f46e5),var(--tb-secondary,#6366f1)); }
+        .tb-promo-sale .tb-promo-banner__link     { color:var(--tb-on-primary,#fff); }
+        .tb-promo-urgent   { background:#dc2626; }
+        .tb-promo-urgent .tb-promo-banner__link   { color:#fff; }
+
+        .tb-countdown { text-align:center; padding:2.5rem 1.5rem; background:var(--tb-surface,#f9fafb); border-radius:var(--tb-radius,0.75rem); border:1px solid #e5e7eb; }
+        .tb-countdown__label { display:block; font-weight:700; font-size:1.1rem; margin-bottom:1rem; color:var(--tb-text,#111827); }
+        .tb-countdown__hint { display:inline-block; font-size:1.5rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--tb-primary-text,#4f46e5); letter-spacing:0.02em; }
+        @media(max-width:600px) { .tb-countdown__hint { font-size:1.15rem; } }
     </style>
 
     <script>

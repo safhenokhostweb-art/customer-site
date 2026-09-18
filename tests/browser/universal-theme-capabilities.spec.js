@@ -420,7 +420,7 @@ test.describe.serial('Universal Theme capabilities (Phase 5)', () => {
         // sr-only/peer toggle switch 'autoplay' uses, which fights
         // Playwright's actionability checks for reasons unrelated to
         // whether the underlying capability actually works.
-        await treeNode(page, 'qa_slider_756893').click();
+        await treeNode(page, 'qa_slider_dc907e').click();
         const intervalField = page.getByTestId('tb-prop-interval');
         await intervalField.fill('8000');
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
@@ -428,12 +428,12 @@ test.describe.serial('Universal Theme capabilities (Phase 5)', () => {
         await reloadCanvasEditor(page);
         await switchToPage(page, 'utilities');
         await openTreeTab(page);
-        await treeNode(page, 'qa_slider_756893').click();
+        await treeNode(page, 'qa_slider_dc907e').click();
         await expect(page.getByTestId('tb-prop-interval')).toHaveValue('8000');
 
         // Tabs: edit the first tab_panel's title (real prop-authored
         // metadata) — id from the same static fixture.
-        await treeNode(page, 'qa_tabs_bb5b7d').click();
+        await treeNode(page, 'qa_tabs_3084ff').click();
         // tab_panel children aren't directly selectable from the tabs node
         // itself in the tree in every Canvas UI revision; select via the
         // add-child/tree expansion if needed. Fall back gracefully if the

@@ -10,6 +10,7 @@
         "test:browser:debug": "playwright test --debug"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.13.0",
         "@playwright/test": "^1.62.1",
         "@tailwindcss/node": "^4.3.0",
         "@tailwindcss/vite": "^4.3.0",

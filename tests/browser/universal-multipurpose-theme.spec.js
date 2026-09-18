@@ -139,8 +139,8 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         // itself) is what proves a customer's own real Library selection/
         // upload actually overrides that default and round-trips.
         //
-        // MAINTENANCE NOTE: the literal block ids below (qa_image_84b33b,
-        // qa_newsletter_form_3a1bc9, qa_hero_gradient_3f9863) are real ids
+        // MAINTENANCE NOTE: the literal block ids below (qa_image_cd6026,
+        // qa_newsletter_form_e1d948, qa_hero_gradient_0a35d3) are real ids
         // from the static, committed export fixture — they include a
         // content+time hash suffix that WILL change if the fixture is ever
         // regenerated (see loadCanonicalUniversalThemeExport()'s docblock
@@ -151,7 +151,7 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
 
         await switchToPage(page, 'builder-coverage');
         await openTreeTab(page);
-        await treeNode(page, 'qa_image_84b33b').click();
+        await treeNode(page, 'qa_image_cd6026').click();
         await page.getByTestId('tb-media-picker-url').click();
         await selectLibraryMediaByTitle(page, 'QA about', itemB);
         await page.getByTestId('tb-media-confirm').click();
@@ -161,7 +161,7 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         await reloadCanvasEditor(page);
         await switchToPage(page, 'builder-coverage');
         await openTreeTab(page);
-        await treeNode(page, 'qa_image_84b33b').click();
+        await treeNode(page, 'qa_image_cd6026').click();
         await expect(page.getByTestId('tb-media-value-url')).toHaveValue(new RegExp(`/uploads/customer-media/.*${itemB}\\.[a-z]+$`));
 
         // A real multipart upload from the computer, selected through the
@@ -185,7 +185,7 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         await reloadCanvasEditor(page);
         await switchToPage(page, 'builder-coverage');
         await openTreeTab(page);
-        await treeNode(page, 'qa_image_84b33b').click();
+        await treeNode(page, 'qa_image_cd6026').click();
         await expect(page.getByTestId('tb-media-value-url')).toHaveValue(uploadedUrl);
 
         // Replacement uses an existing library asset and round-trips again.
@@ -196,28 +196,23 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         await reloadCanvasEditor(page);
         await switchToPage(page, 'builder-coverage');
         await openTreeTab(page);
-        await treeNode(page, 'qa_image_84b33b').click();
+        await treeNode(page, 'qa_image_cd6026').click();
         await expect(page.getByTestId('tb-media-value-url')).toHaveValue(new RegExp(`/uploads/customer-media/.*${itemA}\\.[a-z]+$`));
 
         // Global Style palette references on two semantically distinct
-        // color-typed fields, both on real authored blocks of the real
-        // product: the corporate homepage's own newsletter_form
-        // ('background') and the builder-coverage page's registry-default
-        // hero_gradient ('text_color', a type genuinely not used elsewhere
-        // in the product's real pages). hero's own 'background' prop is a
-        // plain enum (primary/secondary), not a color-typed field, so it
-        // has no theme-color quick-picker button — newsletter_form's
-        // 'background' genuinely is 'type' => 'color' in the registry.
+        // color-typed fields, both on the real corporate homepage (TASK
+        // 3/3 Phase 6 upgraded 'home' to use 'hero_gradient' for its own
+        // hero — real background/text_color color-typed fields, not the
+        // plain 'hero' type's enum 'background'): newsletter_form's
+        // 'background' and hero_gradient's 'text_color'.
         await switchToPage(page, 'home');
         await openTreeTab(page);
-        await treeNode(page, 'qa_newsletter_form_3a1bc9').click();
+        await treeNode(page, 'qa_newsletter_form_e1d948').click();
         await page.getByTestId('tb-theme-color-background-primary').click();
         await expect(page.getByTestId('tb-prop-background')).toHaveValue('var(--tb-primary)');
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
 
-        await switchToPage(page, 'builder-coverage');
-        await openTreeTab(page);
-        await treeNode(page, 'qa_hero_gradient_3f9863').click();
+        await treeNode(page, 'qa_hero_gradient_0a35d3').click();
         await page.getByTestId('tb-theme-color-text_color-secondary').click();
         await expect(page.getByTestId('tb-prop-text_color')).toHaveValue('var(--tb-secondary)');
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
@@ -297,12 +292,13 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         await page.setViewportSize({ width: 1366, height: 900 });
         await page.goto('/page/builder-coverage', { waitUntil: 'domcontentloaded' });
         await expect(page.locator(`img[src*="${itemA}"]`)).toBeVisible();
-        // Scoped to the specific hero_gradient block this test edited
-        // (qa_hero_gradient_3f9863, see universal-theme-capabilities.spec.js
-        // MAINTENANCE NOTE) — a generic '[style*="color:var(--tb-secondary)"]'
-        // attribute selector also matches an unrelated <a> button elsewhere
-        // on this content-dense regression page that happens to reference
-        // the same global-style token for its own unrelated purpose.
-        await expect(page.locator('#tb-qa_hero_gradient_3f9863[style*="color:var(--tb-secondary)"]')).toBeVisible();
+
+        // hero_gradient lives on 'home' (TASK 3/3 Phase 6 upgraded the
+        // corporate homepage's own hero to it) — scoped by ID, not a
+        // generic '[style*="color:var(--tb-secondary)"]' attribute
+        // selector, since that also matches unrelated elements elsewhere
+        // that happen to reference the same global-style token.
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+        await expect(page.locator('#tb-qa_hero_gradient_0a35d3[style*="color:var(--tb-secondary)"]')).toBeVisible();
     });
 });
