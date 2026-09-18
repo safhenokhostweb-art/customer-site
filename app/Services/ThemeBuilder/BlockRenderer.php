@@ -165,6 +165,19 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
         // TB4: children may be at top-level (block.children), legacy (block.blocks), or in props.blocks
         $children = $block['children'] ?? $block['blocks'] ?? ($props['blocks'] ?? []);
+        // TASK 3/3 Phase 5 (BLD-16 follow-up): renderTabs() (inherited from
+        // the shared package) only ever receives $props, never the raw
+        // $block, but needs each child's own data (e.g. a tab_panel's
+        // title) to build a real nav bar — not just $inner's already-
+        // rendered HTML. Writing the resolved children back into
+        // $props['blocks'] makes that one guaranteed channel regardless of
+        // which of the three shapes above the block actually used. Real
+        // browser certification caught this: canonical Canvas-authored
+        // tabs (top-level `children`) rendered a nav bar with empty
+        // labels, since renderTabs() only ever checked `props.blocks`.
+        if (!empty($children)) {
+            $props['blocks'] = $children;
+        }
 
         $inner = '';
         if (self::isContainerType($type) && !empty($children)) {

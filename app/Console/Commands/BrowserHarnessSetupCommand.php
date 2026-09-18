@@ -204,7 +204,14 @@ class BrowserHarnessSetupCommand extends Command
             'global_styles' => [],
         ];
         if ($this->option('universal')) {
-            $canvasThemeData = $this->universalThemeData();
+            $canvasThemeData = $this->loadCanonicalUniversalThemeExport();
+            // Real, seeder-produced CustomerMedia library rows for the
+            // media-round-trip proof (universal-multipurpose-theme.spec.js
+            // selects these by known title/uuid). The canonical export's
+            // OWN images stay plain saas-platform-hosted URLs by design
+            // (a portable master Theme carries no customer-media UUIDs —
+            // see ADR-049 §6) — see MASTER_THEME_MEDIA_LOCALIZATION_GAP.
+            $this->seedUniversalMedia();
             $this->seedUniversalCustomerData();
 
             app(ThemeInstanceRevisionService::class)->record(
@@ -318,272 +325,50 @@ class BrowserHarnessSetupCommand extends Command
     }
 
     /**
-     * QA-only customer instance of the portable SaaS master structure, AND
-     * the real, installed public-render regression surface for the Builder
-     * integrity audit (2026-09-11) — real Persian marketing content, real
-     * CustomerMedia (image + video, resolved through the canonical
-     * {media_id} path, never a raw path/URL for a new selection), and every
-     * newly-implemented module renderer (§G/§P/§J of that audit) placed on
-     * a real page. Inventory is always read from the canonical Canvas
-     * registry; the final coverage page catches every remaining registered
-     * type with its own honest schema defaults.
+     * TASK 3/3 Phase 5 — canonical product convergence. This used to be a
+     * ~260-line hand-authored second definition of the Universal
+     * Multipurpose Theme (`universalThemeData()`, now removed), independent
+     * of saas-platform's real `UniversalMultipurposeQaThemeSeeder` — the
+     * exact "duplicate product definition" problem the Phase 5 harness
+     * audit was asked to find and close. It is replaced by loading a real,
+     * versioned export of the actual canonical product (21 pages, 6 header
+     * variants, 6 footer variants — the same shape saas-platform's
+     * `ThemeInstallGateway` sends over the wire, verified byte-for-byte
+     * against `ThemeCanvasInstallToSiteHttpTest` on that side), then
+     * installing it through the exact same `ThemeInstanceRevisionService::
+     * record()` call this command already used — no new install authority,
+     * no live network dependency on a running saas-platform instance (the
+     * export is a static, committed fixture, not a live API call — see
+     * `tests/Feature/ThemeCanvas/RealUniversalThemeInstallAcceptanceTest.php`,
+     * built from the same file, for the PHPUnit-side proof of this exact
+     * payload surviving the real install endpoint).
      *
-     * 'portfolio_grid' (bare, non-'module:' prefixed) does not exist
-     * anywhere in the merged registry — the previous version of this
-     * fixture referenced it, which silently no-op'd via the isset() guard
-     * below. Replaced with real 'gallery'/'bento_grid' content.
+     * To regenerate this fixture after a real change to the canonical
+     * seeder, re-run (from saas-platform):
+     *   php artisan tinker --execute="... Theme::where('slug','universal-multipurpose-qa')->sole() -> {pages, header_blocks, footer_blocks, getHeaderVariants(), getFooterVariants(), global_styles} -> json_encode(...)"
+     * and overwrite this file's twin at
+     * tests/Feature/ThemeCanvas/fixtures/universal-multipurpose-qa-export.json
+     * (both copies must stay byte-identical — see the note in that file's
+     * directory).
      */
-    private function universalThemeData(): array
+    private function loadCanonicalUniversalThemeExport(): array
     {
-        $registry = BlockRegistry::all();
-        $media = $this->seedUniversalMedia();
-
-        $definitions = [
-            'home' => ['خانه', '', [
-                'hero', 'client_logos', 'features_grid', 'stats_row', 'hero_split',
-                'gallery', 'product_grid', 'module:courses_grid', 'blog_posts', 'team_cards',
-                'testimonials_slider', 'pricing_cards', 'bento_grid', 'faq', 'newsletter_form', 'cta',
-            ]],
-            'about' => ['درباره ما', 'about', ['hero_gradient', 'team', 'team_cards', 'skills_bars', 'client_logos', 'trust_badges', 'process_steps']],
-            'services' => ['خدمات', 'services', ['services_cards', 'service_cards', 'process_steps', 'cta', 'contact_split']],
-            'portfolio' => ['نمونه‌کارها', 'portfolio', ['gallery', 'bento_grid', 'image', 'video']],
-            'pricing' => ['تعرفه‌ها', 'pricing', ['pricing_cards', 'module:pricing_table', 'trust_badges', 'faq']],
-            'team' => ['تیم ما', 'team', ['team_cards', 'team']],
-            'testimonials' => ['نظرات مشتریان', 'testimonials', ['testimonials_slider', 'module:reviews_grid']],
-            'blog' => ['وبلاگ', 'blog', ['module:blog_featured', 'module:blog_posts', 'module:blog_categories', 'search_bar', 'breadcrumb']],
-            'shop' => ['فروشگاه', 'shop', ['module:shop_search_box', 'products', 'product_slider', 'module:shop_product_grid', 'module:shop_product_slider', 'module:shop_categories', 'module:shop_countdown', 'cart_icon', 'add_to_cart', 'price_box']],
-            'learning' => ['آموزش', 'learning', ['module:courses_grid', 'module:course_enroll_cta', 'module:my_learning_link', 'module:edu_article_grid']],
-            'contact' => ['تماس با ما', 'contact', ['contact_info', 'module:contact_quick', 'module:form_embed', 'module:support_button', 'module:whatsapp_widget', 'module:business_card_embed']],
-            'account' => ['حساب کاربری', 'account', ['login_register', 'module:account_quick_links', 'module:subscriber_stats', 'module:referral_widget', 'module:invoice_quick_pay']],
-            'content' => ['مطالب', 'content', ['module:content_cards']],
-            'search' => ['جستجو', 'search', ['module:site_search']],
-            'utilities' => ['امکانات', 'utilities', ['tabs', 'accordion', 'slider', 'countdown', 'promo_banner', 'email_capture', 'language_switcher', 'module:motion', 'module:notifications_bar', 'module:advertisement_zone']],
-        ];
-
-        $block = function (string $type) use ($registry, $media): array {
-            $props = $registry[$type]['defaultProps'] ?? [];
-            $overrides = match ($type) {
-                'hero' => [
-                    'title' => 'راهکار جامع برای کسب‌وکار شما', 'subtitle' => 'یک سایت کامل برای معرفی، فروش، آموزش و ارتباط با مشتری',
-                    'button_text' => 'مشاهده خدمات', 'button_url' => '/page/services', 'background' => 'primary',
-                    'background_image' => $media['hero'],
-                ],
-                'hero_split' => [
-                    'badge' => 'معرفی می‌کنیم', 'title' => 'مدیریت فروشگاه، ساده و سریع',
-                    'subtitle' => 'از افزودن محصول تا دریافت پرداخت، همه در یک داشبورد.',
-                    'button_text' => 'شروع رایگان', 'button_url' => '/account', 'button2_text' => 'مشاهده دمو', 'button2_url' => '/page/portfolio',
-                    'image_url' => $media['about'], 'image_side' => 'left',
-                ],
-                'hero_gradient' => [
-                    'badge' => 'دربارهٔ ما', 'title' => 'ساخته‌شده برای کسب‌وکارهای ایرانی',
-                    'subtitle' => 'از ۱۳۹۸ در حال کمک به هزاران کسب‌وکار برای حضور آنلاین حرفه‌ای.',
-                    'button_text' => 'تماس با ما', 'button_url' => '/page/contact', 'button2_text' => '', 'button2_url' => '#',
-                ],
-                'features_grid' => [
-                    'title' => 'چرا ما را انتخاب کنید؟', 'subtitle' => 'ابزارهایی که واقعاً به آن‌ها نیاز دارید',
-                    'columns' => '3', 'style' => 'cards',
-                    'features' => [
-                        ['icon' => '🎨', 'title' => 'سازندهٔ بصری', 'text' => 'طراحی بدون کدنویسی'],
-                        ['icon' => '🛒', 'title' => 'فروشگاه کامل', 'text' => 'مدیریت محصول و پرداخت'],
-                        ['icon' => '🎓', 'title' => 'آموزش آنلاین', 'text' => 'فروش دوره و دانشجویان'],
-                    ],
-                ],
-                'stats_row' => [
-                    'title' => '', 'background' => '#f8fafc', 'dividers' => true,
-                    'stats' => [
-                        ['value' => 3200, 'suffix' => '+', 'label' => 'کسب‌وکار فعال'],
-                        ['value' => 98, 'suffix' => '%', 'label' => 'رضایت مشتری'],
-                        ['value' => 5, 'suffix' => ' سال', 'label' => 'سابقه'],
-                    ],
-                ],
-                'services_cards', 'service_cards' => [
-                    'title' => 'خدمات ما', 'subtitle' => 'هر آنچه برای رشد کسب‌وکار لازم دارید', 'columns' => '3', 'style' => 'bordered',
-                    'services' => [
-                        ['icon' => '🎨', 'title' => 'طراحی سایت', 'text' => 'طراحی اختصاصی مطابق برند شما', 'link' => '/page/contact', 'link_text' => 'بیشتر بدانید'],
-                        ['icon' => '🛒', 'title' => 'راه‌اندازی فروشگاه', 'text' => 'از کاتالوگ تا درگاه پرداخت', 'link' => '/page/shop', 'link_text' => 'مشاهده'],
-                    ],
-                ],
-                'process_steps' => [
-                    'title' => 'چطور شروع کنیم؟', 'subtitle' => 'سه گام ساده',
-                    'steps' => [
-                        ['number' => '۱', 'title' => 'ثبت‌نام رایگان', 'text' => 'در چند ثانیه حساب بسازید'],
-                        ['number' => '۲', 'title' => 'انتخاب قالب', 'text' => 'قالب دلخواه را انتخاب کنید'],
-                        ['number' => '۳', 'title' => 'انتشار', 'text' => 'سایت خود را منتشر کنید'],
-                    ],
-                ],
-                'skills_bars' => [
-                    'title' => 'توانمندی‌های زیرساخت',
-                    'skills' => [['name' => 'پایداری سرور', 'percent' => 99], ['name' => 'سرعت بارگذاری', 'percent' => 92]],
-                ],
-                'client_logos' => [
-                    'title' => 'مورد اعتماد کسب‌وکارهای موفق',
-                    'logos' => [['name' => 'دیجی‌مد'], ['name' => 'آموزشگاه رشد'], ['name' => 'کلینیک سلامت'], ['name' => 'استودیو نقش']],
-                    'scroll' => true,
-                ],
-                'trust_badges' => [
-                    'badges' => [
-                        ['icon' => '↩️', 'title' => 'بازگشت وجه', 'text' => 'تا ۷ روز'],
-                        ['icon' => '🔒', 'title' => 'پرداخت امن', 'text' => 'درگاه‌های معتبر'],
-                        ['icon' => '☎️', 'title' => 'پشتیبانی ۲۴/۷', 'text' => 'همیشه در دسترس'],
-                    ],
-                    'background' => '#f8fafc',
-                ],
-                'pricing_cards' => [
-                    'title' => 'پلن مناسب خود را انتخاب کنید', 'subtitle' => 'بدون تعهد، هر زمان قابل تغییر',
-                    'plans' => [
-                        ['name' => 'استارتر', 'price' => 'رایگان', 'period' => '', 'badge' => '', 'highlight' => false, 'features' => ['۱ صفحه فرود', '۵۰۰ مگابایت فضا'], 'cta_text' => 'شروع رایگان', 'cta_url' => '/account'],
-                        ['name' => 'حرفه‌ای', 'price' => '۴۹۰', 'period' => 'هزار تومان / ماه', 'badge' => 'محبوب‌ترین', 'highlight' => true, 'features' => ['سایت نامحدود', 'فروشگاه کامل'], 'cta_text' => 'انتخاب پلن', 'cta_url' => '/page/pricing'],
-                    ],
-                ],
-                'bento_grid' => [
-                    'title' => 'همه‌چیز در یک پلتفرم',
-                    'items' => [
-                        ['title' => 'مدیریت هوشمند', 'text' => 'داشبورد جامع', 'icon' => '📊', 'size' => 'large', 'bg_color' => '#4f46e5', 'text_color' => '#ffffff'],
-                        ['title' => 'امنیت پیشرفته', 'text' => 'رمزنگاری کامل', 'icon' => '🔒', 'size' => 'small', 'bg_color' => '#f0fdf4', 'text_color' => '#14532d'],
-                    ],
-                ],
-                'faq' => [
-                    'title' => 'سوالات متداول',
-                    'items' => [
-                        ['question' => 'آیا نیاز به دانش فنی دارم؟', 'answer' => 'خیر، سازندهٔ بصری بدون کدنویسی کار می‌کند.'],
-                        ['question' => 'آیا می‌توانم پلن را تغییر دهم؟', 'answer' => 'بله، در هر زمان ممکن است.'],
-                    ],
-                ],
-                'newsletter_form' => [
-                    'title' => 'در خبرنامه عضو شوید', 'subtitle' => 'جدیدترین اخبار را دریافت کنید',
-                    'placeholder' => 'ایمیل شما', 'button_text' => 'عضویت', 'background' => '#4f46e5', 'text_color' => '#ffffff',
-                ],
-                'cta' => [
-                    'title' => 'همین امروز شروع کنید', 'subtitle' => 'بدون نیاز به کارت اعتباری',
-                    'button_text' => 'ساخت سایت رایگان', 'button_url' => '/account', 'background' => 'primary',
-                ],
-                'contact_split' => [
-                    'title' => 'با ما در ارتباط باشید', 'subtitle' => 'هر سوالی دارید، پاسخگو هستیم',
-                    'phone' => '۰۲۱-۱۲۳۴۵۶۷۸', 'email' => 'info@yourbrand.ir', 'address' => 'تهران، خیابان ولیعصر', 'show_form' => true,
-                ],
-                'contact_info' => [
-                    'title' => 'اطلاعات تماس', 'background' => '',
-                    'items' => [['icon' => '📞', 'label' => 'تلفن', 'value' => '۰۲۱-۱۲۳۴۵۶۷۸'], ['icon' => '✉️', 'label' => 'ایمیل', 'value' => 'info@yourbrand.ir']],
-                ],
-                'nav_header' => ['logo_text' => 'قالب جامع', 'nav_links' => [
-                    ['label' => 'خانه', 'url' => '/'], ['label' => 'خدمات', 'url' => '/page/services'],
-                    ['label' => 'فروشگاه', 'url' => '/page/shop'], ['label' => 'وبلاگ', 'url' => '/page/blog'],
-                    ['label' => 'تماس', 'url' => '/page/contact'],
-                ], 'sticky' => true, 'show_search' => true, 'show_cart' => true],
-                'nav_footer' => [
-                    'logo_text' => 'قالب جامع', 'tagline' => 'سطح مرجع کنترل کیفیت Builder', 'copyright' => '© QA — قالب جامع چندمنظوره',
-                    'columns' => [['title' => 'دسترسی سریع', 'links' => [['label' => 'درباره ما', 'url' => '/page/about'], ['label' => 'تماس', 'url' => '/page/contact']]]],
-                ],
-                'social_icons' => ['links' => [['platform' => 'instagram', 'url' => 'https://instagram.com/qa'], ['platform' => 'telegram', 'url' => 'https://t.me/qa']]],
-                'image' => ['url' => $media['portfolio1'], 'alt' => 'تصویر نمونه قالب جامع', 'caption' => 'رسانهٔ واقعی — از مسیر CustomerMediaService'],
-                'video' => ['url' => $media['video'], 'poster' => $media['portfolio2'], 'caption' => 'ویدیوی نمونه', 'controls' => true],
-                // 'qa_unknown' on item 0 of each repeater below is a
-                // deliberate unrecognized/legacy extra key — the browser
-                // regression surface proves the structured repeater editor
-                // preserves it untouched while other fields/items are
-                // edited (it must never be silently dropped).
-                'gallery' => ['title' => 'گالری تصاویر', 'columns' => '3', 'items' => [
-                    ['url' => $media['portfolio1'], 'alt' => 'نمونه‌کار اول', 'qa_unknown' => 'preserve-gallery'],
-                    ['url' => $media['portfolio2'], 'alt' => 'نمونه‌کار دوم'],
-                    ['url' => $media['about'], 'alt' => 'نمونه‌کار سوم'],
-                ]],
-                'team_cards' => ['title' => 'با تیم ما آشنا شوید', 'columns' => '3', 'members' => [
-                    ['name' => 'سارا احمدی', 'role' => 'مدیرعامل', 'image' => $media['about'], 'bio' => 'بنیان‌گذار پلتفرم', 'qa_unknown' => 'preserve-team'],
-                    ['name' => 'رضا کریمی', 'role' => 'مدیر فنی', 'image' => '', 'bio' => 'معمار زیرساخت'],
-                ]],
-                'testimonials_slider' => [
-                    'title' => 'مشتریان ما چه می‌گویند', 'columns' => '3', 'autoplay' => true, 'interval' => 5000,
-                    'items' => [
-                        ['name' => 'امیر رستمی', 'role' => 'صاحب فروشگاه', 'text' => 'در کمتر از یک هفته فروشگاهم آماده بود.', 'rating' => 5],
-                        ['name' => 'مریم صادقی', 'role' => 'موسس آموزشگاه', 'text' => 'بخش دوره‌ها دقیقاً همان چیزی بود که نیاز داشتم.', 'rating' => 5],
-                        ['name' => 'حسین یزدانی', 'role' => 'مدیر کلینیک', 'text' => 'سازندهٔ بصری فوق‌العاده ساده است.', 'rating' => 4],
-                    ],
-                ],
-                'slider' => ['autoplay' => true, 'interval' => 4000, 'slides' => [
-                    ['id' => 'qa_slide_1', 'type' => 'heading', 'props' => ['text' => 'اسلاید اول — واقعی', 'level' => '2'], 'children' => []],
-                    ['id' => 'qa_slide_2', 'type' => 'heading', 'props' => ['text' => 'اسلاید دوم — واقعی', 'level' => '2'], 'children' => []],
-                    ['id' => 'qa_slide_3', 'type' => 'heading', 'props' => ['text' => 'اسلاید سوم — واقعی', 'level' => '2'], 'children' => []],
-                ]],
-                'product_slider' => ['title' => 'محصولات منتخب', 'limit' => 6, 'autoplay' => true, 'interval' => 5000],
-                'countdown' => ['end_date' => date('Y-m-d', strtotime('+14 days')), 'label' => 'پایان جشنوارهٔ فروش ویژه'],
-                'module:blog_posts' => ['title' => 'آخرین مطالب', 'limit' => 6, 'layout' => 'grid', 'show_excerpt' => true, 'show_date' => true],
-                'module:shop_product_grid' => ['title' => 'همهٔ محصولات', 'limit' => 12, 'columns' => '4'],
-                'module:courses_grid' => ['title' => 'دوره‌های آموزشی', 'limit' => 6, 'columns' => '3', 'layout' => 'grid', 'show_price' => true],
-                'module:contact_quick' => ['title' => 'تماس سریع', 'show_phone' => true, 'show_address' => true, 'show_map' => true],
-                'module:faq_dynamic' => ['title' => 'سوالات بیشتر', 'limit' => 10, 'style' => 'list', 'items' => [
-                    ['question' => 'آیا SSL رایگان است؟', 'answer' => 'بله، به‌صورت خودکار فعال می‌شود.'],
-                    ['question' => 'محدودیت ترافیک؟', 'answer' => 'در پلن حرفه‌ای نامحدود است.'],
-                ]],
-                'module:social_links_bar' => ['style' => 'horizontal', 'color' => 'brand', 'size' => 'md'],
-                'module:whatsapp_widget' => ['label' => 'چت واتساپ', 'phone' => '', 'position' => 'bottom-left'],
-                'module:form_embed' => ['title' => 'فرم درخواست مشاوره', 'show_title' => true, 'style' => 'card'],
-                'module:content_cards' => ['title' => 'آخرین مطالب', 'limit' => 3, 'style' => 'cards', 'show_excerpt' => true],
-                'module:site_search' => ['placeholder' => 'جستجو در کل سایت...', 'style' => 'hero'],
-                'module:shop_search_box' => ['placeholder' => 'جستجوی محصول...', 'style' => 'bar'],
-                'module:shop_countdown' => ['promo_text' => 'پیشنهاد ویژه — فرصت محدود!', 'end_date' => date('Y-m-d', strtotime('+7 days')), 'bg_color' => '#ef4444'],
-                'module:advertisement_zone' => ['zone_name' => 'qa-banner-main', 'position' => 'banner'],
-                'module:business_card_embed' => ['card_slug' => 'qa-business-card'],
-                'module:invoice_quick_pay' => ['title' => 'پرداخت فاکتور', 'placeholder' => 'شماره فاکتور را وارد کنید'],
-                'module:account_quick_links' => ['style' => 'buttons', 'show_avatar' => true, 'show_notifications' => true],
-                default => [],
-            };
-
-            // ElementSchemaRegistry validates type:'textarea' JSON fields as
-            // a STRING (unlike type:'repeater', which accepts a real PHP
-            // array) — a raw array here passes the renderer's own flexible
-            // is_array()-or-json_decode() parsing but fails validation and
-            // falls to the [invalid] placeholder before the renderer is
-            // ever reached. Every textarea-JSON field used above is
-            // encoded here, once, rather than per call site.
-            $textareaJsonFields = [
-                'features_grid' => ['features'], 'stats_row' => ['stats'], 'services_cards' => ['services'],
-                'service_cards' => ['services'], 'process_steps' => ['steps'], 'skills_bars' => ['skills'],
-                'client_logos' => ['logos'], 'trust_badges' => ['badges'], 'pricing_cards' => ['plans'],
-                'bento_grid' => ['items'], 'testimonials_slider' => ['items'],
-            ];
-            foreach ($textareaJsonFields[$type] ?? [] as $key) {
-                if (isset($overrides[$key]) && is_array($overrides[$key])) {
-                    $overrides[$key] = json_encode($overrides[$key], JSON_UNESCAPED_UNICODE);
-                }
-            }
-
-            return [
-                'id' => 'qa_' . str_replace([':', '-'], '_', $type),
-                'type' => $type,
-                'props' => array_replace($props, $overrides),
-                'children' => BlockRegistry::isContainerType($type) ? [] : [],
-            ];
-        };
-
-        $used = [];
-        $pages = [];
-        foreach ($definitions as $key => [$title, $slug, $types]) {
-            $blocks = [];
-            foreach ($types as $type) {
-                if (!isset($registry[$type])) continue;
-                $blocks[] = $block($type);
-                $used[$type] = true;
-            }
-            $pages[$key] = ['title' => $title, 'slug' => $slug, 'is_home' => $key === 'home', 'blocks' => $blocks];
+        $path = base_path('tests/Feature/ThemeCanvas/fixtures/universal-multipurpose-qa-export.json');
+        if (!is_file($path)) {
+            throw new \RuntimeException(
+                "Canonical Universal Theme export fixture not found at {$path}. This is a real export of ".
+                "saas-platform's UniversalMultipurposeQaThemeSeeder, not something to hand-author here again — ".
+                'regenerate it from a real saas-platform run rather than reintroducing a duplicate fixture.'
+            );
         }
-        $pages['builder-coverage'] = [
-            'title' => 'پوشش عناصر سازنده',
-            'slug' => 'builder-coverage',
-            'is_home' => false,
-            'blocks' => array_map($block, array_keys(array_diff_key($registry, $used))),
-        ];
+        $decoded = json_decode((string) file_get_contents($path), true);
+        if (!is_array($decoded) || empty($decoded['pages']) || empty($decoded['header_variants']) || empty($decoded['footer_variants'])) {
+            throw new \RuntimeException("Canonical Universal Theme export fixture is invalid or incomplete: {$path}");
+        }
 
-        return [
-            'pages' => $pages,
-            'header_blocks' => [$block('nav_header'), $block('nav_menu')],
-            'footer_blocks' => [$block('newsletter_form'), $block('nav_footer'), $block('social_icons')],
-            'global_styles' => [
-                'primary_color' => '#4f46e5', 'secondary_color' => '#6366f1',
-                'background_color' => '#f8fafc', 'text_color' => '#111827',
-            ],
-            'settings' => ['qa_fixture' => true],
-        ];
+        return $decoded;
     }
+
 
     /**
      * Real CustomerMedia (§H) for the harness — images via GD-generated

@@ -5,16 +5,15 @@
             "title": "سوالات متداول",
             "blocks": [
                 {
-                    "id": "qa_heading_ed3e6c",
+                    "id": "qa_heading_acf86b",
                     "type": "heading",
                     "props": {
                         "text": "سوالات متداول",
                         "level": "1"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_faq_fb837b",
+                    "id": "qa_faq_a7f15d",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -44,11 +43,10 @@
                             }
                         ],
                         "title": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_faq_dynamic_8ef102",
+                    "id": "qa_module_faq_dynamic_505f5e",
                     "type": "module:faq_dynamic",
                     "props": {
                         "items": [
@@ -64,8 +62,7 @@
                         "limit": 10,
                         "style": "list",
                         "title": "سوالات بیشتر"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -74,15 +71,14 @@
             "title": "وبلاگ",
             "blocks": [
                 {
-                    "id": "qa_module_blog_featured_f97d2f",
+                    "id": "qa_module_blog_featured_19f4d5",
                     "type": "module:blog_featured",
                     "props": {
                         "title": "مطلب ویژه"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_blog_posts_c500c2",
+                    "id": "qa_module_blog_posts_4d6548",
                     "type": "module:blog_posts",
                     "props": {
                         "limit": 9,
@@ -90,16 +86,14 @@
                         "layout": "grid",
                         "show_date": true,
                         "show_excerpt": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_blog_categories_d505fa",
+                    "id": "qa_module_blog_categories_5ac733",
                     "type": "module:blog_categories",
                     "props": {
                         "title": "دسته‌بندی‌ها"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -108,7 +102,7 @@
             "title": "خانه",
             "blocks": [
                 {
-                    "id": "qa_hero_59894a",
+                    "id": "qa_hero_5dcd59",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -118,11 +112,10 @@
                         "button_url": "\/pricing",
                         "button_text": "شروع رایگان",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_client_logos_588f51",
+                    "id": "qa_client_logos_bf1a5c",
                     "type": "client_logos",
                     "props": {
                         "logos": [
@@ -147,11 +140,10 @@
                         ],
                         "title": "مورد اعتماد کسب‌وکارهای موفق ایرانی",
                         "scroll": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_features_grid_26b49c",
+                    "id": "qa_features_grid_41c870",
                     "type": "features_grid",
                     "props": {
                         "style": "cards",
@@ -190,11 +182,10 @@
                             }
                         ],
                         "subtitle": "ابزارهایی که واقعاً به آن‌ها نیاز دارید، بدون پیچیدگی اضافه"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_stats_row_917b2b",
+                    "id": "qa_stats_row_4554ee",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -222,11 +213,10 @@
                         "title": "",
                         "dividers": true,
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_about_section_3ea3ee",
+                    "id": "qa_about_section_3ced10",
                     "type": "about_section",
                     "props": {
                         "badge": "دربارهٔ ما",
@@ -239,11 +229,10 @@
                             "پشتیبانی فارسی ۲۴ ساعته"
                         ],
                         "description": "ما از سال ۱۳۹۸ در حال ساخت ابزارهایی هستیم که به کسب‌وکارهای کوچک و متوسط کمک می‌کند بدون نیاز به تیم فنی، حضور آنلاین حرفه‌ای داشته باشند."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_gallery_4bb927",
+                    "id": "qa_gallery_03675e",
                     "type": "gallery",
                     "props": {
                         "items": [
@@ -262,20 +251,18 @@
                         ],
                         "title": "نمونه‌کارهای ساخته‌شده روی پلتفرم ما",
                         "columns": "3"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_product_grid_50555a",
+                    "id": "qa_product_grid_9b930b",
                     "type": "product_grid",
                     "props": {
                         "limit": 8,
                         "columns": 4
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_courses_grid_d6b274",
+                    "id": "qa_module_courses_grid_6ae705",
                     "type": "module:courses_grid",
                     "props": {
                         "limit": 3,
@@ -283,20 +270,18 @@
                         "layout": "grid",
                         "columns": "3",
                         "show_price": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_blog_posts_2e841e",
+                    "id": "qa_blog_posts_91380f",
                     "type": "blog_posts",
                     "props": {
                         "limit": 3,
                         "title": "جدیدترین مطالب وبلاگ"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_team_cards_0e0722",
+                    "id": "qa_team_cards_4ca80a",
                     "type": "team_cards",
                     "props": {
                         "title": "با تیم ما آشنا شوید",
@@ -321,11 +306,10 @@
                                 "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_3.jpg"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_dd2b05",
+                    "id": "qa_testimonials_slider_70cae9",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -352,11 +336,10 @@
                         "columns": "3",
                         "autoplay": true,
                         "interval": 6000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_pricing_cards_0260b1",
+                    "id": "qa_pricing_cards_4176e9",
                     "type": "pricing_cards",
                     "props": {
                         "plans": [
@@ -407,11 +390,10 @@
                         ],
                         "title": "پلن مناسب کسب‌وکار خود را انتخاب کنید",
                         "subtitle": "بدون تعهد، هر زمان قابل تغییر"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_bento_grid_e6d579",
+                    "id": "qa_bento_grid_989340",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -441,11 +423,10 @@
                             }
                         ],
                         "title": "همه‌چیز در یک پلتفرم"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_faq_721c3d",
+                    "id": "qa_faq_9d3ab3",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -463,11 +444,10 @@
                             }
                         ],
                         "title": "سوالات متداول"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_newsletter_form_c1c0f6",
+                    "id": "qa_newsletter_form_3a1bc9",
                     "type": "newsletter_form",
                     "props": {
                         "title": "در خبرنامهٔ ما عضو شوید",
@@ -476,11 +456,10 @@
                         "text_color": "#ffffff",
                         "button_text": "عضویت رایگان",
                         "placeholder": "ایمیل یا شماره موبایل شما"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cta_7f2eb6",
+                    "id": "qa_cta_16a69f",
                     "type": "cta",
                     "props": {
                         "title": "همین امروز کسب‌وکار آنلاین خود را شروع کنید",
@@ -488,8 +467,7 @@
                         "background": "primary",
                         "button_url": "\/account",
                         "button_text": "ساخت سایت رایگان"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": true
@@ -499,67 +477,60 @@
             "title": "فروشگاه",
             "blocks": [
                 {
-                    "id": "qa_module_shop_search_box_da4d32",
+                    "id": "qa_module_shop_search_box_519d10",
                     "type": "module:shop_search_box",
                     "props": {
                         "placeholder": "جستجوی محصول..."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_categories_62ce46",
+                    "id": "qa_module_shop_categories_a34efd",
                     "type": "module:shop_categories",
                     "props": {
                         "title": "دسته‌بندی محصولات"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_wishlist_icon_7292e1",
+                    "id": "qa_module_shop_wishlist_icon_c01fe8",
                     "type": "module:shop_wishlist_icon",
                     "props": {
                         "mode": "wishlist",
                         "label": "علاقه‌مندی‌های من",
                         "style": "full"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_wishlist_icon_855696",
+                    "id": "qa_module_shop_wishlist_icon_cf0e92",
                     "type": "module:shop_wishlist_icon",
                     "props": {
                         "mode": "compare",
                         "label": "مقایسهٔ محصولات",
                         "style": "full"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_product_grid_b0a73c",
+                    "id": "qa_module_shop_product_grid_4bbb53",
                     "type": "module:shop_product_grid",
                     "props": {
                         "limit": 12,
                         "title": "همه محصولات",
                         "columns": "4"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_installment_badge_4d35bb",
+                    "id": "qa_module_installment_badge_2ec2fa",
                     "type": "module:installment_badge",
                     "props": {
                         "style": "full"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_trust_badges_c09258",
+                    "id": "qa_trust_badges_0cbe62",
                     "type": "trust_badges",
                     "props": {
                         "badges": "[{\"icon\":\"🚚\",\"title\":\"ارسال رایگان\",\"text\":\"بالای ۲۰۰ هزار تومان\"},{\"icon\":\"🔒\",\"title\":\"پرداخت امن\",\"text\":\"درگاه‌های معتبر\"},{\"icon\":\"↩️\",\"title\":\"بازگشت آسان\",\"text\":\"تا ۷ روز\"},{\"icon\":\"☎️\",\"title\":\"پشتیبانی ۲۴\/۷\",\"text\":\"همیشه در دسترس\"}]",
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -568,16 +539,15 @@
             "title": "تیم ما",
             "blocks": [
                 {
-                    "id": "qa_heading_8d0d8b",
+                    "id": "qa_heading_3d37ce",
                     "type": "heading",
                     "props": {
                         "text": "با تیم ما آشنا شوید",
                         "level": "1"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_team_cards_af7b9e",
+                    "id": "qa_team_cards_72da9f",
                     "type": "team_cards",
                     "props": {
                         "title": "",
@@ -608,17 +578,15 @@
                                 "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_4.jpg"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_team_837be1",
+                    "id": "qa_team_abf3a5",
                     "type": "team",
                     "props": {
                         "limit": 6,
                         "title": "اعضای بیشتر تیم (داده پویا)"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -627,7 +595,7 @@
             "title": "درباره ما",
             "blocks": [
                 {
-                    "id": "qa_hero_21382f",
+                    "id": "qa_hero_dd8365",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -637,11 +605,10 @@
                         "button_url": "",
                         "button_text": "",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_about_section_7bac3e",
+                    "id": "qa_about_section_07f1b9",
                     "type": "about_section",
                     "props": {
                         "badge": "مسیر ما",
@@ -654,11 +621,10 @@
                             "بروزرسانی مستمر امکانات"
                         ],
                         "description": "با یک تیم کوچک شروع کردیم و امروز بیش از ۳۰۰۰ کسب‌وکار از پلتفرم ما برای فروش، آموزش و معرفی خدمات خود استفاده می‌کنند."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_process_steps_19fc7a",
+                    "id": "qa_process_steps_4629e8",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -680,11 +646,10 @@
                         ],
                         "title": "چطور کار می‌کنیم",
                         "subtitle": "از ثبت‌نام تا راه‌اندازی، سه گام ساده"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_skills_bars_a7e5de",
+                    "id": "qa_skills_bars_cd62bb",
                     "type": "skills_bars",
                     "props": {
                         "title": "توانمندی‌های زیرساخت ما",
@@ -702,11 +667,10 @@
                                 "percent": 97
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_client_logos_2fc1af",
+                    "id": "qa_client_logos_12e735",
                     "type": "client_logos",
                     "props": {
                         "logos": [
@@ -725,8 +689,7 @@
                         ],
                         "title": "برندهایی که به ما اعتماد کرده‌اند",
                         "scroll": true
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -735,14 +698,13 @@
             "title": "فرم تماس",
             "blocks": [
                 {
-                    "id": "qa_module_form_embed_851023",
+                    "id": "qa_module_form_embed_a34089",
                     "type": "module:form_embed",
                     "props": {
                         "style": "card",
                         "title": "فرم درخواست مشاوره",
                         "show_title": true
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -751,28 +713,25 @@
             "title": "حساب کاربری",
             "blocks": [
                 {
-                    "id": "qa_login_register_32e24c",
+                    "id": "qa_login_register_717942",
                     "type": "login_register",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_module_account_quick_links_ee31d6",
+                    "id": "qa_module_account_quick_links_dec748",
                     "type": "module:account_quick_links",
                     "props": {
                         "style": "buttons",
                         "show_notifications": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_loyalty_points_badge_d93d88",
+                    "id": "qa_module_loyalty_points_badge_83de99",
                     "type": "module:loyalty_points_badge",
                     "props": {
                         "label": "امتیاز باشگاه مشتریان من",
                         "style": "full"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -781,7 +740,7 @@
             "title": "تماس با ما",
             "blocks": [
                 {
-                    "id": "qa_contact_split_cde1b4",
+                    "id": "qa_contact_split_395312",
                     "type": "contact_split",
                     "props": {
                         "email": "info@yourbrand.ir",
@@ -791,39 +750,35 @@
                         "address": "تهران، خیابان ولیعصر، پلاک ۱۲۳",
                         "subtitle": "هر سوالی دارید، تیم ما پاسخگوست",
                         "show_form": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_contact_quick_976cf5",
+                    "id": "qa_module_contact_quick_c68015",
                     "type": "module:contact_quick",
                     "props": {
                         "title": "تماس سریع",
                         "show_map": true,
                         "show_phone": true,
                         "show_address": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_support_button_86d892",
+                    "id": "qa_module_support_button_d1d535",
                     "type": "module:support_button",
                     "props": {
                         "label": "پشتیبانی آنلاین",
                         "style": "floating",
                         "bg_color": "#4f46e5",
                         "position": "bottom-right"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_whatsapp_widget_a487ee",
+                    "id": "qa_module_whatsapp_widget_412174",
                     "type": "module:whatsapp_widget",
                     "props": {
                         "label": "چت واتساپ",
                         "position": "bottom-left"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -832,16 +787,15 @@
             "title": "تعرفه‌ها",
             "blocks": [
                 {
-                    "id": "qa_heading_7340aa",
+                    "id": "qa_heading_0bd9ee",
                     "type": "heading",
                     "props": {
                         "text": "تعرفه‌ها و پلن‌ها",
                         "level": "1"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_pricing_cards_becd7f",
+                    "id": "qa_pricing_cards_8cb006",
                     "type": "pricing_cards",
                     "props": {
                         "plans": [
@@ -892,20 +846,18 @@
                         ],
                         "title": "",
                         "subtitle": "همهٔ پلن‌ها شامل میزبانی و SSL رایگان است"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_pricing_table_12e27b",
+                    "id": "qa_module_pricing_table_21b466",
                     "type": "module:pricing_table",
                     "props": {
                         "title": "اشتراک‌های تکمیلی",
                         "subtitle": "برای نیازهای خاص کسب‌وکار خود"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_trust_badges_ede2cc",
+                    "id": "qa_trust_badges_131e7b",
                     "type": "trust_badges",
                     "props": {
                         "badges": [
@@ -926,8 +878,7 @@
                             }
                         ],
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -936,7 +887,7 @@
             "title": "آموزش",
             "blocks": [
                 {
-                    "id": "qa_module_courses_grid_6a3240",
+                    "id": "qa_module_courses_grid_6695a9",
                     "type": "module:courses_grid",
                     "props": {
                         "limit": 9,
@@ -944,14 +895,12 @@
                         "layout": "grid",
                         "columns": "3",
                         "show_price": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_course_enroll_cta_b26a05",
+                    "id": "qa_module_course_enroll_cta_2c93ad",
                     "type": "module:course_enroll_cta",
-                    "props": [],
-                    "children": []
+                    "props": []
                 }
             ]
         },
@@ -960,7 +909,7 @@
             "title": "خدمات",
             "blocks": [
                 {
-                    "id": "qa_service_cards_2f23cc",
+                    "id": "qa_service_cards_1fac54",
                     "type": "service_cards",
                     "props": {
                         "title": "خدماتی که ارائه می‌دهیم",
@@ -990,11 +939,10 @@
                                 "title": "بهینه‌سازی و سئو"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_process_steps_5c2368",
+                    "id": "qa_process_steps_364a3e",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -1016,11 +964,10 @@
                         ],
                         "title": "روند همکاری",
                         "subtitle": "شفاف و بدون هزینهٔ پنهان"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cta_0aa67e",
+                    "id": "qa_cta_b1b3a1",
                     "type": "cta",
                     "props": {
                         "title": "برای مشاورهٔ رایگان تماس بگیرید",
@@ -1028,8 +975,7 @@
                         "background": "primary",
                         "button_url": "\/contact",
                         "button_text": "تماس با ما"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -1038,16 +984,15 @@
             "title": "نمونه‌کارها",
             "blocks": [
                 {
-                    "id": "qa_heading_d9fb79",
+                    "id": "qa_heading_c06834",
                     "type": "heading",
                     "props": {
                         "text": "نمونه‌کارهای منتخب",
                         "level": "1"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_gallery_9e071c",
+                    "id": "qa_gallery_3bf4aa",
                     "type": "gallery",
                     "props": {
                         "items": [
@@ -1078,11 +1023,10 @@
                         ],
                         "title": "",
                         "columns": "3"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_bento_grid_f64bc3",
+                    "id": "qa_bento_grid_3afb2d",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -1112,8 +1056,7 @@
                             }
                         ],
                         "title": "دسته‌بندی پروژه‌ها"
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -1122,106 +1065,95 @@
             "title": "امکانات",
             "blocks": [
                 {
-                    "id": "qa_module_site_search_c96c30",
+                    "id": "qa_module_site_search_82197f",
                     "type": "module:site_search",
                     "props": {
                         "style": "hero",
                         "placeholder": "جستجو در کل سایت..."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_tabs_a74b4d",
+                    "id": "qa_tabs_bb5b7d",
                     "type": "tabs",
                     "props": {
                         "blocks": [
                             {
-                                "id": "qa_tab_panel_4d2161",
+                                "id": "qa_tab_panel_319061",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "فروشگاه اینترنتی",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_d7e319",
+                                            "id": "qa_heading_0ffdf6",
                                             "type": "heading",
                                             "props": {
                                                 "text": "همه‌چیز برای فروش آنلاین",
                                                 "level": "3"
-                                            },
-                                            "children": []
+                                            }
                                         },
                                         {
-                                            "id": "qa_text_30de6b",
+                                            "id": "qa_text_a2692b",
                                             "type": "text",
                                             "props": {
                                                 "content": "مدیریت محصول، دسته‌بندی، سبد خرید و درگاه پرداخت — بدون نیاز به افزونهٔ جداگانه."
-                                            },
-                                            "children": []
+                                            }
                                         }
                                     ]
-                                },
-                                "children": []
+                                }
                             },
                             {
-                                "id": "qa_tab_panel_83f7b0",
+                                "id": "qa_tab_panel_98f3a1",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "آموزش آنلاین",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_c6ce26",
+                                            "id": "qa_heading_a3bd92",
                                             "type": "heading",
                                             "props": {
                                                 "text": "فروش دوره و مدیریت دانشجو",
                                                 "level": "3"
-                                            },
-                                            "children": []
+                                            }
                                         },
                                         {
-                                            "id": "qa_text_22ad29",
+                                            "id": "qa_text_61d083",
                                             "type": "text",
                                             "props": {
                                                 "content": "تعریف دوره، فروش اقساطی یا یک‌جا، و پیگیری پیشرفت دانشجویان در یک داشبورد."
-                                            },
-                                            "children": []
+                                            }
                                         }
                                     ]
-                                },
-                                "children": []
+                                }
                             },
                             {
-                                "id": "qa_tab_panel_9fbcbd",
+                                "id": "qa_tab_panel_832ff9",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "وبلاگ و محتوا",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_af9b7e",
+                                            "id": "qa_heading_bd3b65",
                                             "type": "heading",
                                             "props": {
                                                 "text": "انتشار محتوای حرفه‌ای",
                                                 "level": "3"
-                                            },
-                                            "children": []
+                                            }
                                         },
                                         {
-                                            "id": "qa_text_fe6fee",
+                                            "id": "qa_text_d22e9d",
                                             "type": "text",
                                             "props": {
                                                 "content": "دسته‌بندی، برچسب و سئوی داخلی برای هر مطلب، بدون نیاز به ابزار جانبی."
-                                            },
-                                            "children": []
+                                            }
                                         }
                                     ]
-                                },
-                                "children": []
+                                }
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_accordion_6b647b",
+                    "id": "qa_accordion_0e2548",
                     "type": "accordion",
                     "props": {
                         "items": [
@@ -1229,12 +1161,11 @@
                                 "title": "آیا می‌توانم استایل هر بخش را جداگانه تغییر دهم؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_73a617",
+                                        "id": "qa_text_296d15",
                                         "type": "text",
                                         "props": {
                                             "content": "بله، هر بخش رنگ، فاصله‌گذاری، اندازهٔ متن و حاشیهٔ مخصوص به خودش را دارد و مستقل از بقیه قابل تنظیم است."
-                                        },
-                                        "children": []
+                                        }
                                     }
                                 ]
                             },
@@ -1242,12 +1173,11 @@
                                 "title": "خروجی موبایل جداگانه طراحی می‌شود؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_629ce8",
+                                        "id": "qa_text_883eaf",
                                         "type": "text",
                                         "props": {
                                             "content": "خیر، طراحی واکنش‌گراست؛ همان صفحه به‌صورت خودکار برای موبایل و تبلت هم بهینه نمایش داده می‌شود."
-                                        },
-                                        "children": []
+                                        }
                                     }
                                 ]
                             },
@@ -1255,21 +1185,19 @@
                                 "title": "چطور به نسخهٔ قبلی صفحه برمی‌گردم؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_a9d24f",
+                                        "id": "qa_text_21904a",
                                         "type": "text",
                                         "props": {
                                             "content": "از تاریخچهٔ نسخه‌ها در سازنده می‌توانید هر نسخهٔ قبلی صفحه را انتخاب و بازیابی کنید."
-                                        },
-                                        "children": []
+                                        }
                                     }
                                 ]
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_slider_4d0c79",
+                    "id": "qa_slider_756893",
                     "type": "slider",
                     "props": {
                         "slides": [
@@ -1300,50 +1228,44 @@
                         ],
                         "autoplay": true,
                         "interval": 5000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_countdown_485036",
+                    "id": "qa_countdown_410005",
                     "type": "countdown",
                     "props": {
                         "label": "پایان جشنواره فروش ویژه",
-                        "end_date": "2026-10-01"
-                    },
-                    "children": []
+                        "end_date": "2026-10-02"
+                    }
                 },
                 {
-                    "id": "qa_promo_banner_2c6786",
+                    "id": "qa_promo_banner_3d3b59",
                     "type": "promo_banner",
                     "props": {
                         "link": "",
                         "text": "",
                         "style": "info"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_email_capture_846c48",
+                    "id": "qa_email_capture_2b999a",
                     "type": "email_capture",
                     "props": {
                         "title": "در خبرنامه عضو شوید",
                         "button_text": "ثبت"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_language_switcher_e5b006",
+                    "id": "qa_language_switcher_ae31d4",
                     "type": "language_switcher",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_module_motion_94241f",
+                    "id": "qa_module_motion_e26292",
                     "type": "module:motion",
                     "props": {
                         "enabled": true
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -1352,7 +1274,7 @@
             "title": "خانه — کسب‌وکار خدماتی",
             "blocks": [
                 {
-                    "id": "qa_hero_e1640b",
+                    "id": "qa_hero_d18738",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -1362,11 +1284,10 @@
                         "button_url": "\/contact",
                         "button_text": "رزرو نوبت آنلاین",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_service_cards_a019de",
+                    "id": "qa_service_cards_3262bf",
                     "type": "service_cards",
                     "props": {
                         "title": "خدمات درمانی و تخصصی کلینیک سلامت",
@@ -1396,11 +1317,10 @@
                                 "title": "مراقبت پوست و زیبایی"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_stats_row_a4cc27",
+                    "id": "qa_stats_row_0d0d24",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -1428,11 +1348,10 @@
                         "title": "",
                         "dividers": true,
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_process_steps_810f12",
+                    "id": "qa_process_steps_67f151",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -1454,11 +1373,10 @@
                         ],
                         "title": "روند دریافت خدمت",
                         "subtitle": "از نوبت‌دهی تا پیگیری درمان، در سه گام روشن"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_35c967",
+                    "id": "qa_testimonials_slider_12b7b5",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1485,11 +1403,10 @@
                         "columns": "3",
                         "autoplay": true,
                         "interval": 6000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_faq_bc490e",
+                    "id": "qa_faq_db1c00",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -1507,11 +1424,10 @@
                             }
                         ],
                         "title": "سوالات متداول"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cta_377d7a",
+                    "id": "qa_cta_edeffd",
                     "type": "cta",
                     "props": {
                         "title": "همین حالا نوبت خود را رزرو کنید",
@@ -1519,8 +1435,7 @@
                         "background": "primary",
                         "button_url": "\/contact",
                         "button_text": "رزرو نوبت"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": false
@@ -1530,16 +1445,15 @@
             "title": "نظرات مشتریان",
             "blocks": [
                 {
-                    "id": "qa_heading_06f3bf",
+                    "id": "qa_heading_106ad5",
                     "type": "heading",
                     "props": {
                         "text": "مشتریان ما چه می‌گویند",
                         "level": "1"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_5dd12c",
+                    "id": "qa_testimonials_slider_15f149",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1572,19 +1486,17 @@
                         "columns": "1",
                         "autoplay": true,
                         "interval": 5000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_reviews_grid_c5bf2a",
+                    "id": "qa_module_reviews_grid_d51154",
                     "type": "module:reviews_grid",
                     "props": {
                         "limit": 6,
                         "style": "cards",
                         "title": "نظرات محصولات (داده پویا)",
                         "show_avatar": true
-                    },
-                    "children": []
+                    }
                 }
             ]
         },
@@ -1593,7 +1505,7 @@
             "title": "خانه — مجله و رسانه",
             "blocks": [
                 {
-                    "id": "qa_hero_2adb1c",
+                    "id": "qa_hero_9ef44e",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -1603,36 +1515,32 @@
                         "button_url": "\/blog",
                         "button_text": "مطالعهٔ مطالب",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_blog_featured_e4f83e",
+                    "id": "qa_module_blog_featured_7a9736",
                     "type": "module:blog_featured",
                     "props": {
                         "title": "مطلب ویژهٔ هفته"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_blog_posts_b9cfe3",
+                    "id": "qa_blog_posts_451c9a",
                     "type": "blog_posts",
                     "props": {
                         "limit": 9,
                         "title": "جدیدترین مطالب"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_blog_categories_d02559",
+                    "id": "qa_module_blog_categories_007e7e",
                     "type": "module:blog_categories",
                     "props": {
                         "title": "مرور بر اساس موضوع"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_bento_grid_b9a56f",
+                    "id": "qa_bento_grid_b3b514",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -1662,11 +1570,10 @@
                             }
                         ],
                         "title": "موضوعات پرطرفدار"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_newsletter_form_750574",
+                    "id": "qa_newsletter_form_5888a1",
                     "type": "newsletter_form",
                     "props": {
                         "title": "خلاصهٔ هفتگی را در ایمیل خود دریافت کنید",
@@ -1675,8 +1582,7 @@
                         "text_color": "#ffffff",
                         "button_text": "عضویت در خبرنامه",
                         "placeholder": "ایمیل شما"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": false
@@ -1686,7 +1592,7 @@
             "title": "خانه — برند شخصی",
             "blocks": [
                 {
-                    "id": "qa_hero_6122f6",
+                    "id": "qa_hero_c4f5f7",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -1696,11 +1602,10 @@
                         "button_url": "\/portfolio",
                         "button_text": "مشاهدهٔ نمونه‌کارها",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_about_section_3dc816",
+                    "id": "qa_about_section_746e29",
                     "type": "about_section",
                     "props": {
                         "badge": "دربارهٔ من",
@@ -1713,11 +1618,10 @@
                             "طراحی رابط کاربری (UI)"
                         ],
                         "description": "از سال ۱۳۹۵ با کسب‌وکارهای کوچک و برندهای نوپا کار می‌کنم تا هویت بصری‌ای بسازم که واقعاً نمایندهٔ آن‌هاست، نه یک قالب تکراری."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_skills_bars_45ca84",
+                    "id": "qa_skills_bars_834852",
                     "type": "skills_bars",
                     "props": {
                         "title": "مهارت‌ها",
@@ -1735,11 +1639,10 @@
                                 "percent": 85
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_gallery_c2e86f",
+                    "id": "qa_gallery_79ed6f",
                     "type": "gallery",
                     "props": {
                         "items": [
@@ -1758,11 +1661,10 @@
                         ],
                         "title": "منتخب پروژه‌ها",
                         "columns": "3"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_79fbee",
+                    "id": "qa_testimonials_slider_047bf9",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1783,11 +1685,10 @@
                         "columns": "1",
                         "autoplay": true,
                         "interval": 5500
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cta_80402e",
+                    "id": "qa_cta_994146",
                     "type": "cta",
                     "props": {
                         "title": "پروژهٔ بعدی خود را با من شروع کنید",
@@ -1795,8 +1696,7 @@
                         "background": "secondary",
                         "button_url": "\/contact",
                         "button_text": "درخواست همکاری"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": false
@@ -1806,7 +1706,7 @@
             "title": "خانه — فروشگاه اینترنتی",
             "blocks": [
                 {
-                    "id": "qa_hero_37d219",
+                    "id": "qa_hero_b87e79",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -1816,11 +1716,10 @@
                         "button_url": "\/shop",
                         "button_text": "مشاهده و خرید",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_features_grid_2ef2a0",
+                    "id": "qa_features_grid_e1d4a9",
                     "type": "features_grid",
                     "props": {
                         "style": "cards",
@@ -1849,29 +1748,26 @@
                             }
                         ],
                         "subtitle": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_heading_4aca8a",
+                    "id": "qa_heading_b98298",
                     "type": "heading",
                     "props": {
                         "text": "پرفروش‌ترین محصولات",
                         "level": "2"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_product_grid_defa09",
+                    "id": "qa_product_grid_6be85e",
                     "type": "product_grid",
                     "props": {
                         "limit": 8,
                         "columns": 4
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_gallery_e1d314",
+                    "id": "qa_gallery_973483",
                     "type": "gallery",
                     "props": {
                         "items": [
@@ -1890,11 +1786,10 @@
                         ],
                         "title": "لوک‌بوک فصل جدید",
                         "columns": "3"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_333d64",
+                    "id": "qa_testimonials_slider_588dc1",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1921,11 +1816,10 @@
                         "columns": "3",
                         "autoplay": true,
                         "interval": 5000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_trust_badges_fc6ffb",
+                    "id": "qa_trust_badges_a2d14d",
                     "type": "trust_badges",
                     "props": {
                         "badges": [
@@ -1946,11 +1840,10 @@
                             }
                         ],
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_newsletter_form_224038",
+                    "id": "qa_newsletter_form_595018",
                     "type": "newsletter_form",
                     "props": {
                         "title": "از تخفیف‌های ویژه باخبر شوید",
@@ -1959,11 +1852,10 @@
                         "text_color": "#ffffff",
                         "button_text": "عضویت",
                         "placeholder": "ایمیل شما"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cta_d04f40",
+                    "id": "qa_cta_ef17d9",
                     "type": "cta",
                     "props": {
                         "title": "فرصت محدود! تخفیف ویژه تا پایان هفته",
@@ -1971,8 +1863,7 @@
                         "background": "primary",
                         "button_url": "\/shop",
                         "button_text": "ورود به فروشگاه"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": false
@@ -1982,7 +1873,7 @@
             "title": "خانه — آموزش آنلاین",
             "blocks": [
                 {
-                    "id": "qa_hero_d850c9",
+                    "id": "qa_hero_93fd68",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -1992,11 +1883,10 @@
                         "button_url": "\/learning",
                         "button_text": "مشاهدهٔ دوره‌ها",
                         "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_stats_row_4d987c",
+                    "id": "qa_stats_row_3d2316",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -2024,11 +1914,10 @@
                         "title": "",
                         "dividers": true,
                         "background": "#f8fafc"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_courses_grid_e531d0",
+                    "id": "qa_module_courses_grid_de1f9a",
                     "type": "module:courses_grid",
                     "props": {
                         "limit": 6,
@@ -2036,11 +1925,10 @@
                         "layout": "grid",
                         "columns": "3",
                         "show_price": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_process_steps_97706c",
+                    "id": "qa_process_steps_15e6c1",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -2062,11 +1950,10 @@
                         ],
                         "title": "چطور یاد می‌گیرید؟",
                         "subtitle": "مسیری ساده از ثبت‌نام تا دریافت مدرک"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_testimonials_slider_d9a64b",
+                    "id": "qa_testimonials_slider_eed8a7",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -2093,17 +1980,15 @@
                         "columns": "3",
                         "autoplay": true,
                         "interval": 6000
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_course_enroll_cta_8e1375",
+                    "id": "qa_module_course_enroll_cta_07606d",
                     "type": "module:course_enroll_cta",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_faq_5757a2",
+                    "id": "qa_faq_09d135",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -2121,8 +2006,7 @@
                             }
                         ],
                         "title": "سوالات متداول دوره‌ها"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_home": false
@@ -2132,47 +2016,43 @@
             "title": "پوشش عناصر سازنده",
             "blocks": [
                 {
-                    "id": "qa_section_17a1e8",
+                    "id": "qa_section_35584d",
                     "type": "section",
                     "props": {
                         "blocks": [],
                         "padding": "md",
                         "container": true,
                         "background": "transparent"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_container_7df0f0",
+                    "id": "qa_container_f1e1ae",
                     "type": "container",
                     "props": {
                         "blocks": [],
                         "maxWidth": "7xl"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_grid_d33bd6",
+                    "id": "qa_grid_726b44",
                     "type": "grid",
                     "props": {
                         "gap": "md",
                         "blocks": [],
                         "columns": 3
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_columns_981c1b",
+                    "id": "qa_columns_23af2d",
                     "type": "columns",
                     "props": {
                         "gap": "md",
                         "blocks": [],
                         "ratios": "1\/2,1\/2"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_flex_container_544e0b",
+                    "id": "qa_flex_container_1494d5",
                     "type": "flex_container",
                     "props": {
                         "gap": "md",
@@ -2182,181 +2062,151 @@
                         "minHeight": 0,
                         "alignItems": "stretch",
                         "justifyContent": "flex-start"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_tab_panel_cb59fb",
+                    "id": "qa_tab_panel_5d48ad",
                     "type": "tab_panel",
                     "props": {
                         "title": "تب",
                         "blocks": []
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_modal_48de53",
+                    "id": "qa_modal_688f4f",
                     "type": "modal",
                     "props": {
                         "blocks": [],
                         "trigger_text": "باز کردن"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_text_78431e",
+                    "id": "qa_text_e34e3c",
                     "type": "text",
                     "props": {
                         "content": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_image_65acd8",
+                    "id": "qa_image_84b33b",
                     "type": "image",
                     "props": {
                         "alt": "",
                         "url": "",
                         "align": "center",
                         "caption": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_video_d1b6fa",
+                    "id": "qa_video_b0b389",
                     "type": "video",
                     "props": {
                         "url": "",
                         "caption": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_button_2d163c",
+                    "id": "qa_button_d28834",
                     "type": "button",
                     "props": {
                         "url": "#",
                         "text": "",
                         "style": "primary"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_divider_7878ea",
+                    "id": "qa_divider_3df44a",
                     "type": "divider",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_icon_197271",
+                    "id": "qa_icon_5fbba4",
                     "type": "icon",
                     "props": {
                         "name": "",
                         "size": "md"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_counter_cc7de1",
+                    "id": "qa_counter_8403cd",
                     "type": "counter",
                     "props": {
                         "label": "",
                         "value": 0,
                         "suffix": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_progress_bar_0adb1d",
+                    "id": "qa_progress_bar_e9e301",
                     "type": "progress_bar",
                     "props": {
                         "label": "",
                         "value": 70
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_products_f8353c",
-                    "type": "products",
-                    "props": {
-                        "limit": 8,
-                        "title": "محصولات",
-                        "source": "recent"
-                    },
-                    "children": []
-                },
-                {
-                    "id": "qa_testimonials_5a2d5b",
+                    "id": "qa_testimonials_7ef2e9",
                     "type": "testimonials",
                     "props": {
                         "limit": 5,
                         "title": "نظرات"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_product_slider_b0c415",
+                    "id": "qa_product_slider_c0f57f",
                     "type": "product_slider",
                     "props": {
                         "limit": 6
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cart_icon_772feb",
+                    "id": "qa_cart_icon_c55a75",
                     "type": "cart_icon",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_add_to_cart_41c663",
+                    "id": "qa_add_to_cart_b70b00",
                     "type": "add_to_cart",
                     "props": {
                         "text": "افزودن به سبد",
                         "product_id": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_price_box_4a56e7",
+                    "id": "qa_price_box_6cbd50",
                     "type": "price_box",
                     "props": {
                         "product_id": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_breadcrumb_e12f16",
+                    "id": "qa_breadcrumb_b5bdf8",
                     "type": "breadcrumb",
-                    "props": [],
-                    "children": []
+                    "props": []
                 },
                 {
-                    "id": "qa_search_bar_d0f03f",
+                    "id": "qa_search_bar_d57ceb",
                     "type": "search_bar",
                     "props": {
                         "placeholder": "جستجو..."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_menu_9990ac",
+                    "id": "qa_nav_menu_f5d6cc",
                     "type": "nav_menu",
                     "props": {
                         "location": "header"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_social_icons_4cb80a",
+                    "id": "qa_social_icons_c3f90a",
                     "type": "social_icons",
                     "props": {
                         "links": []
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_header_feb8da",
+                    "id": "qa_nav_header_c5c300",
                     "type": "nav_header",
                     "props": {
                         "sticky": false,
@@ -2365,182 +2215,144 @@
                         "logo_text": "",
                         "nav_links": [],
                         "text_color": "#111827"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_footer_1b5123",
+                    "id": "qa_nav_footer_b0522e",
                     "type": "nav_footer",
                     "props": {
                         "columns": [],
                         "bg_color": "#111827",
                         "copyright": "",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_product_slider_2453ab",
+                    "id": "qa_module_shop_product_slider_bd35d5",
                     "type": "module:shop_product_slider",
                     "props": {
                         "limit": 6,
                         "title": "محصولات پیشنهادی",
                         "source": "featured",
                         "autoplay": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_cart_button_9b5751",
+                    "id": "qa_module_shop_cart_button_0a97b1",
                     "type": "module:shop_cart_button",
                     "props": {
                         "label": "سبد خرید",
                         "style": "button"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_shop_countdown_c69bac",
+                    "id": "qa_module_shop_countdown_c098f6",
                     "type": "module:shop_countdown",
                     "props": {
                         "bg_color": "#ef4444",
                         "end_date": "",
                         "promo_text": "پیشنهاد ویژه — فرصت محدود!"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_my_learning_link_d34e40",
+                    "id": "qa_module_my_learning_link_1cdd9f",
                     "type": "module:my_learning_link",
                     "props": {
                         "label": "یادگیری من",
                         "style": "button"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_plan_cta_d16f37",
+                    "id": "qa_module_plan_cta_c1c096",
                     "type": "module:plan_cta",
                     "props": {
                         "title": "به کاربران ویژه بپیوند",
                         "bg_color": "#7c3aed",
                         "subtitle": "",
                         "button_text": "مشاهده پلن‌ها"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_subscriber_stats_424999",
+                    "id": "qa_module_subscriber_stats_5f000b",
                     "type": "module:subscriber_stats",
                     "props": {
                         "label": "کاربر فعال",
                         "style": "badge",
                         "show_count": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_referral_widget_4d585d",
+                    "id": "qa_module_referral_widget_00e9ef",
                     "type": "module:referral_widget",
                     "props": {
                         "style": "banner",
                         "title": "دوستانت را دعوت کن",
                         "subtitle": "با معرفی دوستان جایزه بگیر",
                         "show_link": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_content_cards_b29b43",
+                    "id": "qa_module_content_cards_77f7e5",
                     "type": "module:content_cards",
                     "props": {
                         "limit": 3,
                         "style": "cards",
                         "title": "مطالب",
                         "show_excerpt": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_portfolio_grid_e3f4b2",
-                    "type": "module:portfolio_grid",
-                    "props": {
-                        "limit": 6,
-                        "title": "نمونه کارها",
-                        "columns": "3",
-                        "show_filter": true
-                    },
-                    "children": []
-                },
-                {
-                    "id": "qa_module_services_section_1e6d9e",
-                    "type": "module:services_section",
-                    "props": {
-                        "limit": 6,
-                        "style": "cards",
-                        "title": "خدمات ما",
-                        "columns": "3"
-                    },
-                    "children": []
-                },
-                {
-                    "id": "qa_module_advertisement_zone_fcf074",
+                    "id": "qa_module_advertisement_zone_6c8dab",
                     "type": "module:advertisement_zone",
                     "props": {
                         "position": "banner",
                         "zone_name": "banner-main"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_notifications_bar_8b26b2",
+                    "id": "qa_module_notifications_bar_47764f",
                     "type": "module:notifications_bar",
                     "props": {
                         "style": "top-bar",
                         "show_dismiss": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_social_links_bar_60485e",
+                    "id": "qa_module_social_links_bar_f16143",
                     "type": "module:social_links_bar",
                     "props": {
                         "size": "md",
                         "color": "brand",
                         "style": "horizontal"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_business_card_embed_6c72c6",
+                    "id": "qa_module_business_card_embed_4d2800",
                     "type": "module:business_card_embed",
                     "props": {
                         "style": "full",
                         "card_slug": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_edu_article_grid_7c02f1",
+                    "id": "qa_module_edu_article_grid_f036e2",
                     "type": "module:edu_article_grid",
                     "props": {
                         "limit": 6,
                         "title": "مقالات آموزشی",
                         "layout": "grid"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_module_invoice_quick_pay_a528b0",
+                    "id": "qa_module_invoice_quick_pay_a7ff28",
                     "type": "module:invoice_quick_pay",
                     "props": {
                         "title": "پرداخت فاکتور",
                         "placeholder": "شماره فاکتور را وارد کنید"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_hero_split_9bd355",
+                    "id": "qa_hero_split_f6d6db",
                     "type": "hero_split",
                     "props": {
                         "badge": "",
@@ -2553,11 +2365,10 @@
                         "button2_url": "#",
                         "button_text": "شروع کنید",
                         "button2_text": "بیشتر بدانید"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_hero_gradient_4c3a14",
+                    "id": "qa_hero_gradient_3f9863",
                     "type": "hero_gradient",
                     "props": {
                         "badge": "معرفی می‌کنیم",
@@ -2570,11 +2381,10 @@
                         "gradient_to": "#7c3aed",
                         "button2_text": "مشاهده دمو",
                         "gradient_from": "#4f46e5"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_services_cards_05e1d4",
+                    "id": "qa_services_cards_d1cb58",
                     "type": "services_cards",
                     "props": {
                         "style": "bordered",
@@ -2582,11 +2392,10 @@
                         "columns": "3",
                         "services": "[{\"icon\":\"🎨\",\"title\":\"طراحی\",\"text\":\"رابط کاربری زیبا\",\"link\":\"#\",\"link_text\":\"بیشتر\"},{\"icon\":\"⚙️\",\"title\":\"توسعه\",\"text\":\"فناوری‌های جدید\",\"link\":\"#\",\"link_text\":\"بیشتر\"},{\"icon\":\"📈\",\"title\":\"بازاریابی\",\"text\":\"حضور آنلاین\",\"link\":\"#\",\"link_text\":\"بیشتر\"}]",
                         "subtitle": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_hero_trust_c9122b",
+                    "id": "qa_hero_trust_e67460",
                     "type": "hero_trust",
                     "props": {
                         "badge": "",
@@ -2599,37 +2408,34 @@
                         "btn_primary_text": "",
                         "btn_secondary_url": "#",
                         "btn_secondary_text": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_project_cards_b8b6b0",
+                    "id": "qa_project_cards_9b7c46",
                     "type": "project_cards",
                     "props": {
                         "cards": [],
                         "title": "",
                         "columns": "2",
                         "subtitle": ""
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_contact_info_802876",
+                    "id": "qa_contact_info_b147f5",
                     "type": "contact_info",
                     "props": {
                         "items": [],
                         "title": "",
                         "subtitle": "",
                         "background": ""
-                    },
-                    "children": []
+                    }
                 }
             ]
         }
     },
     "header_blocks": [
         {
-            "id": "qa_nav_header_2337e5",
+            "id": "qa_nav_header_2e7b1b",
             "type": "nav_header",
             "props": {
                 "sticky": false,
@@ -2664,13 +2470,12 @@
                     }
                 ],
                 "text_color": "#111827"
-            },
-            "children": []
+            }
         }
     ],
     "footer_blocks": [
         {
-            "id": "qa_nav_footer_11c64b",
+            "id": "qa_nav_footer_83d272",
             "type": "nav_footer",
             "props": {
                 "columns": [
@@ -2692,8 +2497,7 @@
                 "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                 "logo_text": "برند شما",
                 "text_color": "#e5e7eb"
-            },
-            "children": []
+            }
         }
     ],
     "header_variants": [
@@ -2702,7 +2506,7 @@
             "label": "کلاسیک (لوگو + منو)",
             "blocks": [
                 {
-                    "id": "qa_nav_header_2337e5",
+                    "id": "qa_nav_header_2e7b1b",
                     "type": "nav_header",
                     "props": {
                         "sticky": false,
@@ -2737,8 +2541,7 @@
                             }
                         ],
                         "text_color": "#111827"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": true
@@ -2748,12 +2551,11 @@
             "label": "مینیمال (فقط منو، بدون هدر کامل)",
             "blocks": [
                 {
-                    "id": "qa_nav_menu_278ccb",
+                    "id": "qa_nav_menu_5fbf6d",
                     "type": "nav_menu",
                     "props": {
                         "location": "header"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -2763,7 +2565,7 @@
             "label": "ناوبری + سبد خرید مجزا",
             "blocks": [
                 {
-                    "id": "qa_nav_header_405e02",
+                    "id": "qa_nav_header_c430d3",
                     "type": "nav_header",
                     "props": {
                         "sticky": true,
@@ -2799,14 +2601,12 @@
                             }
                         ],
                         "text_color": "#111827"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cart_icon_5ecc29",
+                    "id": "qa_cart_icon_68f691",
                     "type": "cart_icon",
-                    "props": [],
-                    "children": []
+                    "props": []
                 }
             ],
             "is_default": false
@@ -2816,7 +2616,7 @@
             "label": "نوار ابزار + هدر",
             "blocks": [
                 {
-                    "id": "qa_social_icons_0fb1ff",
+                    "id": "qa_social_icons_a64501",
                     "type": "social_icons",
                     "props": {
                         "links": [
@@ -2829,11 +2629,10 @@
                                 "platform": "telegram"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_header_7c7af6",
+                    "id": "qa_nav_header_f6c929",
                     "type": "nav_header",
                     "props": {
                         "phone": "۰۲۱-۱۲۳۴۵۶۷۸",
@@ -2868,8 +2667,7 @@
                             }
                         ],
                         "text_color": "#111827"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -2879,15 +2677,14 @@
             "label": "فروشگاهی (جستجو + هدر + سبد، سه بلوک مستقل)",
             "blocks": [
                 {
-                    "id": "qa_search_bar_5f3f43",
+                    "id": "qa_search_bar_940bfd",
                     "type": "search_bar",
                     "props": {
                         "placeholder": "جستجوی محصول..."
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_header_6df2aa",
+                    "id": "qa_nav_header_fe8720",
                     "type": "nav_header",
                     "props": {
                         "sticky": true,
@@ -2923,14 +2720,12 @@
                         ],
                         "text_color": "#111827",
                         "show_account": true
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_cart_icon_7d85e3",
+                    "id": "qa_cart_icon_f8d095",
                     "type": "cart_icon",
-                    "props": [],
-                    "children": []
+                    "props": []
                 }
             ],
             "is_default": false
@@ -2940,7 +2735,7 @@
             "label": "کسب‌وکاری کامل (تماس + CTA)",
             "blocks": [
                 {
-                    "id": "qa_contact_info_921324",
+                    "id": "qa_contact_info_1ef388",
                     "type": "contact_info",
                     "props": {
                         "items": [
@@ -2957,11 +2752,10 @@
                         ],
                         "title": "",
                         "background": "#111827"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_header_075ab0",
+                    "id": "qa_nav_header_b3ff2f",
                     "type": "nav_header",
                     "props": {
                         "phone": "۰۲۱-۱۲۳۴۵۶۷۸",
@@ -2999,8 +2793,7 @@
                         ],
                         "text_color": "#111827",
                         "show_search": true
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -3012,7 +2805,7 @@
             "label": "ساده",
             "blocks": [
                 {
-                    "id": "qa_nav_footer_11c64b",
+                    "id": "qa_nav_footer_83d272",
                     "type": "nav_footer",
                     "props": {
                         "columns": [
@@ -3034,8 +2827,7 @@
                         "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                         "logo_text": "برند شما",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": true
@@ -3045,7 +2837,7 @@
             "label": "شرکتی چندستونه",
             "blocks": [
                 {
-                    "id": "qa_nav_footer_0d6df4",
+                    "id": "qa_nav_footer_b85105",
                     "type": "nav_footer",
                     "props": {
                         "links": [
@@ -3129,14 +2921,12 @@
                         "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                         "logo_text": "برند شما",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_language_switcher_f9b722",
+                    "id": "qa_language_switcher_967c95",
                     "type": "language_switcher",
-                    "props": [],
-                    "children": []
+                    "props": []
                 }
             ],
             "is_default": false
@@ -3146,7 +2936,7 @@
             "label": "فروشگاهی",
             "blocks": [
                 {
-                    "id": "qa_social_icons_bda6d5",
+                    "id": "qa_social_icons_a75c3e",
                     "type": "social_icons",
                     "props": {
                         "links": [
@@ -3159,11 +2949,10 @@
                                 "platform": "telegram"
                             }
                         ]
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_footer_045225",
+                    "id": "qa_nav_footer_4293f6",
                     "type": "nav_footer",
                     "props": {
                         "columns": [
@@ -3198,8 +2987,7 @@
                         "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                         "logo_text": "فروشگاه شما",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -3209,7 +2997,7 @@
             "label": "محور خبرنامه",
             "blocks": [
                 {
-                    "id": "qa_newsletter_form_bf2177",
+                    "id": "qa_newsletter_form_4b7bb2",
                     "type": "newsletter_form",
                     "props": {
                         "title": "از آخرین اخبار باخبر شوید",
@@ -3218,19 +3006,17 @@
                         "text_color": "#ffffff",
                         "button_text": "عضویت",
                         "placeholder": "ایمیل شما"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_footer_d92b9d",
+                    "id": "qa_nav_footer_9c30a5",
                     "type": "nav_footer",
                     "props": {
                         "bg_color": "#111827",
                         "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                         "logo_text": "برند شما",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -3240,7 +3026,7 @@
             "label": "محور تماس",
             "blocks": [
                 {
-                    "id": "qa_contact_info_e62b03",
+                    "id": "qa_contact_info_94da5e",
                     "type": "contact_info",
                     "props": {
                         "items": [
@@ -3262,19 +3048,17 @@
                         ],
                         "title": "در تماس باشید",
                         "background": "#1f2937"
-                    },
-                    "children": []
+                    }
                 },
                 {
-                    "id": "qa_nav_footer_4cdee7",
+                    "id": "qa_nav_footer_f33535",
                     "type": "nav_footer",
                     "props": {
                         "bg_color": "#111827",
                         "copyright": "© 2026 برند شما. تمامی حقوق محفوظ است.",
                         "logo_text": "برند شما",
                         "text_color": "#e5e7eb"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false
@@ -3284,12 +3068,11 @@
             "label": "مینیمال\/قانونی",
             "blocks": [
                 {
-                    "id": "qa_nav_menu_ba0acb",
+                    "id": "qa_nav_menu_1d40f5",
                     "type": "nav_menu",
                     "props": {
                         "location": "footer"
-                    },
-                    "children": []
+                    }
                 }
             ],
             "is_default": false

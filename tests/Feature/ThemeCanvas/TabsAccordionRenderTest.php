@@ -49,7 +49,10 @@ class TabsAccordionRenderTest extends TestCase
         $this->assertStringContainsString('قیمت‌گذاری', $html);
         $this->assertStringContainsString('محتوای تب یک', $html);
         $this->assertStringContainsString('محتوای تب دو', $html);
-        $this->assertSame(2, substr_count($html, 'tb-tab-panel'));
+        // substr_count('tb-tab-panel') would also match the real nav/
+        // switching script's own selector string (TASK 3/3 Phase 5,
+        // BLD-16) — count the actual rendered panel DIVs by class attribute.
+        $this->assertSame(2, substr_count($html, 'class="tb-tab-panel"'));
     }
 
     /**
@@ -94,7 +97,7 @@ class TabsAccordionRenderTest extends TestCase
         $this->assertStringContainsString('قیمت‌گذاری', $html);
         $this->assertStringContainsString('محتوای تب یک', $html);
         $this->assertStringContainsString('محتوای تب دو', $html);
-        $this->assertSame(2, substr_count($html, 'tb-tab-panel'));
+        $this->assertSame(2, substr_count($html, 'class="tb-tab-panel"'));
     }
 
     public function test_tabs_with_no_tabs_renders_empty_not_a_phantom_panel(): void
