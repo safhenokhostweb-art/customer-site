@@ -896,6 +896,12 @@ class ThemeDesignController extends Controller
         /** @var \App\Services\ThemeCanvas\ThemeCanvasRenderer $renderer */
         $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
         $renderer->setContext(['editor_mode' => true]);
+        // TASK 3/3 Phase 6.5E (BLD-32) — same bulk media preload as the
+        // public render boundary; this endpoint renders through the same
+        // CustomerMediaResolver and is hit on every editor keystroke/tab
+        // switch, so an unbounded per-block query cost here is at least as
+        // real a problem as on public render.
+        $renderer->preloadMediaFor($blocks);
 
         $renderedBlocks = [];
         foreach ($blocks as $block) {

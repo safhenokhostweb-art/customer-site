@@ -447,12 +447,24 @@ test.describe.serial('Universal Theme capabilities (Phase 5)', () => {
         }
 
         // Publish through the real Canvas write path, then verify PUBLIC render.
+        // Phase 6.5E (Blocker B) — publishDraft() in canvas-editor.blade.php
+        // schedules a real, deliberate `window.location.reload()` ~800ms
+        // after a successful publish response, to show the freshly-
+        // published editor state. Start waiting for THAT reload's own
+        // document request before clicking Publish, so there is no gap
+        // between the click and the listener being armed. `networkidle`
+        // (the old wait here) is a proxy signal that can still resolve
+        // WHILE that reload is only scheduled, not yet fired — this
+        // test's own subsequent goto() was then racing the product's own
+        // reload on the same top-level frame, aborting whichever one lost
+        // (net::ERR_ABORTED).
+        const reloadDocument = page.waitForResponse(
+            (res) => res.url().includes('/admin/theme-design/canvas/edit') && res.request().resourceType() === 'document',
+            { timeout: 15_000 }
+        );
         expect((await waitForPublish(page, () => publishButton(page).click())).ok()).toBeTruthy();
-        // The editor's own post-publish UI work (toast/state update) can
-        // still be in flight right after the publish response resolves;
-        // a real, non-arbitrary condition (network idle) rather than a
-        // fixed sleep before navigating away.
-        await page.waitForLoadState('networkidle');
+        await reloadDocument;
+        await page.locator('[data-testid="tb-canvas-save-button"]').waitFor({ state: 'visible', timeout: 15_000 });
 
         await page.goto('/page/utilities', { waitUntil: 'domcontentloaded' });
         await expect(page.locator('.tb-carousel.tb-slider')).toHaveAttribute('data-interval', '8000');

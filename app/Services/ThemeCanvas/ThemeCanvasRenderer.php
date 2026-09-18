@@ -98,6 +98,26 @@ class ThemeCanvasRenderer extends BlockRenderer
     }
 
     /**
+     * TASK 3/3 Phase 6.5E (BLD-32) — bulk-preloads every media reference
+     * across any number of block lists (e.g. header + footer + page
+     * content) in ONE query before rendering, instead of letting
+     * resolveMediaProps() above discover and query them one at a time as
+     * the tree is walked. Call this before renderBlocks() for a page; a
+     * caller that skips it still renders correctly (resolveMediaProps()
+     * falls back to a per-UUID lookup, still memoized) — this is a pure
+     * performance boundary, never a correctness one.
+     */
+    public function preloadMediaFor(array ...$blockLists): void
+    {
+        $this->mediaResolver ??= app(CustomerMediaResolver::class);
+        $uuids = [];
+        foreach ($blockLists as $blocks) {
+            $uuids = array_merge($uuids, $this->mediaResolver->collectMediaIds($blocks));
+        }
+        $this->mediaResolver->preload($uuids);
+    }
+
+    /**
      * TASK 3/3 Phase 6.5C (BLD-28) — the same bounded integration point as
      * resolveMediaProps() above, for internal-page-capable link props
      * (button/CTA/hero action URLs). See InternalLinkResolver's own

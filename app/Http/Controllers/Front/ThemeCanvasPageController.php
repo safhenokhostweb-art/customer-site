@@ -96,8 +96,16 @@ class ThemeCanvasPageController extends Controller
         // on the same short-TTL, install-visible-within-60s data source
         // loadThemeData() above already uses, not the 1-hour settings cache.
         $layoutService = app(\App\Services\BuilderLayoutService::class);
-        $headerHtml  = $this->renderer->renderBlocks($layoutService->getHeaderBlocks(null, $themeData));
-        $footerHtml  = $this->renderer->renderBlocks($layoutService->getFooterBlocks(null, $themeData));
+        $headerBlocks = $layoutService->getHeaderBlocks(null, $themeData);
+        $footerBlocks = $layoutService->getFooterBlocks(null, $themeData);
+
+        // TASK 3/3 Phase 6.5E (BLD-32) — one bulk media query for the whole
+        // page (header + footer + content) instead of one query per
+        // media-bearing block as renderBlocks() below discovers them.
+        $this->renderer->preloadMediaFor($headerBlocks, $footerBlocks, $blocks);
+
+        $headerHtml  = $this->renderer->renderBlocks($headerBlocks);
+        $footerHtml  = $this->renderer->renderBlocks($footerBlocks);
         $contentHtml = $this->renderer->renderBlocks($blocks);
 
         // Phase 3F-C — HasAssets bridge for the real public Canvas render,
