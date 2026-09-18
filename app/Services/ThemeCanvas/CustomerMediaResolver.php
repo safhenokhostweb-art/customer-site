@@ -15,8 +15,15 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class CustomerMediaResolver
 {
-    /** Block type => set of its top-level media-capable prop keys. */
-    private const MEDIA_PROPS = [
+    /**
+     * Block type => set of its top-level media-capable prop keys.
+     * TASK 3/3 Phase 6.5 (BLD-21): made public so
+     * ThemeMediaLocalizationService can walk the SAME canonical inventory
+     * at install time (to rewrite a master-theme-hosted URL into a real
+     * {media_id}) instead of maintaining a second, independently-drifting
+     * list of "which props are images".
+     */
+    public const MEDIA_PROPS = [
         'hero' => ['background_image'],
         'section' => ['background_image'],
         'image' => ['url'],
@@ -26,7 +33,7 @@ class CustomerMediaResolver
     ];
 
     /** Block type => {repeater prop key, nested media field key, storage shape}. */
-    private const MEDIA_REPEATERS = [
+    public const MEDIA_REPEATERS = [
         'gallery' => ['prop' => 'items', 'field' => 'url', 'storage' => 'array'],
         'team_cards' => ['prop' => 'members', 'field' => 'image', 'storage' => 'json'],
         'slider' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],

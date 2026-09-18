@@ -11,6 +11,7 @@ use App\Support\CanvasReservedSlugs;
 use App\Services\BuilderLayoutService;
 use App\Services\ThemeBuilder\BlockRenderer;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
+use App\Services\ThemeCanvas\ThemeMediaLocalizationService;
 use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
 use App\Models\ThemeInstanceRevision;
@@ -399,6 +400,14 @@ class PageBuilderController extends Controller
             'global_styles'    => $data['global_styles'] ?? [],
             'extension_assets' => $data['extension_assets'] ?? [],
         ];
+
+        // BLD-21 (MASTER_THEME_MEDIA_LOCALIZATION_GAP) — must run strictly
+        // BEFORE record() below: ThemeInstanceRevision content is immutable
+        // once created, so this is the only point where a master-theme
+        // hotlinked image can still become a real, locally-owned
+        // {media_id} reference. See ThemeMediaLocalizationService's own
+        // docblock for the full security boundary.
+        $themeData = app(ThemeMediaLocalizationService::class)->localize($themeData);
 
         try {
             $revision = app(ThemeInstanceRevisionService::class)->record($themeData, ThemeInstanceRevision::TYPE_INSTALL, [

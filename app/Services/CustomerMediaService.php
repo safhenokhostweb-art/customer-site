@@ -71,6 +71,76 @@ class CustomerMediaService
         return CustomerMedia::forSite($this->siteId())->available()->where('uuid', $uuid)->firstOrFail();
     }
 
+    private const REMOTE_IMAGE_MIME_TO_EXTENSION = [
+        'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp',
+    ];
+
+    /**
+     * TASK 3/3 Phase 6.5 (BLD-21) — MASTER_THEME_MEDIA_LOCALIZATION_GAP fix.
+     * The write half of ThemeMediaLocalizationService's canonical import:
+     * takes bytes the caller has ALREADY fetched from an allowlisted,
+     * platform-operator-controlled origin (this method performs no network
+     * I/O itself and trusts no URL — that boundary lives entirely in
+     * ThemeMediaLocalizationService, keeping this class's own invariant
+     * ("the only write authority for customer-owned public media") intact:
+     * every write still goes through this one method, exactly like upload().
+     *
+     * Real validation on the bytes themselves (never on a declared
+     * Content-Type alone): size-capped at the same policy as a real image
+     * upload, and getimagesizefromstring() must both succeed and report a
+     * MIME this method itself allows.
+     */
+    public function importFromRemoteBytes(string $bytes, string $filename, string $declaredMime, array $metadata = []): CustomerMedia
+    {
+        if (strlen($bytes) > self::POLICY['image']['max']) {
+            throw ValidationException::withMessages(['file' => 'Remote media exceeds the allowed size.']);
+        }
+
+        $probe = @getimagesizefromstring($bytes);
+        if (!is_array($probe) || !isset(self::REMOTE_IMAGE_MIME_TO_EXTENSION[$probe['mime'] ?? ''])) {
+            throw ValidationException::withMessages(['file' => 'Remote media is not a supported, verifiable image.']);
+        }
+        $mime = $probe['mime'];
+        $extension = self::REMOTE_IMAGE_MIME_TO_EXTENSION[$mime];
+
+        $siteId = $this->siteId();
+        $uuid = (string) Str::uuid();
+        $disk = $this->storage->diskNameFor('uploads');
+        $key = sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+
+        if (!Storage::disk($disk)->put($key, $bytes, ['visibility' => 'public'])) {
+            throw new \RuntimeException('Customer media storage write failed.');
+        }
+
+        try {
+            return CustomerMedia::create([
+                'site_id' => $siteId, 'uuid' => $uuid, 'disk' => $disk, 'storage_key' => $key,
+                'original_filename' => $filename !== '' ? $filename : ($uuid . '.' . $extension),
+                'extension' => $extension, 'category' => 'image', 'mime_type' => $mime, 'size_bytes' => strlen($bytes),
+                'title' => $metadata['title'] ?? null, 'alt_text' => $metadata['alt_text'] ?? null,
+                'width' => (int) $probe[0], 'height' => (int) $probe[1],
+                'metadata' => array_filter(['source_url' => $metadata['source_url'] ?? null]),
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk($disk)->delete($key);
+            throw $exception;
+        }
+    }
+
+    /**
+     * Dedup lookup for importFromRemoteBytes() — a theme re-install or
+     * upgrade must never re-import/duplicate the same master-theme image
+     * for the same site. Bounded: a handful of theme images per site, not
+     * an unbounded scan (indexed by site_id via forSite(), JSON path match
+     * only runs across this one site's own rows).
+     */
+    public function findBySourceUrl(string $url): ?CustomerMedia
+    {
+        return CustomerMedia::forSite($this->siteId())->available()
+            ->whereJsonContains('metadata->source_url', $url)
+            ->first();
+    }
+
     private const SORTS = ['newest', 'oldest', 'name', 'size'];
 
     /**

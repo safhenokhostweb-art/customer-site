@@ -366,6 +366,19 @@
         .tb-team-role { font-size:0.85rem; color:var(--tb-primary-text,#6366f1); font-weight:600; margin:0 0 0.75rem; }
         .tb-team-bio { font-size:0.85rem; color:var(--tb-text-muted,#4b5563); line-height:1.55; margin:0 1.25rem; }
 
+        /* TASK 3/3 Phase 6.5 — the "gallery" block (BlockRenderer::renderGallery())
+           had ZERO CSS anywhere on either host: its <img class="tb-gallery-img">
+           rendered at raw intrinsic pixel size with no max-width, which the
+           real browser-backed ThemeCommercialQualityGate ResponsiveReadinessCheck
+           caught as catastrophic horizontal overflow (232px tablet, 610px
+           mobile) once Redis was restored and the check could actually run
+           instead of silently reporting "unverified". A missing reusable
+           component, not a composition problem — fixed once, canonically. */
+        .tb-gallery-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.25rem; }
+        .tb-gallery-cell { border-radius:var(--tb-radius,0.75rem); overflow:hidden; box-shadow:var(--tb-shadow-sm); }
+        .tb-gallery-img { display:block; width:100%; height:16rem; object-fit:cover; }
+        @media(max-width:480px) { .tb-gallery-grid { grid-template-columns:1fr; } .tb-gallery-img { height:12rem; } }
+
         /* ─── skills_bars ───────────────────────────────────────────── */
         .tb-skills { }
         .tb-skills-list { max-width:640px; }
