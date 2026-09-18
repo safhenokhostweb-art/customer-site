@@ -823,6 +823,60 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     >
                                 </template>
 
+                                {{-- TASK 3/3 Phase 6.5C (BLD-28) — internal-link-capable adapter
+                                     for button/CTA/hero action URL fields. A plain string stays a
+                                     raw custom URL (unchanged, backward compatible); an
+                                     {type:'internal_page', page_id} value is resolved server-side
+                                     (InternalLinkResolver, mirroring CustomerMediaResolver's
+                                     {media_id} pattern) to the Page's CURRENT url at render time,
+                                     so a later slug rename never breaks it — reuses the exact same
+                                     bounded search endpoint Menu's own page picker uses. --}}
+                                <template x-if="schemaDef.type === 'link'">
+                                    <div class="space-y-2" :data-testid="'tb-link-field-' + propKey">
+                                        <div class="flex gap-2 text-xs">
+                                            <button type="button"
+                                                    @click="setLinkCustomUrl(propKey, isInternalLinkValue(selectedBlock.props[propKey]) ? '' : (selectedBlock.props[propKey] || ''))"
+                                                    :class="!isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
+                                                    class="px-2 py-1 rounded transition">آدرس سفارشی</button>
+                                            <button type="button"
+                                                    @click="openLinkPagePicker(propKey)"
+                                                    :class="isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
+                                                    class="px-2 py-1 rounded transition"
+                                                    :data-testid="'tb-link-page-toggle-' + propKey">صفحه داخلی</button>
+                                        </div>
+
+                                        <template x-if="!isInternalLinkValue(selectedBlock.props[propKey])">
+                                            <input type="text" :value="selectedBlock.props[propKey]"
+                                                   @input="setLinkCustomUrl(propKey, $event.target.value)"
+                                                   class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                                   placeholder="https://..." :data-testid="'tb-prop-' + propKey">
+                                        </template>
+
+                                        <template x-if="isInternalLinkValue(selectedBlock.props[propKey])">
+                                            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-xs text-emerald-800"
+                                                 :data-testid="'tb-prop-' + propKey">
+                                                <span x-text="'لینک به: ' + (selectedBlock.props[propKey].page_title || ('#' + selectedBlock.props[propKey].page_id))"></span>
+                                                <button type="button" @click="openLinkPagePicker(propKey)" class="text-indigo-600 underline">تغییر</button>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="linkPickerOpenFor === propKey">
+                                            <div class="border border-slate-200 rounded-lg p-2 space-y-1 bg-white">
+                                                <input type="text" x-model="linkPickerQuery" @input.debounce.300ms="searchLinkPages()"
+                                                       placeholder="جستجوی صفحه..." class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                                                       :data-testid="'tb-link-page-search-' + propKey">
+                                                <template x-for="page in linkPickerResults" :key="page.id">
+                                                    <button type="button" @click="selectLinkPage(propKey, page)"
+                                                            class="block w-full text-right text-xs px-2 py-1.5 rounded hover:bg-indigo-50"
+                                                            :data-testid="'tb-link-page-result-' + page.id"
+                                                            x-text="page.title"></button>
+                                                </template>
+                                                <p x-show="linkPickerQuery && linkPickerResults.length === 0" class="text-xs text-slate-400 px-2 py-1">صفحه‌ای یافت نشد.</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
                                 {{-- One media adapter for every semantically-image property.
                                      It delegates to the existing Canvas media library/upload
                                      endpoints; individual blocks never own an uploader. --}}
@@ -1385,6 +1439,10 @@ const ROUTES = {
     mediaUpload:  '{{ route('admin.theme-design.media-upload') }}',
     mediaDestroy: '{{ route('admin.theme-design.media-destroy') }}',
     motionAssets: '{{ route('admin.theme-design.canvas-motion-assets') }}',
+    // TASK 3/3 Phase 6.5C (BLD-28) — reuses the SAME bounded, already-proven
+    // search endpoint Menu's own "add existing Page" picker uses
+    // (MenuController::searchPages()) — no second Page-search authority.
+    linkPageSearch: '{{ route('admin.menus.pages.search') }}',
 };
 
 function canvasEditor() {
@@ -1436,6 +1494,10 @@ function canvasEditor() {
         // TB3-07: media modal. `selected`/each image's identity is the
         // canonical CustomerMedia uuid, not a raw URL — MEDIA-4.
         mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null, q: '', category: '' },
+        // TASK 3/3 Phase 6.5C (BLD-28) — internal-link picker state.
+        linkPickerOpenFor: null,
+        linkPickerQuery: '',
+        linkPickerResults: [],
         // MEDIA-4: uuid -> resolved URL, populated as the library loads/
         // uploads, so a persisted {media_id} value can render a live
         // thumbnail in the property panel without a DB round trip per
@@ -2326,6 +2388,43 @@ function canvasEditor() {
                 })
                 .catch(() => {})
                 .finally(() => this._mediaCacheInFlight.delete(uuid));
+        },
+
+        // ── TASK 3/3 Phase 6.5C (BLD-28): internal-link picker ──────────
+        isInternalLinkValue(value) {
+            return !!value && typeof value === 'object' && value.type === 'internal_page';
+        },
+
+        setLinkCustomUrl(propKey, url) {
+            this.selectedBlock.props[propKey] = url;
+            this.linkPickerOpenFor = null;
+            this.schedulePropUpdate();
+        },
+
+        openLinkPagePicker(propKey) {
+            this.linkPickerOpenFor = propKey;
+            this.linkPickerQuery = '';
+            this.linkPickerResults = [];
+        },
+
+        async searchLinkPages() {
+            try {
+                const params = new URLSearchParams();
+                if (this.linkPickerQuery) params.set('q', this.linkPickerQuery);
+                const r = await fetch(ROUTES.linkPageSearch + '?' + params.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                });
+                const d = await r.json();
+                this.linkPickerResults = d.pages ?? [];
+            } catch (e) {
+                this.linkPickerResults = [];
+            }
+        },
+
+        selectLinkPage(propKey, page) {
+            this.selectedBlock.props[propKey] = { type: 'internal_page', page_id: page.id, page_title: page.title };
+            this.linkPickerOpenFor = null;
+            this.schedulePropUpdate();
         },
 
         openMediaPicker(propKey, target = null) {

@@ -32,7 +32,9 @@ final class BlockRegistry
                     'title'            => ['type' => 'string',  'label' => 'عنوان اصلی',   'default' => ''],
                     'subtitle'         => ['type' => 'string',  'label' => 'زیرعنوان',      'default' => ''],
                     'button_text'      => ['type' => 'string',  'label' => 'متن دکمه',       'default' => ''],
-                    'button_url'       => ['type' => 'string',  'label' => 'لینک دکمه',      'default' => ''],
+                    // TASK 3/3 Phase 6.5C (BLD-28) — see the matching
+                    // shared-package registry entry for the rationale.
+                    'button_url'       => ['type' => 'link',    'label' => 'لینک دکمه',      'default' => ''],
                     'background'       => ['type' => 'string',  'label' => 'پس‌زمینه',       'default' => 'primary'],
                     'background_image' => ['type' => 'image',   'label' => 'تصویر پس‌زمینه', 'default' => ''],
                     'align'            => ['type' => 'string',  'label' => 'تراز',           'default' => 'center'],
@@ -189,7 +191,7 @@ final class BlockRegistry
                 'category' => self::CATEGORY_CONTENT,
                 'schema'   => [
                     'text'  => ['type' => 'string', 'label' => 'متن دکمه', 'default' => ''],
-                    'url'   => ['type' => 'string', 'label' => 'لینک',     'default' => '#'],
+                    'url'   => ['type' => 'link', 'label' => 'لینک',     'default' => '#'],
                     'style' => ['type' => 'select', 'label' => 'استایل', 'options' => ['primary' => 'اصلی', 'secondary' => 'ثانویه', 'outline' => 'خطی'], 'default' => 'primary'],
                 ],
                 'defaultProps' => ['text' => '', 'url' => '#', 'style' => 'primary'],
@@ -269,7 +271,7 @@ final class BlockRegistry
                     'title'       => ['type' => 'string', 'label' => 'عنوان',      'default' => ''],
                     'subtitle'    => ['type' => 'string', 'label' => 'زیرعنوان',  'default' => ''],
                     'button_text' => ['type' => 'string', 'label' => 'متن دکمه',   'default' => ''],
-                    'button_url'  => ['type' => 'string', 'label' => 'لینک دکمه', 'default' => ''],
+                    'button_url'  => ['type' => 'link',   'label' => 'لینک دکمه', 'default' => ''],
                     'background'  => ['type' => 'color',  'label' => 'رنگ',        'default' => '#4f46e5'],
                 ],
                 'defaultProps' => ['title' => '', 'subtitle' => '', 'button_text' => '', 'button_url' => '', 'background' => '#4f46e5'],
@@ -530,9 +532,9 @@ final class BlockRegistry
                     'title'        => ['type' => 'string',  'label' => 'عنوان اصلی',        'default' => 'عنوان اصلی شما اینجاست'],
                     'subtitle'     => ['type' => 'textarea','label' => 'زیرعنوان',           'default' => 'توضیح کوتاهی درباره محصول یا خدمات شما'],
                     'button_text'  => ['type' => 'string',  'label' => 'متن دکمه اول',       'default' => 'شروع کنید'],
-                    'button_url'   => ['type' => 'string',  'label' => 'لینک دکمه اول',      'default' => '#'],
+                    'button_url'   => ['type' => 'link',    'label' => 'لینک دکمه اول',      'default' => '#'],
                     'button2_text' => ['type' => 'string',  'label' => 'متن دکمه دوم',       'default' => 'بیشتر بدانید'],
-                    'button2_url'  => ['type' => 'string',  'label' => 'لینک دکمه دوم',      'default' => '#'],
+                    'button2_url'  => ['type' => 'link',    'label' => 'لینک دکمه دوم',      'default' => '#'],
                     'image_url'    => ['type' => 'image',   'label' => 'آدرس تصویر',          'default' => ''],
                     'image_side'   => ['type' => 'select',  'label' => 'موقعیت تصویر',       'options' => ['right' => 'راست', 'left' => 'چپ'], 'default' => 'left'],
                     'background'   => ['type' => 'color',   'label' => 'رنگ پس‌زمینه',       'default' => '#ffffff'],
@@ -547,9 +549,9 @@ final class BlockRegistry
                     'title'         => ['type' => 'string',  'label' => 'عنوان اصلی',         'default' => 'قدرت آینده در دستان شما'],
                     'subtitle'      => ['type' => 'textarea','label' => 'زیرعنوان',            'default' => 'پلتفرم چندمنظوره‌ای برای موفقیت کسب‌وکار شما'],
                     'button_text'   => ['type' => 'string',  'label' => 'متن دکمه اول',        'default' => 'رایگان شروع کنید'],
-                    'button_url'    => ['type' => 'string',  'label' => 'لینک دکمه اول',       'default' => '#'],
+                    'button_url'    => ['type' => 'link',    'label' => 'لینک دکمه اول',       'default' => '#'],
                     'button2_text'  => ['type' => 'string',  'label' => 'متن دکمه دوم',        'default' => 'مشاهده دمو'],
-                    'button2_url'   => ['type' => 'string',  'label' => 'لینک دکمه دوم',       'default' => '#'],
+                    'button2_url'   => ['type' => 'link',    'label' => 'لینک دکمه دوم',       'default' => '#'],
                     'gradient_from' => ['type' => 'color',   'label' => 'رنگ گرادیان ابتدا',   'default' => '#4f46e5'],
                     'gradient_to'   => ['type' => 'color',   'label' => 'رنگ گرادیان انتها',   'default' => '#7c3aed'],
                     'text_color'    => ['type' => 'color',   'label' => 'رنگ متن',             'default' => '#ffffff'],
@@ -971,6 +973,9 @@ final class BlockRegistry
                 'name'     => 'فوتر سایت (Nav Footer)',
                 'category' => self::CATEGORY_UTILITY,
                 'schema'   => [
+                    // TASK 3/3 Phase 6.5C (BLD-26) — see the matching
+                    // shared-package registry entry and BlockRenderer::renderNavFooter().
+                    'nav_source' => ['type' => 'select', 'label' => 'منبع لینک‌های فوتر', 'options' => ['custom' => 'ستون‌های سفارشی این بلوک', 'menu' => 'منوی فوتر سایت (/admin/menus)'], 'default' => 'custom'],
                     'columns' => [
                         'type' => 'repeater', 'label' => 'ستون‌های لینک', 'storage' => 'array', 'default' => [],
                         'fields' => [

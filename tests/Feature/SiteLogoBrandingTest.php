@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CustomerMedia;
 use App\Models\License;
 use App\Models\Setting;
 use App\Models\User;
@@ -18,6 +19,14 @@ use Tests\TestCase;
  * mirroring the existing favicon flow exactly, and wires it into both public
  * layouts via the shared <x-site-brand> component (falls back to the site
  * name text when no logo is uploaded, so every existing site is unaffected).
+ *
+ * TASK 3/3 Phase 6.5C (BLD-25) — logo/favicon upload converged onto the
+ * canonical CustomerMediaService instead of an ad-hoc Storage call.
+ * `site_logo`/`site_favicon` now store a CustomerMedia UUID, not a raw
+ * storage path — updated below. `test_site_brand_component_renders_the_logo_image_when_uploaded`
+ * intentionally still seeds a raw legacy path directly, unchanged, as the
+ * real regression test for CustomerMediaService::resolveSiteAssetUrl()'s
+ * backward-compatibility branch (any value uploaded before this phase).
  */
 class SiteLogoBrandingTest extends TestCase
 {
@@ -61,24 +70,31 @@ class SiteLogoBrandingTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-        $this->assertSame('logo/logo.png', Setting::get('site_logo'));
-        Storage::disk('public')->assertExists('logo/logo.png');
+
+        $uuid = Setting::get('site_logo');
+        self::assertNotSame('', $uuid);
+        $media = CustomerMedia::where('uuid', $uuid)->sole();
+        self::assertSame('image', $media->category);
+        self::assertSame('Site Logo', $media->title);
     }
 
-    public function test_uploading_a_new_logo_replaces_the_old_file(): void
+    public function test_uploading_a_new_logo_replaces_the_old_media_and_removes_the_previous_one(): void
     {
         $admin = $this->admin();
 
         $this->actingAs($admin)->post(route('admin.settings.logo'), [
             'logo' => UploadedFile::fake()->image('logo.png', 200, 60),
         ]);
+        $firstUuid = Setting::get('site_logo');
+
         $this->actingAs($admin)->post(route('admin.settings.logo'), [
             'logo' => UploadedFile::fake()->image('logo.jpg', 200, 60),
         ]);
+        $secondUuid = Setting::get('site_logo');
 
-        $this->assertSame('logo/logo.jpg', Setting::get('site_logo'));
-        Storage::disk('public')->assertMissing('logo/logo.png');
-        Storage::disk('public')->assertExists('logo/logo.jpg');
+        self::assertNotSame($firstUuid, $secondUuid);
+        self::assertNotNull(CustomerMedia::where('uuid', $secondUuid)->first());
+        self::assertNotNull(CustomerMedia::where('uuid', $firstUuid)->first()?->deleted_at, 'the replaced media must be cleaned up, not left orphaned forever');
     }
 
     public function test_admin_can_remove_the_logo(): void
@@ -87,12 +103,13 @@ class SiteLogoBrandingTest extends TestCase
         $this->actingAs($admin)->post(route('admin.settings.logo'), [
             'logo' => UploadedFile::fake()->image('logo.png', 200, 60),
         ]);
+        $uuid = Setting::get('site_logo');
 
         $response = $this->actingAs($admin)->delete(route('admin.settings.logo-remove'));
 
         $response->assertRedirect();
         $this->assertSame('', Setting::get('site_logo'));
-        Storage::disk('public')->assertMissing('logo/logo.png');
+        self::assertNotNull(CustomerMedia::where('uuid', $uuid)->first()?->deleted_at);
     }
 
     public function test_oversized_logo_is_rejected(): void

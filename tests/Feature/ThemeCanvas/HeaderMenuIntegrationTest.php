@@ -128,6 +128,134 @@ class HeaderMenuIntegrationTest extends TestCase
         $response->assertDontSee(route('page.show', 'news'), false);
     }
 
+    // ── Footer half of the convergence (BLD-26) ─────────────────────────
+
+    private function installThemeWithNavFooter(string $navSource = 'menu'): void
+    {
+        Setting::set('active_canvas_theme_data', json_encode([
+            'name' => 'Test Theme', 'slug' => 'test-theme',
+            'header_blocks' => [],
+            'footer_blocks' => [
+                ['id' => 'ftr1', 'type' => 'nav_footer', 'props' => [
+                    'nav_source' => $navSource,
+                    'columns' => [['title' => 'ستون قدیمی', 'links' => [['label' => 'لینک سفارشی قدیمی فوتر', 'url' => '/old-footer-link']]]],
+                ]],
+            ],
+            'pages' => [['key' => 'home', 'title' => 'Home', 'blocks' => [
+                ['id' => 'b1', 'type' => 'heading', 'props' => ['text' => 'خانه']],
+            ]]],
+            'global_styles' => [],
+        ], JSON_UNESCAPED_UNICODE), 'theme');
+        Setting::set('active_canvas_theme_name', 'Test Theme', 'theme');
+    }
+
+    public function test_footer_nav_source_menu_renders_real_footer_menu_items_not_the_blocks_own_columns(): void
+    {
+        $page = Page::create(['title' => 'حریم خصوصی', 'slug' => 'privacy', 'body' => '<p>x</p>', 'is_published' => true]);
+        $menu = Menu::create(['name' => 'فوتر', 'location' => 'footer', 'site_id' => null]);
+        MenuItem::create([
+            'menu_id' => $menu->id, 'title' => 'حریم خصوصی',
+            'type' => MenuItem::TYPE_INTERNAL_PAGE, 'reference_id' => $page->id, 'order' => 0,
+        ]);
+
+        $this->installThemeWithNavFooter('menu');
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('حریم خصوصی');
+        $response->assertSee(route('page.show', 'privacy'), false);
+        $response->assertDontSee('لینک سفارشی قدیمی فوتر');
+    }
+
+    public function test_footer_nav_source_custom_keeps_the_blocks_own_columns_unaffected_by_any_footer_menu(): void
+    {
+        $page = Page::create(['title' => 'شرایط استفاده', 'slug' => 'terms', 'body' => '<p>x</p>', 'is_published' => true]);
+        $menu = Menu::create(['name' => 'فوتر', 'location' => 'footer', 'site_id' => null]);
+        MenuItem::create([
+            'menu_id' => $menu->id, 'title' => 'شرایط استفاده',
+            'type' => MenuItem::TYPE_INTERNAL_PAGE, 'reference_id' => $page->id, 'order' => 0,
+        ]);
+
+        $this->installThemeWithNavFooter('custom');
+
+        $response = $this->get('/');
+        $response->assertOk();
+        $response->assertSee('لینک سفارشی قدیمی فوتر');
+        $response->assertDontSee(route('page.show', 'terms'), false);
+    }
+
+    public function test_admin_preview_shows_real_footer_menu_content_not_a_permanently_empty_footer(): void
+    {
+        $page = Page::create(['title' => 'پشتیبانی', 'slug' => 'support', 'body' => '<p>x</p>', 'is_published' => true]);
+        $menu = Menu::create(['name' => 'فوتر', 'location' => 'footer', 'site_id' => null]);
+        MenuItem::create([
+            'menu_id' => $menu->id, 'title' => 'پشتیبانی',
+            'type' => MenuItem::TYPE_INTERNAL_PAGE, 'reference_id' => $page->id, 'order' => 0,
+        ]);
+        $admin = $this->admin();
+
+        $response = $this->actingAs($admin)->postJson(route('builder.preview'), [
+            'blocks' => [['id' => 'ftr1', 'type' => 'nav_footer', 'props' => ['nav_source' => 'menu']]],
+        ]);
+
+        $response->assertOk();
+        self::assertStringContainsString('پشتیبانی', $response->json('html'));
+    }
+
+    // ── Site logo fallback (BLD-25) ──────────────────────────────────
+
+    public function test_nav_header_falls_back_to_the_real_uploaded_site_logo_when_no_block_level_logo_text_is_authored(): void
+    {
+        $media = \App\Models\CustomerMedia::create([
+            'site_id' => 1, 'uuid' => (string) \Illuminate\Support\Str::uuid(), 'disk' => 'public',
+            'storage_key' => 'customer-media/1/logo-test.png', 'original_filename' => 'logo.png',
+            'extension' => 'png', 'category' => 'image', 'mime_type' => 'image/png', 'size_bytes' => 100,
+        ]);
+        Setting::set('site_logo', $media->uuid);
+
+        Setting::set('active_canvas_theme_data', json_encode([
+            'name' => 'Test Theme', 'slug' => 'test-theme',
+            'header_blocks' => [
+                ['id' => 'hdr1', 'type' => 'nav_header', 'props' => ['logo_text' => '']],
+            ],
+            'footer_blocks' => [],
+            'pages' => [['key' => 'home', 'title' => 'Home', 'blocks' => [['id' => 'b1', 'type' => 'heading', 'props' => ['text' => 'خانه']]]]],
+            'global_styles' => [],
+        ], JSON_UNESCAPED_UNICODE), 'theme');
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('tb-nav-header-logo', false);
+        $response->assertSee('<img', false);
+    }
+
+    public function test_nav_header_never_overrides_an_explicitly_authored_text_logo_with_the_site_logo(): void
+    {
+        $media = \App\Models\CustomerMedia::create([
+            'site_id' => 1, 'uuid' => (string) \Illuminate\Support\Str::uuid(), 'disk' => 'public',
+            'storage_key' => 'customer-media/1/logo-test2.png', 'original_filename' => 'logo.png',
+            'extension' => 'png', 'category' => 'image', 'mime_type' => 'image/png', 'size_bytes' => 100,
+        ]);
+        Setting::set('site_logo', $media->uuid);
+
+        Setting::set('active_canvas_theme_data', json_encode([
+            'name' => 'Test Theme', 'slug' => 'test-theme',
+            'header_blocks' => [
+                ['id' => 'hdr1', 'type' => 'nav_header', 'props' => ['logo_text' => 'برند من']],
+            ],
+            'footer_blocks' => [],
+            'pages' => [['key' => 'home', 'title' => 'Home', 'blocks' => [['id' => 'b1', 'type' => 'heading', 'props' => ['text' => 'خانه']]]]],
+            'global_styles' => [],
+        ], JSON_UNESCAPED_UNICODE), 'theme');
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('برند من');
+    }
+
     public function test_admin_preview_shows_real_menu_content_not_a_permanently_empty_nav(): void
     {
         $page = Page::create(['title' => 'تماس', 'slug' => 'contact', 'body' => '<p>x</p>', 'is_published' => true]);

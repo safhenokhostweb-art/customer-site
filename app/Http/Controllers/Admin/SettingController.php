@@ -7,6 +7,7 @@ use App\Helpers\PlatformUx;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\BuilderLayoutService;
+use App\Services\CustomerMediaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,7 +15,8 @@ use Illuminate\Support\Str;
 class SettingController extends Controller
 {
     public function __construct(
-        protected BuilderLayoutService $layoutService
+        protected BuilderLayoutService $layoutService,
+        protected CustomerMediaService $media,
     ) {}
 
     public function index()
@@ -34,10 +36,16 @@ class SettingController extends Controller
         $themeBuilder = PlatformUx::themeBuilder();
         $themeMeta = $themeBuilder['meta'] ?? ($themeBuilder['settings']['meta'] ?? []);
         $currentLogo = Setting::get('site_logo', '');
+        $currentLogoUrl = $this->media->resolveSiteAssetUrl($currentLogo);
+        $currentFavicon = Setting::get('site_favicon', '');
+        $currentFaviconUrl = $this->media->resolveSiteAssetUrl($currentFavicon);
         return view('admin.settings.index', compact(
             'siteName',
             'theme',
             'currentLogo',
+            'currentLogoUrl',
+            'currentFavicon',
+            'currentFaviconUrl',
             'aboutUsTitle',
             'aboutUsText',
             'aboutUsEnabled',
@@ -77,80 +85,104 @@ class SettingController extends Controller
         return back()->with('success', 'تنظیمات ذخیره شد.');
     }
 
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-25) — favicon upload converged onto the
+     * canonical CustomerMediaService ("the only write authority for
+     * customer-owned public media") instead of an ad-hoc Storage call.
+     * The favicon now gets a real CustomerMedia row (visible in the Media
+     * Library, usage-tracked) and `site_favicon` stores its stable UUID —
+     * see CustomerMediaService::resolveSiteAssetUrl() for how every reader
+     * resolves either the new UUID form or a pre-existing raw-path value.
+     *
+     * .ico is intentionally NOT accepted here any more: CustomerMediaService's
+     * own validate() policy (image/jpeg|png|gif|webp) is the one real MIME
+     * allowlist for customer-owned media, and adding a second, wider
+     * allowlist just for this one field would be exactly the kind of
+     * duplicate authority this convergence exists to remove. png/webp
+     * already cover every real favicon use case a modern browser needs.
+     */
     public function uploadFavicon(Request $request)
     {
-        $request->validate([
-            'favicon' => [
-                'required',
-                'file',
-                'max:512',
-                // SVG intentionally excluded: this app has no canonical SVG
-                // sanitization authority (same policy as CustomerMediaService),
-                // and a raw, unsanitized SVG served directly from the public
-                // disk is a stored-XSS vector (embedded <script>/event
-                // handlers execute if the URL is opened directly).
-                'mimes:ico,png,jpg,jpeg,gif,webp',
-            ],
-        ], [
+        $request->validate(['favicon' => ['required', 'file', 'max:512']], [
             'favicon.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
             'favicon.max'      => 'حجم فایل نباید بیشتر از ۵۱۲ کیلوبایت باشد.',
-            'favicon.mimes'    => 'فرمت قابل‌قبول: ico, png, jpg, gif, webp',
         ]);
 
-        $file = $request->file('favicon');
-        $ext  = strtolower($file->getClientOriginalExtension()) ?: 'ico';
-
-        // Delete old favicon if it exists
         $old = Setting::get('site_favicon', '');
-        if ($old && Storage::disk('public')->exists($old)) {
-            Storage::disk('public')->delete($old);
+
+        try {
+            $media = $this->media->upload($request->file('favicon'), ['title' => 'Site Favicon']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors(['favicon' => $e->validator->errors()->first()]);
         }
 
-        $path = $file->storeAs('favicon', 'favicon.' . $ext, 'public');
-        Setting::set('site_favicon', $path);
+        Setting::set('site_favicon', $media->uuid);
+        $this->deleteLegacySiteAsset($old);
 
         return back()->with('success', 'آیکن سایت با موفقیت آپلود شد.');
     }
 
+    /** See uploadFavicon()'s docblock — same convergence, same reasoning. */
     public function uploadLogo(Request $request)
     {
-        $request->validate([
-            'logo' => [
-                'required',
-                'file',
-                'max:2048',
-                // SVG intentionally excluded — see uploadFavicon()'s comment.
-                'mimes:png,jpg,jpeg,gif,webp',
-            ],
-        ], [
+        $request->validate(['logo' => ['required', 'file', 'max:2048']], [
             'logo.required' => 'لطفاً یک فایل تصویری انتخاب کنید.',
             'logo.max'      => 'حجم فایل نباید بیشتر از ۲ مگابایت باشد.',
-            'logo.mimes'    => 'فرمت قابل‌قبول: png, jpg, gif, webp',
         ]);
 
-        $file = $request->file('logo');
-        $ext  = strtolower($file->getClientOriginalExtension()) ?: 'png';
-
-        // Delete old logo if it exists
         $old = Setting::get('site_logo', '');
-        if ($old && Storage::disk('public')->exists($old)) {
-            Storage::disk('public')->delete($old);
+
+        try {
+            $media = $this->media->upload($request->file('logo'), ['title' => 'Site Logo']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors(['logo' => $e->validator->errors()->first()]);
         }
 
-        $path = $file->storeAs('logo', 'logo.' . $ext, 'public');
-        Setting::set('site_logo', $path);
+        Setting::set('site_logo', $media->uuid);
+        $this->deleteLegacySiteAsset($old);
 
         return back()->with('success', 'لوگوی سایت با موفقیت آپلود شد.');
     }
 
     public function removeLogo(Request $request)
     {
-        $old = Setting::get('site_logo', '');
-        if ($old && Storage::disk('public')->exists($old)) {
-            Storage::disk('public')->delete($old);
-        }
+        $this->deleteLegacySiteAsset(Setting::get('site_logo', ''), forceDeleteMedia: true);
         Setting::set('site_logo', '');
 
         return back()->with('success', 'لوگو حذف شد؛ نام سایت به‌جای آن نمایش داده می‌شود.');
+    }
+
+    /**
+     * Deletes whatever the OLD site_logo/site_favicon value pointed at,
+     * whichever form it's in — a real CustomerMedia UUID (post-convergence)
+     * or a legacy raw 'public'-disk path (pre-convergence, or a dev/test
+     * fixture seeded before this phase). A CustomerMedia row is only
+     * force-deleted for an explicit "remove" action (removeLogo) — a plain
+     * re-upload leaves the old media row alone if canonical usage-tracking
+     * says it's still referenced elsewhere, exactly like every other
+     * CustomerMediaService-backed replace flow.
+     */
+    private function deleteLegacySiteAsset(string $value, bool $forceDeleteMedia = false): void
+    {
+        if ($value === '') {
+            return;
+        }
+
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value)) {
+            try {
+                $old = $this->media->findForCurrentSite($value);
+                if ($forceDeleteMedia || !$this->media->isUsed($old)) {
+                    $this->media->deleteUnused($old);
+                }
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException|\LogicException) {
+                // Already gone, or genuinely in use elsewhere — either way
+                // there is nothing unsafe left to do here.
+            }
+            return;
+        }
+
+        if (Storage::disk('public')->exists($value)) {
+            Storage::disk('public')->delete($value);
+        }
     }
 }

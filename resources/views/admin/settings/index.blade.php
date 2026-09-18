@@ -95,18 +95,18 @@
         <div class="card-header">لوگوی سایت</div>
         <div class="card-body">
             <p style="font-size:.875rem;color:#64748b;margin:0 0 1.25rem">
-                لوگویی که در سربرگ سایت به‌جای نام سایت نمایش داده می‌شود.<br>
-                فرمت‌های قابل‌قبول: <code>png، jpg، gif، webp، svg</code> — حداکثر ۲ مگابایت
+                لوگویی که در سربرگ سایت به‌جای نام سایت نمایش داده می‌شود. از طریق کتابخانه رسانه ذخیره می‌شود.<br>
+                فرمت‌های قابل‌قبول: <code>png، jpg، gif، webp</code> — حداکثر ۲ مگابایت
             </p>
 
-            @if($currentLogo && \Illuminate\Support\Facades\Storage::disk('public')->exists($currentLogo))
+            @if($currentLogoUrl)
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.625rem">
                 <div style="display:flex;align-items:center;gap:1rem;">
-                    <img src="{{ Storage::url($currentLogo) }}" alt="لوگوی فعلی"
+                    <img src="{{ $currentLogoUrl }}" alt="لوگوی فعلی"
                          style="max-height:44px;max-width:140px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff;padding:4px">
                     <div>
                         <div style="font-size:.875rem;font-weight:600;color:#374151">لوگوی فعلی</div>
-                        <div style="font-size:.78rem;color:#94a3b8;font-family:monospace">{{ $currentLogo }}</div>
+                        <div style="font-size:.78rem;color:#94a3b8;">در کتابخانه رسانه</div>
                     </div>
                 </div>
                 <form action="{{ route('admin.settings.logo-remove') }}" method="POST"
@@ -131,7 +131,7 @@
                     <label class="form-label">فایل لوگوی جدید</label>
                     <input type="file"
                            name="logo"
-                           accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
+                           accept=".png,.jpg,.jpeg,.gif,.webp"
                            style="display:block;width:100%;padding:.5rem;border:1px solid #e2e8f0;border-radius:.625rem;font-size:.875rem;cursor:pointer"
                            x-on:change="
                                file = $event.target.files[0];
@@ -163,22 +163,21 @@
     </div>
 
     {{-- ── Favicon Upload ──────────────────────────────────────────────────── --}}
-    @php $currentFavicon = \App\Models\Setting::get('site_favicon', ''); @endphp
     <div class="card">
         <div class="card-header">آیکن مرورگر (Favicon)</div>
         <div class="card-body">
             <p style="font-size:.875rem;color:#64748b;margin:0 0 1.25rem">
-                آیکنی که در تب مرورگر، نشانک‌ها و نتایج جستجو نمایش داده می‌شود.<br>
-                فرمت‌های قابل‌قبول: <code>ico، png، jpg، gif، webp، svg</code> — حداکثر ۵۱۲ کیلوبایت
+                آیکنی که در تب مرورگر، نشانک‌ها و نتایج جستجو نمایش داده می‌شود. از طریق کتابخانه رسانه ذخیره می‌شود.<br>
+                فرمت‌های قابل‌قبول: <code>png، jpg، gif، webp</code> — حداکثر ۵۱۲ کیلوبایت
             </p>
 
-            @if($currentFavicon && \Illuminate\Support\Facades\Storage::disk('public')->exists($currentFavicon))
+            @if($currentFaviconUrl)
             <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;padding:.75rem 1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.625rem">
-                <img src="{{ Storage::url($currentFavicon) }}" alt="favicon فعلی"
+                <img src="{{ $currentFaviconUrl }}" alt="favicon فعلی"
                      style="width:32px;height:32px;object-fit:contain;border:1px solid #e2e8f0;border-radius:4px;background:#fff;padding:2px">
                 <div>
                     <div style="font-size:.875rem;font-weight:600;color:#374151">آیکن فعلی</div>
-                    <div style="font-size:.78rem;color:#94a3b8;font-family:monospace">{{ $currentFavicon }}</div>
+                    <div style="font-size:.78rem;color:#94a3b8;">در کتابخانه رسانه</div>
                 </div>
             </div>
             @else
@@ -196,7 +195,7 @@
                     <label class="form-label">فایل آیکن جدید</label>
                     <input type="file"
                            name="favicon"
-                           accept=".ico,.png,.jpg,.jpeg,.gif,.webp,.svg"
+                           accept=".png,.jpg,.jpeg,.gif,.webp"
                            style="display:block;width:100%;padding:.5rem;border:1px solid #e2e8f0;border-radius:.625rem;font-size:.875rem;cursor:pointer"
                            x-on:change="
                                file = $event.target.files[0];

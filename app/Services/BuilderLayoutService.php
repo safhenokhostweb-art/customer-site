@@ -131,6 +131,49 @@ class BuilderLayoutService
      * $themeData to resolve against a caller-supplied theme data array (see
      * getHeaderVariants()) instead of this service's own Setting-cached read.
      */
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-29) — real defect found and fixed: the
+     * Canvas editor's "__header__" virtual page (ThemeDesignController)
+     * read/wrote `themeData['header_blocks']` directly — a SEPARATE array
+     * from whichever entry in `header_variants` this method actually
+     * resolves as live below. For any Theme that ships variants (the
+     * Universal Theme, and every canonical theme per THEME-03), that flat
+     * field is a second, disconnected copy the render path never reads —
+     * editing "the header" in Canvas silently saved to nowhere. This
+     * method gives ThemeDesignController the SAME variant-key resolution
+     * getHeaderBlocks() itself uses, site-level only (no $page override —
+     * the Canvas editor edits the site's default header, not one page's
+     * override), so both sides agree on which variant is "the header."
+     * Returns null only when no Theme/variants exist at all (the flat-field
+     * fallback case getHeaderVariants() itself documents).
+     */
+    public function resolveActiveHeaderVariantKey(?array $themeData = null): ?string
+    {
+        $variants = $this->getHeaderVariants($themeData);
+        if (empty($variants)) {
+            return null;
+        }
+        $key = Setting::get(self::SETTING_HEADER_TEMPLATE, '');
+        if ($key !== '' && $key !== null && $this->findVariant($variants, $key) !== null) {
+            return $key;
+        }
+        return $this->defaultVariant($variants)['key'] ?? null;
+    }
+
+    /** @see resolveActiveHeaderVariantKey() — identical contract, for footers. */
+    public function resolveActiveFooterVariantKey(?array $themeData = null): ?string
+    {
+        $variants = $this->getFooterVariants($themeData);
+        if (empty($variants)) {
+            return null;
+        }
+        $key = Setting::get(self::SETTING_FOOTER_TEMPLATE, '');
+        if ($key !== '' && $key !== null && $this->findVariant($variants, $key) !== null) {
+            return $key;
+        }
+        return $this->defaultVariant($variants)['key'] ?? null;
+    }
+
     public function getHeaderBlocks(?Page $page = null, ?array $themeData = null): array
     {
         if ($page && $page->builder_disable_header) {

@@ -169,7 +169,43 @@
 
     {{-- ══════════════════════════════════════════════════════════════════════
          SECTION 2 — تم سایت
+         TASK 3/3 Phase 6.5C (BLD-24) — Appearance convergence. While a
+         Canvas theme is active, this legacy preset/custom-color form is a
+         SECOND, disconnected place to change the site's live colors/fonts
+         (the public render is driven by Canvas global_styles, not this —
+         see ThemeDesignController::syncThemeSettingFromCanvasGlobalStyles()
+         for why the underlying ThemeSetting store still exists and stays
+         in sync automatically). Customer workflow must converge to ONE
+         editable surface: when Canvas is active, this becomes a compact,
+         read-only pointer to Canvas theme management instead of a second
+         editable form; when no Canvas theme is installed yet, this remains
+         the real, necessary, only appearance authority (the classic
+         non-Canvas render path genuinely depends on it).
          ══════════════════════════════════════════════════════════════════════ --}}
+    @if($canvasActive)
+    <div class="card" style="margin-bottom:1.75rem;">
+        <div class="card-header" style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <x-core-ui::icon name="sun" class="w-4 h-4" style="color:#fff;" />
+            </div>
+            <div style="flex:1;">
+                <span style="font-weight:700;font-size:1rem;display:block;">تم سایت مشتری</span>
+                <span style="font-size:0.78rem;color:#6b7280;">رنگ‌ها و ظاهر صفحات عمومی سایت — مستقل از داشبورد</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size:0.85rem;color:#374151;margin:0 0 1rem;line-height:1.7;">
+                رنگ‌ها و فونت سایت شما هم‌اکنون از <strong>قالب Canvas فعال</strong> ({{ $canvasName ?: 'قالب سفارشی' }}) خوانده می‌شود.
+                برای تغییر رنگ اصلی/ثانویه، پس‌زمینه یا فونت سایت، از مدیریت قالب Canvas استفاده کنید — این فرم قدیمی حین فعال بودن Canvas اثری روی سایت عمومی ندارد.
+            </p>
+            <a href="{{ route('admin.theme-design.canvas') }}"
+               style="display:inline-flex;align-items:center;gap:0.5rem;background:#4f46e5;color:#fff;font-size:0.85rem;font-weight:600;padding:0.55rem 1.25rem;border-radius:0.65rem;text-decoration:none;">
+                <x-core-ui::icon name="layout" class="w-4 h-4" />
+                تنظیم رنگ و فونت در Canvas
+            </a>
+        </div>
+    </div>
+    @else
     <div class="card" style="margin-bottom:1.75rem;">
         <div class="card-header" style="display:flex;align-items:center;gap:0.75rem;">
             <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -438,6 +474,7 @@
             </div>
         </div>
     </div>
+    @endif
 
 </div>
 @endsection

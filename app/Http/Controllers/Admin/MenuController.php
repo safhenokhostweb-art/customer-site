@@ -41,7 +41,7 @@ class MenuController extends Controller
 
     public function create(): View
     {
-        $locations = Menu::locations();
+        $locations = Menu::selectableLocations();
         $existingLocations = Menu::whereNull('site_id')->pluck('location')->toArray();
 
         return view('admin.menus.create', compact('locations', 'existingLocations'));
@@ -51,7 +51,7 @@ class MenuController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'location' => 'required|string|in:primary,footer,mobile,topbar,secondary',
+            'location' => 'required|string|in:primary,footer',
         ];
         if (Menu::menusTableHasStatusColumn()) {
             $rules['status'] = 'nullable|string|in:draft,published';

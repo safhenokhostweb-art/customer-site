@@ -41,6 +41,31 @@ class Menu extends Model
     }
 
     /**
+     * TASK 3/3 Phase 6.5C (BLD-27) — Menu location runtime-connection audit.
+     * `locations()` above models all 5, but only 'primary' (nav_header's
+     * nav_source=menu, and the pre-existing nav_menu block) and 'footer'
+     * (nav_footer's nav_source=menu) are actually wired to ANY renderer or
+     * render context — confirmed by exhaustive search: no block, no theme
+     * layout, no context key anywhere reads a mobile/secondary/topbar Menu
+     * at render time. Selecting one of those 3 in the create form was a
+     * real, silent no-op trap ("I made a Mobile Menu and nothing changed
+     * on my site"). Per this phase's own convergence rule ("do not retain
+     * fake locations that cannot affect runtime"), new Menus can no longer
+     * be created against them — this is the create-form's option list,
+     * not a schema/migration change: the underlying `location` column and
+     * `locations()` label lookup are untouched, so an already-existing row
+     * (there are none in any fixture/test — confirmed) keeps rendering its
+     * real label instead of a raw key.
+     */
+    public static function selectableLocations(): array
+    {
+        return [
+            self::LOCATION_PRIMARY => self::locations()[self::LOCATION_PRIMARY],
+            self::LOCATION_FOOTER => self::locations()[self::LOCATION_FOOTER],
+        ];
+    }
+
+    /**
      * نگاشت موقعیت دیتابیس به کلیدهای سازگار با PlatformUx (header, footer, …).
      *
      * @return array<string, string>

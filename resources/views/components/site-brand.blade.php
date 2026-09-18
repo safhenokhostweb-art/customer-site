@@ -7,12 +7,14 @@
     surrounding visual context (dark header, light header, etc.).
 --}}
 @php
-    $siteBrandLogo    = \App\Models\Setting::get('site_logo', '');
-    $siteBrandHasLogo = $siteBrandLogo && \Illuminate\Support\Facades\Storage::disk('public')->exists($siteBrandLogo);
+    // TASK 3/3 Phase 6.5C (BLD-25) — resolves through CustomerMediaService,
+    // the canonical media authority, covering both a UUID (uploaded after
+    // this convergence) and a legacy raw storage path (uploaded before).
+    $siteBrandLogoUrl = app(\App\Services\CustomerMediaService::class)->resolveSiteAssetUrl(\App\Models\Setting::get('site_logo', ''));
 @endphp
-@if($siteBrandHasLogo)
+@if($siteBrandLogoUrl)
     <a href="{{ route('home') }}" class="{{ $class ?? '' }}" style="{{ $style ?? '' }}display:inline-flex;align-items:center;">
-        <img src="{{ \Illuminate\Support\Facades\Storage::url($siteBrandLogo) }}"
+        <img src="{{ $siteBrandLogoUrl }}"
              alt="{{ \App\Helpers\SiteHelper::siteName() }}"
              style="max-height:2.75rem;width:auto;display:block;">
     </a>

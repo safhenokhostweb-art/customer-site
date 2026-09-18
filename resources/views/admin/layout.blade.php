@@ -203,9 +203,9 @@
     </script>
     @stack('head')
     @php
-        $siteFavicon = \App\Models\Setting::get('site_favicon', '');
-        if ($siteFavicon && \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon)) {
-            $faviconUrl  = \Illuminate\Support\Facades\Storage::url($siteFavicon);
+        // TASK 3/3 Phase 6.5C (BLD-25) — resolves through CustomerMediaService.
+        $faviconUrl = app(\App\Services\CustomerMediaService::class)->resolveSiteAssetUrl(\App\Models\Setting::get('site_favicon', ''));
+        if ($faviconUrl) {
             $faviconMime = match(strtolower(pathinfo($faviconUrl, PATHINFO_EXTENSION))) {
                 'ico'  => 'image/x-icon',
                 'svg'  => 'image/svg+xml',

@@ -12,6 +12,7 @@ use App\Services\ThemeCanvas\SiteThemeTemplateService;
 use App\Services\ThemeCanvas\ThemeInstanceBaseRelease;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemeEngine\TenantThemeResolver;
+use App\Services\BuilderLayoutService;
 use App\Services\MotionGraphics\MotionRuntimeManifestReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class ThemeDesignController extends Controller
         private SiteThemeTemplateService $templateSvc,
         private ThemeInstanceRevisionService $revisions,
         private ThemeInstanceBaseRelease $baseRelease,
+        private BuilderLayoutService $layoutService,
     ) {}
 
     public function index(): View
@@ -342,20 +344,25 @@ class ThemeDesignController extends Controller
         }
 
         // ─── Virtual pages for header/footer block editing ───────────────────
+        // TASK 3/3 Phase 6.5C (BLD-29) — must read from the SAME variant
+        // BuilderLayoutService::getHeaderBlocks()/getFooterBlocks() will
+        // actually render live, never the separate flat header_blocks/
+        // footer_blocks field once variants exist (see that method's own
+        // docblock for why those are two disconnected arrays).
         $virtualPages = [
             '__header__' => [
                 'title'      => 'هدر سایت',
                 'slug'       => '__header__',
                 'is_home'    => false,
                 'is_special' => true,
-                'blocks'     => $themeData['header_blocks'] ?? [],
+                'blocks'     => $this->activeVariantBlocks($themeData, 'header'),
             ],
             '__footer__' => [
                 'title'      => 'فوتر سایت',
                 'slug'       => '__footer__',
                 'is_home'    => false,
                 'is_special' => true,
-                'blocks'     => $themeData['footer_blocks'] ?? [],
+                'blocks'     => $this->activeVariantBlocks($themeData, 'footer'),
             ],
         ];
         $pages = $virtualPages + $pages;
@@ -399,8 +406,18 @@ class ThemeDesignController extends Controller
         $key = $validated['page_key'];
 
         // ─── Virtual pages: header/footer blocks ─────────────────────────────
+        // TASK 3/3 Phase 6.5C (BLD-29) — must write to the SAME variant the
+        // render path (BuilderLayoutService::getHeaderBlocks()/
+        // getFooterBlocks()) actually resolves as live, not always the flat
+        // header_blocks/footer_blocks field — see canvasEdit()'s matching
+        // comment and BuilderLayoutService::resolveActiveHeaderVariantKey()'s
+        // own docblock for the defect this closes.
         if ($key === '__header__' || $key === '__footer__') {
-            $field = $key === '__header__' ? 'header_blocks' : 'footer_blocks';
+            $region = $key === '__header__' ? 'header' : 'footer';
+            $field  = $region === 'header' ? 'header_blocks' : 'footer_blocks';
+            $variantsField = $region === 'header' ? 'header_variants' : 'footer_variants';
+
+            $current = $this->activeVariantBlocks($themeData, $region);
             // Phase 3F-C — same fail-closed ext:* trust boundary the
             // Production Builder already enforces (3E-H-C), reused via the
             // extracted ExtensionBlockReconciler rather than reimplemented:
@@ -408,9 +425,25 @@ class ThemeDesignController extends Controller
             // currently registered is never trusted as submitted; it is
             // reconciled against this same field's own previously-persisted
             // content instead of accepted verbatim.
-            $themeData[$field] = \App\Builder\Extension\ExtensionBlockReconciler::reconcile($validated['blocks'], $themeData[$field] ?? []);
+            $reconciled = \App\Builder\Extension\ExtensionBlockReconciler::reconcile($validated['blocks'], $current);
+
+            $variantKey = $region === 'header'
+                ? $this->layoutService->resolveActiveHeaderVariantKey($themeData)
+                : $this->layoutService->resolveActiveFooterVariantKey($themeData);
+
+            if ($variantKey !== null && !empty($themeData[$variantsField])) {
+                foreach ($themeData[$variantsField] as $i => $variant) {
+                    if (($variant['key'] ?? null) === $variantKey) {
+                        $themeData[$variantsField][$i]['blocks'] = $reconciled;
+                        break;
+                    }
+                }
+            } else {
+                $themeData[$field] = $reconciled;
+            }
+
             Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
-            return response()->json(['success' => true, 'block_count' => count($themeData[$field])]);
+            return response()->json(['success' => true, 'block_count' => count($reconciled)]);
         }
 
         // Normalize pages to slug-keyed (handles both indexed and associative arrays)
@@ -502,6 +535,37 @@ class ThemeDesignController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-29) — the blocks of whichever header/footer
+     * variant BuilderLayoutService actually resolves as live for this
+     * theme data (its designated default, or the site's explicit
+     * selection), falling back to the flat header_blocks/footer_blocks
+     * field only for a Theme with no variants at all — the exact same
+     * fallback getHeaderVariants()/getFooterVariants() themselves define.
+     */
+    private function activeVariantBlocks(array $themeData, string $region): array
+    {
+        $variantKey = $region === 'header'
+            ? $this->layoutService->resolveActiveHeaderVariantKey($themeData)
+            : $this->layoutService->resolveActiveFooterVariantKey($themeData);
+
+        if ($variantKey === null) {
+            return $themeData[$region === 'header' ? 'header_blocks' : 'footer_blocks'] ?? [];
+        }
+
+        $variants = $region === 'header'
+            ? $this->layoutService->getHeaderVariants($themeData)
+            : $this->layoutService->getFooterVariants($themeData);
+
+        foreach ($variants as $variant) {
+            if (($variant['key'] ?? null) === $variantKey) {
+                return $variant['blocks'] ?? [];
+            }
+        }
+
+        return [];
+    }
+
     public function canvasSaveGlobalStyles(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -564,12 +628,66 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => $e->getMessage()], 409);
         }
 
+        // TASK 3/3 Phase 6.5C (BLD-24) — Appearance convergence. Canvas
+        // global_styles is the ONE customer-facing appearance authority
+        // once a Canvas theme is active (see index.blade.php: the legacy
+        // color-picker form is display-only in that state). ThemeSetting
+        // cannot be deleted outright — it remains genuinely load-bearing
+        // for (a) any site with no Canvas theme installed at all
+        // (themes/default/layout.blade.php reads it directly) and (b) the
+        // shared core-ui `--ui-*`/`--ds-*` tokens a few components (e.g.
+        // payment-connection-warning) read even on Canvas pages — so it is
+        // kept in automatic sync here as a genuine read-compatibility
+        // layer, not a second thing the customer edits. This is the one
+        // and only place that writes ThemeSetting FROM a Canvas publish.
+        $this->syncThemeSettingFromCanvasGlobalStyles($decoded['global_styles'] ?? []);
+
         Setting::set('canvas_draft_data', '', 'theme');
 
         Cache::forget('canvas_theme_data');
         $this->resolver->clearCache();
 
         return response()->json(['success' => true, 'message' => 'قالب با موفقیت منتشر شد.']);
+    }
+
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-24) — one-directional sync (Canvas -> legacy),
+     * never the reverse: Canvas is the customer-facing authority, ThemeSetting
+     * is a read-compatibility target for the classic theme path and shared
+     * core-ui tokens. Only overwrites the fields Canvas actually authors
+     * (primary/secondary/background/font) — never touches accent/surface/
+     * text/muted/border/link/header_bg/footer_bg/container_width/
+     * border_radius/button_style/section_spacing, which Canvas has no
+     * concept of and this must not silently clobber.
+     */
+    private function syncThemeSettingFromCanvasGlobalStyles(array $globalStyles): void
+    {
+        if (empty($globalStyles)) {
+            return;
+        }
+
+        $fields = [];
+        if (!empty($globalStyles['primary_color'])) {
+            $fields['primary_color'] = $globalStyles['primary_color'];
+        }
+        if (!empty($globalStyles['secondary_color'])) {
+            $fields['secondary_color'] = $globalStyles['secondary_color'];
+        }
+        if (!empty($globalStyles['background_color'])) {
+            $fields['background_color'] = $globalStyles['background_color'];
+        }
+        if (!empty($globalStyles['font_family'])) {
+            $fields['font_family_heading'] = $globalStyles['font_family'];
+            $fields['font_family_body'] = $globalStyles['font_family'];
+        }
+
+        if (empty($fields)) {
+            return;
+        }
+
+        ThemeSetting::query()->firstOrNew(['site_id' => null])->fill($fields)->save();
+        Setting::set('site_theme_preset_slug', 'custom', 'theme');
+        ThemeSetting::clearCache();
     }
 
     /**
@@ -762,10 +880,11 @@ class ThemeDesignController extends Controller
         }
 
         // Resolve blocks for the requested page key
+        // TASK 3/3 Phase 6.5C (BLD-29) — same fix as canvasEdit()/canvasSaveBlocks().
         if ($pageKey === '__header__') {
-            $blocks = $themeData['header_blocks'] ?? [];
+            $blocks = $this->activeVariantBlocks($themeData, 'header');
         } elseif ($pageKey === '__footer__') {
-            $blocks = $themeData['footer_blocks'] ?? [];
+            $blocks = $this->activeVariantBlocks($themeData, 'footer');
         } else {
             $pages  = $themeData['pages'] ?? [];
             $page   = $pages[$pageKey] ?? null;
@@ -859,8 +978,9 @@ class ThemeDesignController extends Controller
         }
 
         $blocks       = $homePage['blocks'] ?? [];
-        $headerBlocks = $themeData['header_blocks'] ?? [];
-        $footerBlocks = $themeData['footer_blocks'] ?? [];
+        // TASK 3/3 Phase 6.5C (BLD-29) — same fix as canvasEdit()/canvasSaveBlocks()/canvasLivePreview().
+        $headerBlocks = $this->activeVariantBlocks($themeData, 'header');
+        $footerBlocks = $this->activeVariantBlocks($themeData, 'footer');
         $globalStyles = $themeData['global_styles'] ?? [];
 
         $renderedBlocks = collect($blocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');

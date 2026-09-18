@@ -124,8 +124,14 @@ class ThemeCanvasPageController extends Controller
     {
         $this->renderer->setThemeData($themeData);
         $this->renderer->setContext([
-            'menu_html'   => $this->menuService->renderMenuHtml('primary', admin: false),
-            'site_name'   => SiteHelper::siteName(),
+            'menu_html'        => $this->menuService->renderMenuHtml('primary', admin: false),
+            'footer_menu_html' => $this->menuService->renderMenuHtml('footer', admin: false),
+            'site_name'        => SiteHelper::siteName(),
+            // TASK 3/3 Phase 6.5C (BLD-25) — see BlockRenderer::renderNavHeader()'s
+            // matching comment: the same <x-site-brand> logic every other
+            // real render path already uses, not a second logo-resolution
+            // implementation.
+            'site_logo_html'   => view('components.site-brand', ['class' => 'tb-nav-header-logo'])->render(),
         ]);
     }
 

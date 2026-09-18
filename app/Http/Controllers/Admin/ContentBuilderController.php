@@ -114,7 +114,12 @@ class ContentBuilderController extends Controller
         // the same canonical MenuService::renderMenuHtml() the real public
         // render uses (admin: true — a preview should reflect the current
         // draft Menu, not require it to already be published).
-        $renderer->setContext(['menu_html' => app(\App\Services\MenuService::class)->renderMenuHtml('primary', admin: true)]);
+        $menuSvc = app(\App\Services\MenuService::class);
+        $renderer->setContext([
+            'menu_html' => $menuSvc->renderMenuHtml('primary', admin: true),
+            'footer_menu_html' => $menuSvc->renderMenuHtml('footer', admin: true),
+            'site_logo_html' => view('components.site-brand', ['class' => 'tb-nav-header-logo'])->render(),
+        ]);
         $html = $renderer->renderBlocks($blocks);
         return response()->json(['html' => $html]);
     }

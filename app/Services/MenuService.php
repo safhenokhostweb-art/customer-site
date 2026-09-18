@@ -222,19 +222,25 @@ class MenuService
      */
     public function renderMenuHtml(string $location = 'primary', bool $admin = false, ?int $siteId = null): string
     {
+        $variant = $location === Menu::LOCATION_FOOTER ? 'footer' : 'nav';
         $menu = $admin ? $this->getMenuForLocationAdmin($location, $siteId) : $this->getMenuForLocation($location, $siteId);
 
         if ($menu) {
             return view('partials.site-menu', [
                 'menu'    => $menu,
-                'variant' => 'nav',
+                'variant' => $variant,
                 'items'   => $this->buildMenuTree($menu),
             ])->render();
         }
 
+        // TASK 3/3 Phase 6.5C (BLD-26) — was hardcoded to 'header'/'nav'
+        // regardless of the actual requested location, which would have
+        // silently shown the wrong platform-default menu (and wrong
+        // markup variant) for any non-'primary' location once a caller
+        // other than the original header-only use existed (footer, here).
         return view('partials.platform-menu', [
-            'location' => 'header',
-            'variant'  => 'nav',
+            'location' => Menu::locationToPlatformKey()[$location] ?? 'header',
+            'variant'  => $variant,
         ])->render();
     }
 

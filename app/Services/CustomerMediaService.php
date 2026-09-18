@@ -141,6 +141,33 @@ class CustomerMediaService
             ->first();
     }
 
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-25) — site logo/favicon convergence onto
+     * this canonical media authority. `site_logo`/`site_favicon` Settings
+     * now store a CustomerMedia UUID going forward (upload() below), but
+     * any value uploaded before this phase is still a raw 'public'-disk
+     * storage path — resolved here too so existing dev/test fixtures and
+     * already-live sites never lose their configured logo/favicon. Returns
+     * null (never throws) for a missing/deleted/foreign value — every
+     * caller already renders a null URL as "no logo/favicon set".
+     */
+    public function resolveSiteAssetUrl(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value)) {
+            try {
+                return $this->publicUrl($this->findForCurrentSite($value));
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                return null;
+            }
+        }
+
+        return Storage::disk('public')->exists($value) ? Storage::disk('public')->url($value) : null;
+    }
+
     private const SORTS = ['newest', 'oldest', 'name', 'size'];
 
     /**

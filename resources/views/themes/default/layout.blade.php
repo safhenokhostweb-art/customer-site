@@ -22,10 +22,8 @@
     <style>@include('partials.vazirmatn-font-faces-inline')</style>
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     @php
-        $siteFavicon = \App\Models\Setting::get('site_favicon', '');
-        $faviconUrl  = ($siteFavicon && \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon))
-            ? \Illuminate\Support\Facades\Storage::url($siteFavicon)
-            : null;
+        // TASK 3/3 Phase 6.5C (BLD-25) — resolves through CustomerMediaService.
+        $faviconUrl  = app(\App\Services\CustomerMediaService::class)->resolveSiteAssetUrl(\App\Models\Setting::get('site_favicon', ''));
         $faviconExt  = $faviconUrl ? strtolower(pathinfo($faviconUrl, PATHINFO_EXTENSION)) : '';
         $faviconMime = match($faviconExt) {
             'ico'  => 'image/x-icon',

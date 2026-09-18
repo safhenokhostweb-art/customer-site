@@ -24,6 +24,7 @@ class ThemeCanvasRenderer extends BlockRenderer
     protected array $themeData = [];
 
     private ?CustomerMediaResolver $mediaResolver = null;
+    private ?InternalLinkResolver $linkResolver = null;
 
     public function setThemeData(array $themeData): self
     {
@@ -49,6 +50,7 @@ class ThemeCanvasRenderer extends BlockRenderer
         $type = $block['type'] ?? 'text';
         $id   = $block['id'] ?? Str::random(8);
         $block = $this->resolveMediaProps($block, $type);
+        $block = $this->resolveInternalLinkProps($block, $type);
 
         if (str_starts_with($type, 'module:')) {
             try {
@@ -91,6 +93,24 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
         $this->mediaResolver ??= app(CustomerMediaResolver::class);
         $block[$key] = $this->mediaResolver->resolveBlockProps($type, $block[$key]);
+
+        return $block;
+    }
+
+    /**
+     * TASK 3/3 Phase 6.5C (BLD-28) — the same bounded integration point as
+     * resolveMediaProps() above, for internal-page-capable link props
+     * (button/CTA/hero action URLs). See InternalLinkResolver's own
+     * docblock.
+     */
+    private function resolveInternalLinkProps(array $block, string $type): array
+    {
+        $key = isset($block['props']) ? 'props' : (isset($block['data']) ? 'data' : null);
+        if ($key === null || !is_array($block[$key])) {
+            return $block;
+        }
+        $this->linkResolver ??= app(InternalLinkResolver::class);
+        $block[$key] = $this->linkResolver->resolveBlockProps($type, $block[$key]);
 
         return $block;
     }

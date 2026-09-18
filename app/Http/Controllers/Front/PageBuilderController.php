@@ -452,7 +452,12 @@ class PageBuilderController extends Controller
         // TASK 3/3 Phase 6.5B — see the matching comment in
         // ContentBuilderController::preview(): was hardcoded empty, now
         // real (draft-inclusive) Menu content via the canonical MenuService.
-        $renderer->setContext(['menu_html' => app(\App\Services\MenuService::class)->renderMenuHtml('primary', admin: true)]);
+        $menuSvc = app(\App\Services\MenuService::class);
+        $renderer->setContext([
+            'menu_html' => $menuSvc->renderMenuHtml('primary', admin: true),
+            'footer_menu_html' => $menuSvc->renderMenuHtml('footer', admin: true),
+            'site_logo_html' => view('components.site-brand', ['class' => 'tb-nav-header-logo'])->render(),
+        ]);
 
         // Builder mode: return per-block HTML array for live iframe canvas
         if ($request->input('mode') === 'builder') {

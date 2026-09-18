@@ -12,6 +12,25 @@
     <title>{{ $fullTitle }}</title>
     <x-seo-meta :title="$fullTitle" />
 
+    {{-- TASK 3/3 Phase 6.5C (BLD-25) — real defect found and fixed: this
+         Canvas layout (the real public render for every Canvas-active
+         site, including the Universal Theme) had NO favicon handling at
+         all — the Settings -> Favicon upload was completely inert for any
+         Canvas-active site, even though the classic (non-Canvas) layout
+         already wired it correctly. Same resolution logic as
+         themes/default/layout.blade.php, via the same canonical
+         CustomerMediaService. --}}
+    @php
+        $faviconUrl = app(\App\Services\CustomerMediaService::class)->resolveSiteAssetUrl(\App\Models\Setting::get('site_favicon', ''));
+        $faviconMime = $faviconUrl ? match(strtolower(pathinfo($faviconUrl, PATHINFO_EXTENSION))) {
+            'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp', default => 'image/jpeg',
+        } : null;
+    @endphp
+    @if($faviconUrl)
+    <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    @endif
+
     {{-- فونت آفلاین Vazirmatn --}}
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
