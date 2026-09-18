@@ -36,8 +36,28 @@ class ThemeInstanceRevisionService
 {
     public const DEFAULT_IDENTIFIER = 'custom';
 
-    public function __construct(private ThemeInstanceBaseRelease $baseRelease, private CustomerMediaService $media)
-    {
+    /**
+     * TASK 3/3 Phase 6.5D (BLD-30) — revision types whose $themeData
+     * genuinely represents fresh, wholesale Platform-sourced content (a
+     * real install, a marketplace/import update, or a reconciled upgrade)
+     * and must therefore pass through media localization before becoming
+     * live. Deliberately excludes TYPE_PUBLISH (the customer's own local
+     * draft going live — never Platform-sourced), TYPE_ROLLBACK_SNAPSHOT
+     * (restoring theme_data that was already localized when originally
+     * recorded — re-running is a safe no-op but wasted work), and
+     * TYPE_CUSTOMER_EDIT.
+     */
+    private const LOCALIZABLE_TYPES = [
+        ThemeInstanceRevision::TYPE_INSTALL,
+        ThemeInstanceRevision::TYPE_UPDATE,
+        ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED,
+    ];
+
+    public function __construct(
+        private ThemeInstanceBaseRelease $baseRelease,
+        private CustomerMediaService $media,
+        private ThemeMediaLocalizationService $mediaLocalizer,
+    ) {
     }
 
     /**
@@ -92,6 +112,23 @@ class ThemeInstanceRevisionService
                 . implode('، ', $shadowed)
                 . '. ابتدا آن صفحه(ها) را در مدیریت صفحات حذف یا تغییر آدرس دهید.'
             );
+        }
+
+        // TASK 3/3 Phase 6.5D (BLD-30) — localization moved to this single
+        // canonical write boundary (was previously a side effect of one
+        // controller action, PageBuilderController::installTheme(), which
+        // meant any OTHER real caller of record() — including the
+        // marketplace upgrade flow and the browser test harness — silently
+        // bypassed it; certification proved the real canonical Universal
+        // Theme fixture had never actually been localized by any test in
+        // this suite as a result). Runs BEFORE the revision transaction, on
+        // purpose: a localization failure (ThemeMediaLocalizationException,
+        // thrown only for a URL that matched the trusted Platform origin —
+        // see that service's own docblock) must abort the whole operation
+        // atomically, with nothing written at all, never a partially-live
+        // revision with some media still hotlinked.
+        if (in_array($type, self::LOCALIZABLE_TYPES, true)) {
+            $themeData = $this->mediaLocalizer->localize($themeData);
         }
 
         $identifier = $context['theme_identifier'] ?? $this->currentIdentifier();

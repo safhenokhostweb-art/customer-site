@@ -50,17 +50,4 @@ return [
 
     'customer_provision_secret' => env('CUSTOMER_PROVISION_SECRET', ''),
 
-    // TASK 3/3 Phase 6.5 (BLD-21) — MASTER_THEME_MEDIA_LOCALIZATION_GAP fix.
-    // The ONLY origin(s) ThemeMediaLocalizationService is ever allowed to
-    // fetch an image from at theme-install time — a fixed, operator-
-    // controlled allowlist, never a customer- or theme-author-supplied
-    // value. Defaults to the platform's own hostname (where every master
-    // Theme's stock imagery is actually hosted, e.g.
-    // https://panel.safhenokhost.ir/storage/theme-media/...); comma-
-    // separated in THEME_MEDIA_TRUSTED_HOSTS for a CDN/asset-domain split.
-    'trusted_media_hosts' => array_values(array_filter(array_map(
-        'trim',
-        explode(',', env('THEME_MEDIA_TRUSTED_HOSTS', (string) parse_url(env('PLATFORM_URL', ''), PHP_URL_HOST)))
-    ))),
-
 ];

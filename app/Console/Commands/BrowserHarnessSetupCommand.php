@@ -208,9 +208,11 @@ class BrowserHarnessSetupCommand extends Command
             // Real, seeder-produced CustomerMedia library rows for the
             // media-round-trip proof (universal-multipurpose-theme.spec.js
             // selects these by known title/uuid). The canonical export's
-            // OWN images stay plain saas-platform-hosted URLs by design
-            // (a portable master Theme carries no customer-media UUIDs —
-            // see ADR-049 §6) — see MASTER_THEME_MEDIA_LOCALIZATION_GAP.
+            // OWN images are plain saas-platform-hosted URLs on disk (a
+            // portable master Theme carries no customer-media UUIDs — see
+            // ADR-049 §6); record() below now localizes them through the
+            // same canonical boundary a real install uses (Phase 6.5D,
+            // BLD-30) — this harness no longer bypasses that contract.
             $this->seedUniversalMedia();
             $this->seedUniversalCustomerData();
 

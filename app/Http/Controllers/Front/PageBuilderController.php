@@ -11,7 +11,7 @@ use App\Support\CanvasReservedSlugs;
 use App\Services\BuilderLayoutService;
 use App\Services\ThemeBuilder\BlockRenderer;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
-use App\Services\ThemeCanvas\ThemeMediaLocalizationService;
+use App\Services\ThemeCanvas\ThemeMediaLocalizationException;
 use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
 use App\Models\ThemeInstanceRevision;
@@ -401,14 +401,11 @@ class PageBuilderController extends Controller
             'extension_assets' => $data['extension_assets'] ?? [],
         ];
 
-        // BLD-21 (MASTER_THEME_MEDIA_LOCALIZATION_GAP) — must run strictly
-        // BEFORE record() below: ThemeInstanceRevision content is immutable
-        // once created, so this is the only point where a master-theme
-        // hotlinked image can still become a real, locally-owned
-        // {media_id} reference. See ThemeMediaLocalizationService's own
-        // docblock for the full security boundary.
-        $themeData = app(ThemeMediaLocalizationService::class)->localize($themeData);
-
+        // TASK 3/3 Phase 6.5D (BLD-30) — media localization (BLD-21,
+        // MASTER_THEME_MEDIA_LOCALIZATION_GAP) moved to the canonical
+        // ThemeInstanceRevisionService::record() write boundary itself
+        // (gated by revision type), so every real caller gets it, not just
+        // this one controller action. See that service's own docblock.
         try {
             $revision = app(ThemeInstanceRevisionService::class)->record($themeData, ThemeInstanceRevision::TYPE_INSTALL, [
                 'theme_identifier'      => $data['theme_id'],
@@ -424,6 +421,12 @@ class PageBuilderController extends Controller
                 'error'   => 'page_namespace_collision',
                 'message' => $e->getMessage(),
             ], 409);
+        } catch (ThemeMediaLocalizationException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'media_localization_failed',
+                'message' => $e->getMessage(),
+            ], 502);
         }
 
         return response()->json([
