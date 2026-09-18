@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9f44063f13f255561eb4d131afc6c05b",
+    "content-hash": "f5deafe24308bbc39e13590e01681a73",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -5532,7 +5532,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/core-utils",
-                "reference": "be23d8182cbad83704f7e097a9ba2d41ea2ee747"
+                "reference": "607629d71f177febdf44ba7eb756c302e05de77e"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5556,7 +5556,7 @@
             ],
             "description": "Shared Core Utilities for SaaS Platform modules",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5566,7 +5566,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/crm",
-                "reference": "450abe4488ba0b160577a0ca6d45859e0e2d039e"
+                "reference": "fa9bfb6d4b4690660e2868c7943f1c34d9a2a221"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5591,7 +5591,7 @@
             ],
             "description": "crm module for SaaS Platform",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5601,7 +5601,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/extension-sdk",
-                "reference": "cd36248550f45f809ea96c1014255ff7080eb7c6"
+                "reference": "8a45965a52e5f7be9406b05563960892b91a1bac"
             },
             "require": {
                 "php": "^8.1"
@@ -5617,7 +5617,7 @@
             ],
             "description": "Canonical Extension product-identity grammar and declarative release-manifest contract shared by saas-platform (commercial Extension/ExtensionRelease authority) and customer-site (Extension SDK runtime registration authority). Pure PHP value objects only — no Laravel, Eloquent, DB, tenant, or entitlement dependency; usable without booting a framework.",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5627,7 +5627,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/forms",
-                "reference": "865c6ba2c0b6533a5795cb1195ea13012b936014"
+                "reference": "d90da43128447fc5c5b6cc867112bf653e2011ab"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5652,7 +5652,7 @@
             ],
             "description": "Shared Forms Module for SaaS Platform",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5662,7 +5662,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/seo-advanced",
-                "reference": "ca03fac2a14e00ccefe17643299e1a597e7306a7"
+                "reference": "0d56ac6befcbb4f74664c99f20ebb1181949755c"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5687,7 +5687,7 @@
             ],
             "description": "seo-advanced module for SaaS Platform",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5697,7 +5697,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/theme-runtime",
-                "reference": "01e1ff87fd2a7f406c3cee90f93eb64314e52fe3"
+                "reference": "041df047743fa0eb3d1827cd6f47b85a8a892f2f"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5721,7 +5721,7 @@
             ],
             "description": "Canonical Theme block rendering/registry/CSS authority shared by the SaaS Builder preview and customer-site tenant runtime",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
@@ -5731,7 +5731,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/tickets",
-                "reference": "5fdaf59fcf8e37cca86c973d19f54eaad17f519f"
+                "reference": "73a68491b8403499c37b91d1ef9ec621124a935c"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -5756,7 +5756,7 @@
             ],
             "description": "Shared Tickets Module for SaaS Platform",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },

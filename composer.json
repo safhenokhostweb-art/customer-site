@@ -13,49 +13,49 @@
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/tickets",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/forms",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/crm",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/seo-advanced",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/core-utils",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/theme-runtime",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         },
         {
             "type": "path",
             "url": "../saas-platform/packages/saas-platform/modules/extension-sdk",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         }
     ],
@@ -105,6 +105,15 @@
         }
     },
     "scripts": {
+        "pre-install-cmd": [
+            "@php scripts/verify-composer-package-safety.php pre"
+        ],
+        "pre-update-cmd": [
+            "@php scripts/verify-composer-package-safety.php pre"
+        ],
+        "post-install-cmd": [
+            "@php scripts/verify-composer-package-safety.php post"
+        ],
         "sync-cursor-rules": [
             "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-cursor-rules.ps1"
         ],
@@ -136,6 +145,7 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
+            "@php scripts/verify-composer-package-safety.php post",
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [
