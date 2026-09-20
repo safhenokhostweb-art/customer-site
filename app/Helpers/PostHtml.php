@@ -101,4 +101,72 @@ class PostHtml
 
         return HtmlSanitizer::isValidUrl($trimmed);
     }
+
+    /**
+     * Real table-of-contents extraction for the article-detail template
+     * (Commercial Productization fase-2: "فهرست مطالب در صورت امکان" was a
+     * real, confirmed gap). Takes HTML already passed through `safe()`
+     * (never raw editor input — DOMDocument here does no sanitization of
+     * its own) and returns [htmlWithAnchoredHeadings, tocItems]. An article
+     * with no h2/h3 headings returns the html unchanged and an empty TOC —
+     * the caller simply omits the TOC block rather than showing an empty
+     * shell.
+     *
+     * @return array{0: string, 1: list<array{id: string, text: string, level: int}>}
+     */
+    public static function withHeadingIds(string $safeHtml): array
+    {
+        if ($safeHtml === '' || !str_contains($safeHtml, '<h2') && !str_contains($safeHtml, '<h3')) {
+            return [$safeHtml, []];
+        }
+
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8"?><div>'.$safeHtml.'</div>', LIBXML_NOERROR | LIBXML_NOWARNING);
+        libxml_clear_errors();
+
+        $toc = [];
+        $usedIds = [];
+        foreach (['h2', 'h3'] as $tagName) {
+            foreach (iterator_to_array($dom->getElementsByTagName($tagName)) as $node) {
+                $text = trim($node->textContent);
+                if ($text === '') {
+                    continue;
+                }
+                $slug = self::slugify($text);
+                $id = $slug;
+                $i = 2;
+                while (isset($usedIds[$id])) {
+                    $id = $slug.'-'.$i++;
+                }
+                $usedIds[$id] = true;
+                $node->setAttribute('id', $id);
+                $toc[] = ['id' => $id, 'text' => $text, 'level' => (int) substr($tagName, 1), '_pos' => $node->getLineNo()];
+            }
+        }
+
+        if (empty($toc)) {
+            return [$safeHtml, []];
+        }
+
+        // Headings were collected h2-then-h3, not document order — restore
+        // reading order via each node's line number before returning.
+        usort($toc, fn ($a, $b) => $a['_pos'] <=> $b['_pos']);
+        $toc = array_map(fn ($t) => ['id' => $t['id'], 'text' => $t['text'], 'level' => $t['level']], $toc);
+
+        $wrapper = $dom->getElementsByTagName('div')->item(0);
+        $html = '';
+        foreach (iterator_to_array($wrapper->childNodes) as $child) {
+            $html .= $dom->saveHTML($child);
+        }
+
+        return [$html, $toc];
+    }
+
+    private static function slugify(string $text): string
+    {
+        $slug = trim(preg_replace('/[^\p{L}\p{N}]+/u', '-', $text), '-');
+
+        return $slug !== '' ? mb_strtolower($slug) : 'heading';
+    }
 }

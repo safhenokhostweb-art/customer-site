@@ -17,6 +17,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
 
+        // Commercial Productization fase-4 — real, previously undiscovered
+        // bug found via an actual local end-to-end install (not
+        // Http::fake()): /builder/api/theme/install and /theme/unprotect
+        // are genuinely server-to-server endpoints (routes/web.php's own
+        // comment: "uses X-Provision-Secret header, no auth middleware"),
+        // authenticated by ProvisionSecretMiddleware's timing-safe shared-
+        // secret check — never a browser session, so a CSRF token was
+        // never obtainable for a real caller. Every test exercising this
+        // path used Http::fake(), which never runs real middleware, so
+        // this was invisible until a genuine local install was attempted.
+        // Excluding CSRF here does not weaken the endpoint's real security
+        // boundary (the secret-header check), it only removes a check that
+        // could never legitimately pass for this endpoint's real callers.
+        $middleware->validateCsrfTokens(except: [
+            'builder/api/theme/*',
+        ]);
+
         $middleware->web(prepend: [
             \App\Http\Middleware\UseFileSessionWhenNotInstalled::class,
         ]);

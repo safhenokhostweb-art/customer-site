@@ -57,15 +57,25 @@
 
 <article style="max-width: 48rem;">
     @if($post->featured_image)
-    <div style="aspect-ratio: 16/9; background: #f3f4f6; border-radius: 0.75rem; overflow: hidden; margin-bottom: 1.5rem;">
+    <div style="aspect-ratio: 16/9; background: var(--tb-surface, #f3f4f6); border-radius: 0.75rem; overflow: hidden; margin-bottom: 1.5rem;">
         <img src="{{ \App\Helpers\ImageHelper::url($post->featured_image) }}" alt="{{ $post->title }}" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     @endif
-    <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">{{ $post->title }}</h1>
+    <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--tb-text, inherit);">{{ $post->title }}</h1>
     @if($post->excerpt)
-        <p style="font-size: 1rem; color:#374151; margin-bottom:1rem; line-height:1.8;">{{ $post->excerpt }}</p>
+        <p style="font-size: 1rem; color:var(--tb-text-muted, #374151); margin-bottom:1rem; line-height:1.8;">{{ $post->excerpt }}</p>
     @endif
-    <p style="color: #6b7280; margin-bottom: 1rem;">
+    @if($post->user)
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.9rem;">
+            @if($post->user->avatar_url)
+                <img src="{{ $post->user->avatar_url }}" alt="{{ $post->user->name }}" style="width:2.25rem; height:2.25rem; border-radius:50%; object-fit:cover;">
+            @else
+                <div style="width:2.25rem; height:2.25rem; border-radius:50%; background:var(--tb-surface, var(--platform-primary-light,#eef2ff)); color:var(--tb-primary-text, var(--platform-primary,#4f46e5)); display:flex; align-items:center; justify-content:center; font-weight:700;">{{ mb_substr($post->user->name, 0, 1) }}</div>
+            @endif
+            <span style="font-weight:600; font-size:0.9rem; color: var(--tb-text, inherit);">{{ $post->user->name }}</span>
+        </div>
+    @endif
+    <p style="color: var(--tb-text-muted, #6b7280); margin-bottom: 1rem;">
         {{ $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'Y/m/d') : '' }}
         @if($post->category)
             <span>• {{ $post->category->name }}</span>
@@ -76,20 +86,20 @@
     @if($post->tags->isNotEmpty())
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
             @foreach($post->tags as $tag)
-                <a href="{{ route('blog.index', ['tag' => $tag->slug]) }}" style="font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:9999px; background:var(--platform-primary-light,#eef2ff); color:var(--platform-primary,#4338ca); text-decoration:none;">{{ $tag->name }}</a>
+                <a href="{{ route('blog.index', ['tag' => $tag->slug]) }}" style="font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:9999px; background:var(--tb-surface, var(--platform-primary-light,#eef2ff)); color:var(--tb-primary-text, var(--platform-primary,#4338ca)); text-decoration:none;">{{ $tag->name }}</a>
             @endforeach
         </div>
     @endif
     @if($post->series)
         <p style="font-size:0.9rem; margin-bottom:1rem;">
-            <a href="{{ route('blog.series', $post->series->slug) }}" style="color: var(--platform-link-color, #4f46e5); font-weight:600;">مجموعه: {{ $post->series->title }}</a>
+            <a href="{{ route('blog.series', $post->series->slug) }}" style="color: var(--tb-primary-text, var(--platform-link-color, #4f46e5)); font-weight:600;">مجموعه: {{ $post->series->title }}</a>
             @if($post->part_number)
-                <span style="color:#6b7280;"> — قسمت {{ $post->part_number }}</span>
+                <span style="color:var(--tb-text-muted, #6b7280);"> — قسمت {{ $post->part_number }}</span>
             @endif
         </p>
     @endif
     @if(isset($seriesSiblings) && $seriesSiblings->count() > 1)
-        <nav style="margin-bottom:1.25rem; padding:0.75rem; border:1px solid #e5e7eb; border-radius:0.5rem; font-size:0.85rem;">
+        <nav style="margin-bottom:1.25rem; padding:0.75rem; border:1px solid var(--tb-border, #e5e7eb); border-radius:0.5rem; font-size:0.85rem; color: var(--tb-text, inherit);">
             <div style="font-weight:600; margin-bottom:0.35rem;">سایر قسمت‌ها</div>
             <ul style="margin:0; padding-inline-start:1.1rem;">
                 @foreach($seriesSiblings as $sib)
@@ -104,31 +114,54 @@
             </ul>
         </nav>
     @endif
-    <div style="line-height: 1.75;" class="post-body">{!! \App\Helpers\PostHtml::safe($post->body) !!}</div>
+    @php
+        [$postBodyHtml, $toc] = \App\Helpers\PostHtml::withHeadingIds(\App\Helpers\PostHtml::safe($post->body));
+        $shareUrl = $post->effectiveCanonicalUrl();
+        $shareTitle = rawurlencode($post->title);
+        $shareUrlEncoded = rawurlencode($shareUrl);
+    @endphp
+    @if(count($toc) > 1)
+        <nav style="margin-bottom:1.5rem; padding:1rem 1.25rem; border:1px solid var(--tb-border, #e5e7eb); border-radius:0.75rem; background:var(--tb-background, #f9fafb);" aria-label="فهرست مطالب">
+            <div style="font-weight:700; margin-bottom:0.5rem; font-size:0.9rem; color: var(--tb-text, inherit);">فهرست مطالب</div>
+            <ul style="margin:0; padding-inline-start:1.1rem; font-size:0.85rem; line-height:2;">
+                @foreach($toc as $item)
+                    <li style="{{ $item['level'] === 3 ? 'margin-inline-start:1rem;' : '' }}"><a href="#{{ $item['id'] }}" style="color: var(--tb-primary-text, var(--platform-link-color, #4f46e5)); text-decoration:none;">{{ $item['text'] }}</a></li>
+                @endforeach
+            </ul>
+        </nav>
+    @endif
+    <div style="line-height: 1.75; color: var(--tb-text, inherit);" class="post-body">{!! $postBodyHtml !!}</div>
+    <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-top:1.5rem;">
+        <span style="font-size:0.85rem; color:var(--tb-text-muted, #6b7280); font-weight:600;">اشتراک‌گذاری:</span>
+        <a href="https://t.me/share/url?url={{ $shareUrlEncoded }}&text={{ $shareTitle }}" target="_blank" rel="noopener noreferrer" class="tb-tag-neutral" style="padding:0.4rem 0.85rem; text-decoration:none;">تلگرام</a>
+        <a href="https://wa.me/?text={{ $shareTitle }}%20{{ $shareUrlEncoded }}" target="_blank" rel="noopener noreferrer" class="tb-tag-neutral" style="padding:0.4rem 0.85rem; text-decoration:none;">واتس‌اپ</a>
+        <a href="https://twitter.com/intent/tweet?url={{ $shareUrlEncoded }}&text={{ $shareTitle }}" target="_blank" rel="noopener noreferrer" class="tb-tag-neutral" style="padding:0.4rem 0.85rem; text-decoration:none;">توییتر</a>
+        <button type="button" id="blog-copy-link-btn" data-url="{{ $shareUrl }}" class="tb-tag-neutral" style="padding:0.4rem 0.85rem; border:none; cursor:pointer;">کپی لینک</button>
+    </div>
     @php $gallery = array_filter($post->gallery_images ?? []); @endphp
     @if(count($gallery) > 0)
         <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:0.5rem; margin-top:1.25rem;">
             @foreach($gallery as $imgPath)
-                <a href="{{ \App\Helpers\ImageHelper::url($imgPath) }}" target="_blank" rel="noopener noreferrer" style="display:block; border-radius:0.5rem; overflow:hidden; border:1px solid #e5e7eb;">
+                <a href="{{ \App\Helpers\ImageHelper::url($imgPath) }}" target="_blank" rel="noopener noreferrer" style="display:block; border-radius:0.5rem; overflow:hidden; border:1px solid var(--tb-border, #e5e7eb);">
                     <img src="{{ \App\Helpers\ImageHelper::url($imgPath) }}" alt="" style="width:100%; height:100px; object-fit:cover;">
                 </a>
             @endforeach
         </div>
     @endif
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
-        <button type="button" id="blog-like-btn" data-url="{{ route('blog.like', $post->slug) }}" style="padding:0.4rem 0.85rem; border-radius:0.5rem; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-size:0.85rem;">
+        <button type="button" id="blog-like-btn" data-url="{{ route('blog.like', $post->slug) }}" style="padding:0.4rem 0.85rem; border-radius:0.5rem; border:1px solid var(--tb-border, #d1d5db); background:var(--tb-surface, #fff); color: var(--tb-text, inherit); cursor:pointer; font-size:0.85rem;">
             پسندیدم (<span id="blog-like-count">{{ num_fa($post->likes_count) }}</span>)
         </button>
     </div>
 </article>
 @if(isset($relatedPosts) && $relatedPosts->isNotEmpty())
     <section style="margin-top: 2rem; max-width: 48rem;">
-        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem;">مطالب مرتبط</h2>
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--tb-text, inherit);">مطالب مرتبط</h2>
         <div style="display:grid; gap: 0.5rem;">
             @foreach($relatedPosts as $relatedPost)
-                <a href="{{ route('blog.show', $relatedPost->slug) }}" style="display:block; border:1px solid #e5e7eb; border-radius:0.5rem; padding:0.65rem; text-decoration:none; color:inherit;">
+                <a href="{{ route('blog.show', $relatedPost->slug) }}" style="display:block; border:1px solid var(--tb-border, #e5e7eb); border-radius:0.5rem; padding:0.65rem; text-decoration:none; color:var(--tb-text, inherit);">
                     <div style="font-weight:600;">{{ $relatedPost->title }}</div>
-                    <div style="font-size:0.8rem; color:#6b7280;">
+                    <div style="font-size:0.8rem; color:var(--tb-text-muted, #6b7280);">
                         {{ $relatedPost->published_at ? \App\Helpers\Jalali::formatFa($relatedPost->published_at, 'Y/m/d') : '' }}
                     </div>
                 </a>
@@ -136,8 +169,13 @@
         </div>
     </section>
 @endif
+<section style="margin-top:2.5rem; max-width:48rem; padding:2rem; border-radius:1rem; background:linear-gradient(135deg,var(--tb-primary, var(--platform-primary,#4f46e5)),var(--tb-secondary, var(--platform-primary-dark,#3730a3))); color:var(--tb-on-primary, #fff); text-align:center;">
+    <h2 style="font-size:1.2rem; font-weight:700; margin-bottom:0.5rem;">آماده‌اید کسب‌وکار خود را آنلاین کنید؟</h2>
+    <p style="opacity:0.9; margin-bottom:1.25rem; font-size:0.9rem;">با پلتفرم ما در چند دقیقه سایت حرفه‌ای خود را راه‌اندازی کنید.</p>
+    <a href="{{ route('home') }}" style="display:inline-block; padding:0.75rem 1.75rem; border-radius:0.5rem; background:var(--tb-surface, #fff); color:var(--tb-primary-text, var(--platform-primary,#4f46e5)); font-weight:700; text-decoration:none;">شروع رایگان</a>
+</section>
 <p class="mt-8">
-    <a href="{{ route('blog.index') }}" class="font-semibold" style="color: var(--platform-link-color, #4f46e5);">← بازگشت به وبلاگ</a>
+    <a href="{{ route('blog.index') }}" class="font-semibold" style="color: var(--tb-primary-text, var(--platform-link-color, #4f46e5));">← بازگشت به وبلاگ</a>
 </p>
 @push('scripts')
 <script>
@@ -162,6 +200,27 @@
             btn.disabled = true;
         }).catch(function(){});
     });
+    var copyBtn = document.getElementById('blog-copy-link-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var url = copyBtn.getAttribute('data-url');
+            var done = function () {
+                var original = copyBtn.textContent;
+                copyBtn.textContent = 'کپی شد ✓';
+                setTimeout(function () { copyBtn.textContent = original; }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(function () {});
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) {}
+                document.body.removeChild(ta);
+            }
+        });
+    }
 })();
 </script>
 @endpush

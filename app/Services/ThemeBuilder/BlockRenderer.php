@@ -304,12 +304,35 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         if (!\App\Helpers\SiteHelper::blogEnabled()) {
             return "<div id=\"tb-{$id}\" class=\"tb-blog-posts-empty\"><p class=\"tb-text\">ماژول وبلاگ غیرفعال است.</p></div>";
         }
-        $limit = (int) ($props['limit'] ?? 6);
+        $limit = max(1, min(12, (int) ($props['limit'] ?? 6)));
         $title = $this->escape($props['title'] ?? 'آخرین مطالب');
         // Builder integrity audit (2026-09-11): 'layout' is a real,
         // customer-site-declared schema field this method never consumed.
-        $layout = ($props['layout'] ?? 'grid') === 'list' ? 'list' : 'grid';
-        $posts = Post::published()->latest('published_at')->take($limit)->get();
+        // Universal Multipurpose Slider Overhaul: 'slider' is a new third
+        // option alongside the pre-existing 'grid'/'list' — real carousel
+        // via the shared BlockRenderer::renderCarousel(), same card markup.
+        $layout = $props['layout'] ?? 'grid';
+        if (!in_array($layout, ['grid', 'list', 'slider'], true)) {
+            $layout = 'grid';
+        }
+        $source = $props['source'] ?? 'latest';
+
+        $query = Post::published();
+        if ($source === 'category' && !empty($props['category_id'])) {
+            $query->where('category_id', (int) $props['category_id']);
+        } elseif ($source === 'manual' && !empty($props['manual_ids']) && is_array($props['manual_ids'])) {
+            $ids = array_values(array_filter(array_map('intval', $props['manual_ids'])));
+            if (empty($ids)) {
+                return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading\">{$title}</h2></div>";
+            }
+            // A deleted manually-selected post is simply absent from the
+            // result set — never a renderer crash.
+            $query->whereIn('id', $ids)->orderByRaw('FIELD(id, ' . implode(',', $ids) . ')');
+        } else {
+            $query->latest('published_at');
+        }
+        $posts = $query->take($limit)->get();
+
         if ($posts->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading\">{$title}</h2><div class=\"tb-blog-posts-empty\"><p class=\"tb-text\">هنوز مطلبی منتشر نشده است.</p><a href=\"" . $this->escapeAttr(route('blog.index')) . "\" class=\"tb-btn tb-btn-primary\">وبلاگ</a></div></div>";
         }
@@ -317,17 +340,29 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         foreach ($posts as $post) {
             $url = route('blog.show', $post->slug);
             $t = $this->escape($post->title);
-            $excerpt = $this->escape(\Illuminate\Support\Str::limit(strip_tags($post->excerpt ?? $post->body ?? ''), 120));
+            $excerpt = $this->escape($post->previewText(120));
             $date = $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'Y/m/d') : '';
-            $img = '';
-            if (!empty($post->featured_image)) {
-                $imgUrl = \App\Helpers\ImageHelper::url($post->featured_image);
-                $img = "<div class=\"tb-blog-card-img\"><img src=\"" . $this->escapeAttr($imgUrl) . "\" alt=\"{$t}\" loading=\"lazy\"></div>";
-            } else {
-                $img = "<div class=\"tb-blog-card-img tb-blog-card-noimg\">📰</div>";
-            }
+            $img = $this->imageWithFallback(
+                $post->featured_image ? \App\Helpers\ImageHelper::url($post->featured_image) : '',
+                $post->title,
+                'aspect-ratio:16/9;',
+                '📰'
+            );
             $cards[] = "<a href=\"{$url}\" class=\"tb-blog-card\">{$img}<div class=\"tb-blog-card-body\"><h3 class=\"tb-blog-card-title\">{$t}</h3><p class=\"tb-blog-card-meta\">{$date}</p><p class=\"tb-blog-card-excerpt\">{$excerpt}</p></div></a>";
         }
+
+        if ($layout === 'slider') {
+            $carousel = $this->renderCarousel(
+                $cards,
+                $id . '-track',
+                (bool) ($props['autoplay'] ?? true),
+                (int) ($props['interval'] ?? 5000),
+                'tb-blog-slider',
+                ['desktop' => 3, 'tablet' => 2, 'mobile' => 1]
+            );
+            return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2>{$carousel}</div>";
+        }
+
         $colsClass = $layout === 'list' ? 'tb-grid-cols-1' : 'tb-grid-cols-3';
         $html = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-lg tb-blog-grid\">" . implode('', $cards) . "</div>";
         return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\">{$html}</div>";
@@ -435,6 +470,17 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         return "<div id=\"tb-{$id}\" class=\"tb-search-bar-wrap\"><form method=\"get\" action=\"{$action}\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"{$placeholder}\" aria-label=\"جستجو\"></form></div>";
     }
 
+    /**
+     * Commercial Productization fase-2: the shared package gained a
+     * canonical renderCartIcon() this session (closing a real "raw JSON
+     * dump" preview bug that has no real cart to query). This host-owned
+     * override predates that and queries the real session cart / shop
+     * route — a genuine tenant-data adapter, not a duplicate to delete.
+     */
+    #[HostOwnedOverride(
+        reason: 'Queries the real session cart quantity and a real shop.cart route, gated on SiteHelper::shopEnabled() — the canonical version has no real cart to query (Builder preview has no session cart), so it renders a static, non-functional icon. Real tenant-data adapter.',
+        category: HostOwnedOverride::REASON_TENANT_DATA,
+    )]
     protected function renderCartIcon(array $props, string $inner, string $id): string
     {
         if (!\App\Helpers\SiteHelper::shopEnabled()) {
@@ -484,8 +530,18 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
      * here since that underscore name was never itself dispatchable
      * (Str::studly('product_grid') => 'ProductGrid') and the forwarder had
      * no adapter responsibility of its own. Customer-runtime-only: queries
-     * real Product data, no canonical shared equivalent exists.
+     * real Product data.
+     *
+     * Commercial Productization fase-2: the shared package gained a
+     * canonical renderProductGrid() this session (a real demo-fixture
+     * renderer, closing a "raw JSON dump" preview bug — saas-platform has
+     * no Product model to query for real). This host override is the real
+     * tenant-data counterpart, not a duplicate to delete.
      */
+    #[HostOwnedOverride(
+        reason: 'Queries the real tenant Product model (with category/price/stock) — the canonical version renders a static demo fixture since saas-platform has no Product model to query. Real tenant-data adapter, same reasoning as renderBlogPosts().',
+        category: HostOwnedOverride::REASON_TENANT_DATA,
+    )]
     protected function renderProductGrid(array $props, string $inner, string $id): string
     {
         $limit = (int) ($props['limit'] ?? 8);
@@ -507,12 +563,18 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $cards = [];
         foreach ($products as $product) {
-            $url = route('shop.show', $product->slug);
-            $title = $this->escape($product->title);
-            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $img = $product->image ? \App\Helpers\ImageHelper::url($product->image) : '';
-            $imgHtml = $img ? "<div class=\"tb-product-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$title}\" loading=\"lazy\"></div>" : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $cards[] = "<a href=\"{$url}\" class=\"tb-product-card\">{$imgHtml}<div class=\"tb-product-card-inner\"><h3 class=\"tb-product-title\">{$title}</h3><div class=\"tb-product-price\">{$price}</div></div></a>";
+            $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
+            $cards[] = $this->productCardHtml(
+                $product->title,
+                $product->image ? \App\Helpers\ImageHelper::url($product->image) : '',
+                (float) $product->effective_price,
+                $hasDiscount ? (float) $product->price : null,
+                $product->is_new ? 'جدید' : null,
+                null,
+                route('shop.show', $product->slug),
+                CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
+                $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null
+            );
         }
 
         return "<div id=\"tb-{$id}\" class=\"tb-grid {$colsClass} tb-gap-md tb-product-grid-wrap\">" . implode('', $cards) . "</div>";

@@ -147,7 +147,7 @@ class BlogController extends Controller
         }
         $post = Post::query()
             ->published()
-            ->with(['category', 'tags', 'series'])
+            ->with(['category', 'tags', 'series', 'user'])
             ->where('slug', $slug)
             ->firstOrFail();
 

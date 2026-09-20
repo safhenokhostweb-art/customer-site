@@ -80,6 +80,12 @@ class ThemeMediaLocalizationService
 {
     private const TIMEOUT_SECONDS = 8;
     private const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    // Commercial Productization fase-4: the `video` block's `url` prop is
+    // already in CustomerMediaResolver::MEDIA_PROPS as real, intentional
+    // media needing localization (this theme's real local demo video) —
+    // see CustomerMediaService::importVideoFromRemoteBytes()'s docblock
+    // for the full gap this closes.
+    private const ALLOWED_VIDEO_CONTENT_TYPES = ['video/webm', 'video/mp4'];
 
     /** @var array<string, string|array{media_id: string}> per-run memoization — one theme install rarely repeats a URL, but a shared hero/logo across many blocks can. */
     private array $resolved = [];
@@ -294,17 +300,25 @@ class ThemeMediaLocalizationService
         }
 
         $contentType = strtolower(trim(explode(';', $response->header('Content-Type') ?? '')[0]));
-        if (!in_array($contentType, self::ALLOWED_CONTENT_TYPES, true)) {
+        $isVideo = in_array($contentType, self::ALLOWED_VIDEO_CONTENT_TYPES, true);
+        if (!$isVideo && !in_array($contentType, self::ALLOWED_CONTENT_TYPES, true)) {
             throw new ThemeMediaLocalizationException("Trusted Platform media \"{$url}\" has an unexpected content type \"{$contentType}\".");
         }
 
         try {
-            $media = $this->media->importFromRemoteBytes(
-                $response->body(),
-                basename((string) ($parts['path'] ?? 'theme-media')),
-                $contentType,
-                ['source_url' => $url]
-            );
+            $media = $isVideo
+                ? $this->media->importVideoFromRemoteBytes(
+                    $response->body(),
+                    basename((string) ($parts['path'] ?? 'theme-media')),
+                    $contentType,
+                    ['source_url' => $url]
+                )
+                : $this->media->importFromRemoteBytes(
+                    $response->body(),
+                    basename((string) ($parts['path'] ?? 'theme-media')),
+                    $contentType,
+                    ['source_url' => $url]
+                );
         } catch (Throwable $e) {
             throw new ThemeMediaLocalizationException("Failed to store trusted Platform media \"{$url}\": {$e->getMessage()}", previous: $e);
         }

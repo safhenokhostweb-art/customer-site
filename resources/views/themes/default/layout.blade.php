@@ -66,13 +66,157 @@
     @endif
     {{-- Site preset / custom theme tokens — MUST come LAST to override css_block blue defaults --}}
     @include('partials.theme-engine-tokens')
+    {{-- Commercial Productization fase-5 — a real, confirmed gap found via
+         an actual Dark Mode check on Product Detail / Article Detail
+         (this layout, not layouts/canvas-theme.blade.php, is what
+         ShopController::show()/BlogController::show() actually render):
+         this file's own CSS already referenced --tb-* variables
+         (e.g. body's font-family two lines below) but never defined them
+         at all — this layout predates the Theme-Canvas --tb-* token
+         system entirely. The active Canvas theme's real dark palette is
+         read the SAME way ThemeCanvasPageController::loadThemeData() does
+         (the same cached Setting row), so the two layouts share one real
+         source of truth rather than a second, independently-drifting
+         copy. Never throws: a missing/malformed setting silently yields
+         no extra CSS, matching partials.theme-engine-tokens' own
+         defensive try/catch just above. --}}
+    @php
+        $tbGlobalStyles = [];
+        try {
+            $tbRaw = \Illuminate\Support\Facades\Cache::remember('canvas_theme_data', 60, function () {
+                return \Illuminate\Support\Facades\DB::table('settings')->where('key', 'active_canvas_theme_data')->value('value') ?? '';
+            });
+            $tbDecoded = $tbRaw ? json_decode($tbRaw, true) : null;
+            $tbGlobalStyles = is_array($tbDecoded['global_styles'] ?? null) ? $tbDecoded['global_styles'] : [];
+        } catch (\Throwable $e) {
+            $tbGlobalStyles = [];
+        }
+    @endphp
+    @if(!empty($tbGlobalStyles))
+        <style>{!! app(\SaaSPlatform\ThemeRuntime\ThemeTokenNormalizer::class)->renderCssBlock($tbGlobalStyles) !!}</style>
+    @endif
+    {{-- Real, confirmed gap found via a full-page dark-mode screenshot pass
+         on Product Detail: this layout renders the shared nav_header block
+         (BlockRenderer::renderMegaMenuItem()) but, unlike
+         layouts/canvas-theme.blade.php, never included the shared CSS
+         contract those classes depend on (.tb-mega-menu-panel's
+         display:none/position:absolute, etc.) — so every mega menu panel
+         rendered as permanently-visible, unpositioned block content
+         instead of a hover/focus dropdown. Same include as the canvas
+         layout, same ADR-029 source of truth. --}}
+    <style>@include('theme-runtime::css.contract')</style>
+    {{-- Same real dark-mode API (window.__tbTheme) and anti-flash-of-
+         wrong-theme guarantee as layouts/canvas-theme.blade.php — see
+         that file's own comment for the full rationale. The
+         nav_header block's dark-mode toggle button already renders on
+         this layout too (shared BlockRenderer), but without this script
+         it was a dead button: no API for it to call, and [data-theme]
+         was never applied to <html> at all. --}}
+    <script>(function(){
+        var KEY = 'tb-theme';
+        function resolve(p) {
+            if (p === 'system') {
+                try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+                catch (e) { return 'light'; }
+            }
+            return p === 'dark' ? 'dark' : 'light';
+        }
+        function apply(p) {
+            document.documentElement.setAttribute('data-theme', resolve(p));
+            document.documentElement.setAttribute('data-theme-pref', p);
+        }
+        var pref = 'system';
+        try { pref = localStorage.getItem(KEY) || 'system'; } catch (e) {}
+        apply(pref);
+        window.__tbTheme = {
+            get: function () { return pref; },
+            set: function (p) {
+                pref = (p === 'light' || p === 'dark' || p === 'system') ? p : 'system';
+                apply(pref);
+                try { localStorage.setItem(KEY, pref); } catch (e) {}
+                document.dispatchEvent(new CustomEvent('tb-theme-change', { detail: { pref: pref, resolved: resolve(pref) } }));
+            },
+            cycle: function () {
+                var order = ['light', 'dark', 'system'];
+                this.set(order[(order.indexOf(pref) + 1) % order.length]);
+            }
+        };
+        try {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+                if (pref === 'system') { apply('system'); document.dispatchEvent(new CustomEvent('tb-theme-change', { detail: { pref: pref, resolved: resolve(pref) } })); }
+            });
+        } catch (e) {}
+    })();</script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: var(--tb-font-body, Vazirmatn, Tahoma, sans-serif); margin: 0; background: #f9fafb; color: #1f2937; min-height: 100vh; font-size: var(--tb-base-font-size, 16px); }
+        body { font-family: var(--tb-font-body, Vazirmatn, Tahoma, sans-serif); margin: 0; background: var(--tb-background, #f9fafb); color: var(--tb-text, #1f2937); min-height: 100vh; font-size: var(--tb-base-font-size, 16px); transition: background 0.15s, color 0.15s; }
+        {{-- Commercial Productization fase-5 — the base page chrome AND
+             the Product Detail / Article Detail / cart / wishlist content
+             every legacy-layout page shares now genuinely responds to the
+             real dark palette. Every inline hardcoded color in shop/show.
+             blade.php and blog/show.blade.php has been converted to
+             var(--tb-*, original-hex) — the fallback preserves the exact
+             original light-mode value when a Theme's global_styles are
+             absent, and the real token when present (this Theme's own
+             --tb-surface/--tb-background defaults are visually
+             indistinguishable from the original #fff/#f9fafb literals, so
+             light mode is unchanged). --}}
+        [data-theme="dark"] .card { background: var(--tb-surface, #374151); border-color: var(--tb-border, rgba(255,255,255,0.08)); color: var(--tb-text, #e5e7eb); }
+        [data-theme="dark"] main { color: var(--tb-text, #e5e7eb); }
+        [data-theme="dark"] footer .footer-links a { color: var(--tb-text-muted, #9ca3af); }
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-textarea,
+        [data-theme="dark"] .form-select {
+            {{-- !important: a real, confirmed regression found via live
+                 screenshot verification — <select> specifically kept a
+                 white background in dark mode despite this rule matching,
+                 because Tailwind's own form-control base styles (loaded
+                 from a separate, later stylesheet) were winning the
+                 cascade for that one element. Matches the same !important
+                 pattern already used below for .text-gray-500/.text-gray-700/
+                 .border-gray-100 against the same kind of utility-class
+                 cascade fight. --}}
+            background: var(--tb-surface, #1f2937) !important;
+            color: var(--tb-text, #e5e7eb) !important;
+            border-color: var(--tb-border, #4b5563) !important;
+        }
+        [data-theme="dark"] .text-gray-500 { color: var(--tb-text-muted, #9ca3af) !important; }
+        [data-theme="dark"] .text-gray-700 { color: var(--tb-text, #d1d5db) !important; }
+        [data-theme="dark"] .border-gray-100 { border-color: var(--tb-border, #374151) !important; }
+        {{-- Real semantic tag/badge component (product "جدید"/"حراج"/
+             "دسترسی زودهنگام" and any plain tag) — light-mode pastel look
+             is a deliberate, preserved design choice (not forced onto the
+             solid brand-color Badge tokens, which would visibly change
+             light mode); only the dark-mode counterpart is new. --}}
+        .tb-tag-info { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-size:0.8rem; }
+        .tb-tag-warning { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:#fef3c7; color:#92400e; font-size:0.8rem; }
+        .tb-tag-neutral { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:var(--tb-background, #f3f4f6); color:var(--tb-text, inherit); font-size:0.8rem; }
+        [data-theme="dark"] .tb-tag-info { background:rgba(59,130,246,0.18); color:#93c5fd; }
+        [data-theme="dark"] .tb-tag-warning { background:rgba(217,119,6,0.2); color:#fbbf24; }
+        [data-theme="dark"] .tb-tag-neutral { background:var(--tb-surface, #374151); color:var(--tb-text-muted, #cbd5e1); }
+        .tb-installment-plan-row:hover { background: var(--tb-background, #eef2ff) !important; }
+        .tb-platform-menu-dropdown-link { text-decoration: none; color: inherit; }
+        .tb-platform-menu-dropdown-link:hover { background: var(--tb-background, #f9fafb); }
+        .tb-platform-menu-dropdown-link-active { background: var(--tb-background, #eff6ff); }
         .form-input, .form-textarea, .form-select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
         .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--platform-primary, #4f46e5); box-shadow: 0 0 0 2px rgba(79,70,229,0.2); }
         .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
         .form-error { font-size: 0.875rem; color: #dc2626; margin-top: 0.25rem; }
+        [data-theme="dark"] .form-label { color: var(--tb-text-muted, #d1d5db); }
+        [data-theme="dark"] .form-error { color: var(--tb-error-text, #f87171); }
+        [data-theme="dark"] nav[aria-label="مسیر"] a { color: var(--tb-text-muted, #9ca3af); }
+        {{-- Real semantic status flash messages (session success/error/
+             warning/info) — same light-mode-preserved / dark-mode-added
+             pattern as .tb-tag-*. --}}
+        .tb-flash { margin-bottom:1.5rem; padding:1rem; border-radius:0.5rem; display:flex; align-items:center; gap:0.5rem; }
+        .tb-flash-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+        .tb-flash-error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .tb-flash-warning { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+        .tb-flash-info { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+        [data-theme="dark"] .tb-flash-success { background:rgba(22,163,74,0.18); color:#4ade80; border-color:rgba(74,222,128,0.25); }
+        [data-theme="dark"] .tb-flash-error { background:rgba(220,38,38,0.18); color:#f87171; border-color:rgba(248,113,113,0.25); }
+        [data-theme="dark"] .tb-flash-warning { background:rgba(217,119,6,0.18); color:#fbbf24; border-color:rgba(251,191,36,0.25); }
+        [data-theme="dark"] .tb-flash-info { background:rgba(37,99,235,0.18); color:#93c5fd; border-color:rgba(147,197,253,0.25); }
         .nav-link { color: inherit; text-decoration: none; }
         .nav-link:hover { color: var(--platform-menu-link-active, #93c5fd); }
         .site-header .nav-link.font-semibold { color: var(--platform-menu-link-active, #93c5fd); }
@@ -115,8 +259,8 @@
         nav[role="navigation"] { margin-top: 2rem; }
         nav[role="navigation"] ul { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0; }
         nav[role="navigation"] a, nav[role="navigation"] span { padding: 0.5rem 0.75rem; border-radius: 0.375rem; }
-        nav[role="navigation"] a { text-decoration: none; background: #f3f4f6; color: #374151; }
-        nav[role="navigation"] a:hover { background: #e5e7eb; }
+        nav[role="navigation"] a { text-decoration: none; background: var(--tb-surface, #f3f4f6); color: var(--tb-text, #374151); }
+        nav[role="navigation"] a:hover { background: var(--tb-border, #e5e7eb); }
         nav[role="navigation"] .relative span { background: var(--platform-primary, #4f46e5); color: white; }
         .theme-minimal .site-header { background: #fff !important; color: #111 !important; border-bottom: 1px solid #e5e7eb; }
         .theme-minimal .hero-section { background: #f9fafb !important; color: #111 !important; }
@@ -173,7 +317,7 @@
             }
         }
         .tb-section-products .tb-grid { margin-top: 1.5rem; }
-        .tb-product-card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1.25rem 1rem; box-shadow: var(--tb-shadow-sm, 0 1px 2px rgb(0 0 0 / 0.05)); text-align: center; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 0.5rem; }
+        .tb-product-card { background: var(--tb-surface, #ffffff); border-radius: 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); padding: 1.25rem 1rem; box-shadow: var(--tb-shadow-sm, 0 1px 2px rgb(0 0 0 / 0.05)); text-align: center; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 0.5rem; }
         .tb-product-title { font-weight: 700; margin-bottom: 0.25rem; }
         .tb-product-price { font-weight: 700; color: var(--tb-primary, var(--platform-primary, #4f46e5)); }
         .tb-cta { margin-top: 2.5rem; padding: 2rem 1.5rem; border-radius: 1rem; text-align: center; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: var(--tb-on-primary, #fff); }
@@ -182,38 +326,38 @@
         .tb-cta .tb-btn { background: #fff !important; color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; margin-top: 0.5rem; }
         .tb-cta .tb-btn:hover { opacity: 0.95; }
         /* کارت محصول + حالت خالی */
-        .tb-product-card-img { aspect-ratio: 1; background: #f3f4f6; overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: center; }
+        .tb-product-card-img { aspect-ratio: 1; background: var(--tb-background, #f3f4f6); overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: center; }
         .tb-product-card-img img { width: 100%; height: 100%; object-fit: cover; }
-        .tb-product-card-noimg { font-size: 2.5rem; color: #9ca3af; }
-        .tb-product-grid-empty { grid-column: 1 / -1; text-align: center; padding: 2rem; background: #f9fafb; border-radius: 0.75rem; border: 1px dashed #d1d5db; }
-        .tb-product-grid-empty p { margin-bottom: 1rem; color: #6b7280; }
+        .tb-product-card-noimg { font-size: 2.5rem; color: var(--tb-text-muted, #9ca3af); }
+        .tb-product-grid-empty { grid-column: 1 / -1; text-align: center; padding: 2rem; background: var(--tb-background, #f9fafb); border-radius: 0.75rem; border: 1px dashed var(--tb-border, #d1d5db); }
+        .tb-product-grid-empty p { margin-bottom: 1rem; color: var(--tb-text-muted, #6b7280); }
         /* وبلاگ */
         .tb-blog-posts { margin-top: 1.5rem; }
         .tb-section-title { margin-bottom: 1.25rem; font-size: 1.5rem; }
-        .tb-blog-card { display: flex; flex-direction: column; background: #fff; border-radius: 0.75rem; overflow: hidden; border: 1px solid #e5e7eb; text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
+        .tb-blog-card { display: flex; flex-direction: column; background: var(--tb-surface, #fff); border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--tb-border, #e5e7eb); text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
         .tb-blog-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .tb-blog-card-img { aspect-ratio: 16/10; background: #f3f4f6; overflow: hidden; }
+        .tb-blog-card-img { aspect-ratio: 16/10; background: var(--tb-background, #f3f4f6); overflow: hidden; }
         .tb-blog-card-img img { width: 100%; height: 100%; object-fit: cover; }
-        .tb-blog-card-noimg { display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #9ca3af; }
+        .tb-blog-card-noimg { display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--tb-text-muted, #9ca3af); }
         .tb-blog-card-body { padding: 1.25rem; flex: 1; }
         .tb-blog-card-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.5rem; line-height: 1.35; }
-        .tb-blog-card-meta { font-size: 0.8rem; color: #6b7280; margin: 0 0 0.5rem; }
-        .tb-blog-card-excerpt { font-size: 0.9rem; color: #4b5563; margin: 0; line-height: 1.6; }
+        .tb-blog-card-meta { font-size: 0.8rem; color: var(--tb-text-muted, #6b7280); margin: 0 0 0.5rem; }
+        .tb-blog-card-excerpt { font-size: 0.9rem; color: var(--tb-text-muted, #4b5563); margin: 0; line-height: 1.6; }
         @media (max-width: 767px) { .tb-blog-grid.tb-grid-cols-3 { grid-template-columns: 1fr; } }
         /* نظرات / testimonials */
         .tb-testimonials-grid { display: grid; gap: 1.25rem; margin-top: 1rem; }
         @media (min-width: 768px) { .tb-testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .tb-testimonials-grid { grid-template-columns: repeat(3, 1fr); } }
-        .tb-testimonial-card { background: var(--tb-surface, #fff); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tb-testimonial-card { background: var(--tb-surface, #fff); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .tb-testimonial-rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.5rem; }
         .tb-testimonial-text { margin: 0 0 0.75rem; line-height: 1.7; color: var(--tb-text-muted, #4b5563); }
         .tb-testimonial-author { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--tb-text, #111827); }
         /* FAQ */
-        .tb-faq-item { border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
+        .tb-faq-item { border: 1px solid var(--tb-border, #e5e7eb); border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
         .tb-faq-question { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; background: var(--tb-surface, #f9fafb); margin: 0; }
-        .tb-faq-answer { padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb; line-height: 1.7; color: var(--tb-text-muted, #4b5563); }
+        .tb-faq-answer { padding: 1rem 1.25rem; border-top: 1px solid var(--tb-border, #e5e7eb); line-height: 1.7; color: var(--tb-text-muted, #4b5563); }
         /* دسته‌بندی‌ها به صورت کارت/چیپ */
-        .tb-grid .tb-text.prose { background: #f9fafb; border: 1px solid #e5e7eb; padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; font-weight: 500; margin: 0; }
+        .tb-grid .tb-text.prose { background: var(--tb-background, #f9fafb); border: 1px solid var(--tb-border, #e5e7eb); padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; font-weight: 500; margin: 0; }
         .tb-nav.tb-nav-header a { margin-left: 1rem; text-decoration: none; color: inherit; }
         .tb-social-icons a { margin-left: 0.75rem; text-decoration: none; }
         .tb-hero.tb-align-left { text-align: right; }
@@ -227,10 +371,14 @@
         .tb-promo-info .tb-promo-banner__link { color: #1e40af; }
         .tb-promo-success { background: #d1fae5; }
         .tb-promo-success .tb-promo-banner__link { color: #065f46; }
+        [data-theme="dark"] .tb-promo-info { background: rgba(59,130,246,0.18); }
+        [data-theme="dark"] .tb-promo-info .tb-promo-banner__link { color: #93c5fd; }
+        [data-theme="dark"] .tb-promo-success { background: rgba(22,163,74,0.18); }
+        [data-theme="dark"] .tb-promo-success .tb-promo-banner__link { color: #4ade80; }
         .tb-gallery { margin: 1.5rem 0; }
         .tb-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-        .tb-gallery-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.75rem; border: 1px solid #e5e7eb; }
-        .tb-gallery-empty { padding: 2rem; text-align: center; color: #6b7280; background: #f9fafb; border-radius: 0.75rem; border: 1px dashed #d1d5db; }
+        .tb-gallery-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); }
+        .tb-gallery-empty { padding: 2rem; text-align: center; color: var(--tb-text-muted, #6b7280); background: var(--tb-background, #f9fafb); border-radius: 0.75rem; border: 1px dashed var(--tb-border, #d1d5db); }
         .tb-countdown { padding: 1.25rem; border-radius: 1rem; background: linear-gradient(135deg, #1c1917, #292524); color: #fef3c7; text-align: center; margin: 1rem 0; }
         .tb-countdown__label { display: block; font-weight: 700; margin-bottom: 0.35rem; }
         .tb-countdown__hint { display: block; margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.88; }
@@ -243,6 +391,10 @@
         .tb-bg-primary a:hover { opacity: 1; }
         .tb-bg-text { background-color: var(--tb-text, #111827) !important; color: #fff !important; }
         .tb-bg-text a { color: #e5e7eb !important; }
+        /* tb-text inverts between modes, so this section's fixed white foreground
+           must invert too, or dark mode renders near-white text on a near-white bg */
+        [data-theme="dark"] .tb-bg-text { color: var(--tb-background, #111827) !important; }
+        [data-theme="dark"] .tb-bg-text a { color: var(--tb-background, #111827) !important; }
         /* هدر سایت (نوار بالای صفحه) */
         .tb-site-header { border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 0 1rem; background: var(--tb-surface, #fff); }
         .tb-site-header.tb-header-sticky { position: sticky; top: 0; z-index: 100; }
@@ -256,7 +408,7 @@
         .tb-site-header .tb-nav a { margin: 0; text-decoration: none; color: var(--tb-text, #1f2937); font-weight: 500; padding: 0.35rem 0; }
         .tb-site-header .tb-nav a:hover { color: var(--tb-primary, var(--platform-primary, #4f46e5)); }
         .tb-site-header .tb-search-bar-wrap { flex: 0 1 14rem; max-width: 20rem; }
-        .tb-site-header .tb-search-bar-wrap input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.9rem; }
+        .tb-site-header .tb-search-bar-wrap input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); border-radius: 0.5rem; font-size: 0.9rem; background: var(--tb-surface, #fff); color: var(--tb-text, #1f2937); }
         .tb-site-header .tb-cart-link { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: #fff !important; text-decoration: none; font-weight: 600; }
         .tb-site-header .tb-cart-link:hover { opacity: 0.95; }
         .tb-menu-btn { display: none; padding: 0.5rem; border: none; background: transparent; cursor: pointer; color: inherit; border-radius: 0.5rem; }
@@ -277,7 +429,7 @@
             .tb-mobile-menu { display: none !important; }
         }
         /* فوتر سایت */
-        .tb-site-footer { border-top: 1px solid #e5e7eb; margin-top: 3rem; box-shadow: 0 -1px 3px rgba(0,0,0,0.06); }
+        .tb-site-footer { border-top: 1px solid var(--tb-border, #e5e7eb); margin-top: 3rem; box-shadow: 0 -1px 3px rgba(0,0,0,0.06); }
         .tb-site-footer .tb-section { padding-top: 2rem !important; padding-bottom: 2rem !important; }
         .tb-grid.tb-grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
         .tb-grid.tb-grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -353,7 +505,7 @@
         .tb-nav-header-links { display: flex; flex-wrap: wrap; gap: 1.25rem; }
         .tb-nav-header-link { text-decoration: none; color: inherit; font-weight: 500; }
         .tb-nav-header-actions { display: flex; align-items: center; gap: 1rem; }
-        .tb-nav-header-search-input { padding: 0.4rem 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+        .tb-nav-header-search-input { padding: 0.4rem 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); border-radius: 0.5rem; background: var(--tb-surface, #fff); color: var(--tb-text, #1f2937); }
         .tb-nav-header-phone, .tb-nav-header-icon-link { text-decoration: none; color: inherit; }
         .tb-nav-footer { padding: 3rem 0 1.5rem; }
         .tb-nav-footer-brand { margin-bottom: 2rem; }
@@ -381,7 +533,7 @@
     @keyframes ad-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     @keyframes ad-fade { 0%,100%{opacity:1} 50%{opacity:0.5} }
     .advertisements-header { margin-bottom: 1rem; }
-    .advertisements-footer { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+    .advertisements-footer { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--tb-border, #e5e7eb); }
     .advertisements-content_top { margin-bottom: 1rem; }
     .advertisements-content_bottom { margin-top: 1rem; }
     .typewriter-cursor { animation: ad-blink 0.8s step-end infinite; }
@@ -565,40 +717,40 @@
     <main id="main">
         <div class="main-inner">
             @if(session('success'))
-                <div style="margin-bottom:1.5rem;padding:1rem;border-radius:0.5rem;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;display:flex;align-items:center;gap:0.5rem;"
+                <div class="tb-flash tb-flash-success"
                      x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(()=>show=false,5000)">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                     <span style="flex:1">{{ session('success') }}</span>
-                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;" aria-label="بستن">✕</button>
+                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;color:inherit;" aria-label="بستن">✕</button>
                 </div>
             @endif
             @if(session('error'))
-                <div style="margin-bottom:1.5rem;padding:1rem;border-radius:0.5rem;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;display:flex;align-items:center;gap:0.5rem;"
+                <div class="tb-flash tb-flash-error"
                      x-data="{ show: true }" x-show="show" x-transition>
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                     <span style="flex:1">{{ session('error') }}</span>
-                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;" aria-label="بستن">✕</button>
+                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;color:inherit;" aria-label="بستن">✕</button>
                 </div>
             @endif
             @if(session('warning'))
-                <div style="margin-bottom:1.5rem;padding:1rem;border-radius:0.5rem;background:#fffbeb;color:#92400e;border:1px solid #fde68a;display:flex;align-items:center;gap:0.5rem;"
+                <div class="tb-flash tb-flash-warning"
                      x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(()=>show=false,7000)">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                     <span style="flex:1">{{ session('warning') }}</span>
-                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;" aria-label="بستن">✕</button>
+                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;color:inherit;" aria-label="بستن">✕</button>
                 </div>
             @endif
             @if(session('info'))
-                <div style="margin-bottom:1.5rem;padding:1rem;border-radius:0.5rem;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;display:flex;align-items:center;gap:0.5rem;"
+                <div class="tb-flash tb-flash-info"
                      x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(()=>show=false,6000)">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                     <span style="flex:1">{{ session('info') }}</span>
-                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;" aria-label="بستن">✕</button>
+                    <button @click="show=false" style="background:none;border:none;cursor:pointer;opacity:0.6;font-size:1rem;color:inherit;" aria-label="بستن">✕</button>
                 </div>
             @endif
             @include('partials.advertisement-zone', ['position' => 'content_top'])
             @hasSection('breadcrumb')
-                <nav style="margin-bottom: 1.5rem; font-size: 0.875rem; color: #6b7280;" aria-label="مسیر">
+                <nav style="margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--tb-text-muted, #6b7280);" aria-label="مسیر">
                     @yield('breadcrumb')
                 </nav>
             @endif
@@ -625,7 +777,7 @@
                 ->renderBlocks($footerBlocks) !!}
         </footer>
     @elseif($showFooter)
-    <footer style="margin-top: 3rem; padding-top: 2rem; padding-bottom: 1.5rem; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
+    <footer style="margin-top: 3rem; padding-top: 2rem; padding-bottom: 1.5rem; background: var(--tb-background, #f3f4f6); border-top: 1px solid var(--tb-border, #e5e7eb);">
         <div class="footer-inner">
             <div class="footer-row">
                 <div style="font-weight: 600;">{{ \App\Helpers\SiteHelper::siteName() }}</div>
@@ -648,7 +800,7 @@
                 </div>
             </div>
             @include('partials.social-links-footer')
-            <p style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280; text-align: center;">© {{ date('Y') }} {{ \App\Helpers\SiteHelper::siteName() }}. تمامی حقوق محفوظ است.</p>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--tb-text-muted, #6b7280); text-align: center;">© {{ date('Y') }} {{ \App\Helpers\SiteHelper::siteName() }}. تمامی حقوق محفوظ است.</p>
         </div>
     </footer>
     @endif

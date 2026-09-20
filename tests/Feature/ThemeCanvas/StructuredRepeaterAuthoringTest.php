@@ -74,7 +74,15 @@ class StructuredRepeaterAuthoringTest extends TestCase
 
         $navHeader = $registry['nav_header']['schema']['nav_links'];
         self::assertSame('repeater', $navHeader['type']);
-        self::assertSame(['label', 'url'], array_keys($navHeader['fields']));
+        self::assertSame(['label', 'url', 'mega_columns', 'mega_banner_image', 'mega_banner_url', 'mega_banner_text', 'mega_show_desktop', 'mega_mobile_behavior'], array_keys($navHeader['fields']));
+        // Commercial Productization fase-2: Mega Menu's columns are a real,
+        // independent nested repeater (columns[].items[]) — not inferred by
+        // matching duplicate column-title text.
+        $megaColumns = $navHeader['fields']['mega_columns'];
+        self::assertSame('repeater', $megaColumns['type']);
+        self::assertSame(['title', 'items'], array_keys($megaColumns['fields']));
+        self::assertSame('repeater', $megaColumns['fields']['items']['type']);
+        self::assertSame(['label', 'url', 'icon', 'image'], array_keys($megaColumns['fields']['items']['fields']));
 
         $navFooter = $registry['nav_footer']['schema'];
         self::assertSame('repeater', $navFooter['columns']['type']);

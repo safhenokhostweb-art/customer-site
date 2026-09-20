@@ -75,6 +75,10 @@ class CustomerMediaService
         'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp',
     ];
 
+    private const REMOTE_VIDEO_MIME_TO_EXTENSION = [
+        'video/webm' => 'webm', 'video/mp4' => 'mp4',
+    ];
+
     /**
      * TASK 3/3 Phase 6.5 (BLD-21) — MASTER_THEME_MEDIA_LOCALIZATION_GAP fix.
      * The write half of ThemeMediaLocalizationService's canonical import:
@@ -119,6 +123,58 @@ class CustomerMediaService
                 'extension' => $extension, 'category' => 'image', 'mime_type' => $mime, 'size_bytes' => strlen($bytes),
                 'title' => $metadata['title'] ?? null, 'alt_text' => $metadata['alt_text'] ?? null,
                 'width' => (int) $probe[0], 'height' => (int) $probe[1],
+                'metadata' => array_filter(['source_url' => $metadata['source_url'] ?? null]),
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk($disk)->delete($key);
+            throw $exception;
+        }
+    }
+
+    /**
+     * Commercial Productization fase-4 — a real, confirmed gap found via
+     * an actual local end-to-end theme install (not a mocked test): the
+     * `video` block's `url` prop was already listed in
+     * CustomerMediaResolver::MEDIA_PROPS as needing localization, and
+     * `POLICY['video']` above already exists for the manual upload() path
+     * — but the remote-import path (this class's ONLY entry point for
+     * ThemeMediaLocalizationService) was image-only, so any theme with a
+     * real local demo video (this theme's own hero-intro.webm) could never
+     * actually be installed. Same real-bytes-validation posture as
+     * importFromRemoteBytes(): getimagesizefromstring() doesn't apply to
+     * video, so finfo_buffer() sniffs the actual byte content — a declared
+     * Content-Type header is still never trusted alone.
+     */
+    public function importVideoFromRemoteBytes(string $bytes, string $filename, string $declaredMime, array $metadata = []): CustomerMedia
+    {
+        if (strlen($bytes) > self::POLICY['video']['max']) {
+            throw ValidationException::withMessages(['file' => 'Remote media exceeds the allowed size.']);
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $sniffed = $finfo->buffer($bytes) ?: '';
+        if (!isset(self::REMOTE_VIDEO_MIME_TO_EXTENSION[$sniffed])) {
+            throw ValidationException::withMessages(['file' => 'Remote media is not a supported, verifiable video.']);
+        }
+        $mime = $sniffed;
+        $extension = self::REMOTE_VIDEO_MIME_TO_EXTENSION[$mime];
+
+        $siteId = $this->siteId();
+        $uuid = (string) Str::uuid();
+        $disk = $this->storage->diskNameFor('uploads');
+        $key = sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+
+        if (!Storage::disk($disk)->put($key, $bytes, ['visibility' => 'public'])) {
+            throw new \RuntimeException('Customer media storage write failed.');
+        }
+
+        try {
+            return CustomerMedia::create([
+                'site_id' => $siteId, 'uuid' => $uuid, 'disk' => $disk, 'storage_key' => $key,
+                'original_filename' => $filename !== '' ? $filename : ($uuid . '.' . $extension),
+                'extension' => $extension, 'category' => 'video', 'mime_type' => $mime, 'size_bytes' => strlen($bytes),
+                'title' => $metadata['title'] ?? null, 'alt_text' => $metadata['alt_text'] ?? null,
+                'width' => null, 'height' => null,
                 'metadata' => array_filter(['source_url' => $metadata['source_url'] ?? null]),
             ]);
         } catch (\Throwable $exception) {

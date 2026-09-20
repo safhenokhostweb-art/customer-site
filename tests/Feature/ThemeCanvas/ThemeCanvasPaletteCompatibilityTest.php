@@ -49,8 +49,17 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // the shared SaaSPlatform\ThemeRuntime\BlockRegistry it delegates
         // to) — non-module count 60 -> 61, total 95 -> 96. Module count
         // unchanged.
-        self::assertCount(96, $registry);
-        self::assertCount(61, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
+        //
+        // Universal Multipurpose Slider Overhaul: `category_slider` added
+        // (non-module count 61 -> 62, total 96 -> 97) — this count was not
+        // updated at the time, a gap closed here alongside the next entry.
+        //
+        // Commercial Productization fase-2 (22-element audit): `timeline`
+        // added — a confirmed real gap (absent from both registry and
+        // renderer). Non-module count 62 -> 63, total 97 -> 98. Module
+        // count unchanged for both additions.
+        self::assertCount(98, $registry);
+        self::assertCount(63, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
         self::assertCount(35, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
         self::assertArrayNotHasKey('module:portfolio_grid', $registry);

@@ -54,58 +54,58 @@
 <div style="max-width: 72rem; margin: 0 auto;" id="product-show" data-variants='@json($variantsPayload)'>
     <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start; margin-bottom: 2.5rem;">
         <div style="flex: 1 1 260px; max-width: 400px;">
-            <div id="product-gallery-main" style="aspect-ratio: 1; background: #f3f4f6; border-radius: 0.75rem; overflow: hidden; border: 1px solid #e5e7eb; margin-bottom: 0.75rem;">
+            <div id="product-gallery-main" style="aspect-ratio: 1; background: var(--tb-surface, #f3f4f6); border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--tb-border, #e5e7eb); margin-bottom: 0.75rem;">
                 @if($gallery->isNotEmpty())
                     <img id="product-main-img" src="{{ \App\Helpers\ImageHelper::url($gallery->first()->path) }}" alt="{{ $product->title }}" style="width: 100%; height: 100%; object-fit: cover; cursor: zoom-in;">
                 @else
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 4rem;">📦</div>
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--tb-text-muted, #9ca3af); font-size: 4rem;">📦</div>
                 @endif
             </div>
             @if($gallery->count() > 1)
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     @foreach($gallery as $gi => $gim)
-                        <button type="button" class="product-thumb-btn" data-src="{{ \App\Helpers\ImageHelper::url($gim->path) }}" style="width: 64px; height: 64px; padding: 0; border: 2px solid {{ $gi === 0 ? 'var(--platform-primary, #4f46e5)' : '#e5e7eb' }}; border-radius: 0.5rem; overflow: hidden; cursor: pointer; background: none;">
+                        <button type="button" class="product-thumb-btn" data-src="{{ \App\Helpers\ImageHelper::url($gim->path) }}" style="width: 64px; height: 64px; padding: 0; border: 2px solid {{ $gi === 0 ? 'var(--tb-primary, var(--platform-primary, #4f46e5))' : 'var(--tb-border, #e5e7eb)' }}; border-radius: 0.5rem; overflow: hidden; cursor: pointer; background: none;">
                             <img src="{{ \App\Helpers\ImageHelper::url($gim->path) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
                         </button>
                     @endforeach
                 </div>
             @endif
             @if($product->video_url)
-                <p style="margin-top: 1rem;"><a href="{{ $product->video_url }}" target="_blank" rel="noopener" style="font-weight: 600; color: var(--platform-link-color);">مشاهده ویدیو</a></p>
+                <p style="margin-top: 1rem;"><a href="{{ $product->video_url }}" target="_blank" rel="noopener" style="font-weight: 600; color: var(--tb-primary-text, var(--platform-link-color));">مشاهده ویدیو</a></p>
             @endif
         </div>
 
         <div style="flex: 1 1 320px; min-width: 0;">
-            <div class="card" style="padding: 1.75rem; border-radius: 0.75rem; border: 1px solid #e5e7eb; background: #ffffff;">
+            <div class="card" style="padding: 1.75rem; border-radius: 0.75rem; border: 1px solid var(--tb-border, #e5e7eb); background: var(--tb-surface, #ffffff);">
                 <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.75rem;">
-                    @if($product->is_new)<span style="padding: 0.25rem 0.6rem; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-size:0.8rem;">جدید</span>@endif
-                    @if($product->early_access)<span style="display:inline-flex;align-items:center;gap:.2rem;padding:0.25rem 0.6rem;border-radius:999px;background:#fef3c7;color:#b45309;font-size:0.8rem;font-weight:700"><x-core-ui::icon name="star" class="" /> دسترسی زودهنگام</span>@endif
-                    @if($product->sale_price && $product->sale_price < $product->price)<span style="padding: 0.25rem 0.6rem; border-radius:999px; background:#fef3c7; color:#92400e; font-size:0.8rem;">حراج</span>@endif
+                    @if($product->is_new)<span class="tb-tag-info">جدید</span>@endif
+                    @if($product->early_access)<span class="tb-tag-warning" style="display:inline-flex;align-items:center;gap:.2rem;font-weight:700"><x-core-ui::icon name="star" class="" /> دسترسی زودهنگام</span>@endif
+                    @if($product->sale_price && $product->sale_price < $product->price)<span class="tb-tag-warning">حراج</span>@endif
                     @foreach($product->tags as $tg)
-                        <span style="padding: 0.25rem 0.6rem; border-radius:999px; background:#f3f4f6; font-size:0.8rem;">{{ $tg->name }}</span>
+                        <span class="tb-tag-neutral">{{ $tg->name }}</span>
                     @endforeach
                 </div>
-                <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--platform-title-color, #111827);">{{ $product->title }}</h1>
+                <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--tb-text, var(--platform-title-color, #111827));">{{ $product->title }}</h1>
 
-                <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">
+                <p style="color: var(--tb-text-muted, #6b7280); margin-bottom: 1rem; font-size: 0.9rem;">
                     کد محصول: <span id="product-sku-display" style="font-weight: 600;">{{ $product->sku ?? '-' }}</span>
                 </p>
                 @if($product->category)
-                    <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">دسته‌بندی: <span style="font-weight: 600;">{{ $product->category->name }}</span></p>
+                    <p style="color: var(--tb-text-muted, #6b7280); margin-bottom: 1rem; font-size: 0.9rem;">دسته‌بندی: <span style="font-weight: 600;">{{ $product->category->name }}</span></p>
                 @endif
 
                 @if($product->sale_ends_at)
-                    <p id="sale-countdown-wrap" style="font-size:0.9rem; color:#b45309; margin-bottom:0.75rem;">
+                    <p id="sale-countdown-wrap" style="font-size:0.9rem; color:var(--tb-warning-text, #b45309); margin-bottom:0.75rem;">
                         پایان حراج (شمسی): <span dir="ltr">{{ \App\Helpers\Jalali::formatFa($product->sale_ends_at, 'Y/m/d H:i') }}</span>
                         — باقیمانده: <span id="sale-countdown" data-end="{{ $product->sale_ends_at->toIso8601String() }}">—</span>
                     </p>
                 @endif
 
                 <div style="margin-bottom: 1.25rem;">
-                    <span id="product-price-display" style="font-size: 1.4rem; font-weight: 700; color: var(--platform-primary, #4f46e5);">
+                    <span id="product-price-display" style="font-size: 1.4rem; font-weight: 700; color: var(--tb-primary-text, var(--platform-primary, #4f46e5));">
                         {!! \App\Helpers\CurrencyHelper::formatPrice($product->display_price) !!} {{ \App\Helpers\CurrencyHelper::unitLabel() }}
                     </span>
-                    <span id="product-price-old" style="margin-right: 0.5rem; color: #9ca3af; text-decoration: line-through; font-size: 0.95rem; display:none;"></span>
+                    <span id="product-price-old" style="margin-right: 0.5rem; color: var(--tb-text-muted, #9ca3af); text-decoration: line-through; font-size: 0.95rem; display:none;"></span>
                 </div>
 
                 <p id="stock-msg" style="font-size: 0.85rem; margin-bottom: 1rem;"></p>
@@ -126,17 +126,17 @@
                         <span class="form-label mb-0">تعداد:</span>
                         <input type="number" name="quantity" id="qty-input" value="1" min="1" class="form-input w-24">
                     </label>
-                    <button type="submit" id="add-cart-btn" class="px-6 py-3 font-semibold rounded-lg text-white transition" style="background: var(--platform-button-primary-bg, #4f46e5); border: none; cursor: pointer;">
+                    <button type="submit" id="add-cart-btn" class="px-6 py-3 font-semibold rounded-lg transition" style="background: var(--tb-primary, var(--platform-button-primary-bg, #4f46e5)); color: var(--tb-on-primary, #fff); border: none; cursor: pointer;">
                         افزودن به سبد
                     </button>
                 </form>
 
                 {{-- خرید قسطی --}}
                 @if(!empty($installmentPlans) && $installmentPlans->isNotEmpty())
-                <div style="margin-top:1.5rem; border:1.5px solid var(--platform-primary,#e0e7ff); border-radius:0.75rem; padding:1rem; background:var(--platform-primary-light,#f5f3ff);">
+                <div style="margin-top:1.5rem; border:1.5px solid var(--tb-primary, var(--platform-primary,#e0e7ff)); border-radius:0.75rem; padding:1rem; background:var(--tb-surface, var(--platform-primary-light,#f5f3ff));">
                     <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
-                        <svg style="width:18px;height:18px;color:var(--platform-primary,#6366f1);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        <span style="font-size:0.85rem; font-weight:700; color:var(--platform-primary,#4f46e5);">امکان خرید قسطی</span>
+                        <svg style="width:18px;height:18px;color:var(--tb-primary-text, var(--platform-primary,#6366f1));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <span style="font-size:0.85rem; font-weight:700; color:var(--tb-primary-text, var(--platform-primary,#4f46e5));">امکان خرید قسطی</span>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:0.5rem;">
                         @foreach($installmentPlans as $plan)
@@ -144,16 +144,16 @@
                             $calc = $plan['calc'];
                         @endphp
                         <a href="{{ route('installments.apply', ['plan_id' => $plan['id'], 'product_id' => $product->id]) }}"
-                           style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; border-radius:0.5rem; background:#fff; border:1px solid var(--platform-primary-light,#c7d2fe); text-decoration:none; transition:background 0.15s;"
-                           onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--platform-primary-light').trim()||'#eef2ff'" onmouseout="this.style.background='#fff'">
+                           class="tb-installment-plan-row"
+                           style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; border-radius:0.5rem; background:var(--tb-surface, #fff); border:1px solid var(--tb-border, var(--platform-primary-light,#c7d2fe)); text-decoration:none; transition:background 0.15s;">
                             <div>
-                                <span style="font-weight:700; color:var(--platform-primary,#3730a3); font-size:0.85rem;">{{ $plan['name'] }}</span>
-                                <span style="font-size:0.75rem; color:#6b7280; margin-right:0.4rem;">{{ $plan['period_months'] }} ماهه</span>
+                                <span style="font-weight:700; color:var(--tb-primary-text, var(--platform-primary,#3730a3)); font-size:0.85rem;">{{ $plan['name'] }}</span>
+                                <span style="font-size:0.75rem; color:var(--tb-text-muted, #6b7280); margin-right:0.4rem;">{{ $plan['period_months'] }} ماهه</span>
                             </div>
                             <div style="text-align:left;">
-                                <span style="font-size:0.8rem; font-weight:700; color:var(--platform-primary,#4f46e5);">{{ num_fa($calc['monthly_payment']) }} ت/ماه</span>
+                                <span style="font-size:0.8rem; font-weight:700; color:var(--tb-primary-text, var(--platform-primary,#4f46e5));">{{ num_fa($calc['monthly_payment']) }} ت/ماه</span>
                                 @if($calc['down_payment'] > 0)
-                                <span style="font-size:0.7rem; color:#9ca3af; display:block;">پیش‌پرداخت: {{ num_fa($calc['down_payment']) }} ت</span>
+                                <span style="font-size:0.7rem; color:var(--tb-text-muted, #9ca3af); display:block;">پیش‌پرداخت: {{ num_fa($calc['down_payment']) }} ت</span>
                                 @endif
                             </div>
                         </a>
@@ -164,15 +164,15 @@
 
                 <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
                     <form method="post" action="{{ route('shop.wishlist.toggle', $product) }}">@csrf
-                        <button type="submit" class="btn" style="padding:0.5rem 1rem;border:1px solid #e5e7eb;border-radius:0.5rem;background:#fff;cursor:pointer;">{{ $wishlist->has($product->id) ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی' }}</button>
+                        <button type="submit" class="btn" style="padding:0.5rem 1rem;border:1px solid var(--tb-border, #e5e7eb);border-radius:0.5rem;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">{{ $wishlist->has($product->id) ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی' }}</button>
                     </form>
                     <form method="post" action="{{ route('shop.compare.toggle', $product) }}">@csrf
-                        <button type="submit" style="padding:0.5rem 1rem;border:1px solid #e5e7eb;border-radius:0.5rem;background:#fff;cursor:pointer;">مقایسه</button>
+                        <button type="submit" style="padding:0.5rem 1rem;border:1px solid var(--tb-border, #e5e7eb);border-radius:0.5rem;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">مقایسه</button>
                     </form>
                 </div>
 
                 @if((!$product->usesVariants() && $product->stock !== null && (int)$product->stock < 1 && !$product->allow_backorder) || ($product->usesVariants() && $product->variants->every(fn($v) => !$v->allow_backorder && $v->stock !== null && (int)$v->stock < 1) && !$product->allow_backorder))
-                    <form method="post" action="{{ route('shop.stock-notify') }}" style="margin-top:1rem;padding:1rem;background:#f9fafb;border-radius:0.5rem;">
+                    <form method="post" action="{{ route('shop.stock-notify') }}" style="margin-top:1rem;padding:1rem;background:var(--tb-background, #f9fafb);border-radius:0.5rem;">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="product_variant_id" id="notify-variant-id" value="">
@@ -184,29 +184,29 @@
                 @endif
 
                 @if($product->warranty_text || $product->guarantee_text)
-                    <div style="margin-top:1rem;font-size:0.85rem;color:#4b5563;">
+                    <div style="margin-top:1rem;font-size:0.85rem;color:var(--tb-text-muted, #4b5563);">
                         @if($product->warranty_text)<p class="product-html-block"><strong>گارانتی:</strong> <span>{!! $product->warranty_text !!}</span></p>@endif
                         @if($product->guarantee_text)<p class="product-html-block"><strong>تضمین:</strong> <span>{!! $product->guarantee_text !!}</span></p>@endif
                     </div>
                 @endif
 
                 <p style="margin-top: 0.75rem; font-size: 0.9rem;">
-                    <a href="{{ route('shop.index') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none;">← بازگشت به فروشگاه</a>
+                    <a href="{{ route('shop.index') }}" style="font-weight: 600; color: var(--tb-primary-text, var(--platform-link-color, #4f46e5)); text-decoration: none;">← بازگشت به فروشگاه</a>
                 </p>
             </div>
         </div>
     </div>
 
-    <div class="card" style="margin-bottom: 2rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden;">
-        <div style="display:flex; border-bottom:1px solid #e5e7eb; flex-wrap:wrap;">
-            <button type="button" class="product-tab-btn px-4 py-3 font-semibold" data-tab="desc" style="border:none;background:#f3f4f6;cursor:pointer;">توضیحات</button>
-            <button type="button" class="product-tab-btn px-4 py-3" data-tab="specs" style="border:none;background:#fff;cursor:pointer;">مشخصات فنی</button>
-            <button type="button" class="product-tab-btn px-4 py-3" data-tab="ship" style="border:none;background:#fff;cursor:pointer;">ارسال و بازگشت</button>
-            <button type="button" class="product-tab-btn px-4 py-3" data-tab="faq" style="border:none;background:#fff;cursor:pointer;">سوالات</button>
+    <div class="card" style="margin-bottom: 2rem; border: 1px solid var(--tb-border, #e5e7eb); border-radius: 0.75rem; overflow: hidden;">
+        <div style="display:flex; border-bottom:1px solid var(--tb-border, #e5e7eb); flex-wrap:wrap;">
+            <button type="button" class="product-tab-btn px-4 py-3 font-semibold" data-tab="desc" style="border:none;background:var(--tb-background, #f3f4f6);color:var(--tb-text, inherit);cursor:pointer;">توضیحات</button>
+            <button type="button" class="product-tab-btn px-4 py-3" data-tab="specs" style="border:none;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">مشخصات فنی</button>
+            <button type="button" class="product-tab-btn px-4 py-3" data-tab="ship" style="border:none;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">ارسال و بازگشت</button>
+            <button type="button" class="product-tab-btn px-4 py-3" data-tab="faq" style="border:none;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">سوالات</button>
         </div>
         <div id="tab-desc" class="product-tab-panel p-4" style="display:block;">
             @if($product->description)
-                <div class="product-description-html" style="line-height: 1.8; color: #4b5563;">{!! $product->description !!}</div>
+                <div class="product-description-html" style="line-height: 1.8; color: var(--tb-text-muted, #4b5563);">{!! $product->description !!}</div>
             @else
                 <p class="text-gray-500">توضیحی ثبت نشده.</p>
             @endif
@@ -215,7 +215,7 @@
             @if($product->attributeValues->isNotEmpty())
                 <table style="width:100%; border-collapse:collapse;">
                     @foreach($product->attributeValues->groupBy(fn($v) => $v->attribute?->name ?? '—') as $aname => $vals)
-                        <tr style="border-bottom:1px solid #e5e7eb;">
+                        <tr style="border-bottom:1px solid var(--tb-border, #e5e7eb);">
                             <td style="padding:0.5rem; font-weight:600; width:35%;">{{ $aname }}</td>
                             <td style="padding:0.5rem;">{{ $vals->pluck('value')->implode('، ') }}</td>
                         </tr>
@@ -250,12 +250,12 @@
     </div>
 
     <section style="margin-bottom: 2.5rem;" class="card p-4">
-        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">نظر خریداران @if($reviewAvg)<span style="font-size:0.9rem;color:#6b7280;">(میانگین {{ num_fa($reviewAvg, 1) }}/۵)</span>@endif</h2>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">نظر خریداران @if($reviewAvg)<span style="font-size:0.9rem;color:var(--tb-text-muted, #6b7280);">(میانگین {{ num_fa($reviewAvg, 1) }}/۵)</span>@endif</h2>
         @foreach($reviews as $rev)
-            <div style="border-bottom:1px solid #e5e7eb; padding:0.75rem 0;">
+            <div style="border-bottom:1px solid var(--tb-border, #e5e7eb); padding:0.75rem 0;">
                 <div style="font-weight:600;">امتیاز {{ $rev->rating }}/۵</div>
                 @if($rev->title)<div style="font-weight:600;margin-top:0.25rem;">{{ $rev->title }}</div>@endif
-                @if($rev->body)<p style="color:#4b5563;margin-top:0.25rem;">{{ $rev->body }}</p>@endif
+                @if($rev->body)<p style="color:var(--tb-text-muted, #4b5563);margin-top:0.25rem;">{{ $rev->body }}</p>@endif
             </div>
         @endforeach
         <form method="post" action="{{ route('shop.reviews.store', $product->slug) }}" style="margin-top:1.5rem; max-width:28rem;">
@@ -283,16 +283,16 @@
             <div class="card-grid card-grid-4">
                 @foreach($plist as $rel)
                     <article class="card" style="display: flex; flex-direction: column; overflow: hidden;">
-                        <a href="{{ route('shop.show', $rel->slug) }}" style="flex: 1; text-decoration: none; color: inherit;">
-                            <div style="aspect-ratio: 1; background: #f3f4f6; overflow: hidden; margin: -1.5rem -1.5rem 1rem -1.5rem;">
+                        <a href="{{ route('shop.show', $rel->slug) }}" style="flex: 1; text-decoration: none; color: var(--tb-text, inherit);">
+                            <div style="aspect-ratio: 1; background: var(--tb-background, #f3f4f6); overflow: hidden; margin: -1.5rem -1.5rem 1rem -1.5rem;">
                                 @if($rel->image)
                                     <img src="{{ \App\Helpers\ImageHelper::url($rel->image) }}" alt="{{ $rel->title }}" style="width: 100%; height: 100%; object-fit: cover;">
                                 @else
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2.5rem;">📦</div>
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--tb-text-muted, #9ca3af); font-size: 2.5rem;">📦</div>
                                 @endif
                             </div>
                             <h3 style="font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem;">{{ $rel->title }}</h3>
-                            <p style="font-weight: 600; margin-bottom: 0.25rem; color: var(--platform-primary, #4f46e5);">
+                            <p style="font-weight: 600; margin-bottom: 0.25rem; color: var(--tb-primary-text, var(--platform-primary, #4f46e5));">
                                 {!! \App\Helpers\CurrencyHelper::formatPrice($rel->display_price) !!} {{ \App\Helpers\CurrencyHelper::unitLabel() }}
                             </p>
                         </a>
@@ -338,10 +338,12 @@
         if (v && stockEl) {
             var allow = v.allow_backorder || @json($product->allow_backorder);
             var st = v.stock;
-            if (allow) { stockEl.textContent = 'قابل پیش‌سفارش'; stockEl.style.color = '#15803d'; }
-            else if (st === null) { stockEl.textContent = 'موجود'; stockEl.style.color = '#15803d'; }
-            else if (Number(st) < 1) { stockEl.textContent = 'ناموجود'; stockEl.style.color = '#b91c1c'; }
-            else { stockEl.textContent = 'موجودی: ' + st; stockEl.style.color = '#15803d'; }
+            var okColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-success-text').trim() || '#15803d';
+            var badColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-error-text').trim() || '#b91c1c';
+            if (allow) { stockEl.textContent = 'قابل پیش‌سفارش'; stockEl.style.color = okColor; }
+            else if (st === null) { stockEl.textContent = 'موجود'; stockEl.style.color = okColor; }
+            else if (Number(st) < 1) { stockEl.textContent = 'ناموجود'; stockEl.style.color = badColor; }
+            else { stockEl.textContent = 'موجودی: ' + st; stockEl.style.color = okColor; }
         }
         var qty = document.getElementById('qty-input');
         if (v && qty) { qty.min = v.min_q || 1; qty.max = v.max_q || 999; }
@@ -354,15 +356,17 @@
         @if(!$product->variants->isEmpty())
         @else
         var stockEl = document.getElementById('stock-msg');
+        var okColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-success-text').trim() || '#15803d';
+        var badColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-error-text').trim() || '#b91c1c';
         if (stockEl) {
             @if($product->allow_backorder)
-            stockEl.textContent = 'قابل پیش‌سفارش'; stockEl.style.color = '#15803d';
+            stockEl.textContent = 'قابل پیش‌سفارش'; stockEl.style.color = okColor;
             @elseif($product->stock === null)
-            stockEl.textContent = 'موجود'; stockEl.style.color = '#15803d';
+            stockEl.textContent = 'موجود'; stockEl.style.color = okColor;
             @elseif((int)$product->stock < 1)
-            stockEl.textContent = 'ناموجود'; stockEl.style.color = '#b91c1c';
+            stockEl.textContent = 'ناموجود'; stockEl.style.color = badColor;
             @else
-            stockEl.textContent = 'موجودی: {{ $product->stock }}'; stockEl.style.color = '#15803d';
+            stockEl.textContent = 'موجودی: {{ $product->stock }}'; stockEl.style.color = okColor;
             @endif
         }
         @if($product->isLowStock())
@@ -370,13 +374,17 @@
         @endif
         @endif
     }
+    var tbBorderColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-border').trim() || '#e5e7eb';
+    var tbPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-primary').trim() || 'var(--platform-primary, #4f46e5)';
+    var tbSurfaceColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-surface').trim() || '#fff';
+    var tbBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--tb-background').trim() || '#f3f4f6';
     document.querySelectorAll('.product-thumb-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var src = btn.getAttribute('data-src');
             var m = document.getElementById('product-main-img');
             if (m && src) m.src = src;
-            document.querySelectorAll('.product-thumb-btn').forEach(function (b) { b.style.borderColor = '#e5e7eb'; });
-            btn.style.borderColor = 'var(--platform-primary, #4f46e5)';
+            document.querySelectorAll('.product-thumb-btn').forEach(function (b) { b.style.borderColor = tbBorderColor; });
+            btn.style.borderColor = tbPrimaryColor;
         });
     });
     document.querySelectorAll('.product-tab-btn').forEach(function (btn) {
@@ -385,8 +393,8 @@
             document.querySelectorAll('.product-tab-panel').forEach(function (p) { p.style.display = 'none'; });
             var panel = document.getElementById('tab-' + t);
             if (panel) panel.style.display = 'block';
-            document.querySelectorAll('.product-tab-btn').forEach(function (b) { b.style.background = '#fff'; });
-            btn.style.background = '#f3f4f6';
+            document.querySelectorAll('.product-tab-btn').forEach(function (b) { b.style.background = tbSurfaceColor; });
+            btn.style.background = tbBackgroundColor;
         });
     });
     var cd = document.getElementById('sale-countdown');

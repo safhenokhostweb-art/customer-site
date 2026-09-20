@@ -1731,244 +1731,150 @@ class ThemeCanvasRenderer extends BlockRenderer
         return '';
     }
 
-    // ── Carousel runtime (real slider/carousel behavior) ────────────────────────
+    // ── Real-data slider overrides (canonical carousel engine is shared) ───
     //
-    // Builder integrity audit (2026-09-11): the 'slider' bare type had an
-    // autoplay/interval schema but zero renderer (fell to renderFallback(),
-    // a static wrapper div — the props were dead). 'testimonials_slider'
-    // had a real canonical renderer, but that renderer is a static grid
-    // (`.tb-testimonials-grid`), not a slider, despite the name. No
-    // slider/carousel JS or CSS existed anywhere in either repository.
-    // This is the one canonical carousel runtime for every slider-shaped
-    // Canvas type on this host — renderSlider(), renderTestimonialsSlider()
-    // (an intentional host override of the canonical static-grid version,
-    // matching this file's existing override pattern), and
-    // renderProductSlider() all call it. No second carousel implementation
-    // belongs anywhere else in this class.
+    // Universal Multipurpose Slider Overhaul: the carousel engine
+    // (renderCarousel()) and the generic renderSlider()/
+    // renderTestimonialsSlider() implementations moved to the shared
+    // packages/saas-platform/modules/theme-runtime BlockRenderer — the
+    // audit for this change confirmed neither one had any real
+    // customer-site-specific data dependency, so keeping a second,
+    // drifting copy here served no purpose (and had already drifted: this
+    // host's old renderTestimonialsSlider() silently ignored the
+    // `columns` prop the canonical static-grid version honored). Only
+    // renderProductSlider() below remains overridden here, because it is
+    // genuinely host-specific: real Product/ProductCategory/Post queries
+    // this shared package cannot perform. It still calls the shared
+    // $this->renderCarousel()/$this->productCardHtml() — no second
+    // carousel/card implementation belongs in this class.
 
     /**
-     * @param string[] $slidesHtml Pre-rendered inner HTML for each slide.
+     * Real Product-bound override of the canonical (demo-fixture)
+     * renderProductSlider(). `source` selects the same query shapes the
+     * schema now documents (BlockRegistry): latest, new (Product.is_new),
+     * a specific category, or a manual id list. A deleted/inactive
+     * product is excluded by the query itself (active() scope), never
+     * rendered and never a renderer crash; a product with no image gets
+     * the shared safe fallback (never a broken image).
      */
-    private function renderCarousel(array $slidesHtml, string $id, bool $autoplay, int $interval, string $extraClass = ''): string
-    {
-        $slidesHtml = array_values(array_filter($slidesHtml, fn ($s) => trim((string) $s) !== ''));
-        if (empty($slidesHtml)) {
-            return '';
-        }
-        if (count($slidesHtml) === 1) {
-            return "<div id=\"tb-{$id}\" class=\"tb-carousel-single {$extraClass}\">{$slidesHtml[0]}</div>";
-        }
-
-        $interval = max(1000, $interval);
-        $slides = [];
-        $dots = [];
-        foreach ($slidesHtml as $i => $html) {
-            $slides[] = "<div class=\"tb-carousel-slide\" style=\"flex:0 0 100%;min-width:0;\">{$html}</div>";
-            $num = $i + 1;
-            $dots[] = "<button type=\"button\" class=\"tb-carousel-dot\" aria-label=\"اسلاید {$num}\" style=\"width:0.55rem;height:0.55rem;padding:0;border-radius:999px;border:0;background:#d1d5db;cursor:pointer;\"></button>";
-        }
-
-        $autoplayAttr = $autoplay ? 'true' : 'false';
-
-        return "<div id=\"tb-{$id}\" class=\"tb-carousel {$extraClass}\" data-autoplay=\"{$autoplayAttr}\" data-interval=\"{$interval}\" style=\"position:relative;\">
-            <div class=\"tb-carousel-viewport\" style=\"overflow:hidden;\">
-                <div class=\"tb-carousel-track\" style=\"display:flex;transition:transform .45s ease;\">" . implode('', $slides) . "</div>
-            </div>
-            <button type=\"button\" class=\"tb-carousel-prev\" aria-label=\"قبلی\" style=\"position:absolute;top:50%;right:0.25rem;transform:translateY(-50%);width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:1.1rem;line-height:1;z-index:2;\">‹</button>
-            <button type=\"button\" class=\"tb-carousel-next\" aria-label=\"بعدی\" style=\"position:absolute;top:50%;left:0.25rem;transform:translateY(-50%);width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:1.1rem;line-height:1;z-index:2;\">›</button>
-            <div class=\"tb-carousel-dots\" style=\"display:flex;justify-content:center;gap:0.4rem;margin-top:0.85rem;\">" . implode('', $dots) . "</div>
-            <script>(function(){
-                function init(root){
-                    if (!root || root.dataset.tbCarouselInit) return;
-                    root.dataset.tbCarouselInit = '1';
-                    var track = root.querySelector('.tb-carousel-track');
-                    var slides = Array.prototype.slice.call(root.querySelectorAll('.tb-carousel-slide'));
-                    var dots = Array.prototype.slice.call(root.querySelectorAll('.tb-carousel-dot'));
-                    var prev = root.querySelector('.tb-carousel-prev');
-                    var next = root.querySelector('.tb-carousel-next');
-                    var idx = 0, timer = null;
-                    function paint(){
-                        track.style.transform = 'translateX(' + (idx * 100) + '%)';
-                        dots.forEach(function(d, j){ d.style.background = (j === idx) ? 'var(--tb-primary,#4f46e5)' : '#d1d5db'; d.setAttribute('aria-current', j === idx ? 'true' : 'false'); });
-                    }
-                    function go(i){ idx = ((i % slides.length) + slides.length) % slides.length; paint(); }
-                    function stop(){ if (timer) { clearInterval(timer); timer = null; } }
-                    function start(){ stop(); if (root.dataset.autoplay === 'true' && slides.length > 1) { timer = setInterval(function(){ go(idx + 1); }, parseInt(root.dataset.interval, 10) || 5000); } }
-                    if (prev) prev.addEventListener('click', function(){ go(idx - 1); start(); });
-                    if (next) next.addEventListener('click', function(){ go(idx + 1); start(); });
-                    dots.forEach(function(d, j){ d.addEventListener('click', function(){ go(j); start(); }); });
-                    var touchX = null;
-                    root.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
-                    root.addEventListener('touchend', function(e){
-                        if (touchX === null) return;
-                        var dx = e.changedTouches[0].clientX - touchX;
-                        if (Math.abs(dx) > 40) { go(dx > 0 ? idx - 1 : idx + 1); start(); }
-                        touchX = null;
-                    }, {passive:true});
-                    paint();
-                    start();
-                }
-                init(document.getElementById('tb-{$id}'));
-            })();</script>
-        </div>";
-    }
-
-    /**
-     * Builder integrity fix (2026-09-12): a `slider` slide is a plain data
-     * record ({image, title, subtitle, link} — config/builder-elements.php
-     * 'slider'.schema.slides.item_schema), never a self-describing Builder
-     * block. The previous implementation fed each slide into
-     * `renderBlock()`/`ElementSchemaRegistry::validate()` as if it were one
-     * — validation requires a `type` key slides don't have, so every slide
-     * silently rendered as an `[invalid] text` placeholder instead of its
-     * actual content. Slides are built directly from their own fields here,
-     * matching the pattern `renderTestimonialsSlider()`/`renderProductSlider()`
-     * already use correctly for their own repeater/query data.
-     */
-    protected function renderSlider(array $props, string $inner, string $id): string
-    {
-        $slides = $props['slides'] ?? [];
-        if (!is_array($slides)) {
-            $slides = [];
-        }
-
-        $slidesHtml = [];
-        foreach ($slides as $slide) {
-            if (!is_array($slide)) {
-                continue;
-            }
-
-            // resolveMediaProps() already resolved a canonical {media_id}
-            // shape (via CustomerMediaResolver::MEDIA_REPEATERS['slider'])
-            // to a plain URL string before renderBlock() reached this
-            // method — this method only ever sees a renderable string.
-            $image    = trim((string) ($slide['image'] ?? ''));
-            $title    = $this->escape($slide['title'] ?? '');
-            $subtitle = $this->escape($slide['subtitle'] ?? '');
-            $link     = trim((string) ($slide['link'] ?? ''));
-
-            $imgHtml = $image !== ''
-                ? '<img src="' . $this->escapeAttr($image) . '" alt="' . $this->escapeAttr($slide['title'] ?? '') . '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy">'
-                : '';
-
-            $captionHtml = ($title !== '' || $subtitle !== '')
-                ? '<div class="tb-slide-caption" style="position:relative;z-index:1;padding:2.5rem 1.5rem;color:#fff;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.55);">'
-                    . ($title !== '' ? "<h2 class=\"tb-slide-title\" style=\"margin:0 0 .5rem;font-size:1.75rem;font-weight:700;\">{$title}</h2>" : '')
-                    . ($subtitle !== '' ? "<p class=\"tb-slide-subtitle\" style=\"margin:0;font-size:1.05rem;opacity:.95;\">{$subtitle}</p>" : '')
-                    . '</div>'
-                : '';
-
-            $slideInner = '<div class="tb-slide" style="position:relative;min-height:22rem;display:flex;align-items:center;justify-content:center;background:#111827;overflow:hidden;">'
-                . $imgHtml . $captionHtml . '</div>';
-
-            $slidesHtml[] = $link !== ''
-                ? '<a href="' . $this->escapeUrl($link) . '" class="tb-slide-link" style="display:block;color:inherit;text-decoration:none;">' . $slideInner . '</a>'
-                : $slideInner;
-        }
-
-        if (empty($slidesHtml)) {
-            return '';
-        }
-
-        return $this->renderCarousel(
-            $slidesHtml,
-            $id,
-            (bool) ($props['autoplay'] ?? true),
-            (int) ($props['interval'] ?? 5000),
-            'tb-slider'
-        );
-    }
-
-    /**
-     * Host override of the canonical (static-grid) renderTestimonialsSlider
-     * — see the "Carousel runtime" doc comment above for why this
-     * particular type is overridden here rather than fixed in the shared
-     * package.
-     */
-    protected function renderTestimonialsSlider(array $props, string $inner, string $id): string
-    {
-        $title = $this->escape($props['title'] ?? 'نظرات مشتریان');
-
-        $rawItems = $props['items'] ?? '[]';
-        $items = is_array($rawItems) ? $rawItems : (json_decode((string) $rawItems, true) ?? []);
-
-        $slidesHtml = [];
-        foreach ($items as $t) {
-            $name   = $this->escape($t['name'] ?? '');
-            $role   = $this->escape($t['role'] ?? '');
-            $text   = $this->escape($t['text'] ?? '');
-            $rating = max(1, min(5, (int) ($t['rating'] ?? 5)));
-            $stars  = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
-            $initials = mb_substr($name, 0, 1, 'UTF-8');
-            $slidesHtml[] = "<div class=\"tb-testimonial-card\" style=\"max-width:36rem;margin:0 auto;text-align:center;\">
-                <div class=\"tb-testimonial-stars\">{$stars}</div>
-                <p class=\"tb-testimonial-text\">«{$text}»</p>
-                <div class=\"tb-testimonial-author\" style=\"display:flex;justify-content:center;align-items:center;gap:0.5rem;\">
-                    <div class=\"tb-testimonial-avatar\">{$initials}</div>
-                    <div><div class=\"tb-testimonial-name\">{$name}</div><div class=\"tb-testimonial-role\">{$role}</div></div>
-                </div>
-            </div>";
-        }
-
-        if (empty($slidesHtml)) {
-            return "<div id=\"tb-{$id}\" class=\"tb-testimonials tb-section\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
-        }
-
-        $carousel = $this->renderCarousel(
-            $slidesHtml,
-            $id . '-track',
-            (bool) ($props['autoplay'] ?? true),
-            (int) ($props['interval'] ?? 5000),
-            'tb-testimonials-slider'
-        );
-
-        return "<div id=\"tb-{$id}\" class=\"tb-testimonials tb-section\">
-            <div class=\"tb-container\">
-                <div class=\"tb-testimonials-header\"><h2 class=\"tb-features-section-title\">{$title}</h2></div>
-                {$carousel}
-            </div>
-        </div>";
-    }
-
     protected function renderProductSlider(array $props, string $inner, string $id): string
     {
         if (!SiteHelper::shopEnabled()) {
             return '';
         }
         $title = $this->escape($props['title'] ?? 'محصولات منتخب');
-        $limit = max(1, (int) ($props['limit'] ?? 6));
-        $products = Product::query()->active()->latest()->take($limit)->get();
+        $limit = max(1, min(24, (int) ($props['limit'] ?? 6)));
+        $columns = max(2, min(4, (int) ($props['columns'] ?? 3)));
+        $source = $props['source'] ?? 'latest';
+
+        $query = Product::query()->active();
+        if ($source === 'new') {
+            $query->where('is_new', true);
+        } elseif ($source === 'category' && !empty($props['category_id'])) {
+            $query->where('category_id', (int) $props['category_id']);
+        } elseif ($source === 'manual' && !empty($props['manual_ids']) && is_array($props['manual_ids'])) {
+            $ids = array_values(array_filter(array_map('intval', $props['manual_ids'])));
+            if (empty($ids)) {
+                // Every manually-selected product was deleted/never existed
+                // — an honest empty state, not a silent "latest" fallback
+                // that would show different products than the admin chose.
+                return "<div id=\"tb-{$id}\" class=\"tb-module-products tb-section\"><div class=\"tb-container\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div></div>";
+            }
+            $query->whereIn('id', $ids)->orderByRaw('FIELD(id, ' . implode(',', $ids) . ')');
+        } else {
+            $query->latest();
+        }
+        $products = $query->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
         if ($products->isEmpty()) {
-            return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}</div>";
+            return "<div id=\"tb-{$id}\" class=\"tb-module-products tb-section\"><div class=\"tb-container\">{$titleHtml}</div></div>";
         }
 
-        $slidesHtml = [];
+        $cards = [];
         foreach ($products as $product) {
-            $url   = route('shop.show', $product->slug);
-            $t     = $this->escape($product->title);
-            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $imgHtml = $product->image
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
-                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $slidesHtml[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"max-width:20rem;margin:0 auto;display:block;\">{$imgHtml}
-                <div class=\"tb-product-card-inner\">
-                    <h3 class=\"tb-product-title\">{$t}</h3>
-                    <div class=\"tb-product-price\">{$price}</div>
-                </div>
-            </a>";
+            $badge = $product->is_new ? 'جدید' : null;
+            $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
+            if ($hasDiscount && $badge === null) {
+                $badge = 'تخفیف';
+            }
+            $stockLabel = $product->stock !== null
+                ? ((int) $product->stock > 0 ? (((int) $product->stock <= (int) ($product->low_stock_threshold ?? 5)) ? 'تنها ' . (int) $product->stock . ' عدد باقی مانده' : 'موجود') : 'ناموجود')
+                : null;
+
+            $cards[] = $this->productCardHtml(
+                $product->title,
+                $product->image ? ImageHelper::url($product->image) : '',
+                (float) $product->effective_price,
+                $hasDiscount ? (float) $product->price : null,
+                $badge,
+                $stockLabel,
+                route('shop.show', $product->slug),
+                CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
+                $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null
+            );
         }
 
         $carousel = $this->renderCarousel(
-            $slidesHtml,
+            $cards,
             $id . '-track',
             (bool) ($props['autoplay'] ?? true),
             (int) ($props['interval'] ?? 5000),
-            'tb-product-slider'
+            'tb-product-slider',
+            ['desktop' => $columns, 'tablet' => 2, 'mobile' => 1]
         );
 
-        return "<div id=\"tb-{$id}\" class=\"tb-module-products\">{$titleHtml}{$carousel}</div>";
+        return "<div id=\"tb-{$id}\" class=\"tb-module-products tb-section\"><div class=\"tb-container\">{$titleHtml}{$carousel}</div></div>";
+    }
+
+    /**
+     * Real ProductCategory-bound override of the canonical (demo-fixture)
+     * renderCategorySlider(). ProductCategory has no image/icon column
+     * today (confirmed during audit) — categories render with their real
+     * name and real product count, and the shared safe icon fallback
+     * (never a broken image), same visual card shape as the canonical
+     * demo so admin preview and this real render only differ in data.
+     */
+    protected function renderCategorySlider(array $props, string $inner, string $id): string
+    {
+        if (!SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $title = $this->escape($props['title'] ?? 'دسته‌بندی‌ها');
+        $layout = ($props['layout'] ?? 'carousel') === 'grid' ? 'grid' : 'carousel';
+        $columns = max(2, min(6, (int) ($props['columns'] ?? 4)));
+
+        $query = \App\Models\ProductCategory::query()->withCount('products');
+        if (($props['source'] ?? 'all') === 'manual' && !empty($props['manual_ids']) && is_array($props['manual_ids'])) {
+            $ids = array_values(array_filter(array_map('intval', $props['manual_ids'])));
+            $query->whereIn('id', $ids);
+        } else {
+            $query->orderBy('order');
+        }
+        $categories = $query->get();
+
+        $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        if ($categories->isEmpty()) {
+            return "<div id=\"tb-{$id}\" class=\"tb-section\"><div class=\"tb-container\">{$titleHtml}</div></div>";
+        }
+
+        $cards = [];
+        foreach ($categories as $cat) {
+            $url = route('shop.index', ['category' => $cat->slug]);
+            $name = $this->escape($cat->name);
+            $initial = mb_substr($cat->name, 0, 1, 'UTF-8');
+            $cards[] = "<a href=\"{$url}\" class=\"tb-category-card\" style=\"display:block;text-align:center;padding:1.5rem 1rem;border:1px solid #e5e7eb;border-radius:.75rem;text-decoration:none;color:inherit;\">
+                <div class=\"tb-category-icon-fallback\" style=\"width:3rem;height:3rem;margin:0 auto .5rem;border-radius:999px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#6366f1;\">{$initial}</div>
+                <div class=\"tb-category-name\" style=\"font-weight:700;\">{$name}</div>
+                <div class=\"tb-category-count\" style=\"font-size:.8rem;color:#6b7280;margin-top:.2rem;\">" . number_format($cat->products_count) . " محصول</div>
+            </a>";
+        }
+
+        $body = $layout === 'grid'
+            ? "<div class=\"tb-grid tb-grid-cols-{$columns} tb-gap-md\">" . implode('', $cards) . "</div>"
+            : $this->renderCarousel($cards, $id . '-track', (bool) ($props['autoplay'] ?? true), (int) ($props['interval'] ?? 5000), 'tb-category-slider', ['desktop' => $columns, 'tablet' => max(2, (int) round($columns / 2)), 'mobile' => 1]);
+
+        return "<div id=\"tb-{$id}\" class=\"tb-section\"><div class=\"tb-container\">{$titleHtml}{$body}</div></div>";
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -932,10 +932,65 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                         <template x-for="(nestedFieldDef, nestedFieldKey) in fieldDef.fields" :key="nestedFieldKey">
                                                                             <div class="space-y-1">
                                                                                 <label class="block text-[10px] font-medium text-slate-600" x-text="nestedFieldDef.label || nestedFieldKey"></label>
+                                                                                <template x-if="nestedFieldDef.type === 'image'">
+                                                                                    <div class="space-y-1">
+                                                                                        <template x-if="mediaSrc(nestedItem[nestedFieldKey])">
+                                                                                            <img :src="mediaSrc(nestedItem[nestedFieldKey])" alt="" class="w-full h-16 object-cover rounded border border-slate-200" :data-testid="`tb-nested-preview-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        </template>
+                                                                                        <div class="flex gap-1">
+                                                                                            <button type="button" @click="openMediaPicker(propKey, { index: itemIndex, fieldKey, nestedIndex, nestedFieldKey })" :data-testid="`tb-nested-media-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="flex-1 px-2 py-1 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-[10px]">انتخاب از رسانه</button>
+                                                                                            <button type="button" @click="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, '', schemaDef)" :data-testid="`tb-nested-clear-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="px-2 py-1 rounded border border-slate-200 text-slate-600 hover:text-red-600 text-[10px]">حذف</button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </template>
+                                                                                {{-- One further explicit, bounded repeater level (columns → items)
+                                                                                     for Mega Menu's real independent column/group structure — see
+                                                                                     the deepNestedItems()/*DeepNested* Alpine methods. Still not a
+                                                                                     generic recursive mechanism; a deep item's own fields are plain
+                                                                                     string/textarea/image only. --}}
+                                                                                <template x-if="nestedFieldDef.type === 'repeater'">
+                                                                                    <div class="space-y-2 rounded border border-slate-200 bg-white p-2" :data-testid="`tb-deep-repeater-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        <template x-for="(deepItem, deepIndex) in deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey)" :key="deepIndex">
+                                                                                            <div class="rounded border border-slate-200 bg-slate-50 p-2 space-y-1">
+                                                                                                <div class="flex items-center justify-between">
+                                                                                                    <span class="text-[10px] font-semibold text-slate-500" x-text="`${nestedFieldDef.label || nestedFieldKey} ${deepIndex + 1}`"></span>
+                                                                                                    <div class="flex gap-1">
+                                                                                                        <button type="button" @click="moveDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, -1, schemaDef)" :disabled="deepIndex === 0" :data-testid="`tb-deep-up-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}`" class="px-1.5 py-0.5 rounded border border-slate-200 text-[10px] disabled:opacity-30">↑</button>
+                                                                                                        <button type="button" @click="moveDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, 1, schemaDef)" :disabled="deepIndex >= deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey).length - 1" :data-testid="`tb-deep-down-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}`" class="px-1.5 py-0.5 rounded border border-slate-200 text-[10px] disabled:opacity-30">↓</button>
+                                                                                                        <button type="button" @click="removeDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, schemaDef)" :data-testid="`tb-deep-remove-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}`" class="px-1.5 py-0.5 rounded border border-red-200 text-red-600 text-[10px]">حذف</button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <template x-for="(deepFieldDef, deepFieldKey) in nestedFieldDef.fields" :key="deepFieldKey">
+                                                                                                    <div class="space-y-1">
+                                                                                                        <label class="block text-[10px] font-medium text-slate-600" x-text="deepFieldDef.label || deepFieldKey"></label>
+                                                                                                        <template x-if="deepFieldDef.type === 'image'">
+                                                                                                            <div class="space-y-1">
+                                                                                                                <template x-if="mediaSrc(deepItem[deepFieldKey])">
+                                                                                                                    <img :src="mediaSrc(deepItem[deepFieldKey])" alt="" class="w-full h-14 object-cover rounded border border-slate-200">
+                                                                                                                </template>
+                                                                                                                <div class="flex gap-1">
+                                                                                                                    <button type="button" @click="openMediaPicker(propKey, { index: itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey })" :data-testid="`tb-deep-media-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="flex-1 px-2 py-1 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-[10px]">انتخاب از رسانه</button>
+                                                                                                                    <button type="button" @click="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, '', schemaDef)" class="px-2 py-1 rounded border border-slate-200 text-slate-600 hover:text-red-600 text-[10px]">حذف</button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type === 'textarea'">
+                                                                                                            <textarea :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea'">
+                                                                                                            <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                        </template>
+                                                                                                    </div>
+                                                                                                </template>
+                                                                                            </div>
+                                                                                        </template>
+                                                                                        <button type="button" @click="addDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, nestedFieldDef, schemaDef)" :data-testid="`tb-deep-add-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full px-2 py-1 rounded border border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-[10px] font-medium">+ افزودن <span x-text="nestedFieldDef.label || nestedFieldKey"></span></button>
+                                                                                    </div>
+                                                                                </template>
                                                                                 <template x-if="nestedFieldDef.type === 'textarea'">
                                                                                     <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                 </template>
-                                                                                <template x-if="nestedFieldDef.type !== 'textarea'">
+                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater'">
                                                                                     <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                 </template>
                                                                             </div>
@@ -945,7 +1000,20 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                 <button type="button" @click="addNestedItem(propKey, itemIndex, fieldKey, fieldDef, schemaDef)" :data-testid="`tb-nested-add-${propKey}-${itemIndex}-${fieldKey}`" class="w-full px-2 py-1.5 rounded border border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-[11px] font-medium">+ افزودن <span x-text="fieldDef.label || fieldKey"></span></button>
                                                             </div>
                                                         </template>
-                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater'">
+                                                        <template x-if="fieldDef.type === 'boolean'">
+                                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                                <input type="checkbox" :checked="!!item[fieldKey]" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <span class="text-[11px] text-slate-600" x-text="item[fieldKey] ? 'فعال' : 'غیرفعال'"></span>
+                                                            </label>
+                                                        </template>
+                                                        <template x-if="fieldDef.type === 'select'">
+                                                            <select :value="item[fieldKey] ?? ''" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                <template x-for="(optLabel, optVal) in fieldDef.options" :key="optVal">
+                                                                    <option :value="optVal" x-text="optLabel"></option>
+                                                                </template>
+                                                            </select>
+                                                        </template>
+                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
                                                                     <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
@@ -1674,6 +1742,46 @@ function canvasEditor() {
             if (target < 0 || target >= nested.length) return;
             [nested[nestedIndex], nested[target]] = [nested[target], nested[nestedIndex]];
             this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
+        },
+        // Commercial Productization fase-2: one further explicit, bounded
+        // repeater level (Mega Menu's columns -> items), added the same
+        // way nestedItems() itself was added on top of structuredItems() —
+        // still not a generic recursive mechanism.
+        deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey) {
+            const nested = this.nestedItems(propKey, itemIndex, fieldKey);
+            const raw = nested?.[nestedIndex]?.[deepFieldKey];
+            return Array.isArray(raw) ? raw : [];
+        },
+        persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepItems, schemaDef) {
+            const nested = this.nestedItems(propKey, itemIndex, fieldKey).map(it => ({ ...it }));
+            if (!nested[nestedIndex]) return;
+            nested[nestedIndex] = { ...nested[nestedIndex], [deepFieldKey]: deepItems };
+            this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
+        },
+        addDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepSchemaDef, schemaDef) {
+            const item = {};
+            for (const [k, def] of Object.entries(deepSchemaDef?.fields ?? {})) {
+                item[k] = def?.default ?? '';
+            }
+            this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, [...this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey), item], schemaDef);
+        },
+        updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepIndex, deepNestedFieldKey, value, schemaDef) {
+            const deep = this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey).map(it => ({ ...it }));
+            if (!deep[deepIndex]) return;
+            deep[deepIndex][deepNestedFieldKey] = value;
+            this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deep, schemaDef);
+        },
+        removeDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepIndex, schemaDef) {
+            const deep = [...this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey)];
+            deep.splice(deepIndex, 1);
+            this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deep, schemaDef);
+        },
+        moveDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepIndex, direction, schemaDef) {
+            const deep = [...this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey)];
+            const target = deepIndex + direction;
+            if (target < 0 || target >= deep.length) return;
+            [deep[deepIndex], deep[target]] = [deep[target], deep[deepIndex]];
+            this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deep, schemaDef);
         },
         isMediaControl(schemaDef, propKey, blockType) {
             // MEDIA-4: every real media-capable prop's canonical schema
@@ -2432,9 +2540,14 @@ function canvasEditor() {
             this.mediaModal.target   = target;
             this.mediaModal.returnFocus = document.activeElement;
             const schemaDef = this.selectedSchema?.[propKey] ?? {};
-            const current = target
-                ? this.structuredItems(propKey, schemaDef)?.[target.index]?.[target.fieldKey]
-                : this.selectedBlock?.props?.[propKey];
+            let current = this.selectedBlock?.props?.[propKey];
+            if (target && target.deepFieldKey !== undefined) {
+                current = this.deepNestedItems(propKey, target.index, target.fieldKey, target.nestedIndex, target.nestedFieldKey)?.[target.deepIndex]?.[target.deepFieldKey];
+            } else if (target && target.nestedFieldKey !== undefined) {
+                current = this.nestedItems(propKey, target.index, target.fieldKey)?.[target.nestedIndex]?.[target.nestedFieldKey];
+            } else if (target) {
+                current = this.structuredItems(propKey, schemaDef)?.[target.index]?.[target.fieldKey];
+            }
             // Only a canonical {media_id} value can be pre-highlighted in
             // the library grid — a legacy raw URL has no library identity.
             this.mediaModal.selected = (current && typeof current === 'object' && typeof current.media_id === 'string')
@@ -2480,15 +2593,14 @@ function canvasEditor() {
             if (!this.mediaModal.selected || !this.mediaModal.propKey) return;
             const value = { media_id: this.mediaModal.selected };
             if (this.selectedBlock) {
-                if (this.mediaModal.target) {
-                    const schemaDef = this.selectedSchema?.[this.mediaModal.propKey] ?? {};
-                    this.updateStructuredField(
-                        this.mediaModal.propKey,
-                        this.mediaModal.target.index,
-                        this.mediaModal.target.fieldKey,
-                        value,
-                        schemaDef
-                    );
+                const t = this.mediaModal.target;
+                const schemaDef = this.selectedSchema?.[this.mediaModal.propKey] ?? {};
+                if (t && t.deepFieldKey !== undefined) {
+                    this.updateDeepNestedField(this.mediaModal.propKey, t.index, t.fieldKey, t.nestedIndex, t.nestedFieldKey, t.deepIndex, t.deepFieldKey, value, schemaDef);
+                } else if (t && t.nestedFieldKey !== undefined) {
+                    this.updateNestedField(this.mediaModal.propKey, t.index, t.fieldKey, t.nestedIndex, t.nestedFieldKey, value, schemaDef);
+                } else if (t) {
+                    this.updateStructuredField(this.mediaModal.propKey, t.index, t.fieldKey, value, schemaDef);
                 } else {
                     this.selectedBlock.props[this.mediaModal.propKey] = value;
                     this.schedulePropUpdate();

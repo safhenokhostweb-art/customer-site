@@ -19,9 +19,9 @@
             @if(!empty($item['children']))
                 <div class="relative group">
                     <a href="{{ $item['url'] ?? '#' }}" target="{{ $item['target'] ?? '_self' }}" rel="{{ trim(($item['rel'] ?? '').' '.(($item['target'] ?? '_self') === '_blank' ? 'noopener noreferrer' : '')) }}" class="nav-link {{ !empty($item['active_trail']) ? 'font-semibold' : '' }}">{{ $item['title'] }}</a>
-                    <div class="absolute top-full right-0 mt-1 py-2 min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50" style="color: #1f2937;">
+                    <div class="absolute top-full right-0 mt-1 py-2 min-w-[180px] rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50" style="background: var(--tb-surface, #fff); color: var(--tb-text, #1f2937);">
                         @foreach($item['children'] as $child)
-                            <a href="{{ $child['url'] ?? '#' }}" target="{{ $child['target'] ?? '_self' }}" rel="{{ trim(($child['rel'] ?? '').' '.(($child['target'] ?? '_self') === '_blank' ? 'noopener noreferrer' : '')) }}" class="block px-4 py-2 hover:bg-gray-50 {{ !empty($child['active_trail']) ? 'bg-blue-50 font-medium' : '' }}">{{ $child['title'] }}</a>
+                            <a href="{{ $child['url'] ?? '#' }}" target="{{ $child['target'] ?? '_self' }}" rel="{{ trim(($child['rel'] ?? '').' '.(($child['target'] ?? '_self') === '_blank' ? 'noopener noreferrer' : '')) }}" class="tb-platform-menu-dropdown-link block px-4 py-2 {{ !empty($child['active_trail']) ? 'tb-platform-menu-dropdown-link-active font-medium' : '' }}">{{ $child['title'] }}</a>
                         @endforeach
                     </div>
                 </div>

@@ -77,12 +77,23 @@ final class BlockRegistry
                 ],
                 'defaultProps' => ['title' => ''],
             ],
+            // Universal Multipurpose Slider Overhaul: 'transition'/'boxed'/
+            // 'aspect_ratio'/'overlay' and the slide-level 'cta_text' are
+            // new, additive fields matching the shared BlockRegistry
+            // (packages/saas-platform/modules/theme-runtime) and
+            // BlockRenderer::renderSlider() — all default to the exact
+            // pre-existing visual behavior, so content authored before
+            // this change renders unchanged.
             'slider' => [
-                'name'     => 'اسلایدر',
+                'name'     => 'اسلایدر تصویری',
                 'category' => self::CATEGORY_LAYOUT,
                 'schema'   => [
                     'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
                     'interval' => ['type' => 'number',  'label' => 'فاصله (ms)',  'default' => 5000],
+                    'transition' => ['type' => 'select', 'label' => 'نوع گذار', 'options' => ['slide' => 'اسلاید', 'fade' => 'محو شدن'], 'default' => 'slide'],
+                    'boxed' => ['type' => 'boolean', 'label' => 'حالت جعبه‌ای (Boxed)', 'default' => false],
+                    'aspect_ratio' => ['type' => 'select', 'label' => 'نسبت تصویر', 'options' => ['16/9' => '16:9', '21/9' => '21:9', '4/3' => '4:3', '1/1' => '1:1'], 'default' => '16/9'],
+                    'overlay' => ['type' => 'boolean', 'label' => 'گرادیان روی تصویر', 'default' => true],
                     // Builder integrity fix (2026-09-13): renderSlider()
                     // (ThemeCanvasRenderer) always expected slides shaped
                     // {image,title,subtitle,link} — this field was simply
@@ -100,15 +111,20 @@ final class BlockRegistry
                             'title'    => ['type' => 'string', 'label' => 'عنوان',        'default' => ''],
                             'subtitle' => ['type' => 'string', 'label' => 'زیرعنوان',      'default' => ''],
                             'link'     => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'cta_text' => ['type' => 'string', 'label' => 'متن دکمه CTA (اختیاری)', 'default' => ''],
                         ],
                     ],
                 ],
                 'defaultProps' => [
                     'autoplay' => true,
                     'interval' => 5000,
+                    'transition' => 'slide',
+                    'boxed' => false,
+                    'aspect_ratio' => '16/9',
+                    'overlay' => true,
                     'slides' => [
-                        ['image' => '', 'title' => 'عنوان اسلاید ۱', 'subtitle' => '', 'link' => ''],
-                        ['image' => '', 'title' => 'عنوان اسلاید ۲', 'subtitle' => '', 'link' => ''],
+                        ['image' => '', 'title' => 'عنوان اسلاید ۱', 'subtitle' => '', 'link' => '', 'cta_text' => ''],
+                        ['image' => '', 'title' => 'عنوان اسلاید ۲', 'subtitle' => '', 'link' => '', 'cta_text' => ''],
                     ],
                 ],
             ],
@@ -214,15 +230,27 @@ final class BlockRegistry
             ],
 
             // ─── DYNAMIC ─────────────────────────────────────────────────────
+            // Universal Multipurpose Slider Overhaul: 'slider' is a new
+            // third 'layout' option (real carousel via the shared
+            // BlockRenderer::renderCarousel(), see App\Services\
+            // ThemeBuilder\BlockRenderer::renderBlogPosts()); 'source'/
+            // 'category_id'/'manual_ids'/'autoplay'/'interval' are new and
+            // additive. Existing content with no 'source' key keeps its
+            // 'latest' behavior unchanged.
             'blog_posts' => [
                 'name'     => 'پست‌های وبلاگ',
                 'category' => self::CATEGORY_DYNAMIC,
                 'schema'   => [
                     'title'   => ['type' => 'string', 'label' => 'عنوان بخش', 'default' => 'آخرین مطالب'],
                     'limit'   => ['type' => 'number', 'label' => 'تعداد پست', 'default' => 6],
-                    'layout'  => ['type' => 'select', 'label' => 'چیدمان', 'options' => ['grid' => 'گرید', 'list' => 'لیست'], 'default' => 'grid'],
+                    'layout'  => ['type' => 'select', 'label' => 'چیدمان', 'options' => ['grid' => 'گرید', 'list' => 'لیست', 'slider' => 'اسلایدر'], 'default' => 'grid'],
+                    'source'  => ['type' => 'select', 'label' => 'منبع', 'options' => ['latest' => 'جدیدترین', 'category' => 'یک دسته‌بندی خاص', 'manual' => 'انتخاب دستی'], 'default' => 'latest'],
+                    'category_id' => ['type' => 'number', 'label' => 'شناسه دسته‌بندی (در حالت دسته‌بندی)', 'default' => null],
+                    'manual_ids' => ['type' => 'array', 'label' => 'شناسه مقالات (در حالت انتخاب دستی)', 'default' => []],
+                    'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار (در حالت اسلایدر)', 'default' => true],
+                    'interval' => ['type' => 'number', 'label' => 'فاصله زمانی (میلی‌ثانیه)', 'default' => 5000],
                 ],
-                'defaultProps' => ['title' => 'آخرین مطالب', 'limit' => 6, 'layout' => 'grid'],
+                'defaultProps' => ['title' => 'آخرین مطالب', 'limit' => 6, 'layout' => 'grid', 'source' => 'latest', 'autoplay' => true, 'interval' => 5000],
             ],
             'testimonials' => [
                 'name'     => 'نظرات مشتریان',
@@ -245,6 +273,12 @@ final class BlockRegistry
                 ],
                 'defaultProps' => ['title' => 'محصولات', 'columns' => 4, 'limit' => 8],
             ],
+            // Universal Multipurpose Slider Overhaul: 'columns'/'source'/
+            // 'category_id'/'manual_ids' are new and additive — matching
+            // ThemeCanvasRenderer::renderProductSlider()'s real query
+            // options (latest/new/category/manual) and per-breakpoint
+            // column count. No 'source' key → 'latest' (unchanged prior
+            // behavior).
             'product_slider' => [
                 'name'         => 'اسلایدر محصولات',
                 'category'     => self::CATEGORY_ECOMMERCE,
@@ -257,10 +291,33 @@ final class BlockRegistry
                 'schema'       => [
                     'title'    => ['type' => 'string',  'label' => 'عنوان', 'default' => 'محصولات منتخب'],
                     'limit'    => ['type' => 'number',  'label' => 'تعداد', 'default' => 6],
+                    'columns'  => ['type' => 'select', 'label' => 'تعداد ستون (دسکتاپ)', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴'], 'default' => '3'],
+                    'source'   => ['type' => 'select', 'label' => 'منبع محصولات', 'options' => ['latest' => 'جدیدترین', 'new' => 'دارای برچسب جدید', 'category' => 'یک دسته‌بندی خاص', 'manual' => 'انتخاب دستی'], 'default' => 'latest'],
+                    'category_id' => ['type' => 'number', 'label' => 'شناسه دسته‌بندی (در حالت دسته‌بندی)', 'default' => null],
+                    'manual_ids' => ['type' => 'array', 'label' => 'شناسه محصولات (در حالت انتخاب دستی)', 'default' => []],
                     'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
                     'interval' => ['type' => 'number',  'label' => 'فاصله (ms)',  'default' => 5000],
                 ],
-                'defaultProps' => ['title' => 'محصولات منتخب', 'limit' => 6, 'autoplay' => true, 'interval' => 5000],
+                'defaultProps' => ['title' => 'محصولات منتخب', 'limit' => 6, 'columns' => '3', 'source' => 'latest', 'autoplay' => true, 'interval' => 5000],
+            ],
+            // Universal Multipurpose Slider Overhaul: new type — mirrors
+            // the shared BlockRegistry entry (packages/saas-platform/
+            // modules/theme-runtime); real data via ThemeCanvasRenderer::
+            // renderCategorySlider() (ProductCategory + real product
+            // counts).
+            'category_slider' => [
+                'name' => 'اسلایدر دسته‌بندی',
+                'category' => self::CATEGORY_ECOMMERCE,
+                'schema' => [
+                    'title'    => ['type' => 'string', 'label' => 'عنوان بخش', 'default' => 'دسته‌بندی‌ها'],
+                    'layout'   => ['type' => 'select', 'label' => 'چیدمان', 'options' => ['carousel' => 'اسلایدر', 'grid' => 'گرید ثابت'], 'default' => 'carousel'],
+                    'columns'  => ['type' => 'select', 'label' => 'تعداد ستون', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴', '6' => '۶'], 'default' => '4'],
+                    'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
+                    'interval' => ['type' => 'number', 'label' => 'فاصله زمانی (میلی‌ثانیه)', 'default' => 5000],
+                    'source'   => ['type' => 'select', 'label' => 'منبع', 'options' => ['all' => 'همه دسته‌بندی‌ها', 'manual' => 'انتخاب دستی'], 'default' => 'all'],
+                    'manual_ids' => ['type' => 'array', 'label' => 'شناسه دسته‌بندی‌ها (در حالت انتخاب دستی)', 'default' => []],
+                ],
+                'defaultProps' => ['title' => 'دسته‌بندی‌ها', 'layout' => 'carousel', 'columns' => '4', 'autoplay' => true, 'interval' => 5000, 'source' => 'all'],
             ],
 
             // ─── MARKETING ───────────────────────────────────────────────────
@@ -613,8 +670,13 @@ final class BlockRegistry
                     ['value' => 150, 'suffix' => '+', 'label' => 'پروژه'],
                 ], 'background' => '#f8fafc', 'dividers' => true],
             ],
+            // Universal Multipurpose Slider Overhaul: each logo item may
+            // now optionally carry {image, url, alt} alongside the
+            // pre-existing {name} — an existing {name}-only entry still
+            // renders as a text badge, unchanged. 'mode'/'grayscale'/
+            // 'speed'/'visible_count' are new and additive.
             'client_logos' => [
-                'name'     => 'نوار لوگو مشتریان',
+                'name'     => 'اسلایدر لوگوی مشتریان',
                 'category' => self::CATEGORY_MARKETING,
                 'schema'   => [
                     'title'  => ['type' => 'string',  'label' => 'عنوان',        'default' => 'مورد اعتماد برندهای بزرگ'],
@@ -622,12 +684,19 @@ final class BlockRegistry
                         'type' => 'repeater', 'label' => 'لوگوها', 'storage' => 'array',
                         'default' => [['name' => 'برند اول'], ['name' => 'برند دوم'], ['name' => 'برند سوم']],
                         'fields' => [
-                            'name' => ['type' => 'string', 'label' => 'نام برند', 'default' => ''],
+                            'name'  => ['type' => 'string', 'label' => 'نام برند', 'default' => ''],
+                            'image' => ['type' => 'image', 'label' => 'تصویر لوگو (اختیاری)', 'default' => ''],
+                            'url'   => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'alt'   => ['type' => 'string', 'label' => 'متن جایگزین تصویر (اختیاری)', 'default' => ''],
                         ],
                     ],
-                    'scroll' => ['type' => 'boolean', 'label' => 'حرکت خودکار', 'default' => true],
+                    'scroll' => ['type' => 'boolean', 'label' => 'حرکت خودکار (مود مرور - قدیمی)', 'default' => true],
+                    'mode'   => ['type' => 'select', 'label' => 'نوع نمایش', 'options' => ['marquee' => 'نوار متحرک', 'carousel' => 'اسلایدر با کنترل', 'static' => 'ثابت (Grid)'], 'default' => 'marquee'],
+                    'grayscale' => ['type' => 'boolean', 'label' => 'سیاه‌وسفید تا هاور', 'default' => true],
+                    'speed' => ['type' => 'number', 'label' => 'سرعت (ثانیه)', 'default' => 25],
+                    'visible_count' => ['type' => 'number', 'label' => 'تعداد نمایش هم‌زمان (حالت اسلایدر)', 'default' => 5],
                 ],
-                'defaultProps' => ['title' => 'مورد اعتماد برندهای بزرگ', 'logos' => [['name' => 'برند اول'], ['name' => 'برند دوم'], ['name' => 'برند سوم']], 'scroll' => true],
+                'defaultProps' => ['title' => 'مورد اعتماد برندهای بزرگ', 'logos' => [['name' => 'برند اول'], ['name' => 'برند دوم'], ['name' => 'برند سوم']], 'scroll' => true, 'mode' => 'marquee', 'grayscale' => true, 'speed' => 25, 'visible_count' => 5],
             ],
             'process_steps' => [
                 'name'     => 'مراحل انجام کار',
@@ -654,6 +723,35 @@ final class BlockRegistry
                     ['number' => '۲', 'title' => 'تنظیم', 'text' => 'قالب انتخاب کنید'],
                     ['number' => '۳', 'title' => 'انتشار', 'text' => 'راه‌اندازی'],
                 ]],
+            ],
+            'timeline' => [
+                'name'     => 'خط زمانی (Timeline)',
+                'category' => self::CATEGORY_CONTENT,
+                'schema'   => [
+                    'title'    => ['type' => 'string', 'label' => 'عنوان بخش', 'default' => 'مسیر رشد ما'],
+                    'subtitle' => ['type' => 'string', 'label' => 'زیرعنوان', 'default' => ''],
+                    'layout'   => ['type' => 'select', 'label' => 'چیدمان', 'options' => ['vertical' => 'عمودی', 'horizontal' => 'افقی'], 'default' => 'vertical'],
+                    'items'    => [
+                        'type' => 'repeater',
+                        'label' => 'رویدادها',
+                        // Persisted/runtime contract is a JSON string
+                        // (matches the shared canonical schema's textarea
+                        // convention) — the visual adapter decodes/re-encodes
+                        // without changing that shape.
+                        'storage' => 'json',
+                        'default' => '[{"date":"۱۳۹۸","title":"تأسیس شرکت","text":"شروع فعالیت با یک تیم کوچک و ایدهٔ بزرگ.","icon":"🚀","image":"","link_label":"","link_url":""}]',
+                        'fields' => [
+                            'date'       => ['type' => 'string', 'label' => 'تاریخ / مرحله', 'default' => ''],
+                            'title'      => ['type' => 'string', 'label' => 'عنوان رویداد', 'default' => ''],
+                            'text'       => ['type' => 'textarea', 'label' => 'توضیح', 'default' => ''],
+                            'icon'       => ['type' => 'string', 'label' => 'آیکون (اموجی، اختیاری)', 'default' => ''],
+                            'image'      => ['type' => 'image', 'label' => 'تصویر (اختیاری، جای آیکون را می‌گیرد)', 'default' => ''],
+                            'link_label' => ['type' => 'string', 'label' => 'متن دکمه (اختیاری)', 'default' => ''],
+                            'link_url'   => ['type' => 'string', 'label' => 'لینک دکمه (اختیاری)', 'default' => ''],
+                        ],
+                    ],
+                ],
+                'defaultProps' => ['title' => 'مسیر رشد ما', 'subtitle' => '', 'layout' => 'vertical', 'items' => '[{"date":"۱۳۹۸","title":"تأسیس شرکت","text":"شروع فعالیت با یک تیم کوچک و ایدهٔ بزرگ.","icon":"🚀","image":"","link_label":"","link_url":""}]'],
             ],
             'team_cards' => [
                 'name'     => 'کارت اعضای تیم',
@@ -695,35 +793,40 @@ final class BlockRegistry
                 ],
                 'defaultProps' => ['title' => 'مهارت‌ها', 'skills' => [['name' => 'طراحی', 'percent' => 90], ['name' => 'برنامه‌نویسی', 'percent' => 85]]],
             ],
+            // Universal Multipurpose Slider Overhaul: restores 'columns'
+            // (removed 2026-09-11 when it genuinely had no effect) — the
+            // shared canonical renderer (packages/saas-platform/modules/
+            // theme-runtime BlockRenderer::renderTestimonialsSlider) now
+            // honors it in BOTH 'static' and 'carousel' 'mode' via a real
+            // itemsPerView carousel engine, closing that exact
+            // schema/renderer mismatch. This host no longer needs its own
+            // override for this type at all (removed from
+            // ThemeCanvasRenderer — see its own doc comment) — the shared
+            // renderer's behavior is now correct for every host. 'company'/
+            // 'avatar' are new, additive item fields.
             'testimonials_slider' => [
                 'name'     => 'اسلایدر نظرات مشتریان',
                 'category' => self::CATEGORY_DYNAMIC,
                 'schema'   => [
                     'title'    => ['type' => 'string',  'label' => 'عنوان',        'default' => 'نظرات مشتریان'],
-                    // 'columns' removed 2026-09-11: real carousel runtime
-                    // (see ThemeCanvasRenderer::renderTestimonialsSlider)
-                    // shows exactly one slide at a time — a column count
-                    // has no meaning here and was never consumed.
+                    'columns'  => ['type' => 'select', 'label' => 'تعداد ستون', 'options' => ['1' => '۱', '2' => '۲', '3' => '۳'], 'default' => '3'],
+                    'mode'     => ['type' => 'select', 'label' => 'نوع نمایش', 'options' => ['carousel' => 'اسلایدر با کنترل', 'static' => 'ثابت (Grid)'], 'default' => 'carousel'],
                     'items'    => [
                         'type' => 'repeater', 'label' => 'نظرات', 'storage' => 'array',
-                        'default' => [['name' => 'رضا', 'role' => 'مدیر', 'text' => 'عالی بود!', 'rating' => 5]],
+                        'default' => [['name' => 'رضا', 'role' => 'مدیر', 'company' => '', 'text' => 'عالی بود!', 'rating' => 5]],
                         'fields' => [
-                            'name'   => ['type' => 'string', 'label' => 'نام', 'default' => ''],
-                            'role'   => ['type' => 'string', 'label' => 'سمت', 'default' => ''],
-                            'text'   => ['type' => 'textarea', 'label' => 'متن نظر', 'default' => ''],
-                            'rating' => ['type' => 'string', 'label' => 'امتیاز (۱ تا ۵)', 'default' => '5'],
+                            'name'    => ['type' => 'string', 'label' => 'نام', 'default' => ''],
+                            'role'    => ['type' => 'string', 'label' => 'سمت', 'default' => ''],
+                            'company' => ['type' => 'string', 'label' => 'شرکت (اختیاری)', 'default' => ''],
+                            'avatar'  => ['type' => 'image', 'label' => 'تصویر (اختیاری)', 'default' => ''],
+                            'text'    => ['type' => 'textarea', 'label' => 'متن نظر', 'default' => ''],
+                            'rating'  => ['type' => 'string', 'label' => 'امتیاز (۱ تا ۵)', 'default' => '5'],
                         ],
                     ],
-                    // autoplay/interval added 2026-09-11: the canonical
-                    // shared renderer (saas-platform preview) renders this
-                    // type as a static grid, not an actual slider — this
-                    // host overrides it with a real carousel runtime
-                    // (see ThemeCanvasRenderer::renderTestimonialsSlider),
-                    // so these controls now have real effect here.
                     'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
                     'interval' => ['type' => 'number',  'label' => 'فاصله (ms)',  'default' => 5000],
                 ],
-                'defaultProps' => ['title' => 'نظرات مشتریان', 'items' => [['name' => 'رضا', 'role' => 'مدیر', 'text' => 'عالی بود!', 'rating' => 5]], 'autoplay' => true, 'interval' => 5000],
+                'defaultProps' => ['title' => 'نظرات مشتریان', 'columns' => '3', 'mode' => 'carousel', 'items' => [['name' => 'رضا', 'role' => 'مدیر', 'company' => '', 'text' => 'عالی بود!', 'rating' => 5]], 'autoplay' => true, 'interval' => 5000],
             ],
             'trust_badges' => [
                 'name'     => 'نشان‌های اعتماد',
@@ -949,11 +1052,53 @@ final class BlockRegistry
                     // BlockRenderer::renderNavHeader() for the render-time
                     // branch this authors.
                     'nav_source'         => ['type' => 'select', 'label' => 'منبع لینک‌های ناوبری', 'options' => ['custom' => 'لینک‌های سفارشی این بلوک', 'menu' => 'منوی اصلی سایت (/admin/menus)'], 'default' => 'custom'],
+                    // Commercial Productization fase-2 — Mega Menu, real
+                    // independent column/group structure (no raw JSON, and
+                    // no longer inferred by matching duplicate column-title
+                    // text). The Canvas repeater UI (resources/views/admin/
+                    // theme-design/canvas-editor.blade.php) previously
+                    // supported exactly one bounded extra nesting level; a
+                    // second explicit, equally bounded level was added
+                    // specifically for this field (`nestedItems()` family →
+                    // `deepNestedItems()` family) so `mega_columns[].items`
+                    // is a real nested repeater, not a generic recursive
+                    // mechanism. Each column is its own array entry with its
+                    // own `items` — two columns can share the exact same
+                    // title and remain fully independent, unlike the old
+                    // flat-and-grouped shape.
+                    // `mega_items` (flat, grouped-by-title) is kept ONLY so
+                    // themes/instances authored before this change keep
+                    // rendering — BlockRenderer::normalizeMegaMenuData()
+                    // prefers `mega_columns` when present and falls back to
+                    // `mega_items` otherwise. The Canvas editor itself only
+                    // ever writes `mega_columns` going forward.
                     'nav_links'          => [
                         'type' => 'repeater', 'label' => 'لینک‌های منو', 'storage' => 'array', 'default' => [],
                         'fields' => [
                             'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
                             'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                            'mega_columns' => [
+                                'type' => 'repeater',
+                                'label' => 'ستون‌های Mega Menu (اختیاری — برای منوی چندستونی)',
+                                'fields' => [
+                                    'title' => ['type' => 'string', 'label' => 'عنوان ستون', 'default' => ''],
+                                    'items' => [
+                                        'type' => 'repeater',
+                                        'label' => 'آیتم‌های این ستون',
+                                        'fields' => [
+                                            'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
+                                            'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                                            'icon'  => ['type' => 'string', 'label' => 'آیکون (اموجی، اختیاری)', 'default' => ''],
+                                            'image' => ['type' => 'image', 'label' => 'تصویر آیتم (اختیاری، جای آیکون را می‌گیرد)', 'default' => ''],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'mega_banner_image' => ['type' => 'image', 'label' => 'تصویر بنر Mega Menu (اختیاری)', 'default' => ''],
+                            'mega_banner_url'   => ['type' => 'string', 'label' => 'لینک بنر', 'default' => '#'],
+                            'mega_banner_text'  => ['type' => 'string', 'label' => 'متن روی بنر', 'default' => ''],
+                            'mega_show_desktop' => ['type' => 'boolean', 'label' => 'نمایش Mega Menu در دسکتاپ', 'default' => true],
+                            'mega_mobile_behavior' => ['type' => 'select', 'label' => 'رفتار در موبایل', 'options' => ['accordion' => 'آکاردئونی (پیش‌فرض)', 'flat' => 'فهرست تخت بدون ستون‌بندی', 'hidden' => 'مخفی در موبایل'], 'default' => 'accordion'],
                         ],
                     ],
                     'sticky'             => ['type' => 'boolean', 'label' => 'چسبان به بالا', 'default' => false],
@@ -966,6 +1111,11 @@ final class BlockRegistry
                     'search_placeholder' => ['type' => 'string', 'label' => 'متن جای‌گزین جستجو', 'default' => 'جستجو...'],
                     'show_cart'          => ['type' => 'boolean', 'label' => 'نمایش سبد خرید', 'default' => false],
                     'show_account'       => ['type' => 'boolean', 'label' => 'نمایش حساب کاربری', 'default' => false],
+                    // Commercial Productization fase-4: real dark-mode
+                    // toggle — see BlockRenderer::renderDarkModeToggle()
+                    // (shared) and layouts/canvas-theme.blade.php's
+                    // head-bootstrap script for the full mechanism.
+                    'show_dark_toggle'   => ['type' => 'boolean', 'label' => 'نمایش تغییر حالت روشن/تاریک', 'default' => false],
                 ],
                 'defaultProps' => ['logo_text' => '', 'logo_url' => '/', 'nav_links' => [], 'sticky' => false, 'bg_color' => '#ffffff', 'text_color' => '#111827'],
             ],

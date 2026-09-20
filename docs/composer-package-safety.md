@@ -71,12 +71,35 @@ there is no second, competing implementation.
   project) for `composer install`/`composer update` to work at all.
 - **Editing a shared package**: with mirror mode, editing a file directly
   in `saas-platform/packages/saas-platform/...` is **not** instantly
-  visible in `customer-site` the way a live symlink would have been — run
-  `composer update saas-platform/<package>` (or a full `composer update`)
-  in `customer-site` to pick up the change. This is the one real workflow
-  cost of this fix, traded deliberately for eliminating the deletion
-  risk entirely (mirror mode is unconditionally safe; a live symlink/
-  Junction is not, in any location).
+  visible in `customer-site` the way a live symlink would have been. This
+  is the one real workflow cost of this fix, traded deliberately for
+  eliminating the deletion risk entirely (mirror mode is unconditionally
+  safe; a live symlink/Junction is not, in any location).
+
+  **Correction (Universal Multipurpose Slider Overhaul phase, verified
+  empirically)**: `composer update saas-platform/<package>` does **not**
+  reliably re-mirror a content-only change. Composer's path-repository
+  update check for an unversioned `dev-main` reference does not always
+  detect that the *files inside* the source directory changed — running
+  it after editing only shared-package source reported "Nothing to
+  modify in lock file" / "Nothing to install, update or remove" and left
+  the stale `vendor/` copy untouched (confirmed by byte-identical file
+  size and unchanged mtime before and after). The one **safe, reliably
+  reproducible** refresh, run from `customer-site`:
+
+  ```
+  rm -rf vendor/saas-platform/<package>
+  composer install
+  ```
+
+  Removing a mirror-mode vendor copy is explicitly safe per this
+  document's own root-cause section — it is a real, independent file
+  copy, never a link back to the source. `composer install` then detects
+  the package is missing from `vendor/` and re-mirrors it fresh (its own
+  output names the source explicitly: `Mirroring from
+  ../saas-platform/packages/...`). Prefer this two-command form over
+  `composer update <package>` whenever you need to be certain a shared
+  package source edit actually reached `customer-site`'s vendor copy.
 - **Worktrees**: any git worktree of `customer-site` — sibling-placed or
   otherwise — is safe by the same mechanism. There is nothing
   worktree-specific to configure.
