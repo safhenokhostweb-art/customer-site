@@ -22,6 +22,7 @@ export function loadFixture() {
 export const BROWSER_PORT = Number(process.env.BROWSER_PORT || 8791);
 export const BASE_URL = process.env.BROWSER_BASE_URL || `http://127.0.0.1:${BROWSER_PORT}`;
 export const DB_DATABASE = process.env.BROWSER_DB_DATABASE || 'customer_site_browser';
+export const PLATFORM_PORT = Number(process.env.BROWSER_PLATFORM_PORT || 8792);
 
 export const ADMIN_MOBILE = '09120000001';
 export const ADMIN_PASSWORD = 'browser-harness-pass';
@@ -41,5 +42,7 @@ export function serverEnv() {
         CACHE_STORE: 'array',
         QUEUE_CONNECTION: 'sync',
         MAIL_MAILER: 'array',
+        PLATFORM_API_URL: `http://127.0.0.1:${PLATFORM_PORT}`,
+        PLATFORM_ADMIN_TOKEN: 'browser-harness-token',
     };
 }

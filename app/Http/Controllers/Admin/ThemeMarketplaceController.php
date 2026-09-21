@@ -29,7 +29,11 @@ class ThemeMarketplaceController extends Controller
             ]);
         }
 
-        $themes    = Cache::remember('theme_marketplace_list', 300, fn () => $this->platform->marketplaceThemes());
+        // Assignment and license changes originate on the Platform, so a
+        // tenant-local TTL cache cannot be invalidated transactionally by
+        // that write. Fetch the small catalog live to make a newly assigned
+        // Theme visible immediately and avoid stale cross-system state.
+        $themes    = $this->platform->marketplaceThemes();
         $purchased = session('purchased_theme', false);
         $failed    = $request->query('failed', false);
         $msg       = $request->query('msg', '');
@@ -46,7 +50,7 @@ class ThemeMarketplaceController extends Controller
                 ->with('error', 'اتصال به پلتفرم پیکربندی نشده است.');
         }
 
-        $theme = Cache::remember("theme_marketplace_detail_{$themeId}", 300, fn () => $this->platform->marketplaceTheme($themeId));
+        $theme = $this->platform->marketplaceTheme($themeId);
 
         if (!$theme) {
             return redirect()->route('admin.theme-marketplace.index')
