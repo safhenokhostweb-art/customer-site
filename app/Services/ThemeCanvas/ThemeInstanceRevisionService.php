@@ -127,11 +127,13 @@ class ThemeInstanceRevisionService
         // see that service's own docblock) must abort the whole operation
         // atomically, with nothing written at all, never a partially-live
         // revision with some media still hotlinked.
-        if (in_array($type, self::LOCALIZABLE_TYPES, true)) {
-            $themeData = $this->mediaLocalizer->localize($themeData);
-        }
-
         $identifier = $context['theme_identifier'] ?? $this->currentIdentifier();
+
+        if (in_array($type, self::LOCALIZABLE_TYPES, true)) {
+            $themeData = $this->mediaLocalizer->localize($themeData, array_merge($context, [
+                'theme_identifier' => $identifier,
+            ]));
+        }
 
         return DB::transaction(function () use ($themeData, $type, $context, $identifier) {
             // lockForUpdate() serializes concurrent record() calls for the

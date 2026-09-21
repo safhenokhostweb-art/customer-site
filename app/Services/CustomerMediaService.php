@@ -44,7 +44,7 @@ class CustomerMediaService
         [$category, $extension, $mime] = $this->validate($file);
         $uuid = (string) Str::uuid();
         $disk = $this->storage->diskNameFor('uploads');
-        $key = sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+        $key = $this->remoteImportStorageKey($siteId, $uuid, $extension, $metadata);
 
         if (! Storage::disk($disk)->putFileAs(dirname($key), $file, basename($key), ['visibility' => 'public'])) {
             throw new \RuntimeException('Customer media storage write failed.');
@@ -110,7 +110,21 @@ class CustomerMediaService
         $siteId = $this->siteId();
         $uuid = (string) Str::uuid();
         $disk = $this->storage->diskNameFor('uploads');
-        $key = sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+        // Real, proven inconsistency (khab-shimana-tablet media-isolation
+        // certification, 2026-09-21): this was the only one of the three
+        // storage-key call sites (upload(), importVideoFromRemoteBytes(),
+        // this method) still building its own flat
+        // customer-media/{site}/{yyyy}/{mm}/{uuid}.ext path inline instead
+        // of calling remoteImportStorageKey() — despite that method's own
+        // docblock already claiming "Theme imports are physically
+        // namespaced by site, theme and release" for exactly this path.
+        // Since importFromRemoteBytes() is the one ThemeMediaLocalizationService
+        // actually calls for every image (the overwhelming majority of real
+        // theme media — video is the rare exception), every theme-sourced
+        // image was silently exempt from the namespacing the other two
+        // call sites already had. No behavior change for a plain customer
+        // upload or an already-namespaced video import.
+        $key = $this->remoteImportStorageKey($siteId, $uuid, $extension, $metadata);
 
         if (!Storage::disk($disk)->put($key, $bytes, ['visibility' => 'public'])) {
             throw new \RuntimeException('Customer media storage write failed.');
@@ -123,7 +137,11 @@ class CustomerMediaService
                 'extension' => $extension, 'category' => 'image', 'mime_type' => $mime, 'size_bytes' => strlen($bytes),
                 'title' => $metadata['title'] ?? null, 'alt_text' => $metadata['alt_text'] ?? null,
                 'width' => (int) $probe[0], 'height' => (int) $probe[1],
-                'metadata' => array_filter(['source_url' => $metadata['source_url'] ?? null]),
+                'metadata' => array_filter([
+                    'source_url' => $metadata['source_url'] ?? null,
+                    'theme_identifier' => $metadata['theme_identifier'] ?? null,
+                    'release_namespace' => $metadata['release_namespace'] ?? null,
+                ], static fn ($value) => $value !== null && $value !== ''),
             ]);
         } catch (\Throwable $exception) {
             Storage::disk($disk)->delete($key);
@@ -162,7 +180,7 @@ class CustomerMediaService
         $siteId = $this->siteId();
         $uuid = (string) Str::uuid();
         $disk = $this->storage->diskNameFor('uploads');
-        $key = sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+        $key = $this->remoteImportStorageKey($siteId, $uuid, $extension, $metadata);
 
         if (!Storage::disk($disk)->put($key, $bytes, ['visibility' => 'public'])) {
             throw new \RuntimeException('Customer media storage write failed.');
@@ -175,7 +193,11 @@ class CustomerMediaService
                 'extension' => $extension, 'category' => 'video', 'mime_type' => $mime, 'size_bytes' => strlen($bytes),
                 'title' => $metadata['title'] ?? null, 'alt_text' => $metadata['alt_text'] ?? null,
                 'width' => null, 'height' => null,
-                'metadata' => array_filter(['source_url' => $metadata['source_url'] ?? null]),
+                'metadata' => array_filter([
+                    'source_url' => $metadata['source_url'] ?? null,
+                    'theme_identifier' => $metadata['theme_identifier'] ?? null,
+                    'release_namespace' => $metadata['release_namespace'] ?? null,
+                ], static fn ($value) => $value !== null && $value !== ''),
             ]);
         } catch (\Throwable $exception) {
             Storage::disk($disk)->delete($key);
@@ -190,11 +212,48 @@ class CustomerMediaService
      * an unbounded scan (indexed by site_id via forSite(), JSON path match
      * only runs across this one site's own rows).
      */
-    public function findBySourceUrl(string $url): ?CustomerMedia
+    public function findBySourceUrl(string $url, array $scope = []): ?CustomerMedia
     {
-        return CustomerMedia::forSite($this->siteId())->available()
-            ->whereJsonContains('metadata->source_url', $url)
-            ->first();
+        $query = CustomerMedia::forSite($this->siteId())->available()
+            ->whereJsonContains('metadata->source_url', $url);
+
+        if (($scope['theme_identifier'] ?? '') !== '') {
+            $query->whereJsonContains('metadata->theme_identifier', $scope['theme_identifier']);
+        }
+        if (($scope['release_namespace'] ?? '') !== '') {
+            $query->whereJsonContains('metadata->release_namespace', $scope['release_namespace']);
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * Theme imports are physically namespaced by site, theme and release.
+     * Ordinary customer uploads deliberately retain their existing path.
+     */
+    private function remoteImportStorageKey(int $siteId, string $uuid, string $extension, array $metadata): string
+    {
+        $theme = trim((string) ($metadata['theme_identifier'] ?? ''));
+        if ($theme === '') {
+            return sprintf('customer-media/%d/%s/%s.%s', $siteId, now()->format('Y/m'), $uuid, $extension);
+        }
+
+        $safeTheme = trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', $theme), '-');
+        if ($safeTheme === '') {
+            $safeTheme = 'theme-' . substr(hash('sha256', $theme), 0, 16);
+        }
+        $release = trim((string) ($metadata['release_namespace'] ?? 'unversioned'));
+        $safeRelease = trim((string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $release), '-');
+        $safeRelease = $safeRelease !== '' ? $safeRelease : 'unversioned';
+
+        return sprintf(
+            'customer-media/%d/themes/%s/release-%s/%s.%s',
+            $siteId,
+            $safeTheme,
+            $safeRelease,
+            $uuid,
+            $extension
+        );
     }
 
     /**

@@ -53,6 +53,7 @@ class CustomerMediaResolver
         'section' => ['background_image'],
         'image' => ['url'],
         'hero_split' => ['image_url'],
+        'stats_row' => ['background_image'],
         'module:motion' => ['fallback_image'],
         'video' => ['url', 'poster'],
     ];
@@ -62,6 +63,33 @@ class CustomerMediaResolver
         'gallery' => ['prop' => 'items', 'field' => 'url', 'storage' => 'array'],
         'team_cards' => ['prop' => 'members', 'field' => 'image', 'storage' => 'json'],
         'slider' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
+        'bento_grid' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        // Builder integrity audit (2026-09-20) — MASTER_THEME_MEDIA_
+        // LOCALIZATION_GAP coverage fix: these four repeater fields were
+        // real, live media props on the current canonical
+        // universal-multipurpose-qa product (testimonial avatars, timeline
+        // milestone photos, client-logo images, nav mega-menu banners) that
+        // were never registered here. Since ThemeMediaLocalizationService
+        // walks this SAME canonical list at install time, an unregistered
+        // field is never even inspected — its saas-platform-hosted hotlink
+        // ships to the customer untouched regardless of origin-trust
+        // correctness, and CustomerMediaResolver (this class, at render
+        // time) would never resolve a real {media_id} stored in it either.
+        // Discovered by regenerating the stale test fixture from the real,
+        // current seeder and running it through the real localization
+        // service end to end — 21 of 54 real Platform hotlinks in that
+        // fixture were silently left un-localized by exactly this gap.
+        'testimonials_slider' => ['prop' => 'items', 'field' => 'avatar', 'storage' => 'array'],
+        // 'timeline's own BlockRegistry schema persists 'items' as a JSON
+        // STRING (its 'storage' => 'json', matching the shared canonical
+        // schema's textarea convention), unlike the other repeaters here —
+        // must match exactly, or resolveRepeater()/localizeBlockProps()
+        // silently replaces the string with a decoded array, corrupting
+        // the block's persisted shape (caught by
+        // ThemeCanvasPaletteCompatibilityTest's schema-validation sweep).
+        'timeline' => ['prop' => 'items', 'field' => 'image', 'storage' => 'json'],
+        'client_logos' => ['prop' => 'logos', 'field' => 'image', 'storage' => 'array'],
+        'nav_header' => ['prop' => 'nav_links', 'field' => 'mega_banner_image', 'storage' => 'array'],
     ];
 
     public function __construct(private readonly CustomerMediaService $media)

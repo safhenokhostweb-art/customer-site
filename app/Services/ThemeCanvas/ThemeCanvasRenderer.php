@@ -525,6 +525,27 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
+        // Real, proven gap (khab-shimana-tablet certification, 2026-09-21):
+        // the block schema (App\Services\ThemeBuilder\BlockRegistry,
+        // module:blog_posts.layout) has offered 'slider' as an option since
+        // it shipped, but this renderer only ever branched on 'list' vs
+        // everything-else — choosing 'slider' silently rendered the same
+        // static 3-column grid as 'grid', with no carousel behavior at all.
+        // renderCarousel() is the same inherited engine renderProductSlider()/
+        // renderCategorySlider() already use for real Tenant-data carousels
+        // just above in this file — reused here rather than a second
+        // implementation.
+        if ($layout === 'slider') {
+            $carousel = $this->renderCarousel($cards, $id . '-track', true, 5000, 'tb-blog-slider', ['desktop' => 3, 'tablet' => 2, 'mobile' => 1]);
+            return "<div id=\"tb-{$id}\" class=\"tb-module-blog\">
+                {$titleHtml}
+                {$carousel}
+                <div style=\"text-align:center;margin-top:1.5rem;\">
+                    <a href=\"" . e(route('blog.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده همه مطالب</a>
+                </div>
+            </div>";
+        }
+
         return "<div id=\"tb-{$id}\" class=\"tb-module-blog\">
             {$titleHtml}
             <div class=\"tb-grid {$colsClass} tb-gap-lg tb-blog-grid\">" . implode('', $cards) . "</div>

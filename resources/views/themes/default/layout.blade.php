@@ -596,6 +596,22 @@
                         ->renderBlocks($headerBlocks) !!}
                 </div>
             </div>
+            @php
+                // Real, proven gap (khab-shimana-tablet dark-mode
+                // certification, 2026-09-21): .tb-header-nav-wrap above is
+                // display:none below 768px (by design — see
+                // BlockRenderer::renderNavHeader()'s own comment on why the
+                // NAV LINKS get a real mobile replacement here), but nothing
+                // ever gave the SAME treatment to nav_header's actions row
+                // (search/cart/account/dark-toggle) — a real interactive
+                // Playwright test (click .tb-theme-toggle) confirmed it
+                // exists in the DOM but is genuinely unreachable at mobile
+                // width. Only the dark-mode toggle is replicated here (cart/
+                // account already have real bare-route equivalents just
+                // below — "سبد خرید"/"حساب من" — dark mode has none).
+                $tbHeaderWantsDarkToggle = collect($headerBlocks ?? [])
+                    ->contains(fn ($b) => is_array($b) && ($b['type'] ?? null) === 'nav_header' && !empty($b['props']['show_dark_toggle']));
+            @endphp
             <div id="tb-mobile-menu" class="tb-mobile-menu tb-mobile-menu-panel" aria-hidden="true" role="dialog" aria-label="منوی موبایل">
                 <div class="tb-mobile-menu-inner">
                     @if(!empty($mobileNavItems))
@@ -621,6 +637,34 @@
                         @else
                             <a href="{{ route('login') }}">ورود</a>
                         @endauth
+                    @endif
+                    @if($tbHeaderWantsDarkToggle)
+                        <button type="button" id="tb-mobile-theme-toggle" class="tb-theme-toggle" aria-label="تغییر حالت رنگی" style="margin-top:.5rem;">
+                            <span class="tb-theme-toggle-icon" aria-hidden="true">🌓</span>
+                        </button>
+                        <script>(function(){
+                            var btn = document.getElementById('tb-mobile-theme-toggle');
+                            if (!btn || btn.dataset.tbInit) return;
+                            btn.dataset.tbInit = '1';
+                            var ICONS = {light:'☀️', dark:'🌙', system:'💻'};
+                            var LABELS = {
+                                light: 'حالت رنگی: روشن — برای تغییر به تاریک کلیک کنید',
+                                dark: 'حالت رنگی: تاریک — برای تغییر به خودکار (سیستم) کلیک کنید',
+                                system: 'حالت رنگی: هماهنگ با سیستم — برای تغییر به روشن کلیک کنید'
+                            };
+                            function render() {
+                                var p = (window.__tbTheme && window.__tbTheme.get) ? window.__tbTheme.get() : 'system';
+                                var icon = btn.querySelector('.tb-theme-toggle-icon');
+                                if (icon) icon.textContent = ICONS[p] || ICONS.system;
+                                btn.setAttribute('aria-label', LABELS[p] || LABELS.system);
+                            }
+                            btn.addEventListener('click', function () {
+                                if (window.__tbTheme && window.__tbTheme.cycle) window.__tbTheme.cycle();
+                                render();
+                            });
+                            document.addEventListener('tb-theme-change', render);
+                            render();
+                        })();</script>
                     @endif
                 </div>
             </div>

@@ -642,6 +642,45 @@
                     @else
                         <a href="{{ route('login') }}">ورود</a>
                     @endauth
+                    {{-- Real, proven gap (khab-shimana-tablet dark-mode
+                         certification, 2026-09-21): .tb-header-nav-wrap above
+                         is display:none below 768px, so a real
+                         .tb-theme-toggle authored via nav_header's
+                         show_dark_toggle is unreachable at mobile width — a
+                         real interactive Playwright click confirmed it. This
+                         mirrors that toggle's own markup/script exactly (see
+                         BlockRenderer::renderDarkModeToggle()), gated on
+                         whether the real rendered header actually has one, so
+                         no second toggle appears for a header that never
+                         opted in. --}}
+                    @if(str_contains($headerHtml, 'tb-theme-toggle'))
+                        <button type="button" id="tb-mobile-theme-toggle" class="tb-theme-toggle" aria-label="تغییر حالت رنگی" style="margin-top:.5rem;">
+                            <span class="tb-theme-toggle-icon" aria-hidden="true">🌓</span>
+                        </button>
+                        <script>(function(){
+                            var btn = document.getElementById('tb-mobile-theme-toggle');
+                            if (!btn || btn.dataset.tbInit) return;
+                            btn.dataset.tbInit = '1';
+                            var ICONS = {light:'☀️', dark:'🌙', system:'💻'};
+                            var LABELS = {
+                                light: 'حالت رنگی: روشن — برای تغییر به تاریک کلیک کنید',
+                                dark: 'حالت رنگی: تاریک — برای تغییر به خودکار (سیستم) کلیک کنید',
+                                system: 'حالت رنگی: هماهنگ با سیستم — برای تغییر به روشن کلیک کنید'
+                            };
+                            function render() {
+                                var p = (window.__tbTheme && window.__tbTheme.get) ? window.__tbTheme.get() : 'system';
+                                var icon = btn.querySelector('.tb-theme-toggle-icon');
+                                if (icon) icon.textContent = ICONS[p] || ICONS.system;
+                                btn.setAttribute('aria-label', LABELS[p] || LABELS.system);
+                            }
+                            btn.addEventListener('click', function () {
+                                if (window.__tbTheme && window.__tbTheme.cycle) window.__tbTheme.cycle();
+                                render();
+                            });
+                            document.addEventListener('tb-theme-change', render);
+                            render();
+                        })();</script>
+                    @endif
                 </div>
             </div>
         </header>

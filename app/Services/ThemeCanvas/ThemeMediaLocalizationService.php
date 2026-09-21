@@ -93,6 +93,9 @@ class ThemeMediaLocalizationService
     /** @var array<int, array{0: string, 1: string}> [disk, storage_key] pairs this run itself newly wrote — rolled back on failure, never touches media from a prior successful run. */
     private array $newlyWrittenFiles = [];
 
+    /** @var array{theme_identifier?: string, release_namespace?: string} */
+    private array $importScope = [];
+
     public function __construct(private readonly CustomerMediaService $media)
     {
     }
@@ -106,14 +109,25 @@ class ThemeMediaLocalizationService
      *   the exception propagates; media localized by a prior successful
      *   run is never touched.
      */
-    public function localize(array $themeData): array
+    public function localize(array $themeData, array $context = []): array
     {
         $origin = $this->trustedOrigin();
         if ($origin === null) {
             return $themeData; // no trusted Platform origin configured/resolvable — feature stays inert, install is never blocked by it
         }
 
+        // A scoped service instance can live for more than one install in a
+        // queue/Octane process. Per-run caches must never carry a media UUID
+        // from one site/theme/release into the next invocation.
+        $this->resolved = [];
         $this->newlyWrittenFiles = [];
+        $themeIdentifier = trim((string) ($context['theme_identifier'] ?? ''));
+        $this->importScope = $themeIdentifier !== '' ? [
+            'theme_identifier' => $themeIdentifier,
+            'release_namespace' => isset($context['source_release_id']) && $context['source_release_id'] !== null
+                ? (string) $context['source_release_id']
+                : 'unversioned',
+        ] : [];
 
         try {
             return DB::transaction(function () use ($themeData, $origin) {
@@ -192,6 +206,28 @@ class ThemeMediaLocalizationService
             }
             if (isset($block['blocks']) && is_array($block['blocks'])) {
                 $block['blocks'] = $this->localizeBlockList($block['blocks'], $origin);
+            }
+            // Real, proven gap (khab-shimana-tablet certification,
+            // 2026-09-21): BlockRenderer::renderBlock() resolves a block's
+            // children via `$block['children'] ?? $block['blocks'] ??
+            // ($props['blocks'] ?? [])` — a THIRD shape, children nested
+            // under props.blocks (how a Theme author's own `grid`/
+            // `flex_container`/`section` composition is naturally built:
+            // `['type' => 'flex_container', 'props' => ['blocks' => [...]]]`,
+            // no top-level `blocks`/`children` key at all). This method only
+            // checked the first two shapes above, so any master-theme image
+            // nested inside such a container (e.g. a hand-composed product
+            // card: flex_container > image) silently never reached
+            // localization and shipped as a permanent saas-platform hotlink
+            // — confirmed via a real install (grep of rendered HTML showed
+            // the top-level hero/gallery images correctly localized to
+            // customer-media while every flex_container-nested product photo
+            // stayed on saas-platform.test). Checked separately from
+            // `$block['blocks']` above (not `??`) because a block can only
+            // ever populate one of the three shapes, so this is never
+            // redundant work, only the missing case.
+            if (isset($block['props']['blocks']) && is_array($block['props']['blocks'])) {
+                $block['props']['blocks'] = $this->localizeBlockList($block['props']['blocks'], $origin);
             }
             if (isset($block['props']['tabs']) && is_array($block['props']['tabs'])) {
                 $block['props']['tabs'] = array_map(function ($tab) use ($origin) {
@@ -275,6 +311,7 @@ class ThemeMediaLocalizationService
         }
 
         if (!$this->originMatches($parts, $origin)) {
+            $this->logOriginNearMissIfHostMatches($url, $parts, $origin);
             return null; // not the trusted Platform origin — a customer's own external image, left completely untouched
         }
 
@@ -283,7 +320,7 @@ class ThemeMediaLocalizationService
         // media, never a customer's own external content. Every failure
         // from here throws.
 
-        if ($existing = $this->media->findBySourceUrl($url)) {
+        if ($existing = $this->media->findBySourceUrl($url, $this->importScope)) {
             return ['media_id' => $existing->uuid];
         }
 
@@ -311,13 +348,13 @@ class ThemeMediaLocalizationService
                     $response->body(),
                     basename((string) ($parts['path'] ?? 'theme-media')),
                     $contentType,
-                    ['source_url' => $url]
+                    array_merge(['source_url' => $url], $this->importScope)
                 )
                 : $this->media->importFromRemoteBytes(
                     $response->body(),
                     basename((string) ($parts['path'] ?? 'theme-media')),
                     $contentType,
-                    ['source_url' => $url]
+                    array_merge(['source_url' => $url], $this->importScope)
                 );
         } catch (Throwable $e) {
             throw new ThemeMediaLocalizationException("Failed to store trusted Platform media \"{$url}\": {$e->getMessage()}", previous: $e);
@@ -392,5 +429,47 @@ class ThemeMediaLocalizationService
         }
 
         return $scheme === $origin['scheme'] && $host === $origin['host'] && $port === $origin['port'];
+    }
+
+    /**
+     * DIAGNOSABILITY FIX for MASTER_THEME_MEDIA_LOCALIZATION_GAP: before
+     * this, ANY origin mismatch — a customer's own genuinely external
+     * image (expected, must stay silent) or the exact same Platform host
+     * reached via a slightly different scheme/port (a real
+     * misconfiguration/drift bug) — was equally silent. That made the
+     * drift case, which produces a permanently broken hotlink with a
+     * legitimate Platform-owned asset, indistinguishable from ordinary,
+     * correct behavior; nothing in logs ever pointed at it.
+     *
+     * A genuinely different host is still left completely silent here —
+     * that is normal, expected, high-volume (every customer's own
+     * external images/links) and logging it would be useless noise, and
+     * would defeat the entire "external content is left untouched"
+     * contract. Only the narrow, high-signal case — same host as the
+     * configured trusted origin, but scheme and/or port differ — is
+     * logged, specifically and by name, never folded into a generic
+     * catch-all. This never changes trust: the URL is still left
+     * untouched (fail closed); this only makes the decision visible.
+     *
+     * @param array<string, mixed> $urlParts parse_url() output for the candidate media URL
+     * @param array{scheme: string, host: string, port: int} $origin
+     */
+    private function logOriginNearMissIfHostMatches(string $url, array $urlParts, array $origin): void
+    {
+        $host = strtolower((string) ($urlParts['host'] ?? ''));
+        if ($host === '' || $host !== $origin['host']) {
+            return; // genuinely different host — a customer's own external content, not a drift bug
+        }
+
+        Log::warning('theme_media_localization.origin_near_miss', [
+            'url' => $url,
+            'url_scheme' => $urlParts['scheme'] ?? null,
+            'url_port' => $urlParts['port'] ?? (($urlParts['scheme'] ?? null) === 'https' ? 443 : (($urlParts['scheme'] ?? null) === 'http' ? 80 : null)),
+            'configured_platform_url' => (string) config('site.platform_url', ''),
+            'trusted_scheme' => $origin['scheme'],
+            'trusted_host' => $origin['host'],
+            'trusted_port' => $origin['port'],
+            'note' => 'This URL\'s host matches the configured trusted Platform origin, but its scheme and/or port do not — it will NOT be localized and will remain a permanent external hotlink. This is almost always PLATFORM_URL drifting out of sync with how the Theme\'s own media URLs are actually generated (http vs https, a non-default port, etc.), not a genuine third-party image.',
+        ]);
     }
 }
