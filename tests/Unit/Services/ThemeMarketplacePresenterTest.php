@@ -34,6 +34,22 @@ class ThemeMarketplacePresenterTest extends TestCase
         $this->assertNull(ThemeMarketplacePresenter::currentVersion(null));
     }
 
+    public function test_current_version_does_not_crash_when_legacy_version_key_is_entirely_absent(): void
+    {
+        // The real Platform API contract (ThemeMarketplaceApiController::formatTheme)
+        // never sends `version` at all — only `current_version`, nullable. A
+        // direct unguarded access to the missing legacy key used to throw
+        // "Undefined array key" for any unreleased theme.
+        $this->assertNull(ThemeMarketplacePresenter::currentVersion(['current_version' => null]));
+        $this->assertSame('1.2.3', ThemeMarketplacePresenter::currentVersion(['current_version' => '1.2.3']));
+    }
+
+    public function test_current_version_does_not_crash_when_preferred_key_is_entirely_absent(): void
+    {
+        $this->assertSame('7', ThemeMarketplacePresenter::currentVersion(['version' => 7]));
+        $this->assertNull(ThemeMarketplacePresenter::currentVersion([]));
+    }
+
     public function test_installed_version_is_preferred_over_legacy_installed_theme_version(): void
     {
         $license = ['installed_version' => '2.0.0', 'installed_theme_version' => 3];
@@ -46,6 +62,11 @@ class ThemeMarketplacePresenterTest extends TestCase
         $license = ['installed_version' => null, 'installed_theme_version' => 3];
 
         $this->assertSame('3', ThemeMarketplacePresenter::installedVersion($license));
+    }
+
+    public function test_uninstalled_new_license_without_legacy_key_returns_null(): void
+    {
+        $this->assertNull(ThemeMarketplacePresenter::installedVersion(['installed_version' => null]));
     }
 
     // ── update-available logic (CRITICAL per task) ───────────────────────

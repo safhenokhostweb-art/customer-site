@@ -28,12 +28,35 @@ class ThemeMarketplacePresenter
         'design_system' => 'سیستم طراحی',
     ];
 
+    /**
+     * Single safe accessor for the "preferred field, legacy fallback" pattern
+     * used across the marketplace contract. Never assumes either key exists:
+     * the Platform API's real contract (ThemeMarketplaceApiController) has
+     * fully retired `version`/`installed_theme_version` and no longer sends
+     * them at all, so a direct, unguarded array access on the legacy key was
+     * throwing "Undefined array key" (surfaced by Laravel as a 500) for any
+     * unreleased or not-yet-installed theme. Both keys are now read only
+     * through `??`, which is null-safe for both a missing key and an
+     * explicit null value.
+     */
+    private static function preferredVersion(array $data, string $preferredKey, string $legacyKey): ?string
+    {
+        $preferred = $data[$preferredKey] ?? null;
+        if ($preferred !== null) {
+            return (string) $preferred;
+        }
+
+        $legacy = $data[$legacyKey] ?? null;
+
+        return $legacy !== null ? (string) $legacy : null;
+    }
+
     public static function currentVersion(?array $theme): ?string
     {
         if (!$theme) {
             return null;
         }
-        return $theme['current_version'] ?? ($theme['version'] ? (string) $theme['version'] : null);
+        return self::preferredVersion($theme, 'current_version', 'version');
     }
 
     public static function isReleased(?array $theme): bool
@@ -43,8 +66,7 @@ class ThemeMarketplacePresenter
 
     public static function installedVersion(array $license): ?string
     {
-        return $license['installed_version']
-            ?? ($license['installed_theme_version'] ? (string) $license['installed_theme_version'] : null);
+        return self::preferredVersion($license, 'installed_version', 'installed_theme_version');
     }
 
     /**
