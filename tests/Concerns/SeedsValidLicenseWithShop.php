@@ -31,7 +31,6 @@ use App\Models\License;
  *           $this->seedValidLicense(['shop']);          // or ['shop','blog','forms',…]
  *       }
  *   }
- *
  * Production logic is NOT touched by this trait; it only seeds the test
  * environment so it faithfully reflects an installed, licensed tenant.
  */
@@ -72,10 +71,19 @@ trait SeedsValidLicenseWithShop
      * Ensure `storage/installed.lock` is present so `RedirectIfNotInstalled`
      * does not redirect Shop/Blog/etc. routes to the installer wizard.
      *
-     * The file is tracked in the repository, so we never delete it on
-     * tearDown — that would corrupt the developer's working tree. We only
-     * create it if it is missing (covers fresh CI checkouts that exclude
-     * tracked storage files).
+     * `storage/installed.lock` is NOT tracked by git — `.gitignore` lists it
+     * explicitly, so it is a local/CI artifact that a fresh checkout will not
+     * have. This helper therefore only creates the file when it is missing and
+     * never deletes it on tearDown, which is what keeps a test run from
+     * corrupting a developer's working tree.
+     *
+     * This create-if-missing behaviour is the safe default. Tests that also
+     * need to clean up after themselves should use
+     * `Tests\Concerns\EnsuresInstallationLock` instead: it tracks ownership,
+     * so a test removes the lock only if its own process created it, and only
+     * once no other test still holds it. An unconditional unlink here (or in
+     * any tearDown) breaks every test class scheduled after it, because the
+     * `redirect.if.not.installed` middleware answers 302 to the installer.
      */
     protected function markSiteAsInstalled(): void
     {
