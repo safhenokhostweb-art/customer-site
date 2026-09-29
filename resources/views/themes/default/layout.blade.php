@@ -901,6 +901,7 @@
         });
     </script>
     <x-core-ui::payment-connection-warning />
+    @includeWhen(($themeRuntimeMode ?? null) === \App\Services\ThemeCanvas\ThemeRuntimeDocument::MODE_PUBLIC, 'partials.theme-public-runtime')
     @stack('scripts')
 </body>
 </html>

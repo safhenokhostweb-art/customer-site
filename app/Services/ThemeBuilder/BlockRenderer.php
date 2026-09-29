@@ -32,6 +32,15 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 {
     protected array $context = [];
 
+    /**
+     * Nullable to stay signature-compatible with the shared base class
+     * (SaaSPlatform\ThemeRuntime\BlockRenderer declares `protected ?string $mode`),
+     * so a future composer update of the path repo cannot fatal on a
+     * typed-property invariance violation. NULL means "not forced": editor
+     * output is then driven solely by the context['editor_mode'] flag.
+     */
+    protected ?string $mode = 'editor';
+
     /** @var ElementSchemaRegistry|null */
     protected $schemaRegistry;
 
@@ -65,6 +74,17 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     public function setExtensionAssets(array $assetsByType): self
     {
         $this->extensionAssetsByType = $assetsByType;
+        return $this;
+    }
+
+    public function setMode(?string $mode): self
+    {
+        if ($mode !== null && ! in_array($mode, ['editor', 'public'], true)) {
+            throw new \InvalidArgumentException("Unsupported block-render mode [{$mode}].");
+        }
+
+        $this->mode = $mode;
+
         return $this;
     }
 
@@ -118,8 +138,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     }
 
     /**
-     * In editor_mode, wraps block HTML with canvas selection overlay.
-     * No-op in production rendering (editor_mode not set in context).
+     * Editor mode exposes identity plus editing hooks. Public mode exposes
+     * identity only, allowing the runtime to map the DOM without enabling an
+     * authoring surface.
      */
     #[HostOwnedOverride(
         reason: 'Marks container blocks for the canvas iframe\'s nested drop zones — container detection itself is delegated to the shared isContainerType() authority (Phase 3F-B), not a local list.',
@@ -127,17 +148,24 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     )]
     protected function wrapEditorMode(string $html, string $id, string $type): string
     {
-        if (!($this->context['editor_mode'] ?? false)) {
+        $isEditor = $this->mode === 'editor' && ($this->context['editor_mode'] ?? false);
+        $isPublicRuntime = $this->mode === 'public';
+        if (! $isEditor && ! $isPublicRuntime) {
             return $html;
         }
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $idEsc = htmlspecialchars($id,   ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        // TB4: mark container blocks so iframe can show nested drop zones
+        $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
-        return "<div class=\"tb-canvas-block\" data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}>"
-            . "<div class=\"tb-block-badge\">{$esc}</div>"
-            . $html
-            . "</div>";
+        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}";
+
+        // Keep editor hooks metadata-only. Adding a class here can collide
+        // with theme selectors and change typography or layout in preview.
+        $decorated = preg_replace('/^(\s*<[a-zA-Z][a-zA-Z0-9:-]*)(?=\s|>)/', '$1'.$metadata, $html, 1, $rootCount);
+        if ($rootCount === 1) {
+            return $decorated;
+        }
+
+        return "<div{$metadata}>{$html}</div>";
     }
 
     /**

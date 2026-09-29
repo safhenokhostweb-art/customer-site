@@ -134,6 +134,169 @@ class SeoService
     }
 
     /**
+     * Prop keys probed, in order, when deriving a Canvas page's description
+     * from its own block tree. A block contributes at most ONE chunk (the
+     * first non-empty match), so a page's description reads as prose rather
+     * than a dump of every field.
+     */
+    private const CANVAS_TEXT_PROPS = ['description', 'subtitle', 'text', 'content', 'title'];
+
+    /**
+     * Canonical SEO resolution for a Canvas theme page.
+     *
+     * A Canvas page has no Eloquent model: its title, block tree and
+     * (optional) SEO overrides all live in one array inside the theme JSON.
+     * This is the single place that turns that array into the meta values
+     * resources/views/components/seo-meta.blade.php consumes, so the public
+     * layout never has to guess and never renders an empty description.
+     *
+     * Precedence per field, highest first:
+     *   1. the page's own explicit SEO value (author intent)
+     *   2. text derived from the page's own title / block content
+     *   3. the tenant default (seo_default_*)
+     *   4. site identity — the last resort, because a description naming the
+     *      site is a weak but valid signal, whereas an EMPTY one is a
+     *      site-wide duplicate-content signal repeated on every Canvas page.
+     *
+     * The OG image is deliberately NOT guessed from a block's image prop:
+     * theme visual assets are manifest-relative references (src="images/x.jpg")
+     * that only become real URLs later, in ThemeRuntimeDocument's
+     * declared-asset rewrite — an OG image guessed here could 404. Only an
+     * explicit, already-resolved page image is trusted; otherwise the
+     * tenant's configured og image is used.
+     *
+     * @param  array<string,mixed>|null  $page
+     * @param  array<int,mixed>  $blocks
+     * @return array{title:string,description:string,image:?string,imageAlt:string,canonical:string,robots:string,ogType:string}
+     */
+    public function canvasPage(?array $page, array $blocks = [], ?string $fallbackTitle = null): array
+    {
+        $page      = is_array($page) ? $page : [];
+        $blocks    = is_array($blocks) ? $blocks : [];
+        $overrides = is_array($page['seo'] ?? null) ? $page['seo'] : [];
+
+        $title = $this->firstFilled([$page['title'] ?? null, $fallbackTitle]);
+        if ($title === '') {
+            $title = SiteHelper::siteName();
+        }
+
+        $description = $this->firstFilled([
+            $overrides['description'] ?? null,
+            $page['meta_description'] ?? null,
+            $page['description'] ?? null,
+        ]);
+        if ($description === '') {
+            $description = $this->canvasPageText($blocks);
+        }
+        if ($description === '') {
+            $description = $this->description();
+        }
+        if ($description === '') {
+            $description = SiteHelper::siteName();
+        }
+
+        $image = $this->firstFilled([
+            $overrides['image'] ?? null,
+            $page['og_image'] ?? null,
+            $page['meta_image'] ?? null,
+        ]);
+        $image = $image !== '' ? $this->absoluteUrl($image) : $this->imageUrl();
+
+        $canonical = $this->firstFilled([$overrides['canonical'] ?? null, $page['canonical'] ?? null]);
+
+        $robots = $this->firstFilled([$overrides['robots'] ?? null, $page['robots'] ?? null]);
+        if ($robots === '' && ! empty($page['noindex'])) {
+            $robots = 'noindex, follow';
+        }
+
+        return [
+            'title'       => $title,
+            'description' => Str::limit($description, 160),
+            'image'       => $image,
+            'imageAlt'    => $title,
+            'canonical'   => $this->canonical($canonical !== '' ? $canonical : null),
+            'robots'      => $robots !== '' ? $robots : $this->robots(),
+            'ogType'      => $this->firstFilled([$overrides['og_type'] ?? null, $page['og_type'] ?? null]) ?: 'website',
+        ];
+    }
+
+    /**
+     * Derives a page-unique description from a Canvas block tree by walking
+     * it depth-first and taking the first meaningful text prop of each block
+     * (CANVAS_TEXT_PROPS order). Returns '' when the tree carries no text at
+     * all, so the caller falls through to the tenant default rather than
+     * emitting an empty tag.
+     */
+    private function canvasPageText(array $blocks, int $limit = 160): string
+    {
+        if ($blocks === []) {
+            return '';
+        }
+
+        $chunks = [];
+        $walk = function (array $node) use (&$walk, &$chunks, $limit): void {
+            if (mb_strlen(implode(' ', $chunks)) >= $limit) {
+                return;
+            }
+            $props = $node['props'] ?? $node['data'] ?? [];
+            $props = is_array($props) ? $props : [];
+            foreach (self::CANVAS_TEXT_PROPS as $key) {
+                $value = $props[$key] ?? null;
+                if (! is_string($value)) {
+                    continue;
+                }
+                $text = trim(preg_replace('/\s+/u', ' ', strip_tags($value)) ?? '');
+                if ($text !== '') {
+                    $chunks[] = $text;
+                    break;
+                }
+            }
+            $children = $node['children'] ?? $node['blocks'] ?? ($props['blocks'] ?? []);
+            if (is_array($children)) {
+                foreach ($children as $child) {
+                    if (is_array($child)) {
+                        $walk($child);
+                    }
+                }
+            }
+        };
+
+        foreach ($blocks as $block) {
+            if (is_array($block)) {
+                $walk($block);
+            }
+        }
+
+        return trim(implode(' ', array_slice($chunks, 0, 3)));
+    }
+
+    /** First non-empty trimmed string among the candidates, else ''. */
+    private function firstFilled(array $candidates): string
+    {
+        foreach ($candidates as $candidate) {
+            if (! is_string($candidate)) {
+                continue;
+            }
+            $value = trim($candidate);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    /** A stored media path resolved to its real, absolute URL. */
+    private function absoluteUrl(string $path): string
+    {
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return \App\Helpers\ImageHelper::url($path) ?? $path;
+    }
+
+    /**
      * Phase 18-B: reads one field from the bound SeoOverrideProviderInterface.
      * Defensive by design — a provider throwing or returning malformed data
      * must never break page rendering; it just falls through to the

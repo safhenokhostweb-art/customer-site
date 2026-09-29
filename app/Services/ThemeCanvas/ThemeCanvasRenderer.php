@@ -43,7 +43,7 @@ class ThemeCanvasRenderer extends BlockRenderer
     /**
      * Override renderBlock to intercept module:* types before schema validation.
      * The schema registry doesn't know about module blocks, so we bypass it here.
-     * In editor_mode, wraps block with .tb-canvas-block overlay for selection.
+     * In editor_mode, decorates each block root with selection metadata.
      */
     public function renderBlock(array $block): string
     {
@@ -983,8 +983,8 @@ class ThemeCanvasRenderer extends BlockRenderer
             $price   = $course->price
                 ? CurrencyHelper::formatPrice($course->price) . ' ' . CurrencyHelper::unitLabel()
                 : 'رایگان';
-            $imgHtml = $course->thumbnail
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($course->thumbnail)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
+            $imgHtml = $course->image
+                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($course->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
                 : "<div class=\"tb-product-card-img tb-product-card-noimg\" style=\"font-size:2rem;\">🎓</div>";
             $priceHtml = $showPrice ? "<div class=\"tb-product-price\">{$price}</div>" : '';
             $cards[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"text-align:right;\">

@@ -62,6 +62,16 @@ class BuilderLayoutService
     }
 
     /**
+     * Exposes the request-memoized active Theme document to the canonical
+     * runtime-document builder. Callers must treat the returned array as
+     * read-only; Setting remains the persistence authority.
+     */
+    public function currentThemeData(): array
+    {
+        return $this->activeThemeData();
+    }
+
+    /**
      * The installed Theme's selectable Header variants. Always returns at
      * least one real (never fabricated) variant when a Theme is installed:
      * either the Theme's own authored `header_variants`, or — for a Theme

@@ -1,8 +1,11 @@
 @extends('themes.default.layout')
 
-@section('title', \App\Helpers\Seo::title($page))
-@section('meta_description', \App\Helpers\Seo::description($page))
-@section('canonical', route('page.show', $page->slug))
+@section('title', $seoMeta['title'] ?? \App\Helpers\Seo::title($page))
+@section('meta_description', $seoMeta['description'] ?? \App\Helpers\Seo::description($page))
+@section('meta_image', $seoMeta['image'] ?? '')
+@section('meta_robots', $seoMeta['robots'] ?? '')
+@section('og_type', $seoMeta['ogType'] ?? 'website')
+@section('canonical', $seoMeta['canonical'] ?? route('page.show', $page->slug))
 @push('json-ld')
 @php
     $jsonLdWebPage = \App\Helpers\JsonLd::webPage($page->title, route('page.show', $page->slug), \App\Helpers\Seo::description($page));
@@ -29,23 +32,28 @@
 @endauth
 
 @if($page->usesBuilder())
-    @php
-        $__tbRenderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->setContext(['menu_html' => '']);
-        $__tbHtml = $__tbRenderer->renderBlocks($page->getBuilderContentForRender()['sections'] ?? []);
-        $__tbAssets = $__tbRenderer->getCollectedAssets();
-    @endphp
-    @foreach($__tbAssets['css'] ?? [] as $__tbHref)
+    @foreach(($themeAssets['css'] ?? []) as $__tbHref)
         @push('head')
     <link rel="stylesheet" href="{{ $__tbHref }}">
         @endpush
     @endforeach
-    @foreach($__tbAssets['js'] ?? [] as $__tbSrc)
+    @foreach(($extensionAssets['css'] ?? []) as $__tbHref)
+        @push('head')
+    <link rel="stylesheet" href="{{ $__tbHref }}">
+        @endpush
+    @endforeach
+    @foreach(($themeAssets['js'] ?? []) as $__tbSrc)
+        @push('scripts')
+    <script src="{{ $__tbSrc }}" defer></script>
+        @endpush
+    @endforeach
+    @foreach(($extensionAssets['js'] ?? []) as $__tbSrc)
         @push('scripts')
     <script src="{{ $__tbSrc }}" defer></script>
         @endpush
     @endforeach
     <article class="page-builder-content">
-        {!! $__tbHtml !!}
+        {!! $contentHtml ?? '' !!}
     </article>
 @else
 <article style="max-width:48rem;">

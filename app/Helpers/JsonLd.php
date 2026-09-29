@@ -52,6 +52,48 @@ class JsonLd
         return $data;
     }
 
+    /**
+     * FAQPage برای بلوک FAQ در رندر عمومی Canvas.
+     *
+     * فقط Q/Aهایی را نگه می‌دارد که هر دو بخش (پرسش و پاسخ) واقعاً و
+     * غیرخالی باشند؛ ورودی block از دادهٔ نامطمئن (authoring JSON) می‌آید،
+     * پس هر item نامعتبر یا ناقص بدون ساختن داده حذف می‌شود. اگر هیچ مورد
+     * معتبری نماند، آرایهٔ خالی برمی‌گردد — یعنی اصلاً چیزی چاپ نمی‌شود،
+     * که بهتر از FAQPage بدون محتوای واقعی است.
+     *
+     * @param  array<int,mixed>  $items  آیتم‌های خام شکل ['question' => string, 'answer' => string]
+     * @return array<string,mixed>
+     */
+    public static function faqPage(array $items): array
+    {
+        $entities = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $question = trim((string) ($item['question'] ?? ''));
+            $answer   = trim((string) ($item['answer'] ?? ''));
+            if ($question === '' || $answer === '') {
+                continue;
+            }
+            $entities[] = [
+                '@type' => 'Question',
+                'name' => $question,
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $answer],
+            ];
+        }
+
+        if ($entities === []) {
+            return [];
+        }
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $entities,
+        ];
+    }
+
     public static function article($post): array
     {
         $data = [
