@@ -50,6 +50,15 @@ final class LayoutSlotBindingService
         self::SLOT_FOOTER => 'footer',
     ];
 
+    /**
+     * Block types that count as a chrome ROOT block for slot annotation
+     * (prefix match on data-tb-block-type).
+     */
+    private const CHROME_BLOCK_TYPES = [
+        'header', // nav_header, foodmart_header, header_modern_v1, …
+        'footer', // nav_footer, foodmart_footer, …
+    ];
+
     public function __construct(
         private readonly ThemeCanvasRenderer $renderer,
         private readonly BuilderLayoutService $layout,
@@ -212,6 +221,78 @@ final class LayoutSlotBindingService
             'binding_ok' => $failures === [],
             'failures' => $failures,
         ];
+    }
+
+    /**
+     * Inject the data-layout-slot markers into the page chrome's EXISTING
+     * <header>/<footer> tags (content-preserving annotation layer).
+     *
+     * This is the LIVE-PAGE wiring entry point: the runtime document / blade
+     * chrome already rendered the Theme's real header & footer blocks — this
+     * method only ADDS the slot annotation attributes to those chrome tags,
+     * so the markup stays byte-identical apart from the markers (fallback
+     * safe: the flag-off path and any match failure return the HTML
+     * unchanged). Idempotent: HTML that already carries a marker is
+     * returned untouched.
+     */
+    public function decorateChrome(string $html): string
+    {
+        if ($html === '' || str_contains($html, 'data-layout-slot=')) {
+            return $html;
+        }
+
+        foreach (self::SLOT_TAGS as $slot => $tag) {
+            $html = $this->decorateChromeTag($html, $tag, $slot);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Chrome-tag shapes that legitimately carry a slot, tried in order:
+     *
+     *  1. canvas-site-* classes — canvas-theme.blade.php's own chrome
+     *     wrapper tags (role=banner/contentinfo layouts).
+     *  2. the chrome ROOT BLOCK the theme runtime renders — the first
+     *     <header>/<footer> element whose data-tb-block-type is a real
+     *     header/footer family block (foodmart_header / nav_header /
+     *     foodmart_footer / nav_footer / …). This is how active themes
+     *     actually emit their chrome (verified live: FoodMart renders
+     *     <header data-tb-block-id=… data-tb-block-type="foodmart_header">).
+     *
+     * Deliberately NO bare-tag fallback: an arbitrary <header> inside some
+     * widget must never receive the marker. No shape matches → unchanged.
+     */
+    private function decorateChromeTag(string $html, string $tag, string $slot): string
+    {
+        $marker = sprintf('data-layout-slot="%s"', $slot);
+
+        $classPattern = sprintf('/<%1$s\b([^>]*class="[^"]*canvas-site-%1$s[^"]*"[^>]*)(?<!\/)>/', $tag);
+        $decorated = preg_replace(
+            $classPattern,
+            '<' . $tag . '$1 ' . $marker . '>',
+            $html,
+            1,
+        );
+        if (is_string($decorated) && $decorated !== $html) {
+            return $decorated;
+        }
+
+        // Chrome root block: <tag … data-tb-block-type="<…header/footer…>" …>
+        // (class attr may appear before or after; marker appended inside the tag).
+        $blockPattern = sprintf(
+            '/<%1$s\b(?![^>]*data-layout-slot=)([^>]*data-tb-block-type="[^"]*(?:%2$s)[^"]*"[^>]*)(?<!\/)>/i',
+            $tag,
+            implode('|', array_map('preg_quote', self::CHROME_BLOCK_TYPES)),
+        );
+        $decorated = preg_replace(
+            $blockPattern,
+            '<' . $tag . '$1 ' . $marker . '>',
+            $html,
+            1,
+        );
+
+        return is_string($decorated) ? $decorated : $html;
     }
 
     /**
