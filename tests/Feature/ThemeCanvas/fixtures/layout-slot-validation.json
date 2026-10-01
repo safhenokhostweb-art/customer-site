@@ -1,0 +1,44 @@
+{
+    "title": "Test-Layout-Validation",
+    "page_key": "test-layout-validation",
+    "description": "Validation fixture: header and footer slots are bound as Layout Elements (rendered into <header>/<footer>), while the hero stays an inline content block. Slot blocks reuse the canonical BlockCatalog presets — never fake types.",
+    "slots": {
+        "header": {
+            "slot": "header",
+            "catalog_preset": "header-minimal",
+            "block_type": "nav_header",
+            "expected_dom": {
+                "tag": "header",
+                "marker": "data-layout-slot=\"header\""
+            }
+        },
+        "footer": {
+            "slot": "footer",
+            "catalog_preset": "footer-basic-social",
+            "block_type": "nav_footer",
+            "expected_dom": {
+                "tag": "footer",
+                "marker": "data-layout-slot=\"footer\""
+            }
+        }
+    },
+    "inline_content": [
+        {
+            "id": "test_hero",
+            "type": "hero",
+            "props": {
+                "title": "Test-Layout-Validation Hero",
+                "subtitle": "این بخش باید به صورت inline درون محتوای صفحه رندر شود، نه درون هدر یا فوتر",
+                "button_text": "شروع",
+                "button_url": "/",
+                "background": "primary",
+                "align": "center"
+            }
+        }
+    ],
+    "assertions": {
+        "header_slot_tag": "header",
+        "footer_slot_tag": "footer",
+        "hero_must_not_leak_into_chrome": "Test-Layout-Validation Hero must appear ONLY in contentHtml"
+    }
+}
