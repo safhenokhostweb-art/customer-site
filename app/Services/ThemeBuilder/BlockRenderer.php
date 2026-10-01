@@ -134,7 +134,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
 
         $html = $this->applyBlockStyle($html, $block['style'] ?? [], $block['responsive'] ?? [], $id);
-        return $this->wrapEditorMode($html, $id, $type);
+        return $this->wrapEditorMode($html, $id, $type, $block['props'] ?? []);
     }
 
     /**
@@ -146,7 +146,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         reason: 'Marks container blocks for the canvas iframe\'s nested drop zones — container detection itself is delegated to the shared isContainerType() authority (Phase 3F-B), not a local list.',
         category: HostOwnedOverride::REASON_HOST_CONTEXT,
     )]
-    protected function wrapEditorMode(string $html, string $id, string $type): string
+    protected function wrapEditorMode(string $html, string $id, string $type, array $props = []): string
     {
         $isEditor = $this->mode === 'editor' && ($this->context['editor_mode'] ?? false);
         $isPublicRuntime = $this->mode === 'public';
@@ -157,6 +157,17 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
         $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}";
+
+        // Phase 8 Step 2 — context injection for the Lifecycle Engine.
+        // In public runtime mode, embed the block's props as a JSON attribute
+        // so client-side registerBlock().init() can access context without
+        // another server round-trip. Editor mode skips this (editor gets props
+        // via iframe RPC, never via DOM attributes).
+        if ($isPublicRuntime && $props !== []) {
+            $propsJson = json_encode($props, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+            $propsAttr = ' data-tb-block-props="' . htmlspecialchars($propsJson, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+            $metadata .= $propsAttr;
+        }
 
         // Keep editor hooks metadata-only. Adding a class here can collide
         // with theme selectors and change typography or layout in preview.
