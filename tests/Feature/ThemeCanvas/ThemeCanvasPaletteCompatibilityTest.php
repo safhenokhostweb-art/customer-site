@@ -58,8 +58,17 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // added — a confirmed real gap (absent from both registry and
         // renderer). Non-module count 62 -> 63, total 97 -> 98. Module
         // count unchanged for both additions.
-        self::assertCount(98, $registry);
-        self::assertCount(63, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
+        // Shared-package refresh (Phase 11): the committed pins predate
+        // several waves of shared host types that shipped only through
+        // the theme-runtime package — FoodMart Phase 3's canonical
+        // foodmart_* set and the SleepShiman Home blue kit — plus Phase
+        // 11's header_modern_v1. With the vendor refresh complete this
+        // re-bases the pins on the real registry: 98 -> 158 total and
+        // 63 -> 123 non-module (+60 each). Module inventory is unchanged
+        // at 35; every added type is covered by the schema/renderer
+        // compatibility loops below rather than bypassing them.
+        self::assertCount(158, $registry);
+        self::assertCount(123, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
         self::assertCount(35, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
         self::assertArrayNotHasKey('module:portfolio_grid', $registry);

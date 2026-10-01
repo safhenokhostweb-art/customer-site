@@ -139,7 +139,14 @@ class ElementSchemaRegistry
     private function validationType(string $controlType, array $control = []): string
     {
         return match ($controlType) {
-            'number' => 'integer',
+            // Phase 11 — a number control whose authored default is a float
+            // (e.g. hero_content_wrapper.title_size: default 3.25, step
+            // 0.25) legitimately produces fractional values; the flat
+            // 'integer' mapping rejected the control's own default and
+            // placeholdered the whole block. Float-defaulted controls
+            // validate as 'numeric'; whole-number defaults keep the strict
+            // integer contract.
+            'number' => is_float($control['default'] ?? null) ? 'numeric' : 'integer',
             'boolean' => 'boolean',
             'repeater' => ($control['storage'] ?? 'array') === 'json' ? 'string' : 'array',
             // Canvas textarea controls intentionally persist JSON-shaped
@@ -275,6 +282,12 @@ class ElementSchemaRegistry
                 return is_string($value) || is_int($value) || is_float($value);
             case 'integer':
                 return is_int($value) || self::isIntegerString($value);
+            case 'numeric':
+                // Companion of the float-defaulted 'number' control
+                // mapping: whole numbers stay valid, the fractional
+                // values the control authors by design are accepted, and
+                // non-numeric strings/arrays are still rejected.
+                return is_int($value) || is_float($value) || (is_string($value) && is_numeric($value));
             case 'boolean':
                 return is_bool($value);
             case 'array':
