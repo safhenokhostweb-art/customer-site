@@ -2771,3 +2771,25 @@ function canvasEditor() {
 }
 </script>
 @endpush
+                @include('admin.theme-design.partials.block-library')
+        // Block Library (Phase 11 follow-up): canonical insertion for catalog
+        // presets — makeBlock() supplies the real type's identity, schema
+        // defaults, and container semantics, then the preset's replaceable
+        // mock props are merged on top (preset values win; unspecified keys
+        // keep the type's own defaults). No second content tree, no fake
+        // types — the preset's block_type must exist in BLOCK_SCHEMAS exactly
+        // like every palette button. Same pushHistory/select/save contract
+        // as addBlock() above.
+        addLibraryBlock(preset) {
+            if (!preset?.block_type || !BLOCK_SCHEMAS[preset.block_type]) return;
+            this.pushHistory();
+            const block = this.makeBlock(preset.block_type);
+            block.props = { ...block.props, ...(preset.props ?? {}) };
+            const arr = [...this.blocks];
+            arr.push(block);
+            this.pages[this.currentPage].blocks = arr;
+            this.selectedPath = [arr.length - 1];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
