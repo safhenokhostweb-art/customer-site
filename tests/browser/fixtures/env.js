@@ -43,6 +43,7 @@ export function serverEnv() {
         QUEUE_CONNECTION: 'sync',
         MAIL_MAILER: 'array',
         PLATFORM_API_URL: `http://127.0.0.1:${PLATFORM_PORT}`,
+        PLATFORM_URL: `http://127.0.0.1:${PLATFORM_PORT}`,
         PLATFORM_ADMIN_TOKEN: 'browser-harness-token',
     };
 }

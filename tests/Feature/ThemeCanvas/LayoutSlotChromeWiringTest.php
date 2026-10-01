@@ -50,6 +50,37 @@ HTML;
         self::assertSame(2, substr_count($twice, 'data-layout-slot='));
     }
 
+    public function test_partial_binding_does_not_suppress_the_other_slot(): void
+    {
+        $html = str_replace('role="banner"', 'data-layout-slot="header" role="banner"', $this->chromePage());
+        $service = app(LayoutSlotBindingService::class);
+        $decorated = $service->decorateChrome($html);
+        self::assertSame(1, substr_count($decorated, 'data-layout-slot="header"'));
+        self::assertSame(1, substr_count($decorated, 'data-layout-slot="footer"'));
+        self::assertSame($decorated, $service->decorateChrome($decorated));
+    }
+
+    public function test_nested_marker_does_not_suppress_chrome_binding(): void
+    {
+        $html = str_replace('CONTENT STREAM', '<div data-layout-slot="custom">CONTENT STREAM</div>', $this->chromePage());
+        $decorated = app(LayoutSlotBindingService::class)->decorateChrome($html);
+        self::assertStringContainsString('data-layout-slot="header"', $decorated);
+        self::assertStringContainsString('data-layout-slot="footer"', $decorated);
+        self::assertStringContainsString('<div data-layout-slot="custom">CONTENT STREAM</div>', $decorated);
+    }
+
+    public function test_middleware_repairs_partial_binding_and_invalidates_byte_headers(): void
+    {
+        $html = str_replace('role="banner"', 'data-layout-slot="header" role="banner"', $this->chromePage());
+        $response = response($html, 200, ['Content-Type' => 'text/html', 'Content-Length' => (string) strlen($html), 'ETag' => '"old"']);
+        $result = app(\App\Http\Middleware\DecorateCanvasLayoutSlots::class)->handle(
+            \Illuminate\Http\Request::create('/'), fn () => $response,
+        );
+        self::assertStringContainsString('data-layout-slot="footer"', $result->getContent());
+        self::assertFalse($result->headers->has('Content-Length'));
+        self::assertFalse($result->headers->has('ETag'));
+    }
+
     public function test_decorate_chrome_annotates_theme_chrome_root_blocks(): void
     {
         // How active themes actually emit chrome (verified live — FoodMart):

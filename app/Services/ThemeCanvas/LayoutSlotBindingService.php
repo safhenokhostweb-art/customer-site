@@ -30,11 +30,9 @@ use SaaSPlatform\ThemeRuntime\BlockRenderer as SharedBlockRenderer;
  *      exactly WHERE the markup landed: inside the <header>/<footer> chrome
  *      tags, not inline.
  *
- * This service deliberately does NOT touch ThemeRuntimeDocument /
- * canvas-theme.blade.php / ThemeCanvasPageController — all currently carry a
- * collaborator's uncommitted WIP. It renders through the shared renderer and
- * only ADDS the slot-marker layer, so it composes with the real page
- * pipeline without editing any WIP file.
+ * Runtime documents retain ownership of chrome and content. This service
+ * annotates legacy chrome after rendering; explicit layout_slot blocks are
+ * annotated by the shared renderer and preserved here.
  */
 final class LayoutSlotBindingService
 {
@@ -48,15 +46,6 @@ final class LayoutSlotBindingService
     private const SLOT_TAGS = [
         self::SLOT_HEADER => 'header',
         self::SLOT_FOOTER => 'footer',
-    ];
-
-    /**
-     * Block types that count as a chrome ROOT block for slot annotation
-     * (prefix match on data-tb-block-type).
-     */
-    private const CHROME_BLOCK_TYPES = [
-        'header', // nav_header, foodmart_header, header_modern_v1, …
-        'footer', // nav_footer, foodmart_footer, …
     ];
 
     public function __construct(
@@ -130,7 +119,14 @@ final class LayoutSlotBindingService
             fn (): string => $this->renderer->setThemeData($themeData)->renderBlock($binding['block'])
         );
 
-        return sprintf('<%1$s data-layout-slot="%2$s">%3$s</%1$s>', $tag, $slot, $html);
+        if (str_contains($html, 'data-layout-slot="'.$slot.'"')) {
+            return $html;
+        }
+
+        // Semantic chrome already emitted by a theme is annotated in place.
+        // Legacy nav blocks emit div roots and still need the chrome landmark.
+        $decorated = $this->decorateChromeTag($html, $tag, $slot);
+        return $decorated !== $html ? $decorated : sprintf('<%1$s data-layout-slot="%2$s">%3$s</%1$s>', $tag, $slot, $html);
     }
 
     /**
@@ -232,12 +228,12 @@ final class LayoutSlotBindingService
      * method only ADDS the slot annotation attributes to those chrome tags,
      * so the markup stays byte-identical apart from the markers (fallback
      * safe: the flag-off path and any match failure return the HTML
-     * unchanged). Idempotent: HTML that already carries a marker is
-     * returned untouched.
+     * unchanged). Each slot is independently idempotent: an existing header
+     * marker never suppresses decoration of an unbound footer.
      */
     public function decorateChrome(string $html): string
     {
-        if ($html === '' || str_contains($html, 'data-layout-slot=')) {
+        if ($html === '') {
             return $html;
         }
 
@@ -267,7 +263,12 @@ final class LayoutSlotBindingService
     {
         $marker = sprintf('data-layout-slot="%s"', $slot);
 
-        $classPattern = sprintf('/<%1$s\b([^>]*class="[^"]*canvas-site-%1$s[^"]*"[^>]*)(?<!\/)>/', $tag);
+        $classPattern = sprintf('/<%1$s\b(?![^>]*\bdata-layout-slot\s*=)([^>]*class="[^"]*\bcanvas-site-%1$s\b[^"]*"[^>]*)(?<!\/)>/i', $tag);
+        // An already annotated outer chrome must not cause a nested block
+        // to receive a second marker on the next pass.
+        if (preg_match(sprintf('/<[a-z][a-z0-9-]*\b[^>]*\bdata-layout-slot\s*=\s*[\x22\x27]%s[\x22\x27]/i', $slot), $html)) {
+            return $html;
+        }
         $decorated = preg_replace(
             $classPattern,
             '<' . $tag . '$1 ' . $marker . '>',
@@ -281,9 +282,9 @@ final class LayoutSlotBindingService
         // Chrome root block: <tag … data-tb-block-type="<…header/footer…>" …>
         // (class attr may appear before or after; marker appended inside the tag).
         $blockPattern = sprintf(
-            '/<%1$s\b(?![^>]*data-layout-slot=)([^>]*data-tb-block-type="[^"]*(?:%2$s)[^"]*"[^>]*)(?<!\/)>/i',
+            '/<%1$s\b(?![^>]*\bdata-layout-slot\s*=)([^>]*data-tb-block-type="[^"]*%2$s[^"]*"[^>]*)(?<!\/)>/i',
             $tag,
-            implode('|', array_map('preg_quote', self::CHROME_BLOCK_TYPES)),
+            preg_quote($slot, '/'),
         );
         $decorated = preg_replace(
             $blockPattern,

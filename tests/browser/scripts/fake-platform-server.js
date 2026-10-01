@@ -20,6 +20,10 @@ function json(response, status, body) {
 
 createServer((request, response) => {
     const url = new URL(request.url, `http://127.0.0.1:${port}`);
+    if (request.method === 'GET' && url.pathname === '/api/support-tickets/unread-count') {
+        response.setHeader('Access-Control-Allow-Origin', `http://127.0.0.1:${Number(process.env.BROWSER_PORT || 8791)}`);
+        return json(response, 200, { success: true, count: 0 });
+    }
     if (request.method === 'GET' && url.pathname === '/health') return json(response, 200, { ok: true });
     if (request.method === 'GET' && url.pathname === '/api/theme-marketplace') return json(response, 200, { success: true, themes: themes.map((item) => theme(item.id)) });
     if (request.method === 'GET' && url.pathname === '/api/theme-marketplace/my-licenses') {

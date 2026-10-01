@@ -10,14 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Canvas Slot Binding — live-page wiring (Phase 11 follow-up).
  *
- * WHY MIDDLEWARE (and not ThemeRuntimeDocument / canvas-theme.blade.php):
- *   Both of those files currently carry the collaborator's uncommitted WIP;
- *   editing them would entangle two in-flight changesets. The response-side
- *   layer achieves the exact same result without touching them: the runtime
- *   document already rendered the Theme's real chrome — this middleware only
- *   adds the data-layout-slot="header|footer" annotation to the chrome tags
- *   of canvas-theme responses (content-preserving; see
- *   LayoutSlotBindingService::decorateChrome()).
+ * The runtime document renders the theme's chrome. This response layer
+ * annotates legacy chrome while preserving explicit root slot bindings
+ * (see LayoutSlotBindingService::decorateChrome()).
  *
  * FLAG: config('canvas.slot_binding_enabled') (default true) — flipping it
  * off restores the previous response bytes with zero code change.
@@ -42,13 +37,16 @@ class DecorateCanvasLayoutSlots
         }
 
         $original = $response->getContent();
-        if (! is_string($original) || $original === '' || str_contains($original, 'data-layout-slot=')) {
+        if (! is_string($original) || $original === '') {
             return $response;
         }
 
         $decorated = $this->slots->decorateChrome($original);
         if ($decorated !== $original) {
             $response->setContent($decorated);
+            // The transformed response no longer has the original byte length.
+            $response->headers->remove('Content-Length');
+            $response->headers->remove('ETag');
         }
 
         return $response;

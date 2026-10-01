@@ -134,7 +134,10 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
 
         $html = $this->applyBlockStyle($html, $block['style'] ?? [], $block['responsive'] ?? [], $id);
-        return $this->wrapEditorMode($html, $id, $type, $block['props'] ?? []);
+        return $this->annotateLayoutSlot(
+            $this->wrapEditorMode($html, $id, $type, $block['props'] ?? []),
+            $block, $id, $type,
+        );
     }
 
     /**
