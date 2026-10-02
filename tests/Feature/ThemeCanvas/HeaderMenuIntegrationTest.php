@@ -32,6 +32,22 @@ class HeaderMenuIntegrationTest extends TestCase
 {
     use RefreshDatabase, SeedsValidLicenseWithShop;
 
+    /** Assert navigation output without treating saved editor props as visible links. */
+    private function assertNavigationExcludes(string $html, string $blockId, string $label, string $url): void
+    {
+        $document = new \DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">'.$html);
+        $xpath = new \DOMXPath($document);
+        $roots = $xpath->query('//*[@id="tb-'.$blockId.'" or @data-tb-block-id="'.$blockId.'"]');
+        $this->assertGreaterThan(0, $roots->length, 'The navigation block must render.');
+        foreach ($roots as $root) {
+            $this->assertStringNotContainsString($label, $root->textContent);
+            foreach ($xpath->query('.//a[@href]', $root) as $link) {
+                $this->assertNotSame($url, $link->getAttribute('href'));
+            }
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -80,8 +96,7 @@ class HeaderMenuIntegrationTest extends TestCase
         $response->assertSee('درباره ما');
         $response->assertSee(route('page.show', 'about-us'), false);
         // The block's own nav_links must be ignored while nav_source=menu.
-        $response->assertDontSee('لینک سفارشی قدیمی');
-        $response->assertDontSee('/old-custom-link', false);
+        $this->assertNavigationExcludes($response->getContent(), 'hdr1', 'لینک سفارشی قدیمی', '/old-custom-link');
     }
 
     public function test_page_slug_rename_survives_in_the_real_rendered_header_link(): void
@@ -165,7 +180,7 @@ class HeaderMenuIntegrationTest extends TestCase
         $response->assertOk();
         $response->assertSee('حریم خصوصی');
         $response->assertSee(route('page.show', 'privacy'), false);
-        $response->assertDontSee('لینک سفارشی قدیمی فوتر');
+        $this->assertNavigationExcludes($response->getContent(), 'ftr1', 'لینک سفارشی قدیمی فوتر', '/old-footer-link');
     }
 
     public function test_footer_nav_source_custom_keeps_the_blocks_own_columns_unaffected_by_any_footer_menu(): void

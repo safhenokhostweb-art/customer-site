@@ -21,6 +21,7 @@
 /.idea
 /.nova
 /.phpunit.cache
+/.deployment/release-task.json
 /.vscode
 cursor-rules-sync.local.json
 /.cursor

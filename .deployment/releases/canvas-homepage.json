@@ -1,0 +1,117 @@
+{
+    "schema_version":  1,
+    "version":  "2026.10.02-canvas-homepage.1",
+    "project_key":  "customer-site",
+    "branch":  "main",
+    "author":  "safhenokhostweb-art",
+    "created_timestamp":  "2026-10-01T20:56:17Z",
+    "source_commits":  {
+                           "saas-platform":  "6d9f0c619a0d6886ff8e33542dd7aca49abe8c7b",
+                           "customer-site":  "24a4cd418b2b67fc9914780f580bccefaecda79d"
+                       },
+    "verification":  {
+                         "status":  "passed_with_known_issues",
+                         "command":  "php ../deployment-system/deployment/release-prepare.php check",
+                         "artifact_gate":  "php scripts/validate-release.php \u003cstaged-release\u003e --json",
+                         "known_failure_exemptions":  [
+                                                          "CANVAS-BASELINE-001",
+                                                          "CANVAS-BASELINE-002",
+                                                          "CANVAS-BASELINE-003",
+                                                          "CANVAS-BASELINE-004"
+                                                      ],
+                         "known_issues_registry":  ".deployment/known-issues.canvas-homepage.json",
+                         "checked_timestamp":  "2026-10-02T06:26:07.8024157Z",
+                         "project_gate_status":  "READY",
+                         "checks":  [
+                                        {
+                                            "name":  "syntax:scripts/lib/ReleaseKnownIssues.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l scripts/lib/ReleaseKnownIssues.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  196
+                                        },
+                                        {
+                                            "name":  "syntax:scripts/verify-release-known-issues.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l scripts/verify-release-known-issues.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  216
+                                        },
+                                        {
+                                            "name":  "syntax:tests/Feature/ThemeCanvas/CanvasPostMessageOriginTest.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l tests/Feature/ThemeCanvas/CanvasPostMessageOriginTest.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  259
+                                        },
+                                        {
+                                            "name":  "syntax:tests/Feature/ThemeCanvas/CanvasRuntimeParityTest.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l tests/Feature/ThemeCanvas/CanvasRuntimeParityTest.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  154
+                                        },
+                                        {
+                                            "name":  "syntax:tests/Feature/ThemeCanvas/HeaderMenuIntegrationTest.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l tests/Feature/ThemeCanvas/HeaderMenuIntegrationTest.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  286
+                                        },
+                                        {
+                                            "name":  "syntax:tests/ReleaseGate/known-issues.php",
+                                            "type":  "syntax",
+                                            "command":  "php -l tests/ReleaseGate/known-issues.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  230
+                                        },
+                                        {
+                                            "name":  "known-issue-guard-tests",
+                                            "type":  "test",
+                                            "command":  "php tests/ReleaseGate/known-issues.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  320
+                                        },
+                                        {
+                                            "name":  "theme-canvas-regression",
+                                            "type":  "test",
+                                            "command":  "php scripts/verify-release-known-issues.php --run-tests",
+                                            "exit_code":  0,
+                                            "duration_ms":  465830
+                                        },
+                                        {
+                                            "name":  "artifact-gate-tests",
+                                            "type":  "test",
+                                            "command":  "php tests/ReleaseGate/run.php",
+                                            "exit_code":  0,
+                                            "duration_ms":  7158
+                                        }
+                                    ],
+                         "source_artifact":  {
+                                                 "artifact_id":  173,
+                                                 "deployment_id":  243,
+                                                 "commit_sha":  "24a4cd418b2b67fc9914780f580bccefaecda79d",
+                                                 "checksum_sha256":  "595702d6436106bf417ec9ed4ca0652a4673ea99884b6a40e335402e8c536d38",
+                                                 "evidence_digest":  "e93447916a09313d9745c3e08cb8a92079e2200fba6776a399fff6f7ca7003e7",
+                                                 "verified_at":  "2026-10-02T05:43:36+00:00"
+                                             },
+                         "final_guard_verification":  {
+                                                          "exit_code":  0,
+                                                          "name":  "known-issue-guard-tests",
+                                                          "integration_tests":  4,
+                                                          "command":  "php tests/ReleaseGate/known-issues.php \u0026\u0026 php tests/ReleaseGate/known-issue-groups.php",
+                                                          "verified_at":  "2026-10-02T06:20:25.9834241Z",
+                                                          "duration_ms":  8369,
+                                                          "unit_tests":  15
+                                                      },
+                         "regression":  {
+                                            "tests":  373,
+                                            "assertions":  1837,
+                                            "failures":  0,
+                                            "errors":  0,
+                                            "skipped":  0,
+                                            "registered_baseline_exclusions":  4
+                                        }
+                     },
+    "summary":  "Complete Persian default homepage and root layout slot bindings; repair four stale test expectations."
+}

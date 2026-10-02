@@ -134,3 +134,19 @@
 ---
 
 *این فایل برای ردیابی شفاف ساخته شده و نباید به‌عنوان "TODO ضروری" تعبیر شود. اولویت اصلی همان است که در `global-rules.mdc` بند ۴ آمده: حفظ entitlement مشتری و backward compatibility — که در Wave 5.3 و Wave 6.x صفر breaking change داشتیم.*
+
+## Canvas homepage release registry — 2026-10-02
+
+The four original homepage follow-up failures in `HeaderMenuIntegrationTest`
+and `TypographyScaleWiringTest` were corrected and remain in normal runs.
+An isolated run of committed customer source revealed four additional
+pre-existing editor/preview cases previously masked by unrelated local WIP.
+Their exact names, reasons, owner, version, expiry and source fingerprints are
+owned by [the version-specific machine registry](../.deployment/known-issues.canvas-homepage.json).
+
+The user explicitly authorized known-issue registration for this release.
+The policy runs the fail-closed registry guard before using its method-level
+PHPUnit group. This approval expires on 2026-10-16 and does not fix the
+underlying legacy editor/preview gaps. A different version, changed baseline
+source, any additional grouped test or any other failing test blocks the gate.
+No unrelated local runtime edits were included in the release.

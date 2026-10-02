@@ -6,6 +6,7 @@ use App\Models\License;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Concerns\EnsuresInstallationLock;
 use Tests\TestCase;
 
@@ -95,6 +96,7 @@ class CanvasPostMessageOriginTest extends TestCase
         $response->assertDontSee("postMessage({ type:'select',idx}, '*')", false);
     }
 
+    #[Group('canvas-homepage-baseline-2026-10-02')]
     public function test_canvas_editor_page_never_targets_or_accepts_wildcard_postmessage(): void
     {
         Setting::set('active_canvas_theme_data', json_encode(['pages' => ['home' => ['blocks' => []]]]), 'theme');
@@ -105,6 +107,7 @@ class CanvasPostMessageOriginTest extends TestCase
         $this->assertBridgeIsOriginPinned($response);
     }
 
+    #[Group('canvas-homepage-baseline-2026-10-02')]
     public function test_live_preview_iframe_never_targets_or_accepts_wildcard_postmessage(): void
     {
         Setting::set('active_canvas_theme_data', json_encode(['pages' => ['home' => ['blocks' => []]]]), 'theme');
