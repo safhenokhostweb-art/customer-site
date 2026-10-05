@@ -137,9 +137,9 @@ class SliderRenderTest extends TestCase
                 'autoplay' => true,
                 'interval' => 7000,
                 'slides' => [
-                    ['image' => '', 'title' => 'یک', 'subtitle' => '', 'link' => ''],
-                    ['image' => '', 'title' => 'دو', 'subtitle' => '', 'link' => ''],
-                    ['image' => '', 'title' => 'سه', 'subtitle' => '', 'link' => ''],
+                    ['image' => '/uploads/slides/one.jpg', 'title' => 'یک', 'subtitle' => '', 'link' => ''],
+                    ['image' => '/uploads/slides/two.jpg', 'title' => 'دو', 'subtitle' => '', 'link' => ''],
+                    ['image' => '/uploads/slides/three.jpg', 'title' => 'سه', 'subtitle' => '', 'link' => ''],
                 ],
             ],
         ]);
@@ -148,5 +148,8 @@ class SliderRenderTest extends TestCase
         $this->assertStringContainsString('data-interval="7000"', $html);
         $this->assertSame(3, substr_count($html, 'class="tb-carousel-slide"'));
         $this->assertSame(3, substr_count($html, 'class="tb-carousel-dot"'));
+        $this->assertStringContainsString('class="tb-carousel-progress"', $html);
+        $this->assertStringContainsString('class="tb-carousel-pause"', $html);
+        $this->assertSame(3, substr_count($html, 'class="tb-carousel-thumb"'));
     }
 }

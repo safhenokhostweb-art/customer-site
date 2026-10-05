@@ -157,6 +157,31 @@ class ThemeMediaLocalizationTest extends TestCase
         self::assertSame($items[0]['url']['media_id'], $items[1]['url']['media_id']);
     }
 
+    public function test_bento_item_images_use_the_same_canonical_repeater_localization_path(): void
+    {
+        config(['site.platform_url' => 'https://master-theme.test']);
+        Http::fake([
+            'master-theme.test/storage/theme-media/*' => Http::response($this->onePixelPng(), 200, ['Content-Type' => 'image/png']),
+        ]);
+
+        $this->install([[
+            'key' => 'home', 'title' => 'Home', 'blocks' => [
+                ['id' => 'bento1', 'type' => 'bento_grid', 'props' => [
+                    'items' => [[
+                        'title' => 'فروشگاه حرفه‌ای',
+                        'image' => 'https://master-theme.test/storage/theme-media/1/bento-shop.jpg',
+                    ]],
+                ]],
+            ],
+        ]])->assertOk()->assertJson(['success' => true]);
+
+        $stored = json_decode(Setting::get('active_canvas_theme_data'), true);
+        $image = $stored['pages'][0]['blocks'][0]['props']['items'][0]['image'];
+
+        self::assertIsArray($image);
+        self::assertSame(CustomerMedia::query()->sole()->uuid, $image['media_id']);
+    }
+
     // ── Atomic, loud failure (BLD-31) — replaces the old "graceful degrade" ──
 
     public function test_a_fetch_failure_for_a_trusted_origin_url_fails_the_whole_install_atomically_no_silent_partial_success(): void

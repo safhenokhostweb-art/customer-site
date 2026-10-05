@@ -79,7 +79,10 @@ class UniversalMultipurposeQaDemoCommerceContentSeeder extends Seeder
     private function seedAuthor(): User
     {
         return User::updateOrCreate(
-            ['mobile' => '09120000001'],
+            // Keep the editorial fixture distinct from BrowserHarnessSetupCommand's
+            // deterministic admin account. Reusing 09120000001 here changed the
+            // real browser admin password on every --universal setup run.
+            ['mobile' => '09121111111'],
             [
                 'name' => 'سارا محمدی',
                 'password' => Hash::make(bin2hex(random_bytes(16))),
@@ -95,6 +98,9 @@ class UniversalMultipurposeQaDemoCommerceContentSeeder extends Seeder
             ['name' => 'پوشاک و مد', 'slug' => 'fashion', 'order' => 1],
             ['name' => 'دیجیتال و الکترونیک', 'slug' => 'digital', 'order' => 2],
             ['name' => 'خانه و آشپزخانه', 'slug' => 'home-kitchen', 'order' => 3],
+            ['name' => 'زیبایی و سلامت', 'slug' => 'beauty-health', 'order' => 4],
+            ['name' => 'ورزش و سفر', 'slug' => 'sports-travel', 'order' => 5],
+            ['name' => 'کتاب و لوازم تحریر', 'slug' => 'books-stationery', 'order' => 6],
         ];
         $out = [];
         foreach ($defs as $d) {
@@ -261,12 +267,7 @@ class UniversalMultipurposeQaDemoCommerceContentSeeder extends Seeder
         return $this->images[$name] ?? '';
     }
 
-    /**
-     * Same deterministic-GD-branded-image approach the sibling Theme
-     * seeder (saas-platform/database/seeders/UniversalMultipurposeQaTheme
-     * Seeder::generateBrandedImage()) already established and proved
-     * reliable — no internet dependency, same output every run.
-     */
+    /** Store deterministic crops from committed commercial source photos. */
     private function seedImages(): void
     {
         $disk = app(MediaStorage::class)->diskNameFor('public');
@@ -292,35 +293,61 @@ class UniversalMultipurposeQaDemoCommerceContentSeeder extends Seeder
     private function storeBrandedImage(string $disk, string $dir, string $name, int $width, int $height): string
     {
         $path = "{$dir}/{$name}.jpg";
-        if (Storage::disk($disk)->exists($path)) {
-            return $path;
+        $productOrder = [
+            'leather-crossbody-bag' => 0,
+            'smart-watch-x1' => 1,
+            'wireless-earbuds-pro' => 2,
+            'ceramic-cookware-set' => 3,
+            'linen-summer-dress' => 4,
+            'espresso-machine-home' => 5,
+        ];
+        $assetDir = database_path('seeders/assets/universal-multipurpose-qa-commerce');
+
+        $productIndex = null;
+        foreach ($productOrder as $slug => $index) {
+            if (str_starts_with($name, $slug . '_')) {
+                $productIndex = $index;
+                break;
+            }
+        }
+
+        if ($productIndex !== null) {
+            $source = @imagecreatefromjpeg($assetDir . '/product-contact-sheet.jpg');
+            if ($source === false) {
+                throw new \RuntimeException('Missing commercial product contact sheet.');
+            }
+            $cellWidth = intdiv(imagesx($source), 3);
+            $cellHeight = intdiv(imagesy($source), 2);
+            $sourceX = ($productIndex % 3) * $cellWidth;
+            $sourceY = intdiv($productIndex, 3) * $cellHeight;
+            $sourceWidth = $cellWidth;
+            $sourceHeight = $cellHeight;
+        } else {
+            $postIndex = (int) filter_var($name, FILTER_SANITIZE_NUMBER_INT);
+            $postAssets = ['hero-business.jpg', 'business-team.jpg', 'mobile-commerce.jpg', 'technology-products.jpg', 'mountain-trust.jpg', 'business-team.jpg'];
+            $source = @imagecreatefromjpeg($assetDir . '/' . $postAssets[$postIndex % count($postAssets)]);
+            if ($source === false) {
+                throw new \RuntimeException("Missing commercial demo source for [{$name}].");
+            }
+            $sourceWidth = imagesx($source);
+            $sourceHeight = imagesy($source);
+            $targetRatio = $width / $height;
+            if (($sourceWidth / $sourceHeight) > $targetRatio) {
+                $cropWidth = (int) round($sourceHeight * $targetRatio);
+                $sourceX = intdiv($sourceWidth - $cropWidth, 2);
+                $sourceWidth = $cropWidth;
+                $sourceY = 0;
+            } else {
+                $cropHeight = (int) round($sourceWidth / $targetRatio);
+                $sourceY = intdiv($sourceHeight - $cropHeight, 2);
+                $sourceHeight = $cropHeight;
+                $sourceX = 0;
+            }
         }
 
         $image = imagecreatetruecolor($width, $height);
-        $from = [0x0f, 0x76, 0x6e];
-        $to = [0x0e, 0x74, 0x90];
-        for ($y = 0; $y < $height; $y++) {
-            $t = $y / max(1, $height - 1);
-            $r = (int) round($from[0] + ($to[0] - $from[0]) * $t);
-            $g = (int) round($from[1] + ($to[1] - $from[1]) * $t);
-            $b = (int) round($from[2] + ($to[2] - $from[2]) * $t);
-            $rowColor = imagecolorallocate($image, $r, $g, $b);
-            imageline($image, 0, $y, $width, $y, $rowColor);
-        }
-
-        mt_srand(crc32($name));
-        imagealphablending($image, true);
-        $shapeCount = 5 + (crc32($name) % 4);
-        for ($i = 0; $i < $shapeCount; $i++) {
-            $cx = mt_rand(0, $width);
-            $cy = mt_rand(0, $height);
-            $radius = (int) (min($width, $height) * (mt_rand(15, 45) / 100));
-            $alpha = mt_rand(90, 115);
-            $shade = mt_rand(0, 1) === 1 ? 255 : 0;
-            $color = imagecolorallocatealpha($image, $shade, $shade, $shade, $alpha);
-            imagefilledellipse($image, $cx, $cy, $radius * 2, $radius * 2, $color);
-        }
-        mt_srand();
+        imagecopyresampled($image, $source, 0, 0, $sourceX, $sourceY, $width, $height, $sourceWidth, $sourceHeight);
+        imagedestroy($source);
 
         ob_start();
         imagejpeg($image, null, 87);

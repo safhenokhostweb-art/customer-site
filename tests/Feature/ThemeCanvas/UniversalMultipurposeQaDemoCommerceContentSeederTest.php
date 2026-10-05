@@ -23,6 +23,26 @@ class UniversalMultipurposeQaDemoCommerceContentSeederTest extends TestCase
 {
     use RefreshDatabase;
 
+    private bool $createdInstallLock = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (! \App\Support\Installation::isLockPresent()) {
+            $this->createdInstallLock = \App\Support\Installation::writeLockFile();
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->createdInstallLock) {
+            @unlink(\App\Support\Installation::lockPath());
+        }
+
+        parent::tearDown();
+    }
+
     public function test_seeds_at_least_six_products_three_categories_and_six_posts_with_real_content(): void
     {
         $this->seed(UniversalMultipurposeQaDemoCommerceContentSeeder::class);

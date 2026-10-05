@@ -58,6 +58,14 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // added — a confirmed real gap (absent from both registry and
         // renderer). Non-module count 62 -> 63, total 97 -> 98. Module
         // count unchanged for both additions.
+        // FoodMart Phase 3 added 19 canonical foodmart_* types through the
+        // shared host-type mechanism: 98 + 19 = 117 total, 63 + 19 = 82
+        // non-module types. The module inventory remains unchanged.
+        // SleepShiman Home blue adds 22 shared host types: 117 + 22 = 139
+        // total and 82 + 22 = 104 non-module types. Module inventory is
+        // unchanged; each added type is covered by the schema/renderer
+        // compatibility loops below rather than bypassing them.
+        //
         // Shared-package refresh (Phase 11): the committed pins predate
         // several waves of shared host types that shipped only through
         // the theme-runtime package — FoodMart Phase 3's canonical

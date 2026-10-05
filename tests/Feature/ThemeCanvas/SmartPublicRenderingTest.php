@@ -10,6 +10,18 @@ use Tests\TestCase;
 
 class SmartPublicRenderingTest extends TestCase
 {
+    public function test_public_runtime_declares_the_block_sdk_after_the_canvas_runtime(): void
+    {
+        $partial = (string) file_get_contents(resource_path('views/partials/theme-public-runtime.blade.php'));
+
+        $runtime = strpos($partial, "@include('theme-runtime::canvas.runtime')");
+        $sdk = strpos($partial, "@includeIf('theme-runtime::canvas.block-sdk')");
+
+        $this->assertNotFalse($runtime);
+        $this->assertNotFalse($sdk);
+        $this->assertGreaterThan($runtime, $sdk);
+    }
+
     use EnsuresInstallationLock, RefreshDatabase;
 
     protected function setUp(): void

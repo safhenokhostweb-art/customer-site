@@ -5,7 +5,7 @@
             "title": "سوالات متداول",
             "blocks": [
                 {
-                    "id": "qa_heading_da7f3f",
+                    "id": "qa_heading_3acfde",
                     "type": "heading",
                     "props": {
                         "text": "سوالات متداول",
@@ -13,7 +13,7 @@
                     }
                 },
                 {
-                    "id": "qa_faq_3a95e1",
+                    "id": "qa_faq_ba4c16",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -46,7 +46,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_faq_dynamic_6d589e",
+                    "id": "qa_module_faq_dynamic_af9c2b",
                     "type": "module:faq_dynamic",
                     "props": {
                         "items": [
@@ -71,14 +71,14 @@
             "title": "وبلاگ",
             "blocks": [
                 {
-                    "id": "qa_module_blog_featured_d60022",
+                    "id": "qa_module_blog_featured_a03e42",
                     "type": "module:blog_featured",
                     "props": {
                         "title": "مطلب ویژه"
                     }
                 },
                 {
-                    "id": "qa_module_blog_posts_59782f",
+                    "id": "qa_module_blog_posts_34ea8f",
                     "type": "module:blog_posts",
                     "props": {
                         "limit": 9,
@@ -89,7 +89,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_blog_categories_3336ce",
+                    "id": "qa_module_blog_categories_1724a5",
                     "type": "module:blog_categories",
                     "props": {
                         "title": "دسته‌بندی‌ها"
@@ -102,93 +102,97 @@
             "title": "خانه",
             "blocks": [
                 {
-                    "id": "qa_hero_gradient_0a35d3",
-                    "type": "hero_gradient",
+                    "id": "qa_slider_9671de",
+                    "type": "slider",
                     "props": {
-                        "badge": "پلتفرم جامع کسب‌وکار",
-                        "title": "همه‌چیز برای رشد کسب‌وکار شما، در یک پلتفرم",
-                        "subtitle": "ساخت سایت، فروشگاه، وبلاگ و دوره‌های آموزشی — بدون نیاز به دانش فنی، با پشتیبانی واقعی فارسی.",
-                        "button_url": "\/pricing",
-                        "text_color": "#ffffff",
-                        "button2_url": "\/portfolio",
-                        "button_text": "شروع رایگان",
-                        "gradient_to": "#7c3aed",
-                        "button2_text": "مشاهدهٔ نمونه‌کارها",
-                        "gradient_from": "#4f46e5"
-                    }
-                },
-                {
-                    "id": "qa_client_logos_2f0d13",
-                    "type": "client_logos",
-                    "props": {
-                        "logos": [
+                        "boxed": false,
+                        "slides": [
                             {
-                                "name": "فروشگاه دیجی‌مد"
+                                "link": "/pricing",
+                                "image": "http://saas-platform.test/storage/theme-media/1/hero.jpg",
+                                "title": "راهکارهای مدرن برای کسب‌وکارهای ایرانی",
+                                "cta_text": "رایگان شروع کنید",
+                                "subtitle": "سایت، فروشگاه و مدیریت مشتریان در یک تجربهٔ یکپارچه"
                             },
                             {
-                                "name": "آموزشگاه رشد"
+                                "link": "/shop",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg",
+                                "title": "فروش روی موبایل؛ سریع، ساده و حرفه‌ای",
+                                "cta_text": "مشاهده فروشگاه",
+                                "subtitle": "تجربهٔ خریدی که در هر اندازهٔ صفحه کامل می‌ماند"
                             },
                             {
-                                "name": "کلینیک سلامت"
-                            },
-                            {
-                                "name": "استودیو طراحی نقش"
-                            },
-                            {
-                                "name": "آژانس سفر پرواز"
-                            },
-                            {
-                                "name": "رستوران زیتون"
+                                "link": "/services",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_2.jpg",
+                                "title": "ابزارهای سازمانی برای تیم‌های رو‌به‌رشد",
+                                "cta_text": "راهکارها را ببینید",
+                                "subtitle": "از همکاری روزانه تا گزارش‌های تصمیم‌ساز"
                             }
                         ],
-                        "title": "مورد اعتماد کسب‌وکارهای موفق ایرانی",
-                        "scroll": true
+                        "overlay": true,
+                        "autoplay": true,
+                        "interval": 6500,
+                        "transition": "fade",
+                        "aspect_ratio": "21/9"
                     }
                 },
                 {
-                    "id": "qa_features_grid_f831b2",
-                    "type": "features_grid",
+                    "id": "qa_bento_grid_c9490f",
+                    "type": "bento_grid",
                     "props": {
-                        "style": "cards",
-                        "title": "چرا صاحبان کسب‌وکار ما را انتخاب می‌کنند؟",
-                        "columns": "3",
-                        "features": [
+                        "items": [
                             {
-                                "icon": "🎨",
-                                "text": "طراحی صفحات بدون کدنویسی با پیش‌نمایش زنده",
-                                "title": "سازندهٔ بصری صفحه"
+                                "size": "small",
+                                "text": "محصول، پرداخت، ارسال و باشگاه مشتریان",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_3.jpg",
+                                "title": "فروشگاه آنلاین با امکانات کامل",
+                                "bg_color": "#eef6f5",
+                                "link_url": "/shop",
+                                "link_label": "ورود به فروشگاه",
+                                "text_color": "#0f172a"
                             },
                             {
-                                "icon": "🛒",
-                                "text": "مدیریت محصول، سبد خرید و پرداخت یکپارچه",
-                                "title": "فروشگاه آنلاین کامل"
+                                "size": "small",
+                                "text": "تجربهٔ سریع و یکپارچه روی موبایل",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg",
+                                "title": "اپلیکیشن همراه همیشه در دسترس",
+                                "bg_color": "#0b2335",
+                                "link_url": "/services",
+                                "link_label": "دریافت اپ",
+                                "text_color": "#ffffff"
                             },
                             {
-                                "icon": "🎓",
-                                "text": "فروش دوره و مدیریت دانشجویان",
-                                "title": "پلتفرم آموزش آنلاین"
+                                "size": "small",
+                                "text": "برای تیم‌ها و کسب‌وکارهای در حال رشد",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_2.jpg",
+                                "title": "راهکارهای سازمانی",
+                                "bg_color": "#f4f0ff",
+                                "link_url": "/services",
+                                "link_label": "مشاهده راهکارها",
+                                "text_color": "#312e81"
                             },
                             {
-                                "icon": "📱",
-                                "text": "تجربهٔ یکسان روی موبایل، تبلت و دسکتاپ",
-                                "title": "واکنش‌گرا در همهٔ دستگاه‌ها"
+                                "icon": "۲۴/۷",
+                                "size": "small",
+                                "text": "همیشه در کنار شما",
+                                "title": "پشتیبانی حرفه‌ای",
+                                "bg_color": "#ecfeff",
+                                "text_color": "#155e75"
                             },
                             {
-                                "icon": "🔒",
-                                "text": "اطلاعات شما همیشه محافظت‌شده است",
-                                "title": "امنیت و پشتیبان‌گیری خودکار"
-                            },
-                            {
-                                "icon": "💬",
-                                "text": "تیم پشتیبانی همیشه در دسترس شماست",
-                                "title": "پشتیبانی فارسی واقعی"
+                                "icon": "۱:۱",
+                                "size": "small",
+                                "text": "رشد کسب‌وکار شما",
+                                "title": "آموزش و مشاوره",
+                                "bg_color": "#f5f3ff",
+                                "text_color": "#5b21b6"
                             }
                         ],
-                        "subtitle": "ابزارهایی که واقعاً به آن‌ها نیاز دارید، بدون پیچیدگی اضافه"
+                        "title": ""
                     }
                 },
                 {
-                    "id": "qa_stats_row_5e065f",
+                    "id": "qa_stats_row_5641b9",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -213,126 +217,134 @@
                                 "suffix": " سال"
                             }
                         ],
-                        "title": "",
+                        "title": "اعتماد شما سرمایهٔ ماست",
                         "dividers": true,
-                        "background": "#f8fafc"
+                        "background": "#0b2a3c",
+                        "text_color": "#ffffff",
+                        "background_image": "http://saas-platform.test/storage/theme-media/1/gallery_4.jpg"
                     }
                 },
                 {
-                    "id": "qa_about_section_1cb023",
-                    "type": "about_section",
+                    "id": "qa_product_slider_7b3ab5",
+                    "type": "product_slider",
                     "props": {
-                        "badge": "دربارهٔ ما",
-                        "title": "ساخته‌شده برای کسب‌وکارهای ایرانی",
-                        "btn_url": "\/about",
-                        "btn_text": "بیشتر بدانید",
-                        "features": [
-                            "بدون نیاز به کدنویسی",
-                            "میزبانی و دامنهٔ رایگان",
-                            "پشتیبانی فارسی ۲۴ ساعته"
-                        ],
-                        "description": "ما از سال ۱۳۹۸ در حال ساخت ابزارهایی هستیم که به کسب‌وکارهای کوچک و متوسط کمک می‌کند بدون نیاز به تیم فنی، حضور آنلاین حرفه‌ای داشته باشند."
+                        "limit": 6,
+                        "title": "محصولات ویژه",
+                        "source": "latest",
+                        "columns": "4",
+                        "autoplay": true,
+                        "interval": 5200
                     }
                 },
                 {
-                    "id": "qa_gallery_1bfe38",
-                    "type": "gallery",
+                    "id": "qa_category_slider_2bc418",
+                    "type": "category_slider",
                     "props": {
-                        "items": [
+                        "title": "دسته‌بندی‌های محبوب",
+                        "layout": "carousel",
+                        "columns": "6",
+                        "autoplay": true,
+                        "interval": 5800
+                    }
+                },
+                {
+                    "id": "qa_process_steps_181d01",
+                    "type": "process_steps",
+                    "props": {
+                        "steps": [
                             {
-                                "alt": "نمونه‌کار فروشگاه آنلاین",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_1.jpg"
+                                "text": "در چند دقیقه",
+                                "title": "ثبت‌نام",
+                                "number": "۱"
                             },
                             {
-                                "alt": "نمونه‌کار سایت شرکتی",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_2.jpg"
+                                "text": "متناسب با نیاز شما",
+                                "title": "انتخاب بسته",
+                                "number": "۲"
                             },
                             {
-                                "alt": "نمونه‌کار وبلاگ",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_1.jpg"
+                                "text": "با پشتیبانی تیم ما",
+                                "title": "راه‌اندازی",
+                                "number": "۳"
+                            },
+                            {
+                                "text": "با ابزارهای هوشمند",
+                                "title": "رشد و موفقیت",
+                                "number": "۴"
                             }
                         ],
-                        "title": "نمونه‌کارهای ساخته‌شده روی پلتفرم ما",
-                        "columns": "3"
+                        "title": "مسیر ساده تا موفقیت",
+                        "subtitle": "در چهار قدم، کسب‌وکار آنلاین خود را راه‌اندازی کنید"
                     }
                 },
                 {
-                    "id": "qa_product_grid_def2f0",
-                    "type": "product_grid",
-                    "props": {
-                        "limit": 8,
-                        "columns": 4
-                    }
-                },
-                {
-                    "id": "qa_module_courses_grid_87f4d4",
-                    "type": "module:courses_grid",
-                    "props": {
-                        "limit": 3,
-                        "title": "دوره‌های آموزشی محبوب",
-                        "layout": "grid",
-                        "columns": "3",
-                        "show_price": true
-                    }
-                },
-                {
-                    "id": "qa_blog_posts_2acddf",
+                    "id": "qa_blog_posts_56d494",
                     "type": "blog_posts",
                     "props": {
-                        "limit": 3,
-                        "title": "جدیدترین مطالب وبلاگ"
+                        "limit": 5,
+                        "title": "آخرین مقالات",
+                        "layout": "slider"
                     }
                 },
                 {
-                    "id": "qa_team_cards_224818",
-                    "type": "team_cards",
+                    "id": "qa_client_logos_ae926e",
+                    "type": "client_logos",
                     "props": {
-                        "title": "با تیم ما آشنا شوید",
-                        "columns": "3",
-                        "members": [
+                        "mode": "carousel",
+                        "logos": [
                             {
-                                "bio": "بیش از ۱۰ سال تجربه در توسعهٔ کسب‌وکارهای دیجیتال",
-                                "name": "سارا احمدی",
-                                "role": "مدیرعامل و بنیان‌گذار",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_1.jpg"
+                                "name": "آینده‌ساز"
                             },
                             {
-                                "bio": "معمار زیرساخت پلتفرم و تیم مهندسی",
-                                "name": "رضا کریمی",
-                                "role": "مدیر فنی",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_2.jpg"
+                                "name": "راهکار نوین"
                             },
                             {
-                                "bio": "مسئول تجربهٔ کاربری و طراحی محصول",
-                                "name": "نگار حسینی",
-                                "role": "مدیر محصول",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_3.jpg"
+                                "name": "بازار هوشمند"
+                            },
+                            {
+                                "name": "خانه دیجیتال"
+                            },
+                            {
+                                "name": "رشد ایرانی"
+                            },
+                            {
+                                "name": "همراه تجارت"
                             }
-                        ]
+                        ],
+                        "title": "برندهای همراه ما",
+                        "scroll": true,
+                        "visible_count": 6
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_42a60c",
+                    "id": "qa_testimonials_slider_b752af",
                     "type": "testimonials_slider",
                     "props": {
+                        "mode": "carousel",
                         "items": [
                             {
                                 "name": "امیر رستمی",
-                                "role": "صاحب فروشگاه دیجی‌مد",
+                                "role": "صاحب فروشگاه",
                                 "text": "در کمتر از یک هفته فروشگاهم آماده بود. پشتیبانی فارسی واقعاً فرق می‌کند.",
-                                "rating": 5
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_1.jpg",
+                                "rating": 5,
+                                "company": "دیجی‌مد"
                             },
                             {
                                 "name": "مریم صادقی",
-                                "role": "موسس آموزشگاه رشد",
+                                "role": "موسس",
                                 "text": "بخش دوره‌های آموزشی دقیقاً همان چیزی بود که نیاز داشتم.",
-                                "rating": 5
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_2.jpg",
+                                "rating": 5,
+                                "company": "آموزشگاه رشد"
                             },
                             {
                                 "name": "حسین یزدانی",
-                                "role": "مدیر کلینیک سلامت",
+                                "role": "مدیر",
                                 "text": "سازندهٔ بصری فوق‌العاده ساده است، حتی برای من که فنی نیستم.",
-                                "rating": 4
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_3.jpg",
+                                "rating": 4,
+                                "company": "کلینیک سلامت"
                             }
                         ],
                         "title": "مشتریان ما چه می‌گویند",
@@ -342,7 +354,7 @@
                     }
                 },
                 {
-                    "id": "qa_pricing_cards_b32a92",
+                    "id": "qa_pricing_cards_a5fa39",
                     "type": "pricing_cards",
                     "props": {
                         "plans": [
@@ -351,7 +363,7 @@
                                 "badge": "",
                                 "price": "رایگان",
                                 "period": "",
-                                "cta_url": "\/account",
+                                "cta_url": "/account",
                                 "cta_text": "شروع رایگان",
                                 "features": [
                                     "۱ صفحه فرود",
@@ -364,8 +376,8 @@
                                 "name": "حرفه‌ای",
                                 "badge": "محبوب‌ترین",
                                 "price": "۴۹۰",
-                                "period": "هزار تومان \/ ماه",
-                                "cta_url": "\/pricing",
+                                "period": "هزار تومان / ماه",
+                                "cta_url": "/pricing",
                                 "cta_text": "انتخاب پلن حرفه‌ای",
                                 "features": [
                                     "سایت نامحدود صفحه",
@@ -379,8 +391,8 @@
                                 "name": "سازمانی",
                                 "badge": "",
                                 "price": "۱۲۹۰",
-                                "period": "هزار تومان \/ ماه",
-                                "cta_url": "\/contact",
+                                "period": "هزار تومان / ماه",
+                                "cta_url": "/contact",
                                 "cta_text": "تماس با فروش",
                                 "features": [
                                     "همهٔ امکانات حرفه‌ای",
@@ -396,7 +408,7 @@
                     }
                 },
                 {
-                    "id": "qa_bento_grid_0cc534",
+                    "id": "qa_bento_grid_73bce3",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -429,7 +441,7 @@
                     }
                 },
                 {
-                    "id": "qa_faq_df87b7",
+                    "id": "qa_faq_204f87",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -450,7 +462,7 @@
                     }
                 },
                 {
-                    "id": "qa_newsletter_form_e1d948",
+                    "id": "qa_newsletter_form_a0dcb3",
                     "type": "newsletter_form",
                     "props": {
                         "title": "در خبرنامهٔ ما عضو شوید",
@@ -462,39 +474,291 @@
                     }
                 },
                 {
-                    "id": "qa_cta_2e8175",
+                    "id": "qa_cta_f57dbf",
                     "type": "cta",
                     "props": {
                         "title": "همین امروز کسب‌وکار آنلاین خود را شروع کنید",
                         "subtitle": "بدون نیاز به کارت اعتباری — در کمتر از ۵ دقیقه",
                         "background": "primary",
-                        "button_url": "\/account",
+                        "button_url": "/account",
                         "button_text": "ساخت سایت رایگان"
                     }
                 }
             ],
             "is_home": true
         },
+        "saas": {
+            "slug": "saas",
+            "title": "معرفی پلتفرم SaaS",
+            "blocks": [
+                {
+                    "id": "qa_hero_gradient_28f833",
+                    "type": "hero_gradient",
+                    "props": {
+                        "badge": "پلتفرم SaaS",
+                        "title": "یک پلتفرم، همهٔ ابزارهای رشد کسب‌وکار شما",
+                        "subtitle": "سایت، فروشگاه، وبلاگ و دوره‌های آموزشی را روی یک زیرساخت واحد بسازید و مدیریت کنید — بدون نیاز به چند سرویس جدا و بدون دانش فنی.",
+                        "button_url": "/pricing",
+                        "text_color": "#ffffff",
+                        "button2_url": "#capabilities",
+                        "button_text": "شروع رایگان ۱۴ روزه",
+                        "gradient_to": "#7c3aed",
+                        "button2_text": "مشاهدهٔ امکانات",
+                        "gradient_from": "#4f46e5"
+                    }
+                },
+                {
+                    "id": "qa_heading_c486ef",
+                    "type": "heading",
+                    "props": {
+                        "text": "در یک نگاه با پلتفرم آشنا شوید",
+                        "level": 2
+                    }
+                },
+                {
+                    "id": "qa_video_9a7703",
+                    "type": "video",
+                    "props": {
+                        "url": "http://saas-platform.test/storage/theme-media/1/hero-intro.webm",
+                        "loop": true,
+                        "poster": "http://saas-platform.test/storage/theme-media/1/hero-intro-poster.jpg",
+                        "caption": "معرفی کوتاه پلتفرم جامع کسب‌وکار در کمتر از یک دقیقه",
+                        "autoplay": false,
+                        "controls": true
+                    }
+                },
+                {
+                    "id": "qa_bento_grid_93ee97",
+                    "type": "bento_grid",
+                    "props": {
+                        "items": [
+                            {
+                                "icon": "🎨",
+                                "size": "large",
+                                "text": "طراحی صفحات با پیش‌نمایش زنده، بدون کدنویسی",
+                                "title": "سازندهٔ بصری صفحه",
+                                "bg_color": "#eef2ff",
+                                "text_color": "#3730a3"
+                            },
+                            {
+                                "icon": "🛒",
+                                "size": "small",
+                                "text": "مدیریت محصول، سبد خرید و پرداخت آنلاین",
+                                "title": "فروشگاه‌ساز کامل",
+                                "bg_color": "#f0fdf4",
+                                "text_color": "#14532d"
+                            },
+                            {
+                                "icon": "📝",
+                                "size": "small",
+                                "text": "انتشار محتوا با سئوی داخلی",
+                                "title": "وبلاگ و مقالات",
+                                "bg_color": "#fef9c3",
+                                "text_color": "#713f12"
+                            },
+                            {
+                                "icon": "🎓",
+                                "size": "small",
+                                "text": "فروش دوره، مدیریت دانشجو و گواهی پایان دوره",
+                                "title": "دوره‌های آموزشی",
+                                "bg_color": "#fdf4ff",
+                                "text_color": "#6b21a8"
+                            },
+                            {
+                                "icon": "📊",
+                                "size": "small",
+                                "text": "داشبورد آمار فروش و بازدید در لحظه",
+                                "title": "گزارش و تحلیل",
+                                "bg_color": "#f0f9ff",
+                                "text_color": "#0c4a6e"
+                            }
+                        ],
+                        "title": "همه‌چیز که برای رشد لازم دارید"
+                    }
+                },
+                {
+                    "id": "qa_stats_row_89e2dc",
+                    "type": "stats_row",
+                    "props": {
+                        "stats": [
+                            {
+                                "label": "کسب‌وکار فعال",
+                                "value": 3200,
+                                "suffix": "+"
+                            },
+                            {
+                                "label": "آپ‌تایم زیرساخت",
+                                "value": 99,
+                                "suffix": "%"
+                            },
+                            {
+                                "label": "پشتیبانی فارسی",
+                                "value": 24,
+                                "suffix": "/۷"
+                            },
+                            {
+                                "label": "سابقهٔ فعالیت",
+                                "value": 5,
+                                "suffix": "سال"
+                            }
+                        ],
+                        "title": "اعتماد کسب‌وکارهای ایرانی",
+                        "dividers": true,
+                        "background": "#111827"
+                    }
+                },
+                {
+                    "id": "qa_process_steps_64a08c",
+                    "type": "process_steps",
+                    "props": {
+                        "steps": [
+                            {
+                                "text": "یکی از قالب‌های آماده مثل همین قالب جامع چندمنظوره را انتخاب کنید",
+                                "title": "ثبت‌نام و انتخاب قالب",
+                                "number": "۱"
+                            },
+                            {
+                                "text": "متن، تصاویر و رنگ‌بندی را با سازندهٔ بصری متناسب برند خود تغییر دهید",
+                                "title": "شخصی‌سازی محتوا",
+                                "number": "۲"
+                            },
+                            {
+                                "text": "دامنهٔ خود را متصل کنید و کسب‌وکارتان را آنلاین کنید",
+                                "title": "انتشار و رشد",
+                                "number": "۳"
+                            }
+                        ],
+                        "title": "در سه مرحله شروع کنید",
+                        "subtitle": "راه‌اندازی کامل، معمولاً کمتر از یک روز"
+                    }
+                },
+                {
+                    "id": "qa_client_logos_3d5f1d",
+                    "type": "client_logos",
+                    "props": {
+                        "mode": "carousel",
+                        "logos": [
+                            {
+                                "name": "درگاه پرداخت زرین‌پال"
+                            },
+                            {
+                                "name": "پیامک کاوه‌نگار"
+                            },
+                            {
+                                "name": "پست ایران"
+                            },
+                            {
+                                "name": "اسنپ‌باکس"
+                            }
+                        ],
+                        "title": "یکپارچه با ابزارهای مورد اعتماد شما",
+                        "grayscale": true,
+                        "visible_count": 4
+                    }
+                },
+                {
+                    "id": "qa_testimonials_slider_177615",
+                    "type": "testimonials_slider",
+                    "props": {
+                        "mode": "carousel",
+                        "items": [
+                            {
+                                "name": "فرزاد کریمی",
+                                "role": "بنیان‌گذار",
+                                "text": "در کمتر از یک روز فروشگاهم را راه‌اندازی کردم؛ پشتیبانی فارسی واقعاً فرق می‌کند.",
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_1.jpg",
+                                "rating": 5,
+                                "company": "فروشگاه دیجی‌مد"
+                            },
+                            {
+                                "name": "مریم صادقی",
+                                "role": "مدیر آموزشگاه",
+                                "text": "بخش دوره‌های آموزشی دقیقاً همان چیزی بود که برای فروش آنلاین دوره‌ها نیاز داشتم.",
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_2.jpg",
+                                "rating": 5,
+                                "company": "آموزشگاه رشد"
+                            },
+                            {
+                                "name": "حسین یزدانی",
+                                "role": "مدیرعامل",
+                                "text": "سازندهٔ بصری فوق‌العاده ساده است؛ بدون دانش فنی سایت را خودم به‌روز می‌کنم.",
+                                "avatar": "http://saas-platform.test/storage/theme-media/1/team_3.jpg",
+                                "rating": 4,
+                                "company": "کلینیک سلامت"
+                            }
+                        ],
+                        "title": "صاحبان کسب‌وکار چه می‌گویند",
+                        "columns": "3",
+                        "autoplay": true
+                    }
+                },
+                {
+                    "id": "qa_cta_31805a",
+                    "type": "cta",
+                    "props": {
+                        "title": "همین امروز کسب‌وکار خود را آنلاین کنید",
+                        "subtitle": "بدون نیاز به کارت اعتباری — ۱۴ روز رایگان امتحان کنید",
+                        "background": "primary",
+                        "button_url": "/pricing",
+                        "button_text": "شروع رایگان"
+                    }
+                }
+            ]
+        },
         "shop": {
             "slug": "shop",
             "title": "فروشگاه",
             "blocks": [
                 {
-                    "id": "qa_module_shop_search_box_b05196",
+                    "id": "qa_hero_gradient_8549cf",
+                    "type": "hero_gradient",
+                    "props": {
+                        "badge": "حراج پاییزه",
+                        "title": "تا ۳۰٪ تخفیف روی محصولات منتخب",
+                        "subtitle": "ارسال رایگان برای خریدهای بالای ۵۰۰ هزار تومان",
+                        "button_url": "#products",
+                        "text_color": "#ffffff",
+                        "button2_url": "/product-categories",
+                        "button_text": "مشاهدهٔ محصولات",
+                        "gradient_to": "#db2777",
+                        "button2_text": "دسته‌بندی‌ها",
+                        "gradient_from": "#c2410c"
+                    }
+                },
+                {
+                    "id": "qa_module_shop_search_box_63b935",
                     "type": "module:shop_search_box",
                     "props": {
                         "placeholder": "جستجوی محصول..."
                     }
                 },
                 {
-                    "id": "qa_module_shop_categories_019239",
+                    "id": "qa_module_shop_categories_0f86a3",
                     "type": "module:shop_categories",
                     "props": {
                         "title": "دسته‌بندی محصولات"
                     }
                 },
                 {
-                    "id": "qa_module_shop_wishlist_icon_a04c5d",
+                    "id": "qa_heading_21f804",
+                    "type": "heading",
+                    "props": {
+                        "text": "تازه‌ترین محصولات",
+                        "level": 2
+                    }
+                },
+                {
+                    "id": "qa_product_slider_47ac45",
+                    "type": "product_slider",
+                    "props": {
+                        "title": "",
+                        "source": "new",
+                        "columns": 4,
+                        "autoplay": true
+                    }
+                },
+                {
+                    "id": "qa_module_shop_wishlist_icon_5e0f92",
                     "type": "module:shop_wishlist_icon",
                     "props": {
                         "mode": "wishlist",
@@ -503,7 +767,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_shop_wishlist_icon_2817ab",
+                    "id": "qa_module_shop_wishlist_icon_b0634f",
                     "type": "module:shop_wishlist_icon",
                     "props": {
                         "mode": "compare",
@@ -512,7 +776,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_shop_product_grid_3d37fc",
+                    "id": "qa_module_shop_product_grid_8bb819",
                     "type": "module:shop_product_grid",
                     "props": {
                         "limit": 12,
@@ -521,17 +785,17 @@
                     }
                 },
                 {
-                    "id": "qa_module_installment_badge_7de779",
+                    "id": "qa_module_installment_badge_22d96b",
                     "type": "module:installment_badge",
                     "props": {
                         "style": "full"
                     }
                 },
                 {
-                    "id": "qa_trust_badges_c2f60d",
+                    "id": "qa_trust_badges_10ab2b",
                     "type": "trust_badges",
                     "props": {
-                        "badges": "[{\"icon\":\"🚚\",\"title\":\"ارسال رایگان\",\"text\":\"بالای ۲۰۰ هزار تومان\"},{\"icon\":\"🔒\",\"title\":\"پرداخت امن\",\"text\":\"درگاه‌های معتبر\"},{\"icon\":\"↩️\",\"title\":\"بازگشت آسان\",\"text\":\"تا ۷ روز\"},{\"icon\":\"☎️\",\"title\":\"پشتیبانی ۲۴\/۷\",\"text\":\"همیشه در دسترس\"}]",
+                        "badges": "[{\"icon\":\"🚚\",\"title\":\"ارسال رایگان\",\"text\":\"بالای ۲۰۰ هزار تومان\"},{\"icon\":\"🔒\",\"title\":\"پرداخت امن\",\"text\":\"درگاه‌های معتبر\"},{\"icon\":\"↩️\",\"title\":\"بازگشت آسان\",\"text\":\"تا ۷ روز\"},{\"icon\":\"☎️\",\"title\":\"پشتیبانی ۲۴/۷\",\"text\":\"همیشه در دسترس\"}]",
                         "background": "#f8fafc"
                     }
                 }
@@ -542,7 +806,7 @@
             "title": "تیم ما",
             "blocks": [
                 {
-                    "id": "qa_heading_684ec4",
+                    "id": "qa_heading_317384",
                     "type": "heading",
                     "props": {
                         "text": "با تیم ما آشنا شوید",
@@ -550,7 +814,7 @@
                     }
                 },
                 {
-                    "id": "qa_team_cards_3c3136",
+                    "id": "qa_team_cards_aaf159",
                     "type": "team_cards",
                     "props": {
                         "title": "",
@@ -560,31 +824,31 @@
                                 "bio": "بیش از ۱۰ سال تجربه در توسعهٔ کسب‌وکار دیجیتال",
                                 "name": "سارا احمدی",
                                 "role": "مدیرعامل و بنیان‌گذار",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_1.jpg"
+                                "image": "http://saas-platform.test/storage/theme-media/1/team_1.jpg"
                             },
                             {
                                 "bio": "معمار زیرساخت پلتفرم",
                                 "name": "رضا کریمی",
                                 "role": "مدیر فنی",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_2.jpg"
+                                "image": "http://saas-platform.test/storage/theme-media/1/team_2.jpg"
                             },
                             {
                                 "bio": "مسئول تجربهٔ کاربری",
                                 "name": "نگار حسینی",
                                 "role": "مدیر محصول",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_3.jpg"
+                                "image": "http://saas-platform.test/storage/theme-media/1/team_3.jpg"
                             },
                             {
                                 "bio": "سرپرست تیم پشتیبانی مشتریان",
                                 "name": "علی محمدی",
                                 "role": "مدیر پشتیبانی",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/team_4.jpg"
+                                "image": "http://saas-platform.test/storage/theme-media/1/team_4.jpg"
                             }
                         ]
                     }
                 },
                 {
-                    "id": "qa_team_5fa99c",
+                    "id": "qa_team_6af111",
                     "type": "team",
                     "props": {
                         "limit": 6,
@@ -598,7 +862,7 @@
             "title": "درباره ما",
             "blocks": [
                 {
-                    "id": "qa_hero_d0392c",
+                    "id": "qa_hero_3c5023",
                     "type": "hero",
                     "props": {
                         "align": "center",
@@ -607,16 +871,16 @@
                         "background": "secondary",
                         "button_url": "",
                         "button_text": "",
-                        "background_image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg"
+                        "background_image": "http://saas-platform.test/storage/theme-media/1/about.jpg"
                     }
                 },
                 {
-                    "id": "qa_about_section_19ea88",
+                    "id": "qa_about_section_393975",
                     "type": "about_section",
                     "props": {
                         "badge": "مسیر ما",
                         "title": "از ۱۳۹۸ تا امروز",
-                        "btn_url": "\/services",
+                        "btn_url": "/services",
                         "btn_text": "مشاهده خدمات",
                         "features": [
                             "تیم مهندسی داخلی",
@@ -627,32 +891,63 @@
                     }
                 },
                 {
-                    "id": "qa_process_steps_7e232a",
-                    "type": "process_steps",
+                    "id": "qa_timeline_359f0d",
+                    "type": "timeline",
                     "props": {
-                        "steps": [
+                        "items": [
                             {
-                                "text": "در کمتر از یک دقیقه حساب بسازید",
-                                "title": "ثبت‌نام رایگان",
-                                "number": "۱"
+                                "date": "۱۳۹۸",
+                                "icon": "🚀",
+                                "text": "فعالیت را با یک تیم سه‌نفرهٔ مهندسی و یک هدف ساده آغاز کردیم: ساخت سایت برای کسب‌وکارهای ایرانی را آسان کنیم.",
+                                "image": "",
+                                "title": "تأسیس شرکت",
+                                "link_url": "",
+                                "link_label": ""
                             },
                             {
-                                "text": "از میان قالب‌های آماده یکی را انتخاب کنید",
-                                "title": "انتخاب قالب",
-                                "number": "۲"
+                                "date": "۱۳۹۹",
+                                "icon": "📦",
+                                "text": "اولین نسخهٔ Builder بصری منتشر شد و نخستین مشتریان واقعی سایت خود را با آن راه‌اندازی کردند.",
+                                "image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "title": "عرضهٔ نسخهٔ اول پلتفرم",
+                                "link_url": "",
+                                "link_label": ""
                             },
                             {
-                                "text": "محتوای خود را اضافه کرده و سایت را منتشر کنید",
-                                "title": "شخصی‌سازی و انتشار",
-                                "number": "۳"
+                                "date": "۱۴۰۱",
+                                "icon": "🛒",
+                                "text": "ماژول فروشگاه، سبد خرید و درگاه پرداخت به پلتفرم اضافه شد و مسیر فروش آنلاین برای مشتریان باز شد.",
+                                "image": "",
+                                "title": "افزودن فروشگاه‌ساز آنلاین",
+                                "link_url": "/shop",
+                                "link_label": ""
+                            },
+                            {
+                                "date": "۱۴۰۲",
+                                "icon": "📈",
+                                "text": "با رشد پایدار، بیش از هزار کسب‌وکار ایرانی برای معرفی و فروش خدمات خود از پلتفرم استفاده کردند.",
+                                "image": "",
+                                "title": "عبور از هزار کسب‌وکار فعال",
+                                "link_url": "",
+                                "link_label": ""
+                            },
+                            {
+                                "date": "۱۴۰۴",
+                                "icon": "🏢",
+                                "text": "با افزودن امکانات چندفروشگاهی و پشتیبانی اختصاصی، وارد بازار کسب‌وکارهای بزرگ‌تر شدیم.",
+                                "image": "",
+                                "title": "توسعهٔ خدمات سازمانی",
+                                "link_url": "/pricing",
+                                "link_label": "مشاهدهٔ تعرفه‌ها"
                             }
                         ],
-                        "title": "چطور کار می‌کنیم",
-                        "subtitle": "از ثبت‌نام تا راه‌اندازی، سه گام ساده"
+                        "title": "مسیر رشد ما",
+                        "layout": "vertical",
+                        "subtitle": "نگاهی به مهم‌ترین نقاط عطف پلتفرم"
                     }
                 },
                 {
-                    "id": "qa_skills_bars_bbdd20",
+                    "id": "qa_skills_bars_3d43bc",
                     "type": "skills_bars",
                     "props": {
                         "title": "توانمندی‌های زیرساخت ما",
@@ -673,15 +968,20 @@
                     }
                 },
                 {
-                    "id": "qa_client_logos_3123e5",
+                    "id": "qa_client_logos_bd8a46",
                     "type": "client_logos",
                     "props": {
+                        "mode": "carousel",
                         "logos": [
                             {
-                                "name": "دیجی‌مد"
+                                "url": "#",
+                                "name": "دیجی‌مد",
+                                "image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg"
                             },
                             {
-                                "name": "آموزشگاه رشد"
+                                "url": "#",
+                                "name": "آموزشگاه رشد",
+                                "image": "http://saas-platform.test/storage/theme-media/1/portfolio_2.jpg"
                             },
                             {
                                 "name": "کلینیک سلامت"
@@ -691,7 +991,8 @@
                             }
                         ],
                         "title": "برندهایی که به ما اعتماد کرده‌اند",
-                        "scroll": true
+                        "grayscale": true,
+                        "visible_count": 4
                     }
                 }
             ]
@@ -701,7 +1002,7 @@
             "title": "فرم تماس",
             "blocks": [
                 {
-                    "id": "qa_module_form_embed_2b959d",
+                    "id": "qa_module_form_embed_a599c5",
                     "type": "module:form_embed",
                     "props": {
                         "style": "card",
@@ -716,12 +1017,12 @@
             "title": "حساب کاربری",
             "blocks": [
                 {
-                    "id": "qa_login_register_5017e6",
+                    "id": "qa_login_register_40391e",
                     "type": "login_register",
                     "props": []
                 },
                 {
-                    "id": "qa_module_account_quick_links_0946a4",
+                    "id": "qa_module_account_quick_links_0d7738",
                     "type": "module:account_quick_links",
                     "props": {
                         "style": "buttons",
@@ -729,7 +1030,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_loyalty_points_badge_1ea770",
+                    "id": "qa_module_loyalty_points_badge_7fde42",
                     "type": "module:loyalty_points_badge",
                     "props": {
                         "label": "امتیاز باشگاه مشتریان من",
@@ -743,7 +1044,7 @@
             "title": "تماس با ما",
             "blocks": [
                 {
-                    "id": "qa_contact_split_a03c8a",
+                    "id": "qa_contact_split_885045",
                     "type": "contact_split",
                     "props": {
                         "email": "info@yourbrand.ir",
@@ -756,7 +1057,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_contact_quick_91ee5f",
+                    "id": "qa_module_contact_quick_9c8c0c",
                     "type": "module:contact_quick",
                     "props": {
                         "title": "تماس سریع",
@@ -766,7 +1067,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_support_button_8c1006",
+                    "id": "qa_module_support_button_13b992",
                     "type": "module:support_button",
                     "props": {
                         "label": "پشتیبانی آنلاین",
@@ -776,7 +1077,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_whatsapp_widget_119440",
+                    "id": "qa_module_whatsapp_widget_528151",
                     "type": "module:whatsapp_widget",
                     "props": {
                         "label": "چت واتساپ",
@@ -790,7 +1091,7 @@
             "title": "تعرفه‌ها",
             "blocks": [
                 {
-                    "id": "qa_heading_47faa6",
+                    "id": "qa_heading_719f97",
                     "type": "heading",
                     "props": {
                         "text": "تعرفه‌ها و پلن‌ها",
@@ -798,7 +1099,7 @@
                     }
                 },
                 {
-                    "id": "qa_pricing_cards_72bbcf",
+                    "id": "qa_pricing_cards_cc5c1c",
                     "type": "pricing_cards",
                     "props": {
                         "plans": [
@@ -807,7 +1108,7 @@
                                 "badge": "",
                                 "price": "رایگان",
                                 "period": "",
-                                "cta_url": "\/account",
+                                "cta_url": "/account",
                                 "cta_text": "شروع رایگان",
                                 "features": [
                                     "۱ صفحه فرود",
@@ -820,8 +1121,8 @@
                                 "name": "حرفه‌ای",
                                 "badge": "محبوب‌ترین",
                                 "price": "۴۹۰",
-                                "period": "هزار تومان \/ ماه",
-                                "cta_url": "\/account",
+                                "period": "هزار تومان / ماه",
+                                "cta_url": "/account",
                                 "cta_text": "انتخاب پلن حرفه‌ای",
                                 "features": [
                                     "سایت نامحدود صفحه",
@@ -835,8 +1136,8 @@
                                 "name": "سازمانی",
                                 "badge": "",
                                 "price": "۱۲۹۰",
-                                "period": "هزار تومان \/ ماه",
-                                "cta_url": "\/contact",
+                                "period": "هزار تومان / ماه",
+                                "cta_url": "/contact",
                                 "cta_text": "تماس با فروش",
                                 "features": [
                                     "همهٔ امکانات حرفه‌ای",
@@ -852,7 +1153,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_pricing_table_2a28a6",
+                    "id": "qa_module_pricing_table_2ec15c",
                     "type": "module:pricing_table",
                     "props": {
                         "title": "اشتراک‌های تکمیلی",
@@ -860,7 +1161,7 @@
                     }
                 },
                 {
-                    "id": "qa_trust_badges_69ca51",
+                    "id": "qa_trust_badges_7db938",
                     "type": "trust_badges",
                     "props": {
                         "badges": [
@@ -877,7 +1178,7 @@
                             {
                                 "icon": "☎️",
                                 "text": "همیشه در دسترس شما",
-                                "title": "پشتیبانی ۲۴\/۷"
+                                "title": "پشتیبانی ۲۴/۷"
                             }
                         ],
                         "background": "#f8fafc"
@@ -890,7 +1191,7 @@
             "title": "آموزش",
             "blocks": [
                 {
-                    "id": "qa_module_courses_grid_1e201c",
+                    "id": "qa_module_courses_grid_2ebd7e",
                     "type": "module:courses_grid",
                     "props": {
                         "limit": 9,
@@ -901,7 +1202,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_course_enroll_cta_681bb2",
+                    "id": "qa_module_course_enroll_cta_fe6ef9",
                     "type": "module:course_enroll_cta",
                     "props": []
                 }
@@ -912,31 +1213,31 @@
             "title": "خدمات",
             "blocks": [
                 {
-                    "id": "qa_service_cards_93308b",
+                    "id": "qa_service_cards_4838eb",
                     "type": "service_cards",
                     "props": {
                         "title": "خدماتی که ارائه می‌دهیم",
                         "services": [
                             {
-                                "url": "\/contact",
+                                "url": "/service-website-design",
                                 "icon": "🎨",
                                 "text": "طراحی سفارشی مطابق هویت برند شما",
                                 "title": "طراحی سایت اختصاصی"
                             },
                             {
-                                "url": "\/shop",
+                                "url": "/shop",
                                 "icon": "🛒",
                                 "text": "از کاتالوگ محصول تا درگاه پرداخت",
                                 "title": "راه‌اندازی فروشگاه آنلاین"
                             },
                             {
-                                "url": "\/learning",
+                                "url": "/learning",
                                 "icon": "🎓",
                                 "text": "فروش دوره و مدیریت دانشجویان",
                                 "title": "پلتفرم آموزش آنلاین"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "icon": "📈",
                                 "text": "افزایش دیده‌شدن سایت شما در گوگل",
                                 "title": "بهینه‌سازی و سئو"
@@ -945,7 +1246,7 @@
                     }
                 },
                 {
-                    "id": "qa_process_steps_9ce0e8",
+                    "id": "qa_process_steps_6dd80e",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -970,13 +1271,13 @@
                     }
                 },
                 {
-                    "id": "qa_cta_8c851d",
+                    "id": "qa_cta_d9fce0",
                     "type": "cta",
                     "props": {
                         "title": "برای مشاورهٔ رایگان تماس بگیرید",
                         "subtitle": "تیم ما آماده پاسخگویی است",
                         "background": "primary",
-                        "button_url": "\/contact",
+                        "button_url": "/contact",
                         "button_text": "تماس با ما"
                     }
                 }
@@ -987,7 +1288,7 @@
             "title": "نمونه‌کارها",
             "blocks": [
                 {
-                    "id": "qa_heading_e7c49e",
+                    "id": "qa_heading_927b82",
                     "type": "heading",
                     "props": {
                         "text": "نمونه‌کارهای منتخب",
@@ -995,33 +1296,33 @@
                     }
                 },
                 {
-                    "id": "qa_gallery_90cc60",
+                    "id": "qa_gallery_bcb064",
                     "type": "gallery",
                     "props": {
                         "items": [
                             {
                                 "alt": "پروژهٔ فروشگاه دیجی‌مد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg"
                             },
                             {
                                 "alt": "پروژهٔ سایت شرکتی نقش",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_2.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_2.jpg"
                             },
                             {
                                 "alt": "پروژهٔ وبلاگ آموزشی رشد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg"
                             },
                             {
                                 "alt": "پروژهٔ کلینیک سلامت",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_2.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_2.jpg"
                             },
                             {
                                 "alt": "پروژهٔ آژانس سفر پرواز",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_3.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_3.jpg"
                             },
                             {
                                 "alt": "پروژهٔ رستوران زیتون",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_4.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_4.jpg"
                             }
                         ],
                         "title": "",
@@ -1029,7 +1330,7 @@
                     }
                 },
                 {
-                    "id": "qa_bento_grid_0b5a69",
+                    "id": "qa_bento_grid_190a02",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -1068,7 +1369,7 @@
             "title": "امکانات",
             "blocks": [
                 {
-                    "id": "qa_module_site_search_9e32f6",
+                    "id": "qa_module_site_search_7b6ba7",
                     "type": "module:site_search",
                     "props": {
                         "style": "hero",
@@ -1076,26 +1377,26 @@
                     }
                 },
                 {
-                    "id": "qa_tabs_3084ff",
+                    "id": "qa_tabs_5c0b26",
                     "type": "tabs",
                     "props": {
                         "blocks": [
                             {
-                                "id": "qa_tab_panel_da723c",
+                                "id": "qa_tab_panel_48a0ec",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "فروشگاه اینترنتی",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_64ea57",
+                                            "id": "qa_heading_e58e1f",
                                             "type": "heading",
                                             "props": {
                                                 "text": "همه‌چیز برای فروش آنلاین",
-                                                "level": "3"
+                                                "level": "2"
                                             }
                                         },
                                         {
-                                            "id": "qa_text_37bdf6",
+                                            "id": "qa_text_0684a4",
                                             "type": "text",
                                             "props": {
                                                 "content": "مدیریت محصول، دسته‌بندی، سبد خرید و درگاه پرداخت — بدون نیاز به افزونهٔ جداگانه."
@@ -1105,21 +1406,21 @@
                                 }
                             },
                             {
-                                "id": "qa_tab_panel_c2dc00",
+                                "id": "qa_tab_panel_0273f0",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "آموزش آنلاین",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_39e863",
+                                            "id": "qa_heading_1f097e",
                                             "type": "heading",
                                             "props": {
                                                 "text": "فروش دوره و مدیریت دانشجو",
-                                                "level": "3"
+                                                "level": "2"
                                             }
                                         },
                                         {
-                                            "id": "qa_text_e50235",
+                                            "id": "qa_text_d502da",
                                             "type": "text",
                                             "props": {
                                                 "content": "تعریف دوره، فروش اقساطی یا یک‌جا، و پیگیری پیشرفت دانشجویان در یک داشبورد."
@@ -1129,21 +1430,21 @@
                                 }
                             },
                             {
-                                "id": "qa_tab_panel_15e385",
+                                "id": "qa_tab_panel_87afa5",
                                 "type": "tab_panel",
                                 "props": {
                                     "title": "وبلاگ و محتوا",
                                     "blocks": [
                                         {
-                                            "id": "qa_heading_803faa",
+                                            "id": "qa_heading_33e3e0",
                                             "type": "heading",
                                             "props": {
                                                 "text": "انتشار محتوای حرفه‌ای",
-                                                "level": "3"
+                                                "level": "2"
                                             }
                                         },
                                         {
-                                            "id": "qa_text_4cc8c4",
+                                            "id": "qa_text_4083a7",
                                             "type": "text",
                                             "props": {
                                                 "content": "دسته‌بندی، برچسب و سئوی داخلی برای هر مطلب، بدون نیاز به ابزار جانبی."
@@ -1156,7 +1457,7 @@
                     }
                 },
                 {
-                    "id": "qa_accordion_09cc0e",
+                    "id": "qa_accordion_62da3b",
                     "type": "accordion",
                     "props": {
                         "items": [
@@ -1164,7 +1465,7 @@
                                 "title": "آیا می‌توانم استایل هر بخش را جداگانه تغییر دهم؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_afefee",
+                                        "id": "qa_text_77da82",
                                         "type": "text",
                                         "props": {
                                             "content": "بله، هر بخش رنگ، فاصله‌گذاری، اندازهٔ متن و حاشیهٔ مخصوص به خودش را دارد و مستقل از بقیه قابل تنظیم است."
@@ -1176,7 +1477,7 @@
                                 "title": "خروجی موبایل جداگانه طراحی می‌شود؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_20a57b",
+                                        "id": "qa_text_74d480",
                                         "type": "text",
                                         "props": {
                                             "content": "خیر، طراحی واکنش‌گراست؛ همان صفحه به‌صورت خودکار برای موبایل و تبلت هم بهینه نمایش داده می‌شود."
@@ -1188,7 +1489,7 @@
                                 "title": "چطور به نسخهٔ قبلی صفحه برمی‌گردم؟",
                                 "blocks": [
                                     {
-                                        "id": "qa_text_a241a8",
+                                        "id": "qa_text_ce2e7a",
                                         "type": "text",
                                         "props": {
                                             "content": "از تاریخچهٔ نسخه‌ها در سازنده می‌توانید هر نسخهٔ قبلی صفحه را انتخاب و بازیابی کنید."
@@ -1200,49 +1501,52 @@
                     }
                 },
                 {
-                    "id": "qa_slider_dc907e",
+                    "id": "qa_slider_2c552c",
                     "type": "slider",
                     "props": {
                         "slides": [
                             {
-                                "link": "\/shop",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg",
+                                "link": "/shop",
+                                "image": "http://saas-platform.test/storage/theme-media/1/hero.jpg",
                                 "title": "فروش ویژهٔ پاییزه",
+                                "cta_text": "مشاهدهٔ فروشگاه",
                                 "subtitle": "تا ۳۰٪ تخفیف روی محصولات منتخب"
                             },
                             {
-                                "link": "\/learning",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg",
+                                "link": "/learning",
+                                "image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
                                 "title": "دوره‌های جدید آموزشی",
                                 "subtitle": "ثبت‌نام زودهنگام با تخفیف ویژه"
                             },
                             {
-                                "link": "\/portfolio",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_1.jpg",
+                                "link": "/portfolio",
+                                "image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
                                 "title": "نمونه‌کارهای تازه",
                                 "subtitle": ""
                             },
                             {
-                                "link": "\/blog",
-                                "image": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_1.jpg",
+                                "link": "/blog",
+                                "image": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg",
                                 "title": "راهنمای کامل شروع کسب‌وکار آنلاین برای مبتدیان در سال جدید",
                                 "subtitle": "یک راهنمای گام‌به‌گام برای راه‌اندازی اولین فروشگاه یا سایت شما"
                             }
                         ],
+                        "overlay": true,
                         "autoplay": true,
-                        "interval": 5000
+                        "interval": 5000,
+                        "aspect_ratio": "21/9"
                     }
                 },
                 {
-                    "id": "qa_countdown_fb88bc",
+                    "id": "qa_countdown_1e5546",
                     "type": "countdown",
                     "props": {
                         "label": "پایان جشنواره فروش ویژه",
-                        "end_date": "2026-10-02"
+                        "end_date": "2026-10-04"
                     }
                 },
                 {
-                    "id": "qa_promo_banner_9b2d96",
+                    "id": "qa_promo_banner_4bd252",
                     "type": "promo_banner",
                     "props": {
                         "link": "",
@@ -1251,7 +1555,7 @@
                     }
                 },
                 {
-                    "id": "qa_email_capture_2b8e37",
+                    "id": "qa_email_capture_0c84ba",
                     "type": "email_capture",
                     "props": {
                         "title": "در خبرنامه عضو شوید",
@@ -1259,12 +1563,12 @@
                     }
                 },
                 {
-                    "id": "qa_language_switcher_8aeed9",
+                    "id": "qa_language_switcher_94614d",
                     "type": "language_switcher",
                     "props": []
                 },
                 {
-                    "id": "qa_module_motion_c64fc6",
+                    "id": "qa_module_motion_11c09a",
                     "type": "module:motion",
                     "props": {
                         "enabled": true
@@ -1277,47 +1581,47 @@
             "title": "خانه — کسب‌وکار خدماتی",
             "blocks": [
                 {
-                    "id": "qa_hero_split_143c69",
+                    "id": "qa_hero_split_95cec9",
                     "type": "hero_split",
                     "props": {
                         "badge": "کلینیک سلامت",
                         "title": "سلامت شما، اولویت اول ماست",
                         "subtitle": "نوبت‌دهی آنلاین، مشاورهٔ تخصصی و پیگیری درمان در یک کلینیک مدرن با ۱۸ سال سابقه.",
-                        "image_url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg",
+                        "image_url": "http://saas-platform.test/storage/theme-media/1/about.jpg",
                         "background": "#f0fdfa",
-                        "button_url": "\/contact",
+                        "button_url": "/contact",
                         "image_side": "left",
-                        "button2_url": "\/services",
+                        "button2_url": "/services",
                         "button_text": "رزرو نوبت آنلاین",
                         "button2_text": "مشاهدهٔ خدمات"
                     }
                 },
                 {
-                    "id": "qa_service_cards_35f166",
+                    "id": "qa_service_cards_e40f59",
                     "type": "service_cards",
                     "props": {
                         "title": "خدمات درمانی و تخصصی کلینیک سلامت",
                         "services": [
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "icon": "🩺",
                                 "text": "ویزیت حضوری و آنلاین با پزشکان عمومی مجرب",
                                 "title": "مشاورهٔ عمومی"
                             },
                             {
-                                "url": "\/services",
+                                "url": "/services",
                                 "icon": "🏃",
                                 "text": "درمان دردهای اسکلتی-عضلانی با دستگاه‌های روز",
                                 "title": "فیزیوتراپی"
                             },
                             {
-                                "url": "\/services",
+                                "url": "/services",
                                 "icon": "🥗",
                                 "text": "برنامهٔ غذایی اختصاصی با پیگیری هفتگی",
                                 "title": "تغذیه و رژیم درمانی"
                             },
                             {
-                                "url": "\/services",
+                                "url": "/services",
                                 "icon": "✨",
                                 "text": "خدمات پوست با متخصصان دارای مجوز",
                                 "title": "مراقبت پوست و زیبایی"
@@ -1326,7 +1630,7 @@
                     }
                 },
                 {
-                    "id": "qa_stats_row_6c030f",
+                    "id": "qa_stats_row_24488c",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -1357,7 +1661,7 @@
                     }
                 },
                 {
-                    "id": "qa_process_steps_a60fce",
+                    "id": "qa_process_steps_2dbd95",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -1382,7 +1686,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_3affb0",
+                    "id": "qa_testimonials_slider_df0dee",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1412,7 +1716,7 @@
                     }
                 },
                 {
-                    "id": "qa_faq_12b195",
+                    "id": "qa_faq_83c326",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -1433,13 +1737,13 @@
                     }
                 },
                 {
-                    "id": "qa_cta_a96c96",
+                    "id": "qa_cta_6a4fa9",
                     "type": "cta",
                     "props": {
                         "title": "همین حالا نوبت خود را رزرو کنید",
                         "subtitle": "ظرفیت نوبت‌های این هفته محدود است",
                         "background": "primary",
-                        "button_url": "\/contact",
+                        "button_url": "/contact",
                         "button_text": "رزرو نوبت"
                     }
                 }
@@ -1451,7 +1755,7 @@
             "title": "نظرات مشتریان",
             "blocks": [
                 {
-                    "id": "qa_heading_df6dc1",
+                    "id": "qa_heading_6a4665",
                     "type": "heading",
                     "props": {
                         "text": "مشتریان ما چه می‌گویند",
@@ -1459,7 +1763,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_a2f9ba",
+                    "id": "qa_testimonials_slider_972263",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1495,7 +1799,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_reviews_grid_a55136",
+                    "id": "qa_module_reviews_grid_2cc363",
                     "type": "module:reviews_grid",
                     "props": {
                         "limit": 6,
@@ -1511,13 +1815,13 @@
             "title": "خانه — مجله و رسانه",
             "blocks": [
                 {
-                    "id": "qa_hero_gradient_5ee97d",
+                    "id": "qa_hero_gradient_7baedd",
                     "type": "hero_gradient",
                     "props": {
                         "badge": "مجلهٔ کسب‌وکار امروز",
                         "title": "کارآفرینی، تکنولوژی و کسب‌وکار — هر روز یک ایدهٔ تازه",
                         "subtitle": "جدیدترین تحلیل‌ها، گزارش‌های بازار و مصاحبه‌های اختصاصی مجلهٔ کسب‌وکار امروز را دنبال کنید.",
-                        "button_url": "\/blog",
+                        "button_url": "/blog",
                         "text_color": "#f1f5f9",
                         "button_text": "مطالعهٔ مطالب",
                         "gradient_to": "#334155",
@@ -1525,14 +1829,14 @@
                     }
                 },
                 {
-                    "id": "qa_module_blog_featured_24ba6c",
+                    "id": "qa_module_blog_featured_217169",
                     "type": "module:blog_featured",
                     "props": {
                         "title": "مطلب ویژهٔ هفته"
                     }
                 },
                 {
-                    "id": "qa_blog_posts_91df20",
+                    "id": "qa_blog_posts_f5d5ca",
                     "type": "blog_posts",
                     "props": {
                         "limit": 9,
@@ -1540,14 +1844,14 @@
                     }
                 },
                 {
-                    "id": "qa_module_blog_categories_b43869",
+                    "id": "qa_module_blog_categories_1ada1a",
                     "type": "module:blog_categories",
                     "props": {
                         "title": "مرور بر اساس موضوع"
                     }
                 },
                 {
-                    "id": "qa_bento_grid_1542ac",
+                    "id": "qa_bento_grid_10a6ec",
                     "type": "bento_grid",
                     "props": {
                         "items": [
@@ -1580,7 +1884,7 @@
                     }
                 },
                 {
-                    "id": "qa_newsletter_form_a9268c",
+                    "id": "qa_newsletter_form_551835",
                     "type": "newsletter_form",
                     "props": {
                         "title": "خلاصهٔ هفتگی را در ایمیل خود دریافت کنید",
@@ -1599,28 +1903,28 @@
             "title": "خانه — برند شخصی",
             "blocks": [
                 {
-                    "id": "qa_hero_split_774f26",
+                    "id": "qa_hero_split_0f24e5",
                     "type": "hero_split",
                     "props": {
                         "badge": "طراح گرافیک و مشاور برند",
                         "title": "نگین رضایی هستم، طراح گرافیک و مشاور برند",
                         "subtitle": "به کسب‌وکار شما هویت بصری‌ای می‌بخشم که در ذهن مشتری می‌ماند.",
-                        "image_url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/about.jpg",
+                        "image_url": "http://saas-platform.test/storage/theme-media/1/about.jpg",
                         "background": "#f8fafc",
-                        "button_url": "\/portfolio",
+                        "button_url": "/portfolio",
                         "image_side": "right",
-                        "button2_url": "\/contact",
+                        "button2_url": "/contact",
                         "button_text": "مشاهدهٔ نمونه‌کارها",
                         "button2_text": "درخواست همکاری"
                     }
                 },
                 {
-                    "id": "qa_about_section_e6cd83",
+                    "id": "qa_about_section_acb058",
                     "type": "about_section",
                     "props": {
                         "badge": "دربارهٔ من",
                         "title": "بیش از ۸ سال تجربه در طراحی برند",
-                        "btn_url": "\/about",
+                        "btn_url": "/about",
                         "btn_text": "بیشتر بخوانید",
                         "features": [
                             "طراحی لوگو و هویت بصری",
@@ -1631,7 +1935,7 @@
                     }
                 },
                 {
-                    "id": "qa_skills_bars_b279fa",
+                    "id": "qa_skills_bars_490859",
                     "type": "skills_bars",
                     "props": {
                         "title": "مهارت‌ها",
@@ -1652,21 +1956,21 @@
                     }
                 },
                 {
-                    "id": "qa_gallery_7b7fd4",
+                    "id": "qa_gallery_67e24a",
                     "type": "gallery",
                     "props": {
                         "items": [
                             {
                                 "alt": "هویت بصری برند دیجی‌مد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg"
                             },
                             {
                                 "alt": "ریبرندینگ استودیو نقش",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_2.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_2.jpg"
                             },
                             {
                                 "alt": "طراحی رابط کاربری اپلیکیشن رشد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg"
                             }
                         ],
                         "title": "منتخب پروژه‌ها",
@@ -1674,7 +1978,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_8e7a6a",
+                    "id": "qa_testimonials_slider_5c9962",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1698,13 +2002,13 @@
                     }
                 },
                 {
-                    "id": "qa_cta_4adea2",
+                    "id": "qa_cta_d9b756",
                     "type": "cta",
                     "props": {
                         "title": "پروژهٔ بعدی خود را با من شروع کنید",
                         "subtitle": "برای مشاورهٔ رایگان تماس بگیرید",
                         "background": "secondary",
-                        "button_url": "\/contact",
+                        "button_url": "/contact",
                         "button_text": "درخواست همکاری"
                     }
                 }
@@ -1716,40 +2020,40 @@
             "title": "خانه — فروشگاه اینترنتی",
             "blocks": [
                 {
-                    "id": "qa_promo_banner_67f7b8",
+                    "id": "qa_promo_banner_623984",
                     "type": "promo_banner",
                     "props": {
-                        "link": "\/shop",
+                        "link": "/shop",
                         "text": "🔥 حراج پاییزه — تا ۳۰٪ تخفیف روی محصولات منتخب، فقط تا پایان هفته",
                         "style": "sale"
                     }
                 },
                 {
-                    "id": "qa_hero_split_d40059",
+                    "id": "qa_hero_split_6209e0",
                     "type": "hero_split",
                     "props": {
                         "badge": "کلکسیون پاییز ۱۴۰۴",
                         "title": "کلکسیون جدید دیجی‌مد رسید",
                         "subtitle": "ارسال رایگان برای خریدهای بالای ۵۰۰ هزار تومان — ۲۰٪ تخفیف برای اولین خرید شما.",
-                        "image_url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/hero.jpg",
+                        "image_url": "http://saas-platform.test/storage/theme-media/1/hero.jpg",
                         "background": "#fff7ed",
-                        "button_url": "\/shop",
+                        "button_url": "/shop",
                         "image_side": "right",
-                        "button2_url": "\/portfolio",
+                        "button2_url": "/portfolio",
                         "button_text": "مشاهده و خرید",
                         "button2_text": "مشاهدهٔ نمونه‌کارها"
                     }
                 },
                 {
-                    "id": "qa_countdown_cf47b6",
+                    "id": "qa_countdown_3ebb4b",
                     "type": "countdown",
                     "props": {
                         "label": "پایان حراج پاییزه",
-                        "end_date": "2026-09-23"
+                        "end_date": "2026-09-25"
                     }
                 },
                 {
-                    "id": "qa_features_grid_1a00e9",
+                    "id": "qa_features_grid_ebf774",
                     "type": "features_grid",
                     "props": {
                         "style": "cards",
@@ -1781,7 +2085,16 @@
                     }
                 },
                 {
-                    "id": "qa_heading_02aed1",
+                    "id": "qa_category_slider_2ec058",
+                    "type": "category_slider",
+                    "props": {
+                        "title": "دسته‌بندی‌های فروشگاه",
+                        "layout": "carousel",
+                        "columns": "4"
+                    }
+                },
+                {
+                    "id": "qa_heading_22d801",
                     "type": "heading",
                     "props": {
                         "text": "پرفروش‌ترین محصولات",
@@ -1789,7 +2102,7 @@
                     }
                 },
                 {
-                    "id": "qa_product_grid_f5b9a5",
+                    "id": "qa_product_grid_9a4396",
                     "type": "product_grid",
                     "props": {
                         "limit": 8,
@@ -1797,21 +2110,39 @@
                     }
                 },
                 {
-                    "id": "qa_gallery_479de4",
+                    "id": "qa_heading_c5e503",
+                    "type": "heading",
+                    "props": {
+                        "text": "تازه‌ترین محصولات",
+                        "level": "2"
+                    }
+                },
+                {
+                    "id": "qa_product_slider_1fadd6",
+                    "type": "product_slider",
+                    "props": {
+                        "title": "",
+                        "source": "latest",
+                        "columns": 3,
+                        "autoplay": true
+                    }
+                },
+                {
+                    "id": "qa_gallery_51ab25",
                     "type": "gallery",
                     "props": {
                         "items": [
                             {
                                 "alt": "ست پاییزهٔ دیجی‌مد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg"
                             },
                             {
                                 "alt": "کلکسیون رسمی دیجی‌مد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/portfolio_2.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/portfolio_2.jpg"
                             },
                             {
                                 "alt": "استایل روزمرهٔ دیجی‌مد",
-                                "url": "http:\/\/saas-platform.test\/storage\/theme-media\/1\/gallery_1.jpg"
+                                "url": "http://saas-platform.test/storage/theme-media/1/gallery_1.jpg"
                             }
                         ],
                         "title": "لوک‌بوک فصل جدید",
@@ -1819,7 +2150,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_75aa4e",
+                    "id": "qa_testimonials_slider_682901",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -1849,7 +2180,7 @@
                     }
                 },
                 {
-                    "id": "qa_trust_badges_8074a0",
+                    "id": "qa_trust_badges_36e768",
                     "type": "trust_badges",
                     "props": {
                         "badges": [
@@ -1866,14 +2197,14 @@
                             {
                                 "icon": "☎️",
                                 "text": "همیشه در دسترس شما",
-                                "title": "پشتیبانی ۲۴\/۷"
+                                "title": "پشتیبانی ۲۴/۷"
                             }
                         ],
                         "background": "#f8fafc"
                     }
                 },
                 {
-                    "id": "qa_newsletter_form_f23566",
+                    "id": "qa_newsletter_form_b1f028",
                     "type": "newsletter_form",
                     "props": {
                         "title": "از تخفیف‌های ویژه باخبر شوید",
@@ -1885,13 +2216,13 @@
                     }
                 },
                 {
-                    "id": "qa_cta_43ad98",
+                    "id": "qa_cta_376fc6",
                     "type": "cta",
                     "props": {
                         "title": "فرصت محدود! تخفیف ویژه تا پایان هفته",
                         "subtitle": "همین حالا خرید کنید تا از تخفیف جا نمانید",
                         "background": "primary",
-                        "button_url": "\/shop",
+                        "button_url": "/shop",
                         "button_text": "ورود به فروشگاه"
                     }
                 }
@@ -1903,15 +2234,15 @@
             "title": "خانه — آموزش آنلاین",
             "blocks": [
                 {
-                    "id": "qa_hero_gradient_7d9298",
+                    "id": "qa_hero_gradient_3de7f2",
                     "type": "hero_gradient",
                     "props": {
                         "badge": "بیش از ۲۰۰ دورهٔ تخصصی",
                         "title": "یادگیری آنلاین، مسیر رشد شما",
                         "subtitle": "بیش از ۲۰۰ دورهٔ تخصصی با مدرک معتبر و پشتیبانی مستقیم مدرس در آموزشگاه رشد.",
-                        "button_url": "\/learning",
+                        "button_url": "/learning",
                         "text_color": "#ffffff",
-                        "button2_url": "\/account",
+                        "button2_url": "/account",
                         "button_text": "مشاهدهٔ دوره‌ها",
                         "gradient_to": "#a855f7",
                         "button2_text": "ثبت‌نام رایگان",
@@ -1919,7 +2250,7 @@
                     }
                 },
                 {
-                    "id": "qa_stats_row_33d3ac",
+                    "id": "qa_stats_row_334515",
                     "type": "stats_row",
                     "props": {
                         "stats": [
@@ -1950,7 +2281,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_courses_grid_12a2ec",
+                    "id": "qa_module_courses_grid_a446e8",
                     "type": "module:courses_grid",
                     "props": {
                         "limit": 6,
@@ -1961,7 +2292,7 @@
                     }
                 },
                 {
-                    "id": "qa_process_steps_ca08ef",
+                    "id": "qa_process_steps_3cddfe",
                     "type": "process_steps",
                     "props": {
                         "steps": [
@@ -1986,7 +2317,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_slider_b84b7a",
+                    "id": "qa_testimonials_slider_5df215",
                     "type": "testimonials_slider",
                     "props": {
                         "items": [
@@ -2016,12 +2347,12 @@
                     }
                 },
                 {
-                    "id": "qa_module_course_enroll_cta_bf23c9",
+                    "id": "qa_module_course_enroll_cta_fea985",
                     "type": "module:course_enroll_cta",
                     "props": []
                 },
                 {
-                    "id": "qa_faq_69c7e9",
+                    "id": "qa_faq_c531b7",
                     "type": "faq",
                     "props": {
                         "items": [
@@ -2044,12 +2375,181 @@
             ],
             "is_home": false
         },
+        "service_detail": {
+            "slug": "service-website-design",
+            "title": "جزئیات خدمت — طراحی سایت اختصاصی",
+            "blocks": [
+                {
+                    "id": "qa_hero_split_9ac7ef",
+                    "type": "hero_split",
+                    "props": {
+                        "badge": "خدمات طراحی وب",
+                        "title": "طراحی و توسعهٔ سایت اختصاصی",
+                        "subtitle": "سایتی متناسب با هویت برند شما، سریع، امن و آمادهٔ رشد — از طراحی رابط کاربری تا توسعهٔ فنی و تحویل نهایی.",
+                        "image_url": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                        "button_url": "/contact",
+                        "image_side": "left",
+                        "button2_url": "/portfolio",
+                        "button_text": "دریافت مشاورهٔ رایگان",
+                        "button2_text": "مشاهدهٔ نمونه‌کارها"
+                    }
+                },
+                {
+                    "id": "qa_features_grid_d85644",
+                    "type": "features_grid",
+                    "props": {
+                        "style": "cards",
+                        "title": "این خدمت شامل چه مواردی است؟",
+                        "columns": "3",
+                        "features": [
+                            {
+                                "icon": "🎨",
+                                "text": "طراحی از صفر، مطابق هویت بصری برند شما — نه یک قالب آماده.",
+                                "title": "طراحی رابط کاربری اختصاصی"
+                            },
+                            {
+                                "icon": "📱",
+                                "text": "نمایش صحیح در موبایل، تبلت و دسکتاپ.",
+                                "title": "ریسپانسیو کامل"
+                            },
+                            {
+                                "icon": "⚡",
+                                "text": "بهینه‌سازی تصاویر و کد برای تجربهٔ کاربری سریع.",
+                                "title": "سرعت بارگذاری بالا"
+                            },
+                            {
+                                "icon": "🔍",
+                                "text": "ساختار HTML معنایی و متادیتای صحیح از روز اول.",
+                                "title": "سئوی فنی پایه"
+                            },
+                            {
+                                "icon": "🔒",
+                                "text": "اتصال امن HTTPS برای همهٔ صفحات.",
+                                "title": "گواهی امنیتی SSL"
+                            },
+                            {
+                                "icon": "🛠️",
+                                "text": "یک ماه پشتیبانی رایگان پس از راه‌اندازی.",
+                                "title": "پشتیبانی پس از تحویل"
+                            }
+                        ],
+                        "subtitle": "یک بستهٔ کامل، بدون نیاز به تأمین‌کنندهٔ جداگانه"
+                    }
+                },
+                {
+                    "id": "qa_process_steps_56f222",
+                    "type": "process_steps",
+                    "props": {
+                        "steps": [
+                            {
+                                "text": "جلسهٔ اولیه برای شناخت کسب‌وکار و هدف سایت",
+                                "title": "مشاوره و بررسی نیاز",
+                                "number": "۱"
+                            },
+                            {
+                                "text": "ارائهٔ نمونهٔ طراحی و اعمال بازخورد شما",
+                                "title": "طراحی رابط کاربری",
+                                "number": "۲"
+                            },
+                            {
+                                "text": "پیاده‌سازی طراحی به‌صورت واقعی و تست‌شده",
+                                "title": "توسعهٔ فنی",
+                                "number": "۳"
+                            },
+                            {
+                                "text": "انتشار نهایی سایت و آموزش استفاده",
+                                "title": "تحویل و راه‌اندازی",
+                                "number": "۴"
+                            }
+                        ],
+                        "title": "روند اجرای این خدمت",
+                        "subtitle": "از جلسهٔ اول تا تحویل نهایی"
+                    }
+                },
+                {
+                    "id": "qa_stats_row_536007",
+                    "type": "stats_row",
+                    "props": {
+                        "stats": [
+                            {
+                                "label": "پروژهٔ موفق",
+                                "value": 150,
+                                "suffix": "+"
+                            },
+                            {
+                                "label": "میانگین زمان تحویل نسخهٔ اول",
+                                "value": 7,
+                                "suffix": " روز"
+                            },
+                            {
+                                "label": "رضایت مشتریان",
+                                "value": 98,
+                                "suffix": "%"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "qa_faq_649842",
+                    "type": "faq",
+                    "props": {
+                        "items": [
+                            {
+                                "answer": "هزینه بسته به پیچیدگی پروژه متفاوت است؛ برای برآورد دقیق در بخش <a href=\"/pricing\">تعرفه‌ها</a> را ببینید یا با ما تماس بگیرید.",
+                                "question": "هزینهٔ این خدمت چقدر است؟"
+                            },
+                            {
+                                "answer": "نسخهٔ اول معمولاً بین ۷ تا ۲۱ روز کاری، بسته به دامنهٔ پروژه.",
+                                "question": "چقدر طول می‌کشد؟"
+                            },
+                            {
+                                "answer": "تولید محتوا خدمتی مجزاست؛ می‌توانید آن را در مشاورهٔ اولیه اضافه کنید.",
+                                "question": "آیا محتوای سایت را هم آماده می‌کنید؟"
+                            }
+                        ],
+                        "title": "سوالات متداول دربارهٔ این خدمت"
+                    }
+                },
+                {
+                    "id": "qa_service_cards_73519e",
+                    "type": "service_cards",
+                    "props": {
+                        "title": "خدمات مرتبط دیگر",
+                        "services": [
+                            {
+                                "url": "/shop",
+                                "icon": "🛒",
+                                "text": "از کاتالوگ محصول تا درگاه پرداخت",
+                                "title": "راه‌اندازی فروشگاه آنلاین"
+                            },
+                            {
+                                "url": "/contact",
+                                "icon": "📈",
+                                "text": "افزایش دیده‌شدن سایت شما در گوگل",
+                                "title": "بهینه‌سازی و سئو"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "qa_cta_dfd7ce",
+                    "type": "cta",
+                    "props": {
+                        "title": "آمادهٔ شروع پروژه هستید؟",
+                        "subtitle": "همین امروز با ما تماس بگیرید",
+                        "background": "primary",
+                        "button_url": "/contact",
+                        "button_text": "تماس با ما"
+                    }
+                }
+            ]
+        },
         "builder-coverage": {
             "slug": "builder-coverage",
             "title": "پوشش عناصر سازنده",
             "blocks": [
                 {
-                    "id": "qa_section_054d41",
+                    "id": "qa_section_4135c4",
                     "type": "section",
                     "props": {
                         "blocks": [],
@@ -2059,7 +2559,7 @@
                     }
                 },
                 {
-                    "id": "qa_container_6ce5d8",
+                    "id": "qa_container_dd924a",
                     "type": "container",
                     "props": {
                         "blocks": [],
@@ -2067,7 +2567,7 @@
                     }
                 },
                 {
-                    "id": "qa_grid_8470fb",
+                    "id": "qa_grid_cf8ba2",
                     "type": "grid",
                     "props": {
                         "gap": "md",
@@ -2076,16 +2576,16 @@
                     }
                 },
                 {
-                    "id": "qa_columns_6fa808",
+                    "id": "qa_columns_941c25",
                     "type": "columns",
                     "props": {
                         "gap": "md",
                         "blocks": [],
-                        "ratios": "1\/2,1\/2"
+                        "ratios": "1/2,1/2"
                     }
                 },
                 {
-                    "id": "qa_flex_container_3de204",
+                    "id": "qa_flex_container_817776",
                     "type": "flex_container",
                     "props": {
                         "gap": "md",
@@ -2098,7 +2598,7 @@
                     }
                 },
                 {
-                    "id": "qa_tab_panel_ad63c1",
+                    "id": "qa_tab_panel_4dfb1e",
                     "type": "tab_panel",
                     "props": {
                         "title": "تب",
@@ -2106,7 +2606,7 @@
                     }
                 },
                 {
-                    "id": "qa_modal_3e4d4f",
+                    "id": "qa_modal_6f7a1e",
                     "type": "modal",
                     "props": {
                         "blocks": [],
@@ -2114,14 +2614,7 @@
                     }
                 },
                 {
-                    "id": "qa_text_5f72b2",
-                    "type": "text",
-                    "props": {
-                        "content": ""
-                    }
-                },
-                {
-                    "id": "qa_image_cd6026",
+                    "id": "qa_image_3e5082",
                     "type": "image",
                     "props": {
                         "alt": "",
@@ -2131,15 +2624,7 @@
                     }
                 },
                 {
-                    "id": "qa_video_21d2d6",
-                    "type": "video",
-                    "props": {
-                        "url": "",
-                        "caption": ""
-                    }
-                },
-                {
-                    "id": "qa_button_65af7f",
+                    "id": "qa_button_32a02b",
                     "type": "button",
                     "props": {
                         "url": "#",
@@ -2148,20 +2633,20 @@
                     }
                 },
                 {
-                    "id": "qa_divider_841595",
+                    "id": "qa_divider_c83b2b",
                     "type": "divider",
                     "props": []
                 },
                 {
-                    "id": "qa_icon_c13fd8",
+                    "id": "qa_icon_777f61",
                     "type": "icon",
                     "props": {
-                        "name": "",
+                        "name": "star",
                         "size": "md"
                     }
                 },
                 {
-                    "id": "qa_counter_d749cb",
+                    "id": "qa_counter_4fa7d4",
                     "type": "counter",
                     "props": {
                         "label": "",
@@ -2170,7 +2655,7 @@
                     }
                 },
                 {
-                    "id": "qa_progress_bar_8e9f06",
+                    "id": "qa_progress_bar_63ae88",
                     "type": "progress_bar",
                     "props": {
                         "label": "",
@@ -2178,7 +2663,7 @@
                     }
                 },
                 {
-                    "id": "qa_testimonials_ea993f",
+                    "id": "qa_testimonials_51f2a8",
                     "type": "testimonials",
                     "props": {
                         "limit": 5,
@@ -2186,19 +2671,12 @@
                     }
                 },
                 {
-                    "id": "qa_product_slider_bec396",
-                    "type": "product_slider",
-                    "props": {
-                        "limit": 6
-                    }
-                },
-                {
-                    "id": "qa_cart_icon_34c56c",
+                    "id": "qa_cart_icon_46719c",
                     "type": "cart_icon",
                     "props": []
                 },
                 {
-                    "id": "qa_add_to_cart_66bff3",
+                    "id": "qa_add_to_cart_cc8dd7",
                     "type": "add_to_cart",
                     "props": {
                         "text": "افزودن به سبد",
@@ -2206,52 +2684,52 @@
                     }
                 },
                 {
-                    "id": "qa_price_box_f2cc6e",
+                    "id": "qa_price_box_8d44b0",
                     "type": "price_box",
                     "props": {
                         "product_id": ""
                     }
                 },
                 {
-                    "id": "qa_breadcrumb_336b08",
+                    "id": "qa_breadcrumb_eab71e",
                     "type": "breadcrumb",
                     "props": []
                 },
                 {
-                    "id": "qa_search_bar_30ed9c",
+                    "id": "qa_search_bar_ea1956",
                     "type": "search_bar",
                     "props": {
                         "placeholder": "جستجو..."
                     }
                 },
                 {
-                    "id": "qa_nav_menu_d8bb1b",
+                    "id": "qa_nav_menu_590ab5",
                     "type": "nav_menu",
                     "props": {
                         "location": "header"
                     }
                 },
                 {
-                    "id": "qa_social_icons_42bceb",
+                    "id": "qa_social_icons_6984b0",
                     "type": "social_icons",
                     "props": {
                         "links": []
                     }
                 },
                 {
-                    "id": "qa_nav_header_403b4b",
+                    "id": "qa_nav_header_949257",
                     "type": "nav_header",
                     "props": {
                         "sticky": false,
                         "bg_color": "#ffffff",
-                        "logo_url": "\/",
+                        "logo_url": "/",
                         "logo_text": "",
                         "nav_links": [],
                         "text_color": "#111827"
                     }
                 },
                 {
-                    "id": "qa_nav_footer_a2317b",
+                    "id": "qa_nav_footer_e038dc",
                     "type": "nav_footer",
                     "props": {
                         "columns": [],
@@ -2261,7 +2739,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_shop_product_slider_04de04",
+                    "id": "qa_module_shop_product_slider_6ec410",
                     "type": "module:shop_product_slider",
                     "props": {
                         "limit": 6,
@@ -2271,7 +2749,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_shop_cart_button_136cbd",
+                    "id": "qa_module_shop_cart_button_85b9d2",
                     "type": "module:shop_cart_button",
                     "props": {
                         "label": "سبد خرید",
@@ -2279,7 +2757,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_shop_countdown_931e9f",
+                    "id": "qa_module_shop_countdown_cc41bc",
                     "type": "module:shop_countdown",
                     "props": {
                         "bg_color": "#ef4444",
@@ -2288,7 +2766,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_my_learning_link_e34887",
+                    "id": "qa_module_my_learning_link_606a06",
                     "type": "module:my_learning_link",
                     "props": {
                         "label": "یادگیری من",
@@ -2296,7 +2774,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_plan_cta_2b0421",
+                    "id": "qa_module_plan_cta_0c5a2f",
                     "type": "module:plan_cta",
                     "props": {
                         "title": "به کاربران ویژه بپیوند",
@@ -2306,7 +2784,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_subscriber_stats_cfaaf5",
+                    "id": "qa_module_subscriber_stats_1e6fff",
                     "type": "module:subscriber_stats",
                     "props": {
                         "label": "کاربر فعال",
@@ -2315,7 +2793,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_referral_widget_c334f9",
+                    "id": "qa_module_referral_widget_6e5657",
                     "type": "module:referral_widget",
                     "props": {
                         "style": "banner",
@@ -2325,7 +2803,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_content_cards_7866d0",
+                    "id": "qa_module_content_cards_869b6e",
                     "type": "module:content_cards",
                     "props": {
                         "limit": 3,
@@ -2335,7 +2813,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_advertisement_zone_99d588",
+                    "id": "qa_module_advertisement_zone_967044",
                     "type": "module:advertisement_zone",
                     "props": {
                         "position": "banner",
@@ -2343,7 +2821,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_notifications_bar_4b9bc5",
+                    "id": "qa_module_notifications_bar_b6e7fa",
                     "type": "module:notifications_bar",
                     "props": {
                         "style": "top-bar",
@@ -2351,7 +2829,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_social_links_bar_dacf94",
+                    "id": "qa_module_social_links_bar_eb61e4",
                     "type": "module:social_links_bar",
                     "props": {
                         "size": "md",
@@ -2360,7 +2838,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_business_card_embed_78bf0e",
+                    "id": "qa_module_business_card_embed_7f478f",
                     "type": "module:business_card_embed",
                     "props": {
                         "style": "full",
@@ -2368,7 +2846,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_edu_article_grid_92a813",
+                    "id": "qa_module_edu_article_grid_c0e7d2",
                     "type": "module:edu_article_grid",
                     "props": {
                         "limit": 6,
@@ -2377,7 +2855,7 @@
                     }
                 },
                 {
-                    "id": "qa_module_invoice_quick_pay_b86f91",
+                    "id": "qa_module_invoice_quick_pay_b34e70",
                     "type": "module:invoice_quick_pay",
                     "props": {
                         "title": "پرداخت فاکتور",
@@ -2385,7 +2863,7 @@
                     }
                 },
                 {
-                    "id": "qa_services_cards_aeaa21",
+                    "id": "qa_services_cards_56f492",
                     "type": "services_cards",
                     "props": {
                         "style": "bordered",
@@ -2396,7 +2874,7 @@
                     }
                 },
                 {
-                    "id": "qa_hero_trust_5f182d",
+                    "id": "qa_hero_trust_d0c2e9",
                     "type": "hero_trust",
                     "props": {
                         "badge": "",
@@ -2412,7 +2890,7 @@
                     }
                 },
                 {
-                    "id": "qa_project_cards_aab096",
+                    "id": "qa_project_cards_94a3e2",
                     "type": "project_cards",
                     "props": {
                         "cards": [],
@@ -2422,7 +2900,7 @@
                     }
                 },
                 {
-                    "id": "qa_contact_info_d08c6b",
+                    "id": "qa_contact_info_900524",
                     "type": "contact_info",
                     "props": {
                         "items": [],
@@ -2432,62 +2910,213 @@
                     }
                 }
             ]
+        },
+        "product_categories": {
+            "slug": "product-categories",
+            "title": "دسته‌بندی محصولات",
+            "blocks": [
+                {
+                    "id": "qa_heading_fccae7",
+                    "type": "heading",
+                    "props": {
+                        "text": "دسته‌بندی محصولات",
+                        "level": 1
+                    }
+                },
+                {
+                    "id": "qa_text_978951",
+                    "type": "text",
+                    "props": {
+                        "content": "محصولات ما را بر اساس دسته‌بندی مورد نظرتان مرور کنید."
+                    }
+                },
+                {
+                    "id": "qa_category_slider_62977f",
+                    "type": "category_slider",
+                    "props": {
+                        "title": "دسته‌بندی‌های محبوب",
+                        "layout": "carousel",
+                        "columns": "4",
+                        "autoplay": true
+                    }
+                },
+                {
+                    "id": "qa_heading_0f145f",
+                    "type": "heading",
+                    "props": {
+                        "text": "همهٔ دسته‌بندی‌ها",
+                        "level": 2
+                    }
+                },
+                {
+                    "id": "qa_category_slider_c4bb10",
+                    "type": "category_slider",
+                    "props": {
+                        "title": "",
+                        "layout": "grid",
+                        "columns": "4"
+                    }
+                },
+                {
+                    "id": "qa_cta_5b3cf9",
+                    "type": "cta",
+                    "props": {
+                        "title": "دنبال چیز خاصی می‌گردید؟",
+                        "subtitle": "با تیم پشتیبانی ما در تماس باشید",
+                        "background": "primary",
+                        "button_url": "/contact",
+                        "button_text": "تماس با ما"
+                    }
+                }
+            ]
         }
     },
     "header_blocks": [
         {
-            "id": "qa_nav_header_5f79aa",
+            "id": "qa_nav_header_03ce87",
             "type": "nav_header",
             "props": {
                 "sticky": false,
-                "cta_url": "#",
-                "bg_color": "#ffffff",
-                "logo_url": "\/",
+                "cta_url": "/pricing",
+                "bg_color": "#082638",
+                "cta_text": "شروع رایگان",
+                "logo_url": "/",
                 "logo_text": "برند شما",
                 "nav_links": [
                     {
-                        "url": "\/",
+                        "url": "/",
                         "label": "خانه"
                     },
                     {
-                        "url": "\/about",
+                        "url": "/about",
                         "label": "درباره ما"
                     },
                     {
-                        "url": "\/services",
-                        "label": "خدمات"
+                        "url": "/services",
+                        "label": "خدمات",
+                        "mega_columns": [
+                            {
+                                "items": [
+                                    {
+                                        "url": "/services#web",
+                                        "icon": "🎨",
+                                        "label": "طراحی و توسعه سایت"
+                                    },
+                                    {
+                                        "url": "/services#shop",
+                                        "icon": "🛒",
+                                        "label": "فروشگاه‌سازی آنلاین"
+                                    },
+                                    {
+                                        "url": "/services#marketing",
+                                        "icon": "📈",
+                                        "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                    }
+                                ],
+                                "title": "خدمات کسب‌وکار"
+                            },
+                            {
+                                "items": [
+                                    {
+                                        "url": "/saas",
+                                        "label": "معرفی پلتفرم"
+                                    },
+                                    {
+                                        "url": "/pricing",
+                                        "label": "تعرفه‌ها"
+                                    },
+                                    {
+                                        "url": "/learning",
+                                        "label": "مستندات و آموزش"
+                                    }
+                                ],
+                                "title": "پلتفرم SaaS"
+                            }
+                        ],
+                        "mega_banner_url": "/saas",
+                        "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                        "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "accordion"
                     },
                     {
-                        "url": "\/shop",
-                        "label": "فروشگاه"
+                        "url": "/shop",
+                        "label": "فروشگاه",
+                        "mega_columns": [
+                            {
+                                "items": [
+                                    {
+                                        "url": "/shop?category=clothing",
+                                        "label": "پوشاک"
+                                    },
+                                    {
+                                        "url": "/shop?category=digital",
+                                        "label": "دیجیتال و لوازم الکترونیکی"
+                                    },
+                                    {
+                                        "url": "/shop?category=home",
+                                        "label": "خانه و آشپزخانه"
+                                    }
+                                ],
+                                "title": "دسته‌بندی‌های محبوب"
+                            },
+                            {
+                                "items": [
+                                    {
+                                        "url": "/shop?source=new",
+                                        "icon": "✨",
+                                        "label": "محصولات جدید"
+                                    },
+                                    {
+                                        "url": "/shop?source=sale",
+                                        "icon": "🔥",
+                                        "label": "تخفیف‌های ویژه"
+                                    },
+                                    {
+                                        "url": "/product-categories",
+                                        "label": "همهٔ دسته‌بندی‌ها"
+                                    }
+                                ],
+                                "title": "میان‌بر"
+                            }
+                        ],
+                        "mega_banner_url": "/shop?source=sale",
+                        "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                        "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "flat"
                     },
                     {
-                        "url": "\/blog",
+                        "url": "/blog",
                         "label": "وبلاگ"
                     },
                     {
-                        "url": "\/contact",
+                        "url": "/contact",
                         "label": "تماس با ما"
                     }
                 ],
-                "text_color": "#111827"
+                "show_cart": true,
+                "text_color": "#f8fafc",
+                "show_search": true,
+                "show_account": true,
+                "show_dark_toggle": true
             }
         }
     ],
     "footer_blocks": [
         {
-            "id": "qa_nav_footer_5ecc76",
+            "id": "qa_nav_footer_249894",
             "type": "nav_footer",
             "props": {
                 "columns": [
                     {
                         "links": [
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
@@ -2507,41 +3136,133 @@
             "label": "کلاسیک (لوگو + منو)",
             "blocks": [
                 {
-                    "id": "qa_nav_header_5f79aa",
+                    "id": "qa_nav_header_03ce87",
                     "type": "nav_header",
                     "props": {
                         "sticky": false,
-                        "cta_url": "#",
-                        "bg_color": "#ffffff",
-                        "logo_url": "\/",
+                        "cta_url": "/pricing",
+                        "bg_color": "#082638",
+                        "cta_text": "شروع رایگان",
+                        "logo_url": "/",
                         "logo_text": "برند شما",
                         "nav_links": [
                             {
-                                "url": "\/",
+                                "url": "/",
                                 "label": "خانه"
                             },
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/services",
-                                "label": "خدمات"
+                                "url": "/services",
+                                "label": "خدمات",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/services#web",
+                                                "icon": "🎨",
+                                                "label": "طراحی و توسعه سایت"
+                                            },
+                                            {
+                                                "url": "/services#shop",
+                                                "icon": "🛒",
+                                                "label": "فروشگاه‌سازی آنلاین"
+                                            },
+                                            {
+                                                "url": "/services#marketing",
+                                                "icon": "📈",
+                                                "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                            }
+                                        ],
+                                        "title": "خدمات کسب‌وکار"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/saas",
+                                                "label": "معرفی پلتفرم"
+                                            },
+                                            {
+                                                "url": "/pricing",
+                                                "label": "تعرفه‌ها"
+                                            },
+                                            {
+                                                "url": "/learning",
+                                                "label": "مستندات و آموزش"
+                                            }
+                                        ],
+                                        "title": "پلتفرم SaaS"
+                                    }
+                                ],
+                                "mega_banner_url": "/saas",
+                                "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "accordion"
                             },
                             {
-                                "url": "\/shop",
-                                "label": "فروشگاه"
+                                "url": "/shop",
+                                "label": "فروشگاه",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?category=clothing",
+                                                "label": "پوشاک"
+                                            },
+                                            {
+                                                "url": "/shop?category=digital",
+                                                "label": "دیجیتال و لوازم الکترونیکی"
+                                            },
+                                            {
+                                                "url": "/shop?category=home",
+                                                "label": "خانه و آشپزخانه"
+                                            }
+                                        ],
+                                        "title": "دسته‌بندی‌های محبوب"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?source=new",
+                                                "icon": "✨",
+                                                "label": "محصولات جدید"
+                                            },
+                                            {
+                                                "url": "/shop?source=sale",
+                                                "icon": "🔥",
+                                                "label": "تخفیف‌های ویژه"
+                                            },
+                                            {
+                                                "url": "/product-categories",
+                                                "label": "همهٔ دسته‌بندی‌ها"
+                                            }
+                                        ],
+                                        "title": "میان‌بر"
+                                    }
+                                ],
+                                "mega_banner_url": "/shop?source=sale",
+                                "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "flat"
                             },
                             {
-                                "url": "\/blog",
+                                "url": "/blog",
                                 "label": "وبلاگ"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
-                        "text_color": "#111827"
+                        "show_cart": true,
+                        "text_color": "#f8fafc",
+                        "show_search": true,
+                        "show_account": true,
+                        "show_dark_toggle": true
                     }
                 }
             ],
@@ -2552,7 +3273,7 @@
             "label": "مینیمال (فقط منو، بدون هدر کامل)",
             "blocks": [
                 {
-                    "id": "qa_nav_menu_270b27",
+                    "id": "qa_nav_menu_495248",
                     "type": "nav_menu",
                     "props": {
                         "location": "header"
@@ -2566,38 +3287,125 @@
             "label": "ناوبری + سبد خرید مجزا",
             "blocks": [
                 {
-                    "id": "qa_nav_header_1bb9c5",
+                    "id": "qa_nav_header_c3c096",
                     "type": "nav_header",
                     "props": {
                         "sticky": true,
-                        "cta_url": "\/pricing",
+                        "cta_url": "/pricing",
                         "bg_color": "#ffffff",
                         "cta_text": "شروع رایگان",
-                        "logo_url": "\/",
+                        "logo_url": "/",
                         "logo_text": "برند شما",
                         "nav_links": [
                             {
-                                "url": "\/",
+                                "url": "/",
                                 "label": "خانه"
                             },
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/services",
-                                "label": "خدمات"
+                                "url": "/services",
+                                "label": "خدمات",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/services#web",
+                                                "icon": "🎨",
+                                                "label": "طراحی و توسعه سایت"
+                                            },
+                                            {
+                                                "url": "/services#shop",
+                                                "icon": "🛒",
+                                                "label": "فروشگاه‌سازی آنلاین"
+                                            },
+                                            {
+                                                "url": "/services#marketing",
+                                                "icon": "📈",
+                                                "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                            }
+                                        ],
+                                        "title": "خدمات کسب‌وکار"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/saas",
+                                                "label": "معرفی پلتفرم"
+                                            },
+                                            {
+                                                "url": "/pricing",
+                                                "label": "تعرفه‌ها"
+                                            },
+                                            {
+                                                "url": "/learning",
+                                                "label": "مستندات و آموزش"
+                                            }
+                                        ],
+                                        "title": "پلتفرم SaaS"
+                                    }
+                                ],
+                                "mega_banner_url": "/saas",
+                                "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "accordion"
                             },
                             {
-                                "url": "\/shop",
-                                "label": "فروشگاه"
+                                "url": "/shop",
+                                "label": "فروشگاه",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?category=clothing",
+                                                "label": "پوشاک"
+                                            },
+                                            {
+                                                "url": "/shop?category=digital",
+                                                "label": "دیجیتال و لوازم الکترونیکی"
+                                            },
+                                            {
+                                                "url": "/shop?category=home",
+                                                "label": "خانه و آشپزخانه"
+                                            }
+                                        ],
+                                        "title": "دسته‌بندی‌های محبوب"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?source=new",
+                                                "icon": "✨",
+                                                "label": "محصولات جدید"
+                                            },
+                                            {
+                                                "url": "/shop?source=sale",
+                                                "icon": "🔥",
+                                                "label": "تخفیف‌های ویژه"
+                                            },
+                                            {
+                                                "url": "/product-categories",
+                                                "label": "همهٔ دسته‌بندی‌ها"
+                                            }
+                                        ],
+                                        "title": "میان‌بر"
+                                    }
+                                ],
+                                "mega_banner_url": "/shop?source=sale",
+                                "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "flat"
                             },
                             {
-                                "url": "\/blog",
+                                "url": "/blog",
                                 "label": "وبلاگ"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
@@ -2605,7 +3413,7 @@
                     }
                 },
                 {
-                    "id": "qa_cart_icon_c8559f",
+                    "id": "qa_cart_icon_d1fb0f",
                     "type": "cart_icon",
                     "props": []
                 }
@@ -2617,53 +3425,140 @@
             "label": "نوار ابزار + هدر",
             "blocks": [
                 {
-                    "id": "qa_social_icons_e06f8e",
+                    "id": "qa_social_icons_619bdc",
                     "type": "social_icons",
                     "props": {
                         "links": [
                             {
-                                "url": "https:\/\/instagram.com\/yourbrand",
+                                "url": "https://instagram.com/yourbrand",
                                 "platform": "instagram"
                             },
                             {
-                                "url": "https:\/\/t.me\/yourbrand",
+                                "url": "https://t.me/yourbrand",
                                 "platform": "telegram"
                             }
                         ]
                     }
                 },
                 {
-                    "id": "qa_nav_header_9498b9",
+                    "id": "qa_nav_header_8ed2bf",
                     "type": "nav_header",
                     "props": {
                         "phone": "۰۲۱-۱۲۳۴۵۶۷۸",
                         "cta_url": "#",
                         "bg_color": "#ffffff",
-                        "logo_url": "\/",
+                        "logo_url": "/",
                         "logo_text": "برند شما",
                         "nav_links": [
                             {
-                                "url": "\/",
+                                "url": "/",
                                 "label": "خانه"
                             },
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/services",
-                                "label": "خدمات"
+                                "url": "/services",
+                                "label": "خدمات",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/services#web",
+                                                "icon": "🎨",
+                                                "label": "طراحی و توسعه سایت"
+                                            },
+                                            {
+                                                "url": "/services#shop",
+                                                "icon": "🛒",
+                                                "label": "فروشگاه‌سازی آنلاین"
+                                            },
+                                            {
+                                                "url": "/services#marketing",
+                                                "icon": "📈",
+                                                "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                            }
+                                        ],
+                                        "title": "خدمات کسب‌وکار"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/saas",
+                                                "label": "معرفی پلتفرم"
+                                            },
+                                            {
+                                                "url": "/pricing",
+                                                "label": "تعرفه‌ها"
+                                            },
+                                            {
+                                                "url": "/learning",
+                                                "label": "مستندات و آموزش"
+                                            }
+                                        ],
+                                        "title": "پلتفرم SaaS"
+                                    }
+                                ],
+                                "mega_banner_url": "/saas",
+                                "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "accordion"
                             },
                             {
-                                "url": "\/shop",
-                                "label": "فروشگاه"
+                                "url": "/shop",
+                                "label": "فروشگاه",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?category=clothing",
+                                                "label": "پوشاک"
+                                            },
+                                            {
+                                                "url": "/shop?category=digital",
+                                                "label": "دیجیتال و لوازم الکترونیکی"
+                                            },
+                                            {
+                                                "url": "/shop?category=home",
+                                                "label": "خانه و آشپزخانه"
+                                            }
+                                        ],
+                                        "title": "دسته‌بندی‌های محبوب"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?source=new",
+                                                "icon": "✨",
+                                                "label": "محصولات جدید"
+                                            },
+                                            {
+                                                "url": "/shop?source=sale",
+                                                "icon": "🔥",
+                                                "label": "تخفیف‌های ویژه"
+                                            },
+                                            {
+                                                "url": "/product-categories",
+                                                "label": "همهٔ دسته‌بندی‌ها"
+                                            }
+                                        ],
+                                        "title": "میان‌بر"
+                                    }
+                                ],
+                                "mega_banner_url": "/shop?source=sale",
+                                "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "flat"
                             },
                             {
-                                "url": "\/blog",
+                                "url": "/blog",
                                 "label": "وبلاگ"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
@@ -2678,44 +3573,131 @@
             "label": "فروشگاهی (جستجو + هدر + سبد، سه بلوک مستقل)",
             "blocks": [
                 {
-                    "id": "qa_search_bar_1e3fef",
+                    "id": "qa_search_bar_e326ef",
                     "type": "search_bar",
                     "props": {
                         "placeholder": "جستجوی محصول..."
                     }
                 },
                 {
-                    "id": "qa_nav_header_b0c145",
+                    "id": "qa_nav_header_ab9c05",
                     "type": "nav_header",
                     "props": {
                         "sticky": true,
                         "cta_url": "#",
                         "bg_color": "#ffffff",
-                        "logo_url": "\/",
+                        "logo_url": "/",
                         "logo_text": "فروشگاه شما",
                         "nav_links": [
                             {
-                                "url": "\/",
+                                "url": "/",
                                 "label": "خانه"
                             },
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/services",
-                                "label": "خدمات"
+                                "url": "/services",
+                                "label": "خدمات",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/services#web",
+                                                "icon": "🎨",
+                                                "label": "طراحی و توسعه سایت"
+                                            },
+                                            {
+                                                "url": "/services#shop",
+                                                "icon": "🛒",
+                                                "label": "فروشگاه‌سازی آنلاین"
+                                            },
+                                            {
+                                                "url": "/services#marketing",
+                                                "icon": "📈",
+                                                "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                            }
+                                        ],
+                                        "title": "خدمات کسب‌وکار"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/saas",
+                                                "label": "معرفی پلتفرم"
+                                            },
+                                            {
+                                                "url": "/pricing",
+                                                "label": "تعرفه‌ها"
+                                            },
+                                            {
+                                                "url": "/learning",
+                                                "label": "مستندات و آموزش"
+                                            }
+                                        ],
+                                        "title": "پلتفرم SaaS"
+                                    }
+                                ],
+                                "mega_banner_url": "/saas",
+                                "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "accordion"
                             },
                             {
-                                "url": "\/shop",
-                                "label": "فروشگاه"
+                                "url": "/shop",
+                                "label": "فروشگاه",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?category=clothing",
+                                                "label": "پوشاک"
+                                            },
+                                            {
+                                                "url": "/shop?category=digital",
+                                                "label": "دیجیتال و لوازم الکترونیکی"
+                                            },
+                                            {
+                                                "url": "/shop?category=home",
+                                                "label": "خانه و آشپزخانه"
+                                            }
+                                        ],
+                                        "title": "دسته‌بندی‌های محبوب"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?source=new",
+                                                "icon": "✨",
+                                                "label": "محصولات جدید"
+                                            },
+                                            {
+                                                "url": "/shop?source=sale",
+                                                "icon": "🔥",
+                                                "label": "تخفیف‌های ویژه"
+                                            },
+                                            {
+                                                "url": "/product-categories",
+                                                "label": "همهٔ دسته‌بندی‌ها"
+                                            }
+                                        ],
+                                        "title": "میان‌بر"
+                                    }
+                                ],
+                                "mega_banner_url": "/shop?source=sale",
+                                "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "flat"
                             },
                             {
-                                "url": "\/blog",
+                                "url": "/blog",
                                 "label": "وبلاگ"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
@@ -2724,7 +3706,7 @@
                     }
                 },
                 {
-                    "id": "qa_cart_icon_bfe244",
+                    "id": "qa_cart_icon_73ae9d",
                     "type": "cart_icon",
                     "props": []
                 }
@@ -2736,7 +3718,7 @@
             "label": "کسب‌وکاری کامل (تماس + CTA)",
             "blocks": [
                 {
-                    "id": "qa_contact_info_efa34d",
+                    "id": "qa_contact_info_fd1767",
                     "type": "contact_info",
                     "props": {
                         "items": [
@@ -2756,39 +3738,126 @@
                     }
                 },
                 {
-                    "id": "qa_nav_header_d45dff",
+                    "id": "qa_nav_header_767e52",
                     "type": "nav_header",
                     "props": {
                         "phone": "۰۲۱-۱۲۳۴۵۶۷۸",
                         "sticky": true,
-                        "cta_url": "\/contact",
+                        "cta_url": "/contact",
                         "bg_color": "#ffffff",
                         "cta_text": "مشاوره رایگان",
-                        "logo_url": "\/",
+                        "logo_url": "/",
                         "logo_text": "برند شما",
                         "nav_links": [
                             {
-                                "url": "\/",
+                                "url": "/",
                                 "label": "خانه"
                             },
                             {
-                                "url": "\/about",
+                                "url": "/about",
                                 "label": "درباره ما"
                             },
                             {
-                                "url": "\/services",
-                                "label": "خدمات"
+                                "url": "/services",
+                                "label": "خدمات",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/services#web",
+                                                "icon": "🎨",
+                                                "label": "طراحی و توسعه سایت"
+                                            },
+                                            {
+                                                "url": "/services#shop",
+                                                "icon": "🛒",
+                                                "label": "فروشگاه‌سازی آنلاین"
+                                            },
+                                            {
+                                                "url": "/services#marketing",
+                                                "icon": "📈",
+                                                "label": "مشاورهٔ دیجیتال مارکتینگ"
+                                            }
+                                        ],
+                                        "title": "خدمات کسب‌وکار"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/saas",
+                                                "label": "معرفی پلتفرم"
+                                            },
+                                            {
+                                                "url": "/pricing",
+                                                "label": "تعرفه‌ها"
+                                            },
+                                            {
+                                                "url": "/learning",
+                                                "label": "مستندات و آموزش"
+                                            }
+                                        ],
+                                        "title": "پلتفرم SaaS"
+                                    }
+                                ],
+                                "mega_banner_url": "/saas",
+                                "mega_banner_text": "پلتفرم جامع کسب‌وکار — رایگان شروع کنید",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/about.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "accordion"
                             },
                             {
-                                "url": "\/shop",
-                                "label": "فروشگاه"
+                                "url": "/shop",
+                                "label": "فروشگاه",
+                                "mega_columns": [
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?category=clothing",
+                                                "label": "پوشاک"
+                                            },
+                                            {
+                                                "url": "/shop?category=digital",
+                                                "label": "دیجیتال و لوازم الکترونیکی"
+                                            },
+                                            {
+                                                "url": "/shop?category=home",
+                                                "label": "خانه و آشپزخانه"
+                                            }
+                                        ],
+                                        "title": "دسته‌بندی‌های محبوب"
+                                    },
+                                    {
+                                        "items": [
+                                            {
+                                                "url": "/shop?source=new",
+                                                "icon": "✨",
+                                                "label": "محصولات جدید"
+                                            },
+                                            {
+                                                "url": "/shop?source=sale",
+                                                "icon": "🔥",
+                                                "label": "تخفیف‌های ویژه"
+                                            },
+                                            {
+                                                "url": "/product-categories",
+                                                "label": "همهٔ دسته‌بندی‌ها"
+                                            }
+                                        ],
+                                        "title": "میان‌بر"
+                                    }
+                                ],
+                                "mega_banner_url": "/shop?source=sale",
+                                "mega_banner_text": "تا ۳۰٪ تخفیف پاییزه",
+                                "mega_banner_image": "http://saas-platform.test/storage/theme-media/1/portfolio_1.jpg",
+                                "mega_show_desktop": true,
+                                "mega_mobile_behavior": "flat"
                             },
                             {
-                                "url": "\/blog",
+                                "url": "/blog",
                                 "label": "وبلاگ"
                             },
                             {
-                                "url": "\/contact",
+                                "url": "/contact",
                                 "label": "تماس با ما"
                             }
                         ],
@@ -2806,18 +3875,18 @@
             "label": "ساده",
             "blocks": [
                 {
-                    "id": "qa_nav_footer_5ecc76",
+                    "id": "qa_nav_footer_249894",
                     "type": "nav_footer",
                     "props": {
                         "columns": [
                             {
                                 "links": [
                                     {
-                                        "url": "\/about",
+                                        "url": "/about",
                                         "label": "درباره ما"
                                     },
                                     {
-                                        "url": "\/contact",
+                                        "url": "/contact",
                                         "label": "تماس با ما"
                                     }
                                 ],
@@ -2838,16 +3907,16 @@
             "label": "شرکتی چندستونه",
             "blocks": [
                 {
-                    "id": "qa_nav_footer_d12086",
+                    "id": "qa_nav_footer_737fc0",
                     "type": "nav_footer",
                     "props": {
                         "links": [
                             {
-                                "url": "\/content\/privacy",
+                                "url": "/content/privacy",
                                 "label": "حریم خصوصی"
                             },
                             {
-                                "url": "\/content\/terms",
+                                "url": "/content/terms",
                                 "label": "قوانین و مقررات"
                             }
                         ],
@@ -2855,15 +3924,15 @@
                             {
                                 "links": [
                                     {
-                                        "url": "\/about",
+                                        "url": "/about",
                                         "label": "درباره ما"
                                     },
                                     {
-                                        "url": "\/team",
+                                        "url": "/team",
                                         "label": "تیم"
                                     },
                                     {
-                                        "url": "\/careers",
+                                        "url": "/careers",
                                         "label": "فرصت‌های شغلی"
                                     }
                                 ],
@@ -2872,15 +3941,15 @@
                             {
                                 "links": [
                                     {
-                                        "url": "\/shop",
+                                        "url": "/shop",
                                         "label": "فروشگاه"
                                     },
                                     {
-                                        "url": "\/learning",
+                                        "url": "/learning",
                                         "label": "دوره‌ها"
                                     },
                                     {
-                                        "url": "\/pricing",
+                                        "url": "/pricing",
                                         "label": "قیمت‌گذاری"
                                     }
                                 ],
@@ -2889,15 +3958,15 @@
                             {
                                 "links": [
                                     {
-                                        "url": "\/blog",
+                                        "url": "/blog",
                                         "label": "وبلاگ"
                                     },
                                     {
-                                        "url": "\/faq",
+                                        "url": "/faq",
                                         "label": "سوالات متداول"
                                     },
                                     {
-                                        "url": "\/portfolio",
+                                        "url": "/portfolio",
                                         "label": "نمونه‌کارها"
                                     }
                                 ],
@@ -2906,11 +3975,11 @@
                             {
                                 "links": [
                                     {
-                                        "url": "\/contact",
+                                        "url": "/contact",
                                         "label": "تماس با ما"
                                     },
                                     {
-                                        "url": "\/content",
+                                        "url": "/content",
                                         "label": "مرکز راهنما"
                                     }
                                 ],
@@ -2925,7 +3994,7 @@
                     }
                 },
                 {
-                    "id": "qa_language_switcher_83cef2",
+                    "id": "qa_language_switcher_dbc369",
                     "type": "language_switcher",
                     "props": []
                 }
@@ -2937,34 +4006,34 @@
             "label": "فروشگاهی",
             "blocks": [
                 {
-                    "id": "qa_social_icons_65f116",
+                    "id": "qa_social_icons_831e22",
                     "type": "social_icons",
                     "props": {
                         "links": [
                             {
-                                "url": "https:\/\/instagram.com\/yourshop",
+                                "url": "https://instagram.com/yourshop",
                                 "platform": "instagram"
                             },
                             {
-                                "url": "https:\/\/t.me\/yourshop",
+                                "url": "https://t.me/yourshop",
                                 "platform": "telegram"
                             }
                         ]
                     }
                 },
                 {
-                    "id": "qa_nav_footer_14215c",
+                    "id": "qa_nav_footer_a187fb",
                     "type": "nav_footer",
                     "props": {
                         "columns": [
                             {
                                 "links": [
                                     {
-                                        "url": "\/shop?source=recent",
+                                        "url": "/shop?source=recent",
                                         "label": "محصولات جدید"
                                     },
                                     {
-                                        "url": "\/shop",
+                                        "url": "/shop",
                                         "label": "پرفروش‌ترین‌ها"
                                     }
                                 ],
@@ -2973,11 +4042,11 @@
                             {
                                 "links": [
                                     {
-                                        "url": "\/account\/orders",
+                                        "url": "/account/orders",
                                         "label": "پیگیری سفارش"
                                     },
                                     {
-                                        "url": "\/content",
+                                        "url": "/content",
                                         "label": "راهنمای خرید"
                                     }
                                 ],
@@ -2998,7 +4067,7 @@
             "label": "محور خبرنامه",
             "blocks": [
                 {
-                    "id": "qa_newsletter_form_148a41",
+                    "id": "qa_newsletter_form_52d8f8",
                     "type": "newsletter_form",
                     "props": {
                         "title": "از آخرین اخبار باخبر شوید",
@@ -3010,7 +4079,7 @@
                     }
                 },
                 {
-                    "id": "qa_nav_footer_cad086",
+                    "id": "qa_nav_footer_6c07cc",
                     "type": "nav_footer",
                     "props": {
                         "bg_color": "#111827",
@@ -3027,7 +4096,7 @@
             "label": "محور تماس",
             "blocks": [
                 {
-                    "id": "qa_contact_info_b2bc22",
+                    "id": "qa_contact_info_13d893",
                     "type": "contact_info",
                     "props": {
                         "items": [
@@ -3052,7 +4121,7 @@
                     }
                 },
                 {
-                    "id": "qa_nav_footer_646f4f",
+                    "id": "qa_nav_footer_dda570",
                     "type": "nav_footer",
                     "props": {
                         "bg_color": "#111827",
@@ -3066,10 +4135,10 @@
         },
         {
             "key": "minimal_legal",
-            "label": "مینیمال\/قانونی",
+            "label": "مینیمال/قانونی",
             "blocks": [
                 {
-                    "id": "qa_nav_menu_d036ca",
+                    "id": "qa_nav_menu_8d0aea",
                     "type": "nav_menu",
                     "props": {
                         "location": "footer"
@@ -3090,20 +4159,26 @@
             "text_muted": "#6b7280"
         },
         "shadows": {
-            "lg": "0 10px 15px -3px rgb(0 0 0 \/ 0.1), 0 4px 6px -4px rgb(0 0 0 \/ 0.1)",
-            "md": "0 4px 6px -1px rgb(0 0 0 \/ 0.1), 0 2px 4px -2px rgb(0 0 0 \/ 0.1)",
-            "sm": "0 1px 2px 0 rgb(0 0 0 \/ 0.05)"
+            "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+            "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+            "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)"
         },
         "spacing": {
             "unit": "rem",
             "scale": 1
         },
         "dark_mode": {
-            "text": "#f9fafb",
+            "text": "#f1f5f9",
+            "error": "#f87171",
+            "accent": "#fbbf24",
             "enabled": true,
-            "primary": "#818cf8",
-            "surface": "#1f2937",
-            "background": "#111827"
+            "primary": "#2dd4bf",
+            "success": "#4ade80",
+            "surface": "#1e293b",
+            "warning": "#fbbf24",
+            "secondary": "#22d3ee",
+            "background": "#0f172a",
+            "text_muted": "#94a3b8"
         },
         "text_color": "#111827",
         "typography": {
@@ -3111,13 +4186,24 @@
             "font_body": "Vazirmatn, Tahoma, sans-serif",
             "font_heading": "Vazirmatn, Tahoma, sans-serif"
         },
+        "error_color": "#dc2626",
+        "accent_color": "#f59e0b",
         "border_radius": {
             "lg": "0.75rem",
             "md": "0.5rem",
             "sm": "0.25rem"
         },
-        "primary_color": "#4f46e5",
-        "secondary_color": "#6366f1",
-        "background_color": "#f8fafc"
+        "primary_color": "#0f766e",
+        "success_color": "#16a34a",
+        "warning_color": "#d97706",
+        "secondary_color": "#0e7490",
+        "background_color": "#fdfdfc"
+    },
+    "settings": {
+        "meta": {
+            "qa_structure_only": false,
+            "supported_modules": []
+        },
+        "qa_fixture": true
     }
 }

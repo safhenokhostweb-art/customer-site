@@ -18,7 +18,7 @@ use Tests\TestCase;
  * (real route, real 'provision.secret' middleware, real controller, real
  * ThemeInstanceRevisionService, real migrated DB) using a small synthetic
  * 3-page/1-header/1-footer payload. What it does not prove is that the
- * ACTUAL universal-multipurpose-qa product — 21 real pages, 6 real header
+ * ACTUAL universal-multipurpose-qa product — 24 real pages, 6 real header
  * variants, 6 real footer variants, as saas-platform's own seeder produces
  * them — survives the same canonical path intact, and that variant
  * selection has real behavioral effect after install (not just data
@@ -99,23 +99,23 @@ class RealUniversalThemeInstallAcceptanceTest extends TestCase
             ->postJson(route('builder.api.theme.install'), $payload);
     }
 
-    // ── 1/2/3. Real 21-page product survives the canonical install path ────
+    // ── 1/2/3. Real 24-page product survives the canonical install path ────
 
-    public function test_all_21_real_pages_survive_the_canonical_install_path(): void
+    public function test_all_24_real_pages_survive_the_canonical_install_path(): void
     {
         $response = $this->callInstall($this->installPayload());
 
         $response->assertOk();
-        $response->assertJson(['success' => true, 'pages_installed' => 21]);
+        $response->assertJson(['success' => true, 'pages_installed' => 24]);
 
         $revision = ThemeInstanceRevision::where('theme_identifier', 'universal-multipurpose-qa')->sole();
         self::assertSame(ThemeInstanceRevision::TYPE_INSTALL, $revision->type);
         self::assertSame('1.0.0', $revision->source_theme_version);
         self::assertSame(99, $revision->source_release_id);
-        self::assertCount(21, $revision->theme_data['pages']);
+        self::assertCount(24, $revision->theme_data['pages']);
 
         $activeData = json_decode(Setting::get('active_canvas_theme_data'), true);
-        self::assertCount(21, $activeData['pages']);
+        self::assertCount(24, $activeData['pages']);
 
         // Every page from Phase 2's category-specific homepage compositions
         // is present by key, not silently dropped or renamed in transit.
@@ -157,7 +157,7 @@ class RealUniversalThemeInstallAcceptanceTest extends TestCase
 
         $home = $this->get('/');
         $home->assertOk();
-        $home->assertSee('همه‌چیز برای رشد کسب‌وکار شما، در یک پلتفرم');
+        $home->assertSee('راهکارهای مدرن برای کسب‌وکارهای ایرانی');
 
         // A page that did not exist before Phase 2 of this task — proves
         // the install path isn't only tested against legacy content.
@@ -251,8 +251,8 @@ class RealUniversalThemeInstallAcceptanceTest extends TestCase
 
         $revisions = ThemeInstanceRevision::where('theme_identifier', 'universal-multipurpose-qa')
             ->orderBy('revision_number')->get();
-        self::assertCount(2, $revisions, 'publish after installing the real 21-page product must add a revision cleanly');
-        self::assertSame(21, count($revisions[1]->theme_data['pages']), 'publish must not drop pages from the real product');
+        self::assertCount(2, $revisions, 'publish after installing the real 24-page product must add a revision cleanly');
+        self::assertSame(24, count($revisions[1]->theme_data['pages']), 'publish must not drop pages from the real product');
 
         $about = $this->get('/page/about');
         $about->assertOk();
