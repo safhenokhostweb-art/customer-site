@@ -186,6 +186,65 @@ class ThemeAssetLocalizationService
         return $result;
     }
 
+    /**
+     * Phase 8 — resolve ONE asset URL to its verified customer-local form
+     * for the on-demand asset manifest.
+     *
+     * Fail-closed, mirroring runtimeAssets(): only a URL that (a) is already
+     * this site's own storage URL for a manifest-declared asset, or (b) is a
+     * platform-origin URL whose path names a manifest-declared asset, maps
+     * to the localized copy. Everything else returns null — the caller then
+     * uses the URL exactly as declared (the same eager-injection semantics
+     * as before), so this can never become a general URL-rewriting channel
+     * for arbitrary sources.
+     *
+     * @param  array<string, mixed>|null $localizedManifest the installed Theme's stored theme_assets manifest (version 1, localized: true)
+     */
+    public function localizedUrlFor(mixed $url, ?array $localizedManifest): ?string
+    {
+        if (! is_string($url) || $url === '' || ! is_array($localizedManifest)
+            || ($localizedManifest['version'] ?? null) !== self::VERSION
+            || ($localizedManifest['localized'] ?? null) !== true
+            || ! is_array($localizedManifest['assets'] ?? null)) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts) || empty($parts['host'])
+            || $this->containsTraversal((string) ($parts['path'] ?? ''))) {
+            return null;
+        }
+
+        $origin = $this->trustedOrigin();
+        $path = ltrim((string) ($parts['path'] ?? ''), '/');
+        $disk = Storage::disk('public');
+
+        foreach ($localizedManifest['assets'] as $asset) {
+            if (! is_array($asset) || ! in_array($asset['kind'] ?? null, ['css', 'js'], true)
+                || ! $this->isSafePath($asset['path'] ?? null)
+                || ! is_string($asset['storage_key'] ?? null)
+                || ! str_starts_with($asset['storage_key'], 'theme-assets/')
+                || ! $disk->exists($asset['storage_key'])) {
+                continue;
+            }
+
+            $localUrl = $disk->url($asset['storage_key']);
+
+            if ($url === $localUrl) {
+                return $localUrl; // already the verified local copy
+            }
+
+            // A platform-origin URL naming this manifest path is the same
+            // file pre-localization → serve the verified local copy.
+            if ($origin !== null && $this->originMatches($parts, $origin)
+                && ($path === $asset['path'] || str_ends_with($path, '/'.$asset['path']))) {
+                return $localUrl;
+            }
+        }
+
+        return null;
+    }
+
     /** Validate an already-localized manifest before carrying it into another immutable revision. */
     private function validateLocalizedManifest(array $manifest): array
     {

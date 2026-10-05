@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ویرایشگر قالب Canvas') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
+    {{-- The one head-tag renderer. This layout previously emitted no robots
+         directive, no description and no canonical; a Canvas editor is a
+         PREVIEW_EDITOR surface and is never indexable, so the directive is
+         pinned here rather than inherited from the tenant's seo_robots
+         setting. --}}
+    <x-seo-meta robots="noindex, nofollow" :include-organization-json-ld="false" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

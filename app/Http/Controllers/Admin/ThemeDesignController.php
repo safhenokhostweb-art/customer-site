@@ -11,15 +11,19 @@ use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeCanvas\SiteThemeTemplateService;
 use App\Services\ThemeCanvas\ThemeInstanceBaseRelease;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
+use App\Services\ThemeCanvas\ThemeRuntimeDocument;
+use App\Services\ThemeCanvas\ThemePresentationCapabilityRegistry;
 use App\Services\ThemeEngine\TenantThemeResolver;
 use App\Services\BuilderLayoutService;
 use App\Services\MotionGraphics\MotionRuntimeManifestReader;
+use App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use SaaSPlatform\ThemeRuntime\Layout\LockedStructureGuard;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -31,6 +35,8 @@ class ThemeDesignController extends Controller
         private ThemeInstanceRevisionService $revisions,
         private ThemeInstanceBaseRelease $baseRelease,
         private BuilderLayoutService $layoutService,
+        private ThemeRuntimeDocument $runtimeDocument,
+        private ThemePresentationCapabilityRegistry $presentationCapabilities,
     ) {}
 
     public function index(): View
@@ -365,12 +371,13 @@ class ThemeDesignController extends Controller
                 'blocks'     => $this->activeVariantBlocks($themeData, 'footer'),
             ],
         ];
-        $pages = $virtualPages + $pages;
+        $pages = $pages + $virtualPages;
 
         $byCategory = BlockRegistry::byCategory();
         $catLabels  = BlockRegistry::categoryLabels();
         $catIcons   = BlockRegistry::categoryIcons();
         $registry   = BlockRegistry::all();
+        $modulePresentations = $this->presentationCapabilities->availableFor($themeData);
 
         $gs = $themeData['global_styles'] ?? [];
         $globalStyles = [
@@ -382,7 +389,7 @@ class ThemeDesignController extends Controller
 
         return view('admin.theme-design.canvas-editor', compact(
             'themeData', 'pages', 'byCategory', 'catLabels', 'catIcons', 'registry', 'globalStyles',
-            'hasDraft', 'previewToken'
+            'hasDraft', 'previewToken', 'modulePresentations'
         ));
     }
 
@@ -427,6 +434,19 @@ class ThemeDesignController extends Controller
             // content instead of accepted verbatim.
             $reconciled = \App\Builder\Extension\ExtensionBlockReconciler::reconcile($validated['blocks'], $current);
 
+            $structure = LockedStructureGuard::validate(
+                $current,
+                $reconciled,
+                static fn (string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
+            );
+            if (!$structure['ok']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'ساختار محافظت‌شده قابل حذف، جابه‌جایی یا تکثیر نیست.',
+                    'structure_errors' => $structure['errors'],
+                ], 422);
+            }
+
             $variantKey = $region === 'header'
                 ? $this->layoutService->resolveActiveHeaderVariantKey($themeData)
                 : $this->layoutService->resolveActiveFooterVariantKey($themeData);
@@ -454,10 +474,25 @@ class ThemeDesignController extends Controller
         }
 
         // Phase 3F-C — same reconciliation gate for regular pages.
-        $themeData['pages'][$key]['blocks'] = \App\Builder\Extension\ExtensionBlockReconciler::reconcile(
+        $current = $themeData['pages'][$key]['blocks'] ?? [];
+        $reconciled = \App\Builder\Extension\ExtensionBlockReconciler::reconcile(
             $validated['blocks'],
-            $themeData['pages'][$key]['blocks'] ?? []
+            $current
         );
+
+        $structure = LockedStructureGuard::validate(
+            $current,
+            $reconciled,
+            static fn (string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
+        );
+        if (!$structure['ok']) {
+            return response()->json([
+                'success' => false,
+                'error' => 'ساختار محافظت‌شده قابل حذف، جابه‌جایی یا تکثیر نیست.',
+                'structure_errors' => $structure['errors'],
+            ], 422);
+        }
+        $themeData['pages'][$key]['blocks'] = $reconciled;
 
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
@@ -743,6 +778,33 @@ class ThemeDesignController extends Controller
     }
 
     /**
+     * Phase 4B.5 — generic, tenant-safe entity options for a binding
+     * source's manual selection control. Only allowlisted data sources
+     * (per ThemeDataBindingRegistry) are ever served; nothing is writable,
+     * and every option carries a human-readable label so the editor never
+     * needs raw numeric IDs. Published/unpublished rules stay inside the
+     * existing domain models — exactly what the public resolver uses.
+     */
+    public function canvasBindingEntities(string $source): JsonResponse
+    {
+        $allowed = array_keys(ThemeDataBindingRegistry::capabilities());
+        if (!in_array($source, $allowed, true)) {
+            return response()->json(['error' => 'Unknown data source.'], 404);
+        }
+
+        $entities = $source === 'products'
+            ? \App\Models\Product::query()->published()->orderBy('title')->limit(200)->get(['id', 'title'])
+            : \App\Models\ProductCategory::query()->orderBy('order')->orderBy('id')->limit(200)->get(['id', 'name']);
+
+        return response()->json([
+            'entities' => $entities->map(fn ($e): array => [
+                'id' => (int) $e->id,
+                'label' => (string) ($e->title ?? $e->name),
+            ])->all(),
+        ]);
+    }
+
+    /**
      * List available canvas revisions (customer-facing restore UI).
      */
     public function canvasRevisions(): JsonResponse
@@ -881,21 +943,37 @@ class ThemeDesignController extends Controller
 
         // Resolve blocks for the requested page key
         // TASK 3/3 Phase 6.5C (BLD-29) — same fix as canvasEdit()/canvasSaveBlocks().
+        $editorRegion = null;
+        $pageTitle = $pageKey;
         if ($pageKey === '__header__') {
             $blocks = $this->activeVariantBlocks($themeData, 'header');
+            $editorRegion = 'header';
+            $pageTitle = 'Header';
         } elseif ($pageKey === '__footer__') {
             $blocks = $this->activeVariantBlocks($themeData, 'footer');
+            $editorRegion = 'footer';
+            $pageTitle = 'Footer';
         } else {
             $pages  = $themeData['pages'] ?? [];
             $page   = $pages[$pageKey] ?? null;
             $blocks = $page['blocks'] ?? [];
+            $pageTitle = $page['title'] ?? $pageKey;
         }
 
-        $globalStyles = $themeData['global_styles'] ?? [];
+        $viewData = $this->runtimeDocument->build(
+            $themeData,
+            $blocks,
+            $pageTitle,
+            $pageKey,
+            editorPreview: true,
+            editorRegion: $editorRegion,
+        ) + ['themeName' => Setting::get('active_canvas_theme_name', '')];
 
-        /** @var \App\Services\ThemeCanvas\ThemeCanvasRenderer $renderer */
-        $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
-        $renderer->setContext(['editor_mode' => true]);
+        return response()
+            ->view('admin.theme-design.canvas-live-preview', $viewData)
+            ->header('Content-Type', 'text/html; charset=UTF-8');
+
+        /*
         // TASK 3/3 Phase 6.5E (BLD-32) — same bulk media preload as the
         // public render boundary; this endpoint renders through the same
         // CustomerMediaResolver and is hit on every editor keystroke/tab
@@ -921,6 +999,7 @@ class ThemeDesignController extends Controller
         return response()
             ->view('admin.theme-design.canvas-live-preview', compact('blocks', 'renderedBlocks', 'globalStyles', 'pageKey', 'extensionAssets'))
             ->header('Content-Type', 'text/html; charset=UTF-8');
+        */
     }
 
     /**
@@ -944,14 +1023,16 @@ class ThemeDesignController extends Controller
 
         /** @var \App\Services\ThemeCanvas\ThemeCanvasRenderer $renderer */
         $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
-        $renderer->setContext(['editor_mode' => true]);
+        $bindings = app(\App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry::class)
+            ->resolveBlockLists([$blockData]);
+        $renderer->setContext(['editor_mode' => true, 'theme_bindings' => $bindings]);
 
         return response()->json(['html' => $renderer->renderBlock($blockData)]);
     }
 
-    public function canvasPreviewPublic()
+    public function canvasPreviewPublic(Request $request)
     {
-        $token = request('token');
+        $token = $request->query('token');
         $savedToken = Setting::get('canvas_preview_token');
 
         if (empty($token) || $token !== $savedToken) {
@@ -968,39 +1049,37 @@ class ThemeDesignController extends Controller
             abort(422);
         }
 
-        // Render the home page from draft
-        $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
-
-        $pages = $themeData['pages'] ?? [];
-        $homePage = null;
-        foreach ($pages as $page) {
-            if (!empty($page['is_home']) || ($page['slug'] ?? '') === 'home') {
-                $homePage = $page;
-                break;
+        $pageKey = (string) $request->query('page', 'home');
+        $pages = is_array($themeData['pages'] ?? null) ? $themeData['pages'] : [];
+        $page = $pages[$pageKey] ?? null;
+        if (!is_array($page)) {
+            foreach ($pages as $candidate) {
+                if (is_array($candidate) && (!empty($candidate['is_home']) || ($candidate['slug'] ?? '') === 'home')) {
+                    $page = $candidate;
+                    $pageKey = (string) ($candidate['slug'] ?? 'home');
+                    break;
+                }
             }
         }
-        if (!$homePage && !empty($pages)) {
-            $homePage = array_values($pages)[0];
+        if (!is_array($page)) {
+            $firstPage = reset($pages);
+            $page = is_array($firstPage) ? $firstPage : ['title' => 'Preview', 'blocks' => []];
         }
 
-        $blocks       = $homePage['blocks'] ?? [];
-        // TASK 3/3 Phase 6.5C (BLD-29) — same fix as canvasEdit()/canvasSaveBlocks()/canvasLivePreview().
-        $headerBlocks = $this->activeVariantBlocks($themeData, 'header');
-        $footerBlocks = $this->activeVariantBlocks($themeData, 'footer');
-        $globalStyles = $themeData['global_styles'] ?? [];
+        $viewData = $this->runtimeDocument
+            ->forMode(ThemeRuntimeDocument::MODE_PUBLIC)
+            ->build(
+            $themeData,
+            is_array($page['blocks'] ?? null) ? $page['blocks'] : [],
+            (string) ($page['title'] ?? 'Preview'),
+            $pageKey,
+            );
+        $viewData['showBuilderEditBar'] = false;
 
-        $renderedBlocks = collect($blocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
-        $renderedHeader = collect($headerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
-        $renderedFooter = collect($footerBlocks)->map(fn($b) => $renderer->renderBlock($b))->implode('');
+        return response()
+            ->view('canvas-preview', $viewData)
+            ->header('Content-Type', 'text/html; charset=UTF-8');
 
-        // Phase 3F-C — same HasAssets bridge as canvasLivePreview()/the
-        // public render path; renderer instance accumulates assets across
-        // all three renderBlock() calls above.
-        $extensionAssets = $renderer->getCollectedAssets();
-
-        return view('canvas-preview', compact(
-            'renderedBlocks', 'renderedHeader', 'renderedFooter', 'globalStyles', 'themeData', 'extensionAssets'
-        ));
     }
 
     /** فعال‌سازی پریست تم سایت */

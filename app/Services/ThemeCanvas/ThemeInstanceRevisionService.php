@@ -57,6 +57,7 @@ class ThemeInstanceRevisionService
         private ThemeInstanceBaseRelease $baseRelease,
         private CustomerMediaService $media,
         private ThemeMediaLocalizationService $mediaLocalizer,
+        private ThemeAssetLocalizationService $assetLocalizer,
     ) {
     }
 
@@ -133,6 +134,13 @@ class ThemeInstanceRevisionService
             $themeData = $this->mediaLocalizer->localize($themeData, array_merge($context, [
                 'theme_identifier' => $identifier,
             ]));
+            if (array_key_exists('theme_assets', $themeData) && !is_array($themeData['theme_assets'])) {
+                throw new ThemeAssetLocalizationException('Malformed theme_assets manifest.');
+            }
+            $themeData['theme_assets'] = $this->assetLocalizer->localize(
+                $themeData['theme_assets'] ?? [],
+                array_merge($context, ['theme_identifier' => $identifier]),
+            );
         }
 
         return DB::transaction(function () use ($themeData, $type, $context, $identifier) {

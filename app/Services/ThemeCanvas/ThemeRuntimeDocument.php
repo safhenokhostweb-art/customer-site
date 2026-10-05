@@ -30,6 +30,7 @@ class ThemeRuntimeDocument
         private BuilderLayoutService $layoutService,
         private ThemeDataBindingRegistry $dataBindings,
         private DynamicApiDataSource $dynamicApi,
+        private AssetManifestGeneratorService $manifestGenerator,
         string $mode = self::MODE_EDITOR,
     ) {
         $this->mode = self::validateMode($mode);
@@ -103,6 +104,10 @@ class ThemeRuntimeDocument
         $runtime = $this->resolveCapabilities($themeData);
         $themeAssets = $this->assetLocalizer->runtimeAssets($themeData['theme_assets'] ?? []);
 
+        $assetManifest = $this->manifestGenerator !== null
+            ? $this->manifestGenerator->forCanvasPage($themeData, $blocks)
+            : null;
+
         if (($themeAssets['files'] ?? []) !== []) {
             $headerHtml = $this->rewriteDeclaredAssets($headerHtml, $themeAssets['files']);
             $footerHtml = $this->rewriteDeclaredAssets($footerHtml, $themeAssets['files']);
@@ -118,6 +123,7 @@ class ThemeRuntimeDocument
             'globalStyles' => $themeData['global_styles'] ?? [],
             'extensionAssets' => $extensionAssets,
             'themeAssets' => $themeAssets,
+            'assetManifest' => $assetManifest,
             'canvasPageKey' => $pageKey,
             'chromeOwner' => $editorRegion === null ? $runtime['chromeOwner'] : 'theme',
             'documentDirection' => $runtime['documentDirection'],

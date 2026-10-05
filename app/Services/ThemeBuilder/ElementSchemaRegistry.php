@@ -148,7 +148,16 @@ class ElementSchemaRegistry
             // integer contract.
             'number' => is_float($control['default'] ?? null) ? 'numeric' : 'integer',
             'boolean' => 'boolean',
-            'repeater' => ($control['storage'] ?? 'array') === 'json' ? 'string' : 'array',
+            // Phase 4B.6 — a repeater persisted as JSON must accept BOTH
+            // real shapes that legitimately occur: the structured editor
+            // writes a JSON-encoded array string, while hand-authored
+            // theme data/fixtures carry a real PHP array. The existing
+            // json_array type (BLD-14) is exactly this dual-shape
+            // contract; mapping to plain 'string' made the validator
+            // reject the array shape and placeholder out the whole block
+            // (observed on foodmart_footer.columns). Renderers already
+            // accept both shapes (foodmartEditableList).
+            'repeater' => ($control['storage'] ?? 'array') === 'json' ? 'json_array' : 'array',
             // Canvas textarea controls intentionally persist JSON-shaped
             // values as text.  Treating those values as arrays caused valid
             // defaults such as stats_row and client_logos to be rejected.

@@ -56,11 +56,23 @@ class CustomerMediaResolver
         'stats_row' => ['background_image'],
         'module:motion' => ['fallback_image'],
         'video' => ['url', 'poster'],
+        'sleepshiman_header' => ['logo'],
+        'sleepshiman_amazing_offers' => ['illustration'],
+        'sleepshiman_bedding_products' => ['feature_image'],
+        'sleepshiman_blanket_products' => ['feature_image'],
+        'sleepshiman_articles' => ['feature_image'],
+        'sleepshiman_sleep_banner' => ['image'],
+        'sleepshiman_editorial' => ['image'],
     ];
 
     /** Block type => {repeater prop key, nested media field key, storage shape}. */
     public const MEDIA_REPEATERS = [
         'gallery' => ['prop' => 'items', 'field' => 'url', 'storage' => 'array'],
+        // Phase 4B.5: FoodMart hero declares its editable slides through the
+        // same generic repeater contract — the canonical {media_id} value a
+        // slide stores resolves here at render time, exactly like every
+        // other media-capable prop, with no FoodMart-specific code path.
+        'foodmart_hero' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
         'team_cards' => ['prop' => 'members', 'field' => 'image', 'storage' => 'json'],
         'slider' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
         'bento_grid' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
@@ -90,6 +102,19 @@ class CustomerMediaResolver
         'timeline' => ['prop' => 'items', 'field' => 'image', 'storage' => 'json'],
         'client_logos' => ['prop' => 'logos', 'field' => 'image', 'storage' => 'array'],
         'nav_header' => ['prop' => 'nav_links', 'field' => 'mega_banner_image', 'storage' => 'array'],
+        'sleepshiman_amazing_offers' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_featured_product' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_mattresses' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_promo_banners' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_bedding_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_blanket_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_brands' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_published_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_topic_cards' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_articles' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_reviews' => ['prop' => 'items', 'field' => 'avatar', 'storage' => 'array'],
+        'sleepshiman_guide_cards' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
+        'sleepshiman_footer' => ['prop' => 'trust_marks', 'field' => 'image', 'storage' => 'array'],
     ];
 
     public function __construct(private readonly CustomerMediaService $media)

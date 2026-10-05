@@ -13,7 +13,18 @@ $blockLabels  = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>$d['name']]);
 // canonical/shared authority (\App\Services\ThemeCanvas\BlockRegistry::
 // isContainerType()), not a client-side hardcoded array — see that
 // method's docblock for the layered shared+host design.
-$blockSchemas = collect($registry)->mapWithKeys(fn($d,$t)=>[$t=>['schema'=>$d['schema']??[],'defaultProps'=>$d['defaultProps']??[],'is_container'=>\App\Services\ThemeCanvas\BlockRegistry::isContainerType($t)]]);
+$blockSchemas = collect($registry)->mapWithKeys(function ($d, $t) {
+    $definition = \SaaSPlatform\ThemeRuntime\Inspector\InspectorFieldRegistry::normalizeDefinition($d);
+    return [$t => [
+        'schema' => $definition['schema'],
+        'defaultProps' => $definition['defaultProps'] ?? [],
+        'editor' => $definition['editor'],
+        'dataBinding' => $definition['dataBinding'] ?? null,
+        'modulePresentation' => $definition['modulePresentation'] ?? null,
+        'liveStructureUpdate' => $definition['liveStructureUpdate'] ?? null,
+        'is_container' => \App\Services\ThemeCanvas\BlockRegistry::isContainerType($t),
+    ]];
+});
 $orderedCats  = ['layout','content','dynamic','ecommerce','marketing','utility','module'];
 $catColors    = ['layout'=>'text-blue-600 bg-blue-50','content'=>'text-green-700 bg-green-50','dynamic'=>'text-purple-600 bg-purple-50','ecommerce'=>'text-emerald-700 bg-emerald-50','marketing'=>'text-orange-600 bg-orange-50','utility'=>'text-slate-600 bg-slate-100','module'=>'text-indigo-700 bg-indigo-50'];
 $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
@@ -136,7 +147,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             </button>
 
             {{-- Preview draft --}}
-            <a href="{{ url('/canvas-preview?token=' . $previewToken) }}" target="_blank"
+            <a :href="@js(url('/canvas-preview?token=' . $previewToken)) + '&page=' + encodeURIComponent(currentPage)" target="_blank" data-testid="tb-full-preview-link"
                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-300 hover:text-teal-700 text-xs font-medium transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 پیش‌نمایش
@@ -301,7 +312,23 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 </div>
             </div>
 
+            @if(!empty($modulePresentations))
+            <div x-show="leftPanelTab==='blocks'" class="px-3 py-3 border-b border-indigo-100 bg-indigo-50/60" data-testid="tb-module-capability-palette">
+                <p class="text-[11px] font-bold text-indigo-800 mb-2">Add Element / Module</p>
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach($modulePresentations as $capability => $capabilityDef)
+                    <button type="button" @click="openModuleCapability(@js($capability))"
+                        data-testid="tb-module-capability-{{ str_replace('.', '-', $capability) }}"
+                        class="rounded-lg border border-indigo-200 bg-white px-2 py-2 text-[11px] font-semibold text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50 text-right">
+                        {{ $capabilityDef['label'] }}
+                    </button>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <div x-show="leftPanelTab==='blocks'" class="flex-1 overflow-y-auto">
+                @include('admin.theme-design.partials.block-library')
                 @foreach($orderedCats as $catKey)
                     @if(!isset($byCategory[$catKey])) @continue @endif
                     @php
@@ -473,22 +500,22 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
                     {{-- Block Actions (Move / Duplicate / Delete) — TB4: path-aware --}}
                     <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 shrink-0">
-                        <button @click="moveSelectedUp()" :disabled="!canMoveUp()"
+                        <button @click="moveSelectedUp()" :disabled="selectedEditorCapabilities.lockedStructure || !canMoveUp()"
                             title="بالاتر"
                             class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
                         </button>
-                        <button @click="moveSelectedDown()" :disabled="!canMoveDown()"
+                        <button @click="moveSelectedDown()" :disabled="selectedEditorCapabilities.lockedStructure || !canMoveDown()"
                             title="پایین‌تر"
                             class="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                        <button @click="duplicateSelected()"
+                        <button @click="duplicateSelected()" :disabled="selectedEditorCapabilities.lockedStructure"
                             title="کپی بلوک"
                             class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         </button>
-                        <button @click="removeSelected()"
+                        <button @click="removeSelected()" :disabled="selectedEditorCapabilities.lockedStructure"
                             title="حذف بلوک"
                             class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-red-200 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-400 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -766,7 +793,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
                     {{-- Advanced Tab --}}
                     <div x-show="selectedTab === 'advanced'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                        <div>
+                        <div x-show="selectedEditorCapabilities.allowCustomCss">
                             <label class="block text-xs font-semibold text-slate-600 mb-1.5">کلاس CSS سفارشی</label>
                             <input type="text" :value="selectedBlock.style?.customClass ?? ''" @input="updateStyle('customClass', $event.target.value)"
                                 placeholder="my-class another-class" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono">
@@ -898,8 +925,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                      modal and upload endpoints as single-image fields. --}}
                                 <template x-if="schemaDef.type === 'repeater'">
                                     <div class="space-y-3" :data-testid="'tb-repeater-' + propKey">
-                                        <template x-for="(item, itemIndex) in structuredItems(propKey, schemaDef)" :key="itemIndex">
-                                            <fieldset class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+                                        <template x-for="(item, itemIndex) in structuredItems(propKey, schemaDef)" :key="repeaterItemKey(item, itemIndex)">
+                                            <fieldset class="rounded-lg border bg-slate-50 p-3 space-y-3" :class="selectedLogicalItem?.group === propKey && selectedLogicalItem?.index === itemIndex ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200'" :data-testid="`tb-repeater-item-${propKey}-${itemIndex}`">
                                                 <legend class="px-1 text-[11px] font-semibold text-slate-500" x-text="`${schemaDef.label || propKey} ${itemIndex + 1}`"></legend>
                                                 <template x-for="(fieldDef, fieldKey) in schemaDef.fields" :key="fieldKey">
                                                     <div class="space-y-1.5">
@@ -919,7 +946,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                         </template>
                                                         <template x-if="fieldDef.type === 'repeater'">
                                                             <div class="space-y-2 rounded-lg border border-slate-200 bg-white p-2" :data-testid="`tb-nested-repeater-${propKey}-${itemIndex}-${fieldKey}`">
-                                                                <template x-for="(nestedItem, nestedIndex) in nestedItems(propKey, itemIndex, fieldKey)" :key="nestedIndex">
+                                                                <template x-for="(nestedItem, nestedIndex) in nestedItems(propKey, itemIndex, fieldKey)" :key="repeaterItemKey(nestedItem, nestedIndex)">
                                                                     <div class="rounded border border-slate-200 bg-slate-50 p-2 space-y-2">
                                                                         <div class="flex items-center justify-between">
                                                                             <span class="text-[10px] font-semibold text-slate-500" x-text="`${fieldDef.label || fieldKey} ${nestedIndex + 1}`"></span>
@@ -950,7 +977,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                      string/textarea/image only. --}}
                                                                                 <template x-if="nestedFieldDef.type === 'repeater'">
                                                                                     <div class="space-y-2 rounded border border-slate-200 bg-white p-2" :data-testid="`tb-deep-repeater-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
-                                                                                        <template x-for="(deepItem, deepIndex) in deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey)" :key="deepIndex">
+                                                                                        <template x-for="(deepItem, deepIndex) in deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey)" :key="repeaterItemKey(deepItem, deepIndex)">
                                                                                             <div class="rounded border border-slate-200 bg-slate-50 p-2 space-y-1">
                                                                                                 <div class="flex items-center justify-between">
                                                                                                     <span class="text-[10px] font-semibold text-slate-500" x-text="`${nestedFieldDef.label || nestedFieldKey} ${deepIndex + 1}`"></span>
@@ -1028,6 +1055,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                 <div class="flex gap-1 justify-end">
                                                     <button type="button" @click="moveStructuredItem(propKey, itemIndex, -1, schemaDef)" :disabled="itemIndex === 0" :data-testid="`tb-structured-up-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-slate-200 text-xs disabled:opacity-30" :aria-label="`انتقال مورد ${itemIndex + 1} به بالا`">↑</button>
                                                     <button type="button" @click="moveStructuredItem(propKey, itemIndex, 1, schemaDef)" :disabled="itemIndex >= structuredItems(propKey, schemaDef).length - 1" :data-testid="`tb-structured-down-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-slate-200 text-xs disabled:opacity-30" :aria-label="`انتقال مورد ${itemIndex + 1} به پایین`">↓</button>
+                                                    <button type="button" @click="duplicateStructuredItem(propKey, itemIndex, schemaDef)" :data-testid="`tb-structured-duplicate-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-slate-200 text-xs" :aria-label="`تکثیر مورد ${itemIndex + 1}`">تکثیر</button>
                                                     <button type="button" @click="removeStructuredItem(propKey, itemIndex, schemaDef)" :data-testid="`tb-structured-remove-${propKey}-${itemIndex}`" class="px-2 py-1 rounded border border-red-200 text-red-600 text-xs" :aria-label="`حذف مورد ${itemIndex + 1}`">حذف مورد</button>
                                                 </div>
                                             </fieldset>
@@ -1130,7 +1158,79 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </div>
                         </template>
 
-                        <div x-show="Object.keys(selectedSchema).length === 0" class="text-center py-6">
+                        {{-- Phase 4B.6 — generic Manual/Dynamic content-source
+                             selector. Rendered for any block whose registered
+                             type declares a manual_prop; no FoodMart branch. --}}
+                        <template x-if="selectedManualPropKey">
+                            <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2" data-testid="tb-content-source">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">منبع محتوا (Content source)</label>
+                                <div class="flex gap-2">
+                                    <button type="button" @click="setContentSource('manual')"
+                                        class="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium border"
+                                        :class="!bindingEnabled ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-200'"
+                                        data-testid="tb-source-manual">دستی (Manual)</button>
+                                    <button type="button" @click="setContentSource('dynamic')"
+                                        class="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium border"
+                                        :class="bindingEnabled ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-slate-600 border-slate-200'"
+                                        data-testid="tb-source-dynamic">پویا (Dynamic)</button>
+                                </div>
+                                <p class="text-[11px] text-slate-500" x-show="!bindingEnabled">محتوای دستی شما در همین بخش ویرایش می‌شود و با تغییر منبع حذف نمی‌شود.</p>
+                                <p class="text-[11px] text-slate-500" x-show="bindingEnabled">محتوا از داده‌های واقعی ماژول خوانده می‌شود؛ محتوای دستی حفظ می‌ماند.</p>
+                            </div>
+                        </template>
+
+                        <template x-if="selectedBindingDef">
+                            <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-3" data-testid="tb-data-binding" x-show="bindingEnabled">
+                                <label class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700">
+                                    <span>Dynamic data</span>
+                                    <input type="checkbox" :checked="bindingEnabled" @change="toggleBinding($event.target.checked)" data-testid="tb-binding-enabled">
+                                </label>
+                                <template x-if="bindingEnabled">
+                                    <div class="space-y-3">
+                                        <p class="text-[11px] text-slate-500">Source: <span class="font-mono" x-text="selectedBindingDef.source"></span></p>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Sort / selection</label>
+                                            <select @change="updateBindingQuery('sort', $event.target.value)" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-sort">
+                                                <template x-for="sort in bindingSortOptions" :key="sort"><option :value="sort" :selected="sort === selectedBlock.binding.query.sort" x-text="sort"></option></template>
+                                            </select>
+                                        </div>
+                                        <div x-show="selectedBindingDef.source === 'products'">
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Category ID (optional)</label>
+                                            <input type="number" min="1" :value="selectedBlock.binding.query.category_id ?? ''" @input="updateBindingQuery('category_id', $event.target.value ? Number($event.target.value) : null)" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-category">
+                                        </div>                                            <div x-show="selectedBlock.binding.query.sort === 'manual'" x-effect="bindingEntitiesActive">
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">انتخاب موارد</label>
+                                            <div x-show="bindingEntitiesLoading" class="text-[11px] text-slate-400 py-1">در حال بارگذاری موارد…</div>
+                                            <div x-show="!bindingEntitiesLoading && bindingEntities.length === 0" class="text-[11px] text-slate-400 py-1">موردی موجود نیست</div>
+                                            <template x-if="!bindingEntitiesLoading && bindingEntities.length > 0">
+                                                <div class="max-h-40 overflow-y-auto rounded border border-slate-200 bg-white divide-y divide-slate-100" data-testid="tb-binding-entity-options">
+                                                    <template x-for="entity in bindingEntities" :key="entity.id">
+                                                        <label class="flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer hover:bg-slate-50">
+                                                            <input type="checkbox" class="rounded" :value="entity.id"
+                                                                :checked="(selectedBlock.binding.query.selected_ids ?? []).includes(entity.id)"
+                                                                @change="toggleBindingEntity(entity.id, $event.target.checked)" :data-testid="'tb-binding-entity-' + entity.id">
+                                                            <span class="truncate" x-text="entity.label"></span>
+                                                        </label>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <p class="text-[10px] text-slate-400 mt-1" x-show="bindingSelectedLabels">انتخاب‌شده: <span x-text="bindingSelectedLabels"></span></p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Item limit</label>
+                                            <input type="number" min="1" max="24" :value="selectedBlock.binding.query.limit" @input="updateBindingQuery('limit', Number($event.target.value))" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-limit">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">When no data exists</label>
+                                            <select x-model="selectedBlock.binding.empty" @change="schedulePropUpdate()" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-empty">
+                                                <option value="manual">نمایش محتوای دستی</option><option value="hide">پنهان‌کردن بخش</option><option value="empty_state">نمایش وضعیت خالی</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <div x-show="Object.keys(selectedSchema).length === 0 && !selectedBindingDef" class="text-center py-6">
                             <p class="text-xs text-slate-400">این ویجت تنظیماتی ندارد</p>
                         </div>
 
@@ -1478,6 +1578,30 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
     </div>
 
+    <div x-show="moduleChooser.open" x-transition.opacity class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" data-testid="tb-module-presentation-modal">
+        <div @click.outside="moduleChooser.open=false" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800" x-text="moduleChooser.definition?.label || 'Module'"></h3>
+                    <p class="text-xs text-slate-500 mt-1">Choose a presentation supplied by the active theme.</p>
+                </div>
+                <button type="button" @click="moduleChooser.open=false" class="text-slate-400 text-xl">&times;</button>
+            </div>
+            <div class="space-y-2">
+                <template x-for="presentation in (moduleChooser.definition?.presentations ?? [])" :key="presentation.type">
+                    <div class="rounded-xl border border-slate-200 p-3" :data-testid="'tb-module-presentation-' + presentation.type">
+                        <p class="text-sm font-semibold text-slate-800" x-text="presentation.label"></p>
+                        <p class="text-[10px] text-slate-400 font-mono mt-1" x-text="presentation.type"></p>
+                        <div class="flex gap-2 mt-3">
+                            <button type="button" @click="insertModulePresentation(presentation, 'before')" class="flex-1 rounded-lg border border-indigo-200 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50" data-testid="tb-module-insert-before">Insert before selection</button>
+                            <button type="button" @click="insertModulePresentation(presentation, 'after')" class="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs text-white hover:bg-indigo-700" data-testid="tb-module-insert-after">Insert after selection</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
     {{-- Toast --}}
     <div x-show="toast.show" x-transition.opacity
          :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
@@ -1489,10 +1613,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 @endsection
 
 @push('scripts')
+{{-- Phase 6.1-B: one include = runtime -> identity (version-gated) -> interaction.
+     No host structural services on this surface yet ([]), kept in sync with
+     the platform's own editor pages which use the same bootstrap partial. --}}
+@include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
 const BLOCK_LABELS  = @json($blockLabels);
 const BLOCK_SCHEMAS = @json($blockSchemas);
+const MODULE_PRESENTATIONS = @json($modulePresentations);
+const BINDING_CAPABILITIES = @json(\App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry::capabilities());
 const INITIAL_PAGES = @json($pages);
 const GLOBAL_STYLES = @json($globalStyles);
 const ROUTES = {
@@ -1507,21 +1637,50 @@ const ROUTES = {
     mediaUpload:  '{{ route('admin.theme-design.media-upload') }}',
     mediaDestroy: '{{ route('admin.theme-design.media-destroy') }}',
     motionAssets: '{{ route('admin.theme-design.canvas-motion-assets') }}',
+    bindingEntities: '{{ route('admin.theme-design.canvas-binding-entities', ['source' => ':source']) }}',
     // TASK 3/3 Phase 6.5C (BLD-28) — reuses the SAME bounded, already-proven
     // search endpoint Menu's own "add existing Page" picker uses
     // (MenuController::searchPages()) — no second Page-search authority.
     linkPageSearch: '{{ route('admin.menus.pages.search') }}',
 };
 
+// Phase 4B.5 — block props arriving from storage as a JSON empty array
+// ([]) decode to a JS Array, and x-model assignments on an Array become
+// expando properties that JSON.stringify silently drops — so the first
+// prop edit on such a block would never reach the renderer. Normalizing
+// every props container to a plain object at state init makes the panel's
+// draft mutation lossless for all block types, generically.
+function normalizePageProps(pages) {
+    const walk = (blocks) => {
+        if (!Array.isArray(blocks)) return;
+        for (const block of blocks) {
+            if (!block || typeof block !== 'object') continue;
+            if (!Array.isArray(block.children ?? null)) {
+                if (!block.props || typeof block.props !== 'object' || Array.isArray(block.props)) block.props = {};
+            }
+            if (Array.isArray(block.children)) {
+                walk(block.children);
+                if (!block.props || typeof block.props !== 'object' || Array.isArray(block.props)) block.props = {};
+            }
+        }
+    };
+    for (const page of Object.values(pages ?? {})) {
+        walk(page?.blocks);
+    }
+    return pages;
+}
+
 function canvasEditor() {
     return {
         // ── State ──────────────────────────────────────────────
-        pages:         JSON.parse(JSON.stringify(INITIAL_PAGES)),
+        pages:         normalizePageProps(JSON.parse(JSON.stringify(INITIAL_PAGES))),
         currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
         selectedPath:  null,          // null | [0] | [0, 1] | ...
+        selectedLogicalItem: null,
         leftPanelTab:  'blocks',      // 'blocks' | 'tree'
         treeExpanded:  {},
         showAddChildModal: false,
+        moduleChooser: { open: false, capability: null, definition: null },
         // TB5: responsive editor
         activeBreakpoint: 'desktop',   // 'desktop' | 'tablet' | 'mobile'
         selectedTab:   'content',
@@ -1545,6 +1704,7 @@ function canvasEditor() {
         iframeLoading:  true,
         iframeReady:    false,
         propUpdateTimer: null,
+        pendingPropUpdate: false,
         // TB3-03: drag
         isDraggingBlock:      false,
         draggedBlockType:     null,
@@ -1592,6 +1752,103 @@ function canvasEditor() {
         get selectedSchema() {
             if (!this.selectedBlock) return {};
             return BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+        },
+        get selectedEditorCapabilities() {
+            return this.selectedBlock
+                ? (BLOCK_SCHEMAS[this.selectedBlock.type]?.editor ?? { allowCustomCss: true, lockedStructure: false, uiDirection: null })
+                : { allowCustomCss: true, lockedStructure: false, uiDirection: null };
+        },
+        // Phase 4B.6 — generic manual/dynamic content-source contract.
+        // A block supports manual mode when its registered type declares
+        // dataBinding.manual_prop naming the manual-items prop. Switching
+        // source never destroys the other side's data (manual props and
+        // binding live in separate keys).
+        get selectedManualPropKey() {
+            const type = this.selectedBlock?.type;
+            if (!type || !this.selectedBlock) return null;
+            const manual = BLOCK_SCHEMAS[type]?.dataBinding?.manual_prop;
+            return typeof manual === 'string' && manual !== '' ? manual : null;
+        },
+        setContentSource(mode) {
+            if (!this.selectedBlock || !this.selectedManualPropKey) return;
+            if (mode === 'dynamic') {
+                if (!this.selectedBlock.binding) this.toggleBinding(true);
+            } else {
+                if (this.selectedBlock.binding) this.toggleBinding(false);
+            }
+        },
+        get selectedBindingDef() {
+            if (!this.selectedBlock) return null;
+            return BLOCK_SCHEMAS[this.selectedBlock.type]?.dataBinding ?? null;
+        },
+        get bindingEnabled() { return !!this.selectedBlock?.binding; },
+        get bindingSortOptions() {
+            return BINDING_CAPABILITIES[this.selectedBindingDef?.source]?.sorts ?? [];
+        },
+        get bindingSelectedIds() { return (this.selectedBlock?.binding?.query?.selected_ids ?? []).join(','); },
+        bindingEntities: [],
+        bindingEntitiesLoading: false,
+        bindingEntitiesSource: null,
+        // Phase 4B.5 — lazy-load entity options once per source, when a
+        // block with a manual-selection-capable binding gets selected.
+        get bindingEntitiesActive() {
+            const source = this.selectedBindingDef?.source;
+            if (source && this.bindingEntitiesSource !== source) this.fetchBindingEntities(source);
+            return source ?? null;
+        },
+        toggleBinding(enabled) {
+            if (!this.selectedBlock || !this.selectedBindingDef) return;
+            if (!enabled) {
+                delete this.selectedBlock.binding;
+            } else {
+                this.selectedBlock.binding = {
+                    source: this.selectedBindingDef.source,
+                    query: { sort: this.selectedBindingDef.default_sort ?? 'catalog_order', limit: BINDING_CAPABILITIES[this.selectedBindingDef.source]?.default_limit ?? 10 },
+                    empty: 'hide'
+                };
+            }
+            this.schedulePropUpdate();
+        },
+        updateBindingQuery(key, value) {
+            if (!this.selectedBlock?.binding?.query) return;
+            if (value === null || value === '') delete this.selectedBlock.binding.query[key];
+            else this.selectedBlock.binding.query[key] = value;
+            this.schedulePropUpdate();
+        },
+        updateBindingSelectedIds(value) {
+            const ids = String(value).split(',').map(id => Number(id.trim())).filter(id => Number.isInteger(id) && id > 0).slice(0, 24);
+            this.updateBindingQuery('selected_ids', ids);
+        },
+        // Phase 4B.5 — generic tenant-safe entity picker for binding manual
+        // selection. Options come from the server's allowlisted read-only
+        // endpoint (same published/tenant rules the public resolver uses),
+        // so users pick human-readable names instead of raw numeric IDs.
+        get bindingSelectedLabels() {
+            const ids = this.selectedBlock?.binding?.query?.selected_ids ?? [];
+            return ids.map((id) => this.bindingEntities.find((e) => e.id === id)?.label ?? ('#' + id)).join('، ');
+        },
+        toggleBindingEntity(id, checked) {
+            if (!this.selectedBlock?.binding?.query) return;
+            const ids = [...(this.selectedBlock.binding.query.selected_ids ?? [])];
+            const index = ids.indexOf(id);
+            if (checked && index === -1) ids.push(id);
+            if (!checked && index !== -1) ids.splice(index, 1);
+            this.updateBindingQuery('selected_ids', ids.slice(0, 24));
+        },
+        async fetchBindingEntities(source) {
+            if (!source || this.bindingEntitiesSource === source) return;
+            this.bindingEntitiesSource = source;
+            this.bindingEntitiesLoading = true;
+            try {
+                const r = await fetch(ROUTES.bindingEntities.replace(':source', encodeURIComponent(source)),
+                    { headers: { 'Accept': 'application/json' } });
+                const d = await r.json();
+                this.bindingEntities = Array.isArray(d.entities) ? d.entities : [];
+            } catch (_) {
+                this.bindingEntities = [];
+            } finally {
+                this.bindingEntitiesLoading = false;
+            }
         },
         // TB5: reactive style object for the active breakpoint
         get currentBpStyle() {
@@ -1651,6 +1908,40 @@ function canvasEditor() {
                 ...(this.isContainerType(type) ? { children: [] } : {})
             };
         },
+        openModuleCapability(capability) {
+            const definition = MODULE_PRESENTATIONS[capability];
+            if (!definition || !Array.isArray(definition.presentations) || definition.presentations.length === 0) return;
+            this.moduleChooser = { open: true, capability, definition };
+        },
+        insertModulePresentation(presentation, position) {
+            if (!presentation?.type || !BLOCK_SCHEMAS[presentation.type]) return;
+            this.pushHistory();
+            const block = this.makeBlock(presentation.type);
+            const capability = BINDING_CAPABILITIES[presentation.source] ?? {};
+            const allowedSorts = capability.sorts ?? [];
+            const requestedSort = presentation.default_sort || 'catalog_order';
+            block.binding = {
+                source: presentation.source,
+                query: {
+                    sort: allowedSorts.includes(requestedSort) ? requestedSort : (allowedSorts[0] || 'catalog_order'),
+                    limit: capability.default_limit ?? 10,
+                },
+                empty: 'manual',
+            };
+
+            const blocks = [...this.blocks];
+            const selectedTopIndex = this.selectedPath?.[0];
+            let index = Number.isInteger(selectedTopIndex)
+                ? selectedTopIndex + (position === 'before' ? 0 : 1)
+                : blocks.length;
+            index = Math.max(0, Math.min(index, blocks.length));
+            blocks.splice(index, 0, block);
+            this.pages[this.currentPage].blocks = blocks;
+            this.selectedPath = [index];
+            this.moduleChooser = { open: false, capability: null, definition: null };
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
         isContainerType(type) {
             // Phase 3F-B: declarative metadata from the server (see
             // BLOCK_SCHEMAS construction in this file's @php block), not a
@@ -1669,19 +1960,44 @@ function canvasEditor() {
                 return [];
             }
         },
-        persistStructuredItems(propKey, schemaDef, items) {
+        persistStructuredItems(propKey, schemaDef, items, structuralChange = false) {
             if (!this.selectedBlock) return;
             this.selectedBlock.props[propKey] = schemaDef?.storage === 'json'
                 ? JSON.stringify(items)
                 : items;
-            this.schedulePropUpdate();
+            if (structuralChange && BLOCK_SCHEMAS[this.selectedBlock.type]?.liveStructureUpdate === 'document') {
+                this.isDirty = true;
+                this.autoSaveAndReload();
+            } else {
+                this.schedulePropUpdate();
+            }
+        },
+        newRepeaterId() {
+            return 'item_' + (globalThis.crypto?.randomUUID?.().replaceAll('-', '') ?? (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+        },
+        newRepeaterItem(fields) {
+            const item = { _id: this.newRepeaterId() };
+            for (const [fieldKey, fieldDef] of Object.entries(fields ?? {})) item[fieldKey] = fieldDef?.default ?? '';
+            return item;
+        },
+        repeaterItemKey(item, index) {
+            if (typeof item?._id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item._id)) return item._id;
+            const source = `${index}|${JSON.stringify(item ?? {})}`;
+            let hash = 2166136261;
+            for (let i = 0; i < source.length; i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619);
+            return `legacy_${(hash >>> 0).toString(16)}`;
         },
         addStructuredItem(propKey, schemaDef) {
-            const item = {};
-            for (const [fieldKey, fieldDef] of Object.entries(schemaDef?.fields ?? {})) {
-                item[fieldKey] = fieldDef?.default ?? '';
-            }
-            this.persistStructuredItems(propKey, schemaDef, [...this.structuredItems(propKey, schemaDef), item]);
+            const item = this.newRepeaterItem(schemaDef?.fields);
+            this.persistStructuredItems(propKey, schemaDef, [...this.structuredItems(propKey, schemaDef), item], true);
+        },
+        duplicateStructuredItem(propKey, itemIndex, schemaDef) {
+            const items = this.structuredItems(propKey, schemaDef).map(item => ({ ...item }));
+            if (!items[itemIndex]) return;
+            const duplicate = JSON.parse(JSON.stringify(items[itemIndex]));
+            duplicate._id = this.newRepeaterId();
+            items.splice(itemIndex + 1, 0, duplicate);
+            this.persistStructuredItems(propKey, schemaDef, items, true);
         },
         updateStructuredField(propKey, itemIndex, fieldKey, value, schemaDef) {
             const items = this.structuredItems(propKey, schemaDef).map(item => ({ ...item }));
@@ -1694,14 +2010,14 @@ function canvasEditor() {
         removeStructuredItem(propKey, itemIndex, schemaDef) {
             const items = [...this.structuredItems(propKey, schemaDef)];
             items.splice(itemIndex, 1);
-            this.persistStructuredItems(propKey, schemaDef, items);
+            this.persistStructuredItems(propKey, schemaDef, items, true);
         },
         moveStructuredItem(propKey, itemIndex, direction, schemaDef) {
             const items = [...this.structuredItems(propKey, schemaDef)];
             const target = itemIndex + direction;
             if (target < 0 || target >= items.length) return;
             [items[itemIndex], items[target]] = [items[target], items[itemIndex]];
-            this.persistStructuredItems(propKey, schemaDef, items);
+            this.persistStructuredItems(propKey, schemaDef, items, true);
         },
         // BLD-11..13: one explicit, bounded extra repeater level for the one
         // genuinely nested field (nav_footer.columns[].links) — deliberately
@@ -1719,10 +2035,7 @@ function canvasEditor() {
             this.persistStructuredItems(propKey, schemaDef, items);
         },
         addNestedItem(propKey, itemIndex, fieldKey, nestedSchemaDef, schemaDef) {
-            const item = {};
-            for (const [k, def] of Object.entries(nestedSchemaDef?.fields ?? {})) {
-                item[k] = def?.default ?? '';
-            }
+            const item = this.newRepeaterItem(nestedSchemaDef?.fields);
             this.persistNestedItems(propKey, itemIndex, fieldKey, [...this.nestedItems(propKey, itemIndex, fieldKey), item], schemaDef);
         },
         updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, value, schemaDef) {
@@ -1759,10 +2072,7 @@ function canvasEditor() {
             this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
         },
         addDeepNestedItem(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepSchemaDef, schemaDef) {
-            const item = {};
-            for (const [k, def] of Object.entries(deepSchemaDef?.fields ?? {})) {
-                item[k] = def?.default ?? '';
-            }
+            const item = this.newRepeaterItem(deepSchemaDef?.fields);
             this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, [...this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey), item], schemaDef);
         },
         updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepIndex, deepNestedFieldKey, value, schemaDef) {
@@ -1910,6 +2220,27 @@ function canvasEditor() {
             this.addBlock(type, -1, this.selectedPath);
         },
 
+        // Block Library (Phase 11 follow-up): canonical insertion for catalog
+        // presets — makeBlock() supplies the real type's identity, schema
+        // defaults, and container semantics, then the preset's replaceable
+        // mock props are merged on top (preset values win; unspecified keys
+        // keep the type's own defaults). No second content tree, no fake
+        // types — the preset's block_type must exist in BLOCK_SCHEMAS exactly
+        // like every palette button. Same pushHistory/select/save contract
+        // as addBlock() above.
+        addLibraryBlock(preset) {
+            if (!preset?.block_type || !BLOCK_SCHEMAS[preset.block_type]) return;
+            this.pushHistory();
+            const block = this.makeBlock(preset.block_type);
+            block.props = { ...block.props, ...(preset.props ?? {}) };
+            const arr = [...this.blocks];
+            arr.push(block);
+            this.pages[this.currentPage].blocks = arr;
+            this.selectedPath = [arr.length - 1];
+            this.isDirty = true;
+            this.autoSaveAndReload();
+        },
+
         // TASK 2A (tabs container authoring fix): a bounded, tabs-specific
         // shortcut over the exact same canonical mechanism addChildBlock()
         // above already uses (makeBlock('tab_panel') + push into
@@ -1939,7 +2270,7 @@ function canvasEditor() {
         },
 
         removeSelected() {
-            if (!this.selectedPath) return;
+            if (!this.selectedPath || this.selectedEditorCapabilities.lockedStructure) return;
             this.pushHistory();
             const siblings = this.getSiblingArray(this.selectedPath);
             if (!siblings) return;
@@ -1951,7 +2282,7 @@ function canvasEditor() {
         },
 
         duplicateSelected() {
-            if (!this.selectedPath) return;
+            if (!this.selectedPath || this.selectedEditorCapabilities.lockedStructure) return;
             this.pushHistory();
             const siblings = this.getSiblingArray(this.selectedPath);
             if (!siblings) return;
@@ -1980,7 +2311,7 @@ function canvasEditor() {
         },
 
         moveSelectedUp() {
-            if (!this.selectedPath) return;
+            if (!this.selectedPath || this.selectedEditorCapabilities.lockedStructure) return;
             const siblings = this.getSiblingArray(this.selectedPath);
             const idx = this.selectedPath[this.selectedPath.length - 1];
             if (!siblings || idx <= 0) return;
@@ -1992,7 +2323,7 @@ function canvasEditor() {
         },
 
         moveSelectedDown() {
-            if (!this.selectedPath) return;
+            if (!this.selectedPath || this.selectedEditorCapabilities.lockedStructure) return;
             const siblings = this.getSiblingArray(this.selectedPath);
             const idx = this.selectedPath[this.selectedPath.length - 1];
             if (!siblings || idx >= siblings.length - 1) return;
@@ -2127,7 +2458,17 @@ function canvasEditor() {
         },
 
         async pushPropUpdate() {
-            if (!this.selectedBlock || !this.iframeReady) return;
+            if (!this.selectedBlock) return;
+            // Phase 4B.6 — the live preview of a content-rich page takes
+            // seconds to boot, and 'ready' arrives after @load. A prop edit
+            // made in that window used to be SILENTLY DROPPED here (the
+            // early return), so the user's first edit never appeared until
+            // some later reload re-read the draft. Queue it and flush on
+            // ready instead of discarding it.
+            if (!this.iframeReady) {
+                this.pendingPropUpdate = true;
+                return;
+            }
             try {
                 const blockPayload = JSON.parse(JSON.stringify(this.selectedBlock)); // includes .style if set
                 const r = await fetch(ROUTES.renderBlock, {
@@ -2270,7 +2611,7 @@ function canvasEditor() {
                 // location.origin instead of '*' means the message is never
                 // delivered if the iframe has somehow navigated away to a
                 // different origin.
-                try { iframe.contentWindow.postMessage(msg, window.location.origin); } catch (_) {}
+                try { ThemeCanvasRuntime.post(iframe.contentWindow, msg.action, Object.fromEntries(Object.entries(msg).filter(([key]) => key !== 'action'))); } catch (_) {}
             }
         },
 
@@ -2280,14 +2621,20 @@ function canvasEditor() {
             // Phase 3C: only ever trust messages from this app's own origin
             // — the live-preview iframe is same-origin by design, so a
             // message from anywhere else is not the preview iframe.
-            if (e.origin !== window.location.origin) return;
+            if (!ThemeCanvasRuntime.sameOrigin(e.origin) || e.source !== this.getIframe()?.contentWindow) return;
             const d = e.data;
-            if (!d || !d.action) return;
+            if (!ThemeCanvasRuntime.valid(d, 'to-editor')) return;
             switch (d.action) {
                 case 'ready':
                     this.iframeReady   = true;
                     this.iframeLoading = false;
                     if (this.selectedBlock) this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                    // Phase 4B.6 — flush a prop edit queued while the iframe
+                    // was still booting (see pushPropUpdate).
+                    if (this.pendingPropUpdate) {
+                        this.pendingPropUpdate = false;
+                        this.pushPropUpdate();
+                    }
                     break;
                 case 'iframeHeight':
                     const iframe = this.getIframe();
@@ -2295,7 +2642,16 @@ function canvasEditor() {
                     break;
                 case 'blockSelected': {
                     const path = this.findBlockPath(d.blockId);
-                    if (path) { this.selectedPath = path; this.selectedTab = 'content'; }
+                    if (path) {
+                        this.selectedPath = path;
+                        this.selectedTab = 'content';
+                        this.selectedLogicalItem = d.logicalGroup !== null && Number.isInteger(d.logicalIndex)
+                            ? { group: d.logicalGroup, index: d.logicalIndex }
+                            : null;
+                        if (this.selectedLogicalItem) {
+                            this.$nextTick(() => document.querySelector(`[data-testid="tb-repeater-item-${d.logicalGroup}-${d.logicalIndex}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+                        }
+                    }
                     break;
                 }
                 case 'dropIndexResult':
@@ -2771,25 +3127,3 @@ function canvasEditor() {
 }
 </script>
 @endpush
-                @include('admin.theme-design.partials.block-library')
-        // Block Library (Phase 11 follow-up): canonical insertion for catalog
-        // presets — makeBlock() supplies the real type's identity, schema
-        // defaults, and container semantics, then the preset's replaceable
-        // mock props are merged on top (preset values win; unspecified keys
-        // keep the type's own defaults). No second content tree, no fake
-        // types — the preset's block_type must exist in BLOCK_SCHEMAS exactly
-        // like every palette button. Same pushHistory/select/save contract
-        // as addBlock() above.
-        addLibraryBlock(preset) {
-            if (!preset?.block_type || !BLOCK_SCHEMAS[preset.block_type]) return;
-            this.pushHistory();
-            const block = this.makeBlock(preset.block_type);
-            block.props = { ...block.props, ...(preset.props ?? {}) };
-            const arr = [...this.blocks];
-            arr.push(block);
-            this.pages[this.currentPage].blocks = arr;
-            this.selectedPath = [arr.length - 1];
-            this.isDirty = true;
-            this.autoSaveAndReload();
-        },
-

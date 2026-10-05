@@ -1,71 +1,39 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>پیش‌نمایش زنده</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+@push('head')
+{{-- No <title> here. layouts/canvas-theme.blade.php renders its own
+     <title> at line 73 AND renders @stack('head') at line 166, inside the
+     same <head>. A pushed <title> therefore produced a SECOND <title> on
+     every live-preview document — verified: 2 titles rendered before this
+     change. The layout's title is the correct one. --}}
 <style>
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body {
-    font-family: 'Vazirmatn', Tahoma, sans-serif;
-    direction: rtl;
-    background: {{ $globalStyles['background_color'] ?? '#ffffff' }};
-    color: #1f2937;
-    margin: 0; padding: 0;
-    min-height: 100vh;
-}
-:root {
-    --tb-primary:    {{ $globalStyles['primary_color']    ?? '#4f46e5' }};
-    --tb-secondary:  {{ $globalStyles['secondary_color']  ?? '#7c3aed' }};
-    --tb-bg:         {{ $globalStyles['background_color'] ?? '#f9fafb' }};
-    --tb-font:       {{ $globalStyles['font_family']      ?? 'Vazirmatn' }};
-}
-/* Base TB styles */
-.tb-container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-.tb-section { width: 100%; }
-.tb-padding-none { padding-top: 0; padding-bottom: 0; }
-.tb-padding-sm   { padding-top: 2rem; padding-bottom: 2rem; }
-.tb-padding-md   { padding-top: 4rem; padding-bottom: 4rem; }
-.tb-padding-lg   { padding-top: 6rem; padding-bottom: 6rem; }
-.tb-padding-xl   { padding-top: 8rem; padding-bottom: 8rem; }
-.tb-grid { display: grid; gap: 1.5rem; }
-.tb-cols-2 { grid-template-columns: repeat(2, 1fr); }
-.tb-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.tb-cols-4 { grid-template-columns: repeat(4, 1fr); }
-.tb-hero { min-height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 5rem 1.5rem; }
-.tb-hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.3; }
-.tb-hero p { font-size: 1.1rem; opacity: 0.85; margin-bottom: 1.5rem; }
-.tb-hero .tb-btn { display: inline-flex; align-items: center; padding: 0.75rem 2rem; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.6); color: #fff; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; text-decoration: none; }
-.tb-cta { padding: 4rem 1.5rem; text-align: center; }
-.tb-heading { line-height: 1.4; margin: 0 0 1rem; font-weight: 700; }
-.tb-text { line-height: 1.85; color: #374151; margin: 0 0 1rem; }
-.tb-img { max-width: 100%; border-radius: 0.5rem; }
-.tb-button { display: inline-flex; align-items: center; padding: 0.6rem 1.5rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
-.tb-btn-primary { background: var(--tb-primary, #4f46e5); color: #fff; }
-.tb-divider { border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
-.tb-bg-primary { background: var(--tb-primary, #4f46e5); color: #fff; }
-.tb-bg-dark { background: #1e293b; color: #fff; }
-.tb-bg-light { background: #f8fafc; }
-.tb-bg-gray { background: #f1f5f9; }
+{{-- Canvas fidelity fix (2026-09-20): this iframe is what the Theme
+     Design Canvas editor's WYSIWYG surface actually shows to the site
+     owner — it used to carry its own tiny, hand-rolled CSS subset (no
+     theme-runtime::css.contract, no nav_header/nav_footer, hero_split/
+     hero_gradient, gallery, promo_banner/countdown, wishlist/installment
+     CSS, and only 4 raw --tb-* custom properties instead of the full
+     ThemeTokenNormalizer set), which had silently drifted from
+     layouts/canvas-theme.blade.php — the SAME renderer output (both go
+     through ThemeCanvasRenderer) rendered with materially different CSS.
+     Now shares the exact same partial as the real public page: a single,
+     un-driftable source for both. Do not re-add any of these rules
+     locally; edit the partial. --}}
 
 /* ── Editor canvas overlay ── */
-.tb-canvas-block {
-    position: relative;
+[data-tb-block-id] {
     cursor: pointer;
     outline: 2px solid transparent;
     outline-offset: 0;
     transition: outline-color 0.12s ease;
-    min-height: 16px;
 }
-.tb-canvas-block:hover { outline: 2px solid rgba(99,102,241,0.55); }
-.tb-canvas-block.tb-selected {
+[data-tb-block-id]:hover { outline: 2px solid rgba(99,102,241,0.55); }
+[data-tb-block-id].tb-selected {
     outline: 2px solid #4f46e5;
     box-shadow: 0 0 0 4px rgba(79,70,229,0.12);
 }
-.tb-block-badge {
+[data-tb-block-id]::before {
+    content: attr(data-tb-block-type);
     display: none;
     position: absolute;
     top: 0; right: 0;
@@ -76,8 +44,6 @@ body {
     border-radius: 0 0 0 5px;
     pointer-events: none; white-space: nowrap; line-height: 1.6;
 }
-.tb-canvas-block:hover .tb-block-badge,
-.tb-canvas-block.tb-selected .tb-block-badge { display: block; }
 
 /* ── Drop zones (TB3-03) ── */
 .tb-drop-zone {
@@ -145,20 +111,18 @@ body.tb-drag-active .tb-drop-zone {
     color: #818cf8; font-size: 0.8rem; font-weight: 500;
     background: rgba(99,102,241,0.04); width: 100%;
 }
-.tb-canvas-block[data-tb-container="1"].tb-selected {
+[data-tb-block-id][data-tb-container="1"].tb-selected {
     outline: 2px solid #10b981;
     box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
 }
-.tb-canvas-block[data-tb-container="1"].tb-container-drag-over {
+[data-tb-block-id][data-tb-container="1"].tb-container-drag-over {
     outline: 2px dashed #6366f1 !important;
     background: rgba(99,102,241,0.04) !important;
 }
 </style>
-@foreach(($extensionAssets['css'] ?? []) as $__extHref)
-<link rel="stylesheet" href="{{ $__extHref }}">
-@endforeach
-</head>
-<body>
+@endpush
+@push('scripts')
+@if(false)
 
 @if(empty($blocks))
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;color:#9ca3af;padding:2rem;">
@@ -186,6 +150,11 @@ body.tb-drag-active .tb-drop-zone {
 
 @endif
 
+@endif
+{{-- Phase 6.1-B: one include = runtime -> identity (version-gated) -> interaction.
+     Render/inline-edit surface: no structural services ([]), same bootstrap
+     as the customer editor and the platform's live preview. --}}
+@include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 (function () {
     'use strict';
@@ -198,7 +167,7 @@ body.tb-drag-active .tb-drop-zone {
         // canvas editor, served from this same app) — targeting window.
         // location.origin instead of '*' means nothing is delivered if this
         // frame is ever loaded under an unexpected parent.
-        try { parent.postMessage(msg, window.location.origin); } catch (_) {}
+        try { ThemeCanvasRuntime.post(parent, msg.action, Object.fromEntries(Object.entries(msg).filter(([key]) => key !== 'action'))); } catch (_) {}
     }
 
     /* ── Inline editing (TB3-04) ─────────────────────────────── */
@@ -278,14 +247,22 @@ body.tb-drag-active .tb-drop-zone {
     document.addEventListener('click', function (e) {
         var blockEl = e.target.closest('[data-tb-block-id]');
         if (blockEl) {
-            e.stopPropagation();
+            var logicalItem = e.target.closest('[data-tb-logical-group][data-tb-logical-index]');
+            var interactive = e.target.closest('a, button, input, select, textarea, form, [role="button"]');
+            if (interactive && interactive.closest('a[href]')) e.preventDefault();
+            if (!interactive) e.stopPropagation();
             selectBlock(blockEl.getAttribute('data-tb-block-id'));
-            notifyParent({ action: 'blockSelected', blockId: state.selectedBlockId });
+            notifyParent({
+                action: 'blockSelected',
+                blockId: state.selectedBlockId,
+                logicalGroup: logicalItem ? logicalItem.getAttribute('data-tb-logical-group') : null,
+                logicalIndex: logicalItem ? Number(logicalItem.getAttribute('data-tb-logical-index')) : null
+            });
         }
     }, true);
 
     function selectBlock(blockId) {
-        var prev = document.querySelector('.tb-canvas-block.tb-selected');
+        var prev = document.querySelector('[data-tb-block-id].tb-selected');
         if (prev) prev.classList.remove('tb-selected');
         state.selectedBlockId = blockId;
         if (blockId) {
@@ -299,17 +276,12 @@ body.tb-drag-active .tb-drop-zone {
 
     function updateBlockHtml(blockId, html) {
         disableInlineEditing();
-        var el = document.querySelector('[data-tb-block-id="' + blockId + '"]');
-        if (!el) return;
-        var badge = el.querySelector('.tb-block-badge');
-        el.innerHTML = html;
-        if (badge) el.insertBefore(badge, el.firstChild);
-        if (state.selectedBlockId === blockId) el.classList.add('tb-selected');
+        ThemeCanvasRuntime.replaceNode(blockId, html);
     }
 
     function setDropTarget(beforeId) {
-        document.querySelectorAll('.tb-drop-zone').forEach(function (el) {
-            el.classList.toggle('tb-drop-active', el.getAttribute('data-before') === beforeId);
+        document.querySelectorAll('#canvas-main > [data-tb-block-id]').forEach(function (el) {
+            el.classList.toggle('tb-drop-active', el.getAttribute('data-tb-block-id') === beforeId);
         });
     }
 
@@ -325,7 +297,7 @@ body.tb-drag-active .tb-drop-zone {
 
     function getDropIndexAtY(clientY) {
         // Only top-level blocks
-        var blocks = Array.from(document.body.querySelectorAll(':scope > [data-tb-block-id]'));
+        var blocks = Array.from(document.querySelectorAll('#canvas-main > [data-tb-block-id]'));
         var result = { index: blocks.length, beforeId: '__end__' };
         for (var i = 0; i < blocks.length; i++) {
             var rect = blocks[i].getBoundingClientRect();
@@ -354,9 +326,9 @@ body.tb-drag-active .tb-drop-zone {
     window.addEventListener('message', function (e) {
         // Phase 3C: only ever trust messages from this app's own origin —
         // this frame is only ever embedded same-origin by the canvas editor.
-        if (e.origin !== window.location.origin) return;
+        if (!ThemeCanvasRuntime.sameOrigin(e.origin) || e.source !== parent) return;
         var d = e.data;
-        if (!d || !d.action) return;
+        if (!ThemeCanvasRuntime.valid(d, 'to-preview')) return;
         switch (d.action) {
             case 'select':
                 selectBlock(d.blockId);
@@ -395,8 +367,11 @@ body.tb-drag-active .tb-drop-zone {
     }
 }());
 </script>
-@foreach(($extensionAssets['js'] ?? []) as $__extSrc)
-<script src="{{ $__extSrc }}" defer></script>
-@endforeach
-</body>
-</html>
+@endpush
+{{-- This is the editor's live-preview iframe, i.e. a PREVIEW_EDITOR surface,
+     even though it renders through the PUBLIC canvas layout. Pin the directive
+     to noindex instead of inheriting the tenant's indexable default, so the
+     preview document is never indexable. layouts/canvas-theme.blade.php reads
+     $seoMeta and @include shares this scope. --}}
+@php($seoMeta = ['robots' => 'noindex, nofollow'])
+@include('layouts.canvas-theme')

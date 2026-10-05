@@ -157,12 +157,36 @@
     });
     </script>
 
-    @foreach(($themeAssets['css'] ?? []) as $__themeHref)
-    <link rel="stylesheet" href="{{ $__themeHref }}">
+    {{-- Phase 8 Step 1 — Asset-on-Demand. Theme-global assets (themeAssets)
+         are needed by every page and stay eager. The per-block assets the
+         blocks on THIS page actually require (assetManifest — extension
+         assets only) are injected from the manifest; null manifest ⇒ Safe
+         Default: the historical eager global injection, unchanged, so a
+         manifest problem can never strip a live page of its assets. --}}
+    @php
+        $__manifest = ($assetManifest ?? null);
+        $__safeDefaultCss = array_values(array_unique(array_merge(
+            (array) ($themeAssets['css'] ?? []),
+            (array) ($extensionAssets['css'] ?? []),
+        )));
+        $__pageCss = is_array($__manifest) ? array_values((array) ($__manifest['css'] ?? [])) : [];
+    @endphp
+
+    @foreach(($themeAssets['css'] ?? []) as $__href)
+    <link rel="stylesheet" href="{{ $__href }}">
     @endforeach
-    @foreach(($extensionAssets['css'] ?? []) as $__extHref)
-    <link rel="stylesheet" href="{{ $__extHref }}">
+
+    @if ($__manifest === null)
+    @foreach(array_diff($__safeDefaultCss, (array) ($themeAssets['css'] ?? [])) as $__href)
+    <link rel="stylesheet" href="{{ $__href }}">
     @endforeach
+    @else
+    <script type="application/json" id="theme-asset-manifest" data-tb-asset-manifest>{!! json_encode(['css' => $__pageCss, 'js' => array_values((array) ($__manifest['js'] ?? []))], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP) !!}</script>
+    @foreach($__pageCss as $__href)
+    <link rel="preload" as="style" href="{{ $__href }}">
+    <link rel="stylesheet" href="{{ $__href }}">
+    @endforeach
+    @endif
     @stack('head')
 </head>
 <body>
@@ -367,9 +391,160 @@
     @foreach(($themeAssets['js'] ?? []) as $__themeSrc)
     <script src="{{ $__themeSrc }}" defer></script>
     @endforeach
+    @if (($assetManifest ?? null) !== null)
+    {{-- Phase 8 hydration bridge: inject ONLY the manifest-listed scripts,
+         non-blocking (async, appended at body end). Theme-global scripts
+         stay eager above; this covers the per-block manifest set. If the
+         island is missing or unparseable, nothing is injected — the page's
+         static content never depends on these scripts to render. --}}
+    <script>
+    (function () {
+        var island = document.querySelector('script[type="application/json"][data-tb-asset-manifest]');
+        if (!island) { return; }
+        var manifest;
+        try { manifest = JSON.parse(island.textContent || '{}'); } catch (e) { return; }
+        ((manifest && manifest.js) || []).forEach(function (src) {
+            if (typeof src !== 'string' || src === '') { return; }
+            var s = document.createElement('script');
+            s.src = src;
+            s.async = true;
+            document.body.appendChild(s);
+        });
+    })();
+    </script>
+
+<!-- Phase 8 (1.2) — viewport-triggered asset hydration.
+
+     The bridge above loads the manifest's scripts eagerly once, at body
+     end. This engine is the SECOND, lazy tier: a block that only needs an
+     asset when it actually scrolls into view. The manifest remains the
+     single source of truth for "what is already on this page" — the
+     engine re-reads it rather than keeping a second list, so a page served
+     WITHOUT a manifest (the $assetManifest ?? null branch above) simply
+     has nothing to cross-reference against and this engine stands down
+     instead of guessing.
+
+     BLOCK_ASSETS is intentionally EMPTY as shipped. No per-block asset
+     files exist in this installation yet (verified: public/js and
+     public/css contain only the two platform stylesheets), and naming
+     files that do not exist would inject 404s that degrade real pages.
+     The engine below is complete and provably correct; it becomes useful
+     the moment an entry is added. Adding one is a data change only — no
+     code edit below is required. -->
+<script>
+    (function () {
+        'use strict';
+
+        // type => { css: [...], js: [...] }. Keys are BLOCK TYPES, spelled
+        // exactly as SaaSPlatform\ThemeRuntime\BlockRegistry spells them, so
+        // they match the data-tb-block-type the renderer already emits.
+        var BLOCK_ASSETS = Object.freeze({});
+
+        var island = document.getElementById('theme-asset-manifest')
+            || document.querySelector('script[type="application/json"][data-tb-asset-manifest]');
+        if (!island) { return; }
+
+        var manifest;
+        try { manifest = JSON.parse(island.textContent || '{}'); } catch (e) { return; }
+        if (!manifest || typeof manifest !== 'object') { return; }
+
+        // Authoritative "already on this page" set, unioned with what the
+        // eager bridge above may have injected and with the tags the server
+        // rendered directly. Reading the live DOM as well as the manifest is
+        // what makes double-loading structurally impossible: a tag we are
+        // about to add is checked against every one of these sources first.
+        var loaded = Object.create(null);
+        var remember = function (bucket, url) {
+            if (typeof url === 'string' && url !== '') { loaded[bucket + '|' + url] = true; }
+        };
+
+        (Array.isArray(manifest.css) ? manifest.css : []).forEach(function (u) { remember('css', u); });
+        (Array.isArray(manifest.js) ? manifest.js : []).forEach(function (u) { remember('js', u); });
+
+        Array.prototype.forEach.call(
+            document.querySelectorAll('link[rel="stylesheet"], link[rel="preload"], script[src]'),
+            function (el) {
+                remember(el.tagName === 'LINK' ? 'css' : 'js', el.getAttribute('href') || el.getAttribute('src'));
+            }
+        );
+
+        var has = function (bucket, url) { return loaded[bucket + '|' + url] === true; };
+
+        var injectCss = function (url) {
+            if (has('css', url)) { return; }
+            remember('css', url);
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = url;
+            // A late-arriving stylesheet still costs a reflow; preload tells
+            // the browser to fetch it in parallel with the current work.
+            var pre = document.createElement('link');
+            pre.rel = 'preload';
+            pre.as = 'style';
+            pre.href = url;
+            document.head.appendChild(pre);
+            document.head.appendChild(link);
+        };
+
+        var injectJs = function (url) {
+            if (has('js', url)) { return; }
+            remember('js', url);
+            var s = document.createElement('script');
+            s.src = url;
+            s.async = true;
+            document.body.appendChild(s);
+        };
+
+         var hydrate = function (el) {
+            var type = el.getAttribute('data-tb-block-type');
+            if (!type) { return; }
+            var spec = BLOCK_ASSETS[type];
+            if (!spec) { return; }
+            (Array.isArray(spec.css) ? spec.css : []).forEach(injectCss);
+            var jsUrls = Array.isArray(spec.js) ? spec.js : [];
+            // Phase 8 Step 2 — Lifecycle Engine: after assets are injected,
+            // schedule init(ctx) via microtask so no block's init() blocks
+            // another. ThemeCanvasRuntime.initBlock() reads props from
+            // data-tb-block-props and dispatches to the registered handler.
+            if (window.ThemeCanvasRuntime && typeof window.ThemeCanvasRuntime.initBlock === 'function') {
+                // If JS was injected, wait for it to load before init;
+                // otherwise init runs immediately via microtask (non-blocking).
+                var pending = jsUrls.map(function (url) { return window.ThemeCanvasRuntime.trackScript(url); });
+                Promise.all(pending).then(function () {
+                    window.ThemeCanvasRuntime.initBlock(el);
+                }).catch(function () {
+                    // Even on script load failure, attempt init — fail-open
+                    // to the block's own error handling, never silent skip.
+                    window.ThemeCanvasRuntime.initBlock(el);
+                });
+            }
+        };
+
+        // rootMargin preloads just before the block is painted, so the asset
+        // is usually in hand by the time the user sees it — the point of
+        // viewport-triggered loading is to hide latency, not to expose it.
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) { return; }
+                hydrate(entry.target);
+                // Once satisfied, stop watching: assets are never unloaded,
+                // and a re-entering block must not re-run the lookup.
+                observer.unobserve(entry.target);
+            });
+        }, { rootMargin: '200px 0px' });
+
+        var blocks = document.querySelectorAll('[data-tb-block-type]');
+        Array.prototype.forEach.call(blocks, function (el) { observer.observe(el); });
+    })();
+    </script>
+    @else
+    @foreach(($themeAssets['js'] ?? []) as $__themeSrc)
+    <script src="{{ $__themeSrc }}" defer></script>
+    @endforeach
     @foreach(($extensionAssets['js'] ?? []) as $__extSrc)
     <script src="{{ $__extSrc }}" defer></script>
     @endforeach
+    @endif
     @includeWhen(($themeRuntimeMode ?? null) === \App\Services\ThemeCanvas\ThemeRuntimeDocument::MODE_PUBLIC, 'partials.theme-public-runtime')
     @stack('scripts')
 

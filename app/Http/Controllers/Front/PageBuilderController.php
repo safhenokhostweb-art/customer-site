@@ -10,6 +10,7 @@ use App\Models\PageTemplate;
 use App\Support\CanvasReservedSlugs;
 use App\Services\BuilderLayoutService;
 use App\Services\ThemeBuilder\BlockRenderer;
+use App\Services\ThemeCanvas\ThemeAssetLocalizationException;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemeCanvas\ThemeMediaLocalizationException;
 use App\Services\ThemePageProvisionService;
@@ -387,6 +388,7 @@ class PageBuilderController extends Controller
             'pages'                 => 'required|array',
             'global_styles'         => 'nullable|array',
             'extension_assets'      => 'nullable|array',
+            'theme_assets'          => 'nullable|array',
         ]);
 
         $themeData = [
@@ -399,6 +401,7 @@ class PageBuilderController extends Controller
             'pages'            => $data['pages'],
             'global_styles'    => $data['global_styles'] ?? [],
             'extension_assets' => $data['extension_assets'] ?? [],
+            'theme_assets'     => $data['theme_assets'] ?? [],
         ];
 
         // TASK 3/3 Phase 6.5D (BLD-30) — media localization (BLD-21,
@@ -427,6 +430,12 @@ class PageBuilderController extends Controller
                 'error'   => 'media_localization_failed',
                 'message' => $e->getMessage(),
             ], 502);
+        } catch (ThemeAssetLocalizationException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'theme_asset_localization_failed',
+                'message' => $e->getMessage(),
+            ], 422);
         }
 
         return response()->json([

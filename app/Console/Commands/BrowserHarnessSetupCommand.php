@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\CustomerMediaService;
+use App\Services\MediaStorage;
 use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Support\Installation;
@@ -203,8 +204,37 @@ class BrowserHarnessSetupCommand extends Command
             'footer_blocks' => [],
             'global_styles' => [],
         ];
+        $foodMartFixture = $this->seedFoodMartBindingFixtures();
+        $canvasThemeData['pages']['foodmart-binding'] = $foodMartFixture['page'];
+        $canvasThemeData['pages']['foodmart-editing'] = $foodMartFixture['editing_page'];
+        $sleepDefinitions = \SaaSPlatform\ThemeRuntime\SleepShimanBlockTypes::definitions();
+        $sleepShimanStats = $sleepDefinitions['sleepshiman_stats']['defaultProps'];
+        $sleepFeatured = $sleepDefinitions['sleepshiman_featured_product']['defaultProps'];
+        $sleepAssetPath = 'browser-harness/sleepshiman/pillow-green.webp';
+        $sleepAssetSource = base_path('../saas-platform/public/theme-assets/sleepshiman-home-blue/1.0.0/images/pillow-green.webp');
+        if (is_file($sleepAssetSource)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->put($sleepAssetPath, file_get_contents($sleepAssetSource));
+            $sleepFeatured['items'][0]['image'] = \Illuminate\Support\Facades\Storage::disk('public')->url($sleepAssetPath);
+        }
+        $sleepShimanPage = [
+            'title' => 'SleepShiman Acceptance',
+            'slug' => 'sleepshiman-acceptance',
+            'is_home' => false,
+            'blocks' => [
+                ['id' => 'sleepshiman-featured-manual', 'type' => 'sleepshiman_featured_product', 'props' => $sleepFeatured],
+                ['id' => 'sleepshiman-featured-dynamic', 'type' => 'sleepshiman_featured_product', 'props' => $sleepFeatured, 'binding' => [
+                    'source' => 'products', 'query' => ['sort' => 'manual', 'selected_ids' => [$foodMartFixture['product_id']], 'limit' => 1], 'empty' => 'manual',
+                ]],
+                ['id' => 'sleepshiman-featured-fallback', 'type' => 'sleepshiman_featured_product', 'props' => $sleepFeatured, 'binding' => [
+                    'source' => 'products', 'query' => ['sort' => 'manual', 'selected_ids' => [999999], 'limit' => 1], 'empty' => 'manual',
+                ]],
+                ['id' => 'sleepshiman-stats-acceptance', 'type' => 'sleepshiman_stats', 'props' => $sleepShimanStats],
+            ],
+        ];
+        $canvasThemeData['pages']['sleepshiman-acceptance'] = $sleepShimanPage;
         if ($this->option('universal')) {
             $canvasThemeData = $this->loadCanonicalUniversalThemeExport();
+            $canvasThemeData['pages']['sleepshiman-acceptance'] = $sleepShimanPage;
             // Real, seeder-produced CustomerMedia library rows for the
             // media-round-trip proof (universal-multipurpose-theme.spec.js
             // selects these by known title/uuid). The canonical export's
@@ -265,11 +295,124 @@ class BrowserHarnessSetupCommand extends Command
                 'universal_media_uuids' => $this->universalMediaUuids,
                 'pagination_media_count' => self::MEDIA_PAGINATION_COUNT,
                 'pagination_media_title_prefix' => self::MEDIA_PAGINATION_TITLE_PREFIX,
+                'foodmart_page_slug' => 'foodmart-binding',
+                'foodmart_product_id' => $foodMartFixture['product_id'],
+                'sleepshiman_page_slug' => 'sleepshiman-acceptance',
             ]));
         }
 
         return self::SUCCESS;
     }
+
+    /** @return array{page:array<string,mixed>,product_id:int} */
+    private function seedFoodMartBindingFixtures(): array
+    {
+        $fruit = \App\Models\ProductCategory::create(['name' => 'Browser Fresh Fruit', 'slug' => 'browser-fresh-fruit', 'order' => 1]);
+        $bakery = \App\Models\ProductCategory::create(['name' => 'Browser Bakery', 'slug' => 'browser-bakery', 'order' => 2]);
+        \App\Models\ProductCategory::create(['name' => 'Browser Empty Category', 'slug' => 'browser-empty-category', 'order' => 3]);
+
+        $sale = \App\Models\Product::create([
+            'title' => 'Browser Sale Apple', 'slug' => 'browser-sale-apple', 'category_id' => $fruit->id,
+            'price' => 120000, 'sale_price' => 90000, 'stock' => 8, 'status' => \App\Models\Product::STATUS_PUBLISHED,
+            'is_new' => true, 'views_count' => 40, 'order' => 2,
+            'image' => $this->storeBrandedQaImage('foodmart-binding-apple', 'foodmart-binding-fixtures', 640, 640),
+        ]);
+        \App\Models\ProductImage::create([
+            'product_id' => $sale->id,
+            'path' => $this->storeBrandedQaImage('foodmart-binding-apple-secondary', 'foodmart-binding-fixtures', 640, 640),
+            'sort_order' => 0,
+        ]);
+        $bread = \App\Models\Product::create([
+            'title' => 'Browser Bakery Bread', 'slug' => 'browser-bakery-bread', 'category_id' => $bakery->id,
+            'price' => 70000, 'stock' => 12, 'status' => \App\Models\Product::STATUS_PUBLISHED,
+            'views_count' => 90, 'order' => 1,
+            'image' => $this->storeBrandedQaImage('foodmart-binding-bread', 'foodmart-binding-fixtures', 640, 640),
+        ]);
+        \App\Models\ProductVariant::create([
+            'product_id' => $bread->id, 'sku' => 'BROWSER-BREAD-S', 'label' => 'Small',
+            'price_override' => 65000, 'stock' => 4, 'sort_order' => 1, 'min_order_qty' => 2, 'max_order_qty' => 4,
+        ]);
+        \App\Models\Product::create([
+            'title' => 'Browser Sold Out Juice', 'slug' => 'browser-sold-out-juice', 'category_id' => $fruit->id,
+            'price' => 50000, 'stock' => 0, 'status' => \App\Models\Product::STATUS_PUBLISHED,
+            'views_count' => 4, 'order' => 3,
+            'image' => $this->storeBrandedQaImage('foodmart-binding-juice', 'foodmart-binding-fixtures', 640, 640),
+        ]);
+        \App\Models\Product::create([
+            'title' => 'Browser Product With An Intentionally Long Name For Responsive Verification',
+            'slug' => 'browser-long-product', 'category_id' => $fruit->id, 'price' => 88000, 'stock' => 3,
+            'status' => \App\Models\Product::STATUS_PUBLISHED, 'views_count' => 2, 'order' => 4,
+        ]);
+        \App\Models\Product::create([
+            'title' => 'Browser Hidden Draft', 'slug' => 'browser-hidden-draft', 'category_id' => $fruit->id,
+            'price' => 1, 'stock' => 99, 'status' => \App\Models\Product::STATUS_DRAFT,
+            'image' => $this->storeBrandedQaImage('foodmart-binding-hidden', 'foodmart-binding-fixtures', 640, 640),
+        ]);
+
+        \App\Models\License::updateOrCreate(['domain' => '127.0.0.1'], [
+            'license_key' => 'BROWSER-FOODMART-BINDING', 'platform_valid' => true,
+            'expires_at' => now()->addYear(), 'last_validated_at' => now(), 'modules' => ['shop'],
+        ]);
+
+        $binding = static fn (string $source, string $sort, int $limit): array => [
+            'source' => $source, 'query' => ['sort' => $sort, 'limit' => $limit], 'empty' => 'empty_state',
+        ];
+
+        return [
+            'product_id' => (int) $sale->id,
+            'page' => [
+                'title' => 'FoodMart Dynamic Binding', 'slug' => 'foodmart-binding', 'is_home' => false,
+                'blocks' => [
+                    ['id' => 'fm-svg', 'type' => 'foodmart_svg_sprite', 'props' => []],
+                    ['id' => 'fm-cart', 'type' => 'foodmart_offcanvas_cart', 'props' => []],
+                    ['id' => 'fm-search', 'type' => 'foodmart_offcanvas_search', 'props' => []],
+                    ['id' => 'fm-header', 'type' => 'foodmart_header', 'props' => []],
+                    ['id' => 'fm-binding-categories', 'type' => 'foodmart_categories', 'props' => [], 'binding' => $binding('product_categories', 'catalog_order', 12)],
+                    ['id' => 'fm-binding-products', 'type' => 'foodmart_trending_products', 'props' => [], 'binding' => $binding('products', 'most_viewed', 10)],
+                    ['id' => 'fm-binding-arrivals', 'type' => 'foodmart_product_carousel_just_arrived', 'props' => [], 'binding' => $binding('products', 'new_arrivals', 10)],
+                    // Phase 4B.5: a hero block with one editable slide declared
+                    // through the generic repeater schema (empty values keep
+                    // the byte-exact static output; the editor exposes the
+                    // controls as soon as the block carries the schema).
+                    ['id' => 'fm-hero', 'type' => 'foodmart_hero', 'props' => [
+                        'slides' => [['label' => '', 'title' => 'Fresh Smoothie & Summer Juice', 'description' => '', 'cta_label' => '', 'cta_url' => '', 'image' => '']],
+                    ]],
+                    ['id' => 'fm-footer', 'type' => 'foodmart_footer', 'props' => []],
+                ],
+            ],
+            // Phase 4B.6 user-acceptance editing page: every remaining
+            // content-bearing block, with manual items pre-populated so the
+            // spec edits REAL visible cards (not empty repeaters).
+            'editing_page' => [
+                'title' => 'FoodMart Editing Acceptance', 'slug' => 'foodmart-editing', 'is_home' => false,
+                'blocks' => [
+                    ['id' => 'fme-svg', 'type' => 'foodmart_svg_sprite', 'props' => []],
+                    ['id' => 'fme-header', 'type' => 'foodmart_header', 'props' => [
+                        'nav_items' => [
+                            ['label' => 'Home', 'url' => 'index.html'],
+                            ['label' => 'Shop', 'url' => 'shop.html'],
+                        ],
+                    ]],
+                    ['id' => 'fme-products', 'type' => 'foodmart_trending_products', 'props' => [
+                        'items' => [
+                            ['image' => 'images/thumb-bananas.png', 'image_alt' => '', 'url' => '#', 'badge' => '-14%', 'title' => 'Bananas', 'unit_label' => '1 Unit', 'price_text' => '$2.99', 'old_price_text' => '$3.49', 'cta_label' => 'Shop Now'],
+                            ['image' => 'images/thumb-biscuits.png', 'image_alt' => '', 'url' => '#', 'badge' => '', 'title' => 'Biscuits', 'unit_label' => '1 Pack', 'price_text' => '$1.99', 'old_price_text' => '', 'cta_label' => 'Shop Now'],
+                        ],
+                    ]],
+                    ['id' => 'fme-blog', 'type' => 'foodmart_blog', 'props' => [
+                        'items' => [
+                            ['image' => 'images/post-thumb-1.jpg', 'image_alt' => 'post', 'url' => '#', 'date_text' => '22 Aug 2021', 'category_label' => 'Recipes', 'title' => 'Fresh Produce Fitness', 'excerpt' => 'Balanced snacks for every training day.'],
+                        ],
+                    ]],
+                    ['id' => 'fme-newsletter', 'type' => 'foodmart_newsletter', 'props' => []],
+                    ['id' => 'fme-promo', 'type' => 'foodmart_promo_banners', 'props' => []],
+                    ['id' => 'fme-trust', 'type' => 'foodmart_trust_badges', 'props' => []],
+                    ['id' => 'fme-footer', 'type' => 'foodmart_footer', 'props' => []],
+                ],
+            ],
+        ];
+    }
+
 
     /**
      * MEDIA-3 browser acceptance needs three preconditions that cannot be
@@ -310,6 +453,53 @@ class BrowserHarnessSetupCommand extends Command
         return [$foreignMedia->uuid, $usedMedia->uuid];
     }
 
+    /**
+     * Real, deterministic, visually distinct branded JPEG — a vertical
+     * gradient plus a seeded-PRNG abstract shape, the same technique
+     * saas-platform's own UniversalMultipurposeQaThemeSeeder uses for the
+     * Theme's stock imagery. Stored on the real 'uploads' disk (the same
+     * one ImageHelper::url()/MediaStorage resolve product/post/course
+     * images from) so the returned path is a genuine, working image the
+     * public renderer can serve — never a 1×1 placeholder pixel.
+     */
+    private function storeBrandedQaImage(string $seed, string $directory, int $width, int $height): string
+    {
+        $image = imagecreatetruecolor($width, $height);
+
+        $from = [0x4f, 0x46, 0xe5];
+        $to   = [0x05, 0x96, 0x69];
+        for ($y = 0; $y < $height; $y++) {
+            $t = $y / max(1, $height - 1);
+            $r = (int) round($from[0] + ($to[0] - $from[0]) * $t);
+            $g = (int) round($from[1] + ($to[1] - $from[1]) * $t);
+            $b = (int) round($from[2] + ($to[2] - $from[2]) * $t);
+            $rowColor = imagecolorallocate($image, $r, $g, $b);
+            imageline($image, 0, $y, $width, $y, $rowColor);
+        }
+
+        mt_srand(crc32($seed));
+        $white = imagecolorallocatealpha($image, 255, 255, 255, 40);
+        for ($i = 0; $i < 6; $i++) {
+            $radius = mt_rand((int) ($width * 0.08), (int) ($width * 0.22));
+            $cx = mt_rand(0, $width);
+            $cy = mt_rand(0, $height);
+            imagefilledellipse($image, $cx, $cy, $radius, $radius, $white);
+        }
+        mt_srand();
+
+        $tmp = tempnam(sys_get_temp_dir(), 'qa_branded_') . '.jpg';
+        imagejpeg($image, $tmp, 85);
+        imagedestroy($image);
+
+        $disk = app(MediaStorage::class)->diskNameFor('uploads');
+        $filename = $seed . '.jpg';
+        $path = trim($directory, '/') . '/' . $filename;
+        \Illuminate\Support\Facades\Storage::disk($disk)->put($path, file_get_contents($tmp));
+        @unlink($tmp);
+
+        return $path;
+    }
+
     private function fakeUploadedPng(string $originalName): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'qa_media_');
@@ -333,7 +523,7 @@ class BrowserHarnessSetupCommand extends Command
      * of saas-platform's real `UniversalMultipurposeQaThemeSeeder` — the
      * exact "duplicate product definition" problem the Phase 5 harness
      * audit was asked to find and close. It is replaced by loading a real,
-     * versioned export of the actual canonical product (21 pages, 6 header
+     * versioned export of the actual canonical product (24 pages, 6 header
      * variants, 6 footer variants — the same shape saas-platform's
      * `ThemeInstallGateway` sends over the wire, verified byte-for-byte
      * against `ThemeCanvasInstallToSiteHttpTest` on that side), then
@@ -428,22 +618,42 @@ class BrowserHarnessSetupCommand extends Command
             'modules' => collect(BlockRegistry::all())->pluck('requires')->filter()->unique()->values()->all(),
         ]);
 
+        // Builder integrity audit (2026-09-20): these three records used to
+        // carry no image field at all, so every product/blog/course card
+        // rendering them fell back to the theme's generic placeholder icon
+        // (📦/🎓) — visually indistinguishable from "broken", and exactly
+        // the class of defect this QA fixture exists to catch, not
+        // reproduce. Real, deterministic, locally-generated branded JPEGs
+        // (same GD-gradient technique saas-platform's own
+        // UniversalMultipurposeQaThemeSeeder::generateBrandedImage() uses
+        // for the Theme's own stock imagery) close that gap — this fixture
+        // must clear the theme's own "no placeholder, no broken image" bar
+        // like every other seeded asset here.
         \App\Models\Post::create([
             'title' => 'خبر نمونه قالب جامع', 'slug' => 'universal-qa-post',
             'body' => 'محتوای قطعی برای کنترل کیفیت.', 'excerpt' => 'خلاصه محتوای نمونه',
             'is_published' => true, 'editorial_status' => \App\Models\Post::EDITORIAL_PUBLISHED,
             'published_at' => now(), 'user_id' => \App\Models\User::query()->value('id'),
+            'featured_image' => $this->storeBrandedQaImage('qa-post', 'blog', 1200, 675),
         ]);
         \App\Models\Product::create([
             'title' => 'محصول نمونه قالب جامع', 'slug' => 'universal-qa-product',
             'description' => 'محصول قطعی کنترل کیفیت', 'sku' => 'UNIVERSAL-QA-1',
             'price' => 125000, 'stock' => 10, 'status' => \App\Models\Product::STATUS_PUBLISHED,
+            'image' => $this->storeBrandedQaImage('qa-product', 'products', 1000, 1000),
         ]);
         \App\Models\Course::create([
             'title' => 'دوره نمونه قالب جامع', 'slug' => 'universal-qa-course',
             'description' => 'دوره قطعی کنترل کیفیت', 'price' => 0, 'is_active' => true,
+            'image' => $this->storeBrandedQaImage('qa-course', 'courses', 800, 600),
         ]);
         \App\Models\Form::create(['title' => 'فرم درخواست قالب جامع', 'slug' => 'universal-qa-form', 'is_active' => true]);
+
+        // Use the canonical commercial demo-data seeder as the browser
+        // product source too. The previous one-product/one-post fixture
+        // could only ever render a sparse strip, so it was structurally
+        // valid but incapable of proving the real commercial sliders.
+        app(\Database\Seeders\UniversalMultipurposeQaDemoCommerceContentSeeder::class)->run();
 
         // Builder integrity audit (2026-09-11): real backing rows for the
         // newly-implemented module:advertisement_zone,
