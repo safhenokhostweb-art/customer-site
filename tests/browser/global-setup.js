@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serverEnv } from './fixtures/env.js';
 import { startServer } from './helpers/server.js';
+import { startFakePlatform } from './helpers/fake-platform.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
@@ -64,5 +65,6 @@ export default async function globalSetup() {
     const fixture = JSON.parse(jsonLine.slice('BROWSER_HARNESS_JSON:'.length));
     writeFileSync(fixturePath, JSON.stringify(fixture, null, 2));
 
+    await startFakePlatform();
     await startServer();
 }

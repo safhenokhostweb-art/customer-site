@@ -100,4 +100,34 @@ test.describe.serial('Universal Theme accessibility (Phase 6)', () => {
         });
         expect(active, 'first Tab press must focus a real element').not.toBeNull();
     });
+
+    for (const [name, viewport] of [
+        ['desktop', { width: 1366, height: 900 }],
+        ['tablet', { width: 768, height: 1024 }],
+        ['mobile', { width: 390, height: 844 }],
+    ]) {
+        test(`dark mode: real toggle and persisted preference (${name})`, async ({ page }) => {
+            await page.setViewportSize(viewport);
+            await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+            const hamburger = page.locator('#tb-mobile-menu-btn, .tb-menu-btn').first();
+            if (await hamburger.isVisible().catch(() => false)) {
+                await hamburger.click();
+            }
+
+            const toggle = page.locator('.tb-theme-toggle:visible').first();
+            await expect(toggle).toBeVisible();
+            // A fresh context starts at `system`; the contract cycles
+            // system -> light -> dark.
+            await toggle.click();
+            await toggle.click();
+            await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+            expect(await page.evaluate(() => localStorage.getItem('tb-theme'))).toBe('dark');
+
+            await page.reload({ waitUntil: 'domcontentloaded' });
+            await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+            expect(await page.evaluate(() => localStorage.getItem('tb-theme'))).toBe('dark');
+            await page.screenshot({ path: `${outDir}/dark-mode-${name}.png`, fullPage: false });
+        });
+    }
 });

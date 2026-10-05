@@ -212,7 +212,7 @@ test.describe('Canvas Extension Bridge — full authoring, nesting, save/reload/
         // Checked BEFORE the reorder action below, which triggers its own
         // async iframe reload independent of what this is proving.
         const frame = canvasIframe(page);
-        await expect(frame.locator('.tb-canvas-block[data-tb-container="1"] .ext-acme-demo-card').first()).toBeVisible();
+        await expect(frame.locator('[data-tb-block-id][data-tb-container="1"].ext-acme-demo-card, [data-tb-block-id][data-tb-container="1"] .ext-acme-demo-card').first()).toBeVisible();
         await expect(frame.locator('.ext-acme-demo-container').first()).toBeVisible();
 
         // Real drag/order proof: move the demo_card child up past heading using
