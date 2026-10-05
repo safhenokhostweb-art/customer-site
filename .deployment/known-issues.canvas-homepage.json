@@ -25,24 +25,24 @@
                        "test":  "Tests\\Feature\\ThemeCanvas\\CanvasRuntimeParityTest::test_canvas_keeps_unknown_block_fallback_and_legacy_platform_defaults"
                    }
                ],
-    "recorded_at":  "2026-10-02T06:00:02.3822443Z",
+    "recorded_at":  "2026-10-05T17:30:00.0000000Z",
     "expires_at":  "2026-10-16T00:00:00Z",
     "schema_version":  1,
     "group":  "canvas-homepage-baseline-2026-10-02",
     "source_files":  {
-                         "resources/views/admin/theme-design/canvas-editor.blade.php":  "78bc84d694ab9dbd73365fe58eb6632cef38b7a29bdae7ae090f3ffa10388462",
+                         "resources/views/admin/theme-design/canvas-editor.blade.php":  "bac24d070c2ec12b61833abeb663a05b4e17dfd14b8012517e1d41e2872b109b",
                          "vendor/saas-platform/modules-theme-runtime/resources/views/canvas/runtime.blade.php":  "4917af2997946cd743a3252956b7078bdb933ae07eb7bf1498331a1e182e1e2b",
-                         "resources/views/admin/theme-design/canvas-live-preview.blade.php":  "a492a5e0e21c2f1007cb7e21dc0b12cd4f2ac72088cf6c57e0a722aff9a317ea",
-                         "resources/views/layouts/canvas-theme.blade.php":  "2a10dcf06e995651c3c20e14ff80d18523892419a7281fea4bf6e663983c710e",
+                         "resources/views/admin/theme-design/canvas-live-preview.blade.php":  "a815ca2161ba2f1a44d93ab7773d1552fae348c221e3a35d5587cd0f79d0d268",
+                         "resources/views/layouts/canvas-theme.blade.php":  "48ee4bcde23c7e7031ed03a2521075b1a8de503a9d3c6bdd61238c2896a9e689",
                          "tests/Feature/ThemeCanvas/CanvasRuntimeParityTest.php":  "7fec84d261fb78a97bcde7396a93d561d816fd372d3f1b70c6fd94fd6e6042d1",
                          "tests/Feature/ThemeCanvas/CanvasPostMessageOriginTest.php":  "66beb2327c526999fd2e57244718a72cdb2fa1cf37e2c5f81b529b5974b603c0",
-                         "resources/views/canvas-preview.blade.php":  "f8ff5416f8f2a0cb1f918c33475cf54d2d9865a7cec032e5d34ccaeb6eddc794",
-                         "app/Services/ThemeCanvas/ThemeRuntimeDocument.php":  "6f423da203c1e4e341e36e45bfd2c2378e091144c8224ca419f1f965bd55efcd",
-                         "app/Http/Controllers/Admin/ThemeDesignController.php":  "400824559c4d91a7f260d847948060cca6f5b7c4d2d6cb6cc2d3dc069802c633"
+                         "resources/views/canvas-preview.blade.php":  "7182939bc24d54af5cc840eaaab76efb4903bec74f711e57a16573461734ad31",
+                         "app/Services/ThemeCanvas/ThemeRuntimeDocument.php":  "9df5633c61f52c4892d9ef80b230520ead8785fb3d966d68a557a33df0525791",
+                         "app/Http/Controllers/Admin/ThemeDesignController.php":  "f54dcf4ca4c2abc07fad663bb065775acb08a603410d6646eaf4500c68cf4cee"
                      },
     "source_commits":  {
-                           "saas-platform":  "6d9f0c619a0d6886ff8e33542dd7aca49abe8c7b",
-                           "customer-site":  "24a4cd418b2b67fc9914780f580bccefaecda79d"
+                           "saas-platform":  "fa8694d4540b777501cf3f83ddc9e12ee69b7c4f",
+                           "customer-site":  "7e90f316dc3ab7c6efeb77a61b2db17d1c92262a"
                        },
     "release_version":  "2026.10.02-canvas-homepage.1",
     "fingerprint_format":  "sha256-utf8-lf-v1"

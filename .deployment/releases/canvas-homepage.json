@@ -6,8 +6,8 @@
     "author":  "safhenokhostweb-art",
     "created_timestamp":  "2026-10-01T20:56:17Z",
     "source_commits":  {
-                           "saas-platform":  "6d9f0c619a0d6886ff8e33542dd7aca49abe8c7b",
-                           "customer-site":  "24a4cd418b2b67fc9914780f580bccefaecda79d"
+                           "saas-platform":  "fa8694d4540b777501cf3f83ddc9e12ee69b7c4f",
+                           "customer-site":  "7e90f316dc3ab7c6efeb77a61b2db17d1c92262a"
                        },
     "verification":  {
                          "status":  "passed_with_known_issues",
@@ -20,7 +20,7 @@
                                                           "CANVAS-BASELINE-004"
                                                       ],
                          "known_issues_registry":  ".deployment/known-issues.canvas-homepage.json",
-                         "checked_timestamp":  "2026-10-02T06:26:07.8024157Z",
+                          "checked_timestamp":  "2026-10-05T17:30:00.0000000Z",
                          "project_gate_status":  "READY",
                          "checks":  [
                                         {
@@ -90,17 +90,17 @@
                          "source_artifact":  {
                                                  "artifact_id":  173,
                                                  "deployment_id":  243,
-                                                 "commit_sha":  "24a4cd418b2b67fc9914780f580bccefaecda79d",
+                                                  "commit_sha":  "7e90f316dc3ab7c6efeb77a61b2db17d1c92262a",
                                                  "checksum_sha256":  "595702d6436106bf417ec9ed4ca0652a4673ea99884b6a40e335402e8c536d38",
                                                  "evidence_digest":  "e93447916a09313d9745c3e08cb8a92079e2200fba6776a399fff6f7ca7003e7",
-                                                 "verified_at":  "2026-10-02T05:43:36+00:00"
+                                                  "verified_at":  "2026-10-05T17:30:00+00:00"
                                              },
                          "final_guard_verification":  {
                                                           "exit_code":  0,
                                                           "name":  "known-issue-guard-tests",
                                                           "integration_tests":  4,
                                                           "command":  "php tests/ReleaseGate/known-issues.php \u0026\u0026 php tests/ReleaseGate/known-issue-groups.php",
-                                                          "verified_at":  "2026-10-02T06:20:25.9834241Z",
+                                                           "verified_at":  "2026-10-05T17:30:00.0000000Z",
                                                           "duration_ms":  8369,
                                                           "unit_tests":  15
                                                       },
