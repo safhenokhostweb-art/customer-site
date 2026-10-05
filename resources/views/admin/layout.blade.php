@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'پنل مدیریت') — {{ \App\Helpers\SiteHelper::siteName() }}</title>
+    {{-- The one head-tag renderer. This layout (151 child views) previously
+         emitted no <meta name="robots"> at all, so an authenticated admin
+         surface shipped no noindex directive whatsoever. An admin surface is
+         never indexable, so the directive is pinned here rather than
+         inherited from the tenant's seo_robots setting;
+         include-organization-json-ld is off because Organization/WebSite is
+         public-site structured data. --}}
+    <x-seo-meta robots="noindex, nofollow" :include-organization-json-ld="false" />
     {{-- قالب و منو: فقط فایل محلی؛ ابزارهای صفحات داخلی از build محلی Vite (بدون CDN) --}}
     <link rel="stylesheet" href="{{ asset('css/customer-admin-layout.css') }}?v={{ @filemtime(public_path('css/customer-admin-layout.css')) ?: time() }}">
     @include('partials.customer-admin-sidebar-theme')

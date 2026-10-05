@@ -7,6 +7,7 @@ use App\Models\Setting;
 
 class SiteHelper
 {
+    private const REQUEST_LICENSE_CACHE = '_site_helper_license_by_host';
     /**
      * Phase 5 / P0-7:
      * نگاشت دوطرفهٔ alias بین کلیدهای قدیمی و جدید ماژول‌ها.
@@ -79,7 +80,7 @@ class SiteHelper
     {
         // blog و shop: فقط از لایسنس؛ بدون لایسنس معتبر همیشه غیرفعال
         if (in_array($key, ['blog', 'shop'], true)) {
-            $license = License::current();
+            $license = self::currentLicenseForRequest();
             if (!$license || !$license->isValid()) {
                 return false;
             }
@@ -88,7 +89,7 @@ class SiteHelper
         }
 
         // سایر ماژول‌ها: لایسنس اول، سپس fallback به .env
-        $license = License::current();
+        $license = self::currentLicenseForRequest();
         if ($license && $license->isValid()) {
             $modules = $license->modules ?? [];
             if (is_array($modules)) {
@@ -104,6 +105,33 @@ class SiteHelper
             }
         }
         return false;
+    }
+
+    /**
+     * Resolve the tenant license once per HTTP request and host. Menu item
+     * visibility asks about several modules during one render; repeating the
+     * same host-scoped query adds no entitlement information. Request
+     * attributes avoid a process-static cache, so Octane workers and later
+     * tenant requests cannot inherit another host's license snapshot.
+     */
+    private static function currentLicenseForRequest(): ?License
+    {
+        if (! app()->bound('request')) {
+            return License::current('');
+        }
+
+        $request = app('request');
+        $host = (string) $request->getHost();
+        $key = License::normalizeDomain($host);
+        $cache = $request->attributes->get(self::REQUEST_LICENSE_CACHE, []);
+        $cache = is_array($cache) ? $cache : [];
+
+        if (! array_key_exists($key, $cache)) {
+            $cache[$key] = License::current($host);
+            $request->attributes->set(self::REQUEST_LICENSE_CACHE, $cache);
+        }
+
+        return $cache[$key];
     }
 
     /**

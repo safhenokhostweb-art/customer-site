@@ -3,9 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ورود') — {{ \App\Helpers\PlatformUx::platformName() }}</title>
+    {{-- The one head-tag renderer. This layout previously hand-wrote only the
+         robots directive and emitted no <meta name="description"> and no
+         <link rel="canonical"> at all. An auth surface is never indexable, so
+         the directive is pinned here rather than inherited from the tenant's
+         seo_robots setting; include-organization-json-ld is off because
+         Organization/WebSite is public-site structured data. --}}
+    <x-seo-meta robots="noindex, nofollow" :include-organization-json-ld="false" />
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
     <style>@include('partials.vazirmatn-font-faces-inline')</style>

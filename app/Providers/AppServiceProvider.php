@@ -99,7 +99,15 @@ class AppServiceProvider extends ServiceProvider
         // Phase 18-B — generic SEO extension point default. Any module
         // that wants to contribute meta/JSON-LD rebinds this in its own
         // ServiceProvider; Core never references a specific module here.
-        $this->app->bind(
+        //
+        // bindIf, not bind: Laravel splices package-discovered providers
+        // (vendor/composer/installed.json) at index 1 of the provider list,
+        // i.e. BEFORE this provider. A plain bind() therefore ran last and
+        // overwrote an installed module's adapter every time, so an installed
+        // SEO Advanced contributed nothing. bindIf keeps the Null Object as
+        // the default for a runtime with no SEO module, and leaves an
+        // already-bound module adapter alone.
+        $this->app->bindIf(
             \SaaSPlatform\CoreUtils\Contracts\Services\SeoOverrideProviderInterface::class,
             \App\Services\Seo\NullSeoOverrideProvider::class
         );
@@ -158,6 +166,10 @@ $this->app->bind(
 
     public function boot(): void
     {
+        // Mixed-content hardening — must run before anything consumes the
+        // platform base URL (views, licence checks, the support-ticket poll).
+        $this->forceHttpsPlatformBaseUrls();
+
         // ── PERSIAN LOCALIZATION GLOBAL STANDARD — Blade Directives ────────────
         Blade::directive('numFa', function ($expression) {
             return "<?php echo \\App\\Services\\PersianFormatter::num($expression); ?>";
@@ -196,6 +208,15 @@ $this->app->bind(
         Product::observe(ProductObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
         \App\Models\Order::observe(\App\Observers\OrderObserver::class);
+
+        // Phase 2.1 — sitemap entries are host-scoped and cached, but
+        // clearCache() previously had no caller at all, so a content change
+        // could leave the sitemap stale for a full `seo.sitemap_cache_ttl`.
+        // Registered per model rather than globally so exactly the four
+        // models SitemapController::collectEntries() reads are observed.
+        foreach (\App\Observers\SitemapContentObserver::observedModels() as $sitemapContentModel) {
+            $sitemapContentModel::observe(\App\Observers\SitemapContentObserver::class);
+        }
         if (\Illuminate\Support\Facades\Schema::hasTable('support_conversations')) {
             \App\Models\SupportConversation::observe(\App\Observers\SupportConversationObserver::class);
         }
@@ -231,6 +252,59 @@ $this->app->bind(
         // extension exists yet), so this is a total no-op in production
         // today; see App\Builder\Extension\ThemeBuilderExtensionLoader.
         \App\Builder\Extension\ThemeBuilderExtensionLoader::boot($this->app);
+    }
+
+    /**
+     * Mixed-content hardening: guarantees the platform base URL is HTTPS.
+     *
+     * The customer site is served over HTTPS in production, so a plaintext
+     * "http://panel…" value in PLATFORM_URL / PLATFORM_API_URL makes the
+     * browser block the resulting request as Mixed Content. The failure is
+     * silent: e.g. the support-ticket unread poll in
+     * resources/views/admin/layout.blade.php simply never updates, with no
+     * visible error on the page.
+     *
+     * Both config keys are normalized independently, so an explicit
+     * PLATFORM_API_URL pointing at a different host keeps working instead of
+     * being overwritten by PLATFORM_URL.
+     *
+     * Local development hosts (localhost, *.test, *.local, loopback) are left
+     * on plain HTTP: Laragon serves those without TLS, and upgrading them
+     * would break local development.
+     *
+     * Implemented here rather than in config/ so the guarantee is enforced at
+     * runtime regardless of whether the config was loaded from
+     * config/site.php or from a `php artisan config:cache` artifact.
+     */
+    protected function forceHttpsPlatformBaseUrls(): void
+    {
+        config(['site.platform_url' => $this->upgradePlatformUrlToHttps((string) config('site.platform_url', ''))]);
+        config(['platform.api_url' => $this->upgradePlatformUrlToHttps((string) config('platform.api_url', ''))]);
+    }
+
+    protected function upgradePlatformUrlToHttps(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if ($host === '') {
+            return rtrim($url, '/');
+        }
+
+        $isLocalHost = $host === 'localhost'
+            || $host === '127.0.0.1'
+            || $host === '::1'
+            || str_ends_with($host, '.test')
+            || str_ends_with($host, '.local');
+
+        if (! $isLocalHost && str_starts_with(strtolower($url), 'http://')) {
+            $url = 'https://' . substr($url, strlen('http://'));
+        }
+
+        return rtrim($url, '/');
     }
 
     /**

@@ -52,3 +52,6 @@ Thumbs.db
 # Personal isolated-cert-DB PHPUnit config (never shared, points at a
 # machine-local dedicated test database) — never tracked.
 phpunit.cert.xml
+
+# Local agent tooling state — machine-local, never tracked.
+/.freebuff/

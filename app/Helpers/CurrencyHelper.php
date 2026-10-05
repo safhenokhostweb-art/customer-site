@@ -67,11 +67,26 @@ class CurrencyHelper
      */
     public static function formatPrice(float|int|string $price): string
     {
-        $value = self::toDisplayValue($price);
+        return self::formatPriceWithContext($price, self::displayContext());
+    }
+
+    /** @return array{enabled:bool,migrated:bool} */
+    public static function displayContext(): array
+    {
+        return ['enabled' => self::isReformEnabled(), 'migrated' => self::isMigrated()];
+    }
+
+    /** @param array{enabled:bool,migrated:bool} $context */
+    public static function formatPriceWithContext(float|int|string $price, array $context): string
+    {
+        $raw = (float) $price;
+        $value = $context['enabled']
+            ? ($context['migrated'] ? $raw : $raw / self::DIVISOR)
+            : ($context['migrated'] ? $raw * self::DIVISOR : $raw);
         $formatted = number_format((int) round($value));
         $persianDigits = ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹'];
         $main = strtr($formatted, $persianDigits);
-        if (self::isReformEnabled()) {
+        if ($context['enabled']) {
             return $main . '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>';
         }
         return $main;

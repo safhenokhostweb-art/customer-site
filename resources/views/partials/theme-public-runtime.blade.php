@@ -1,4 +1,4 @@
-{{-- Public Canvas runtime: identity/lifecycle/interaction only. Never load
+{{-- Public Canvas runtime: identity/lifecycle/SDK/interaction only. Never load
      editor-bootstrap or host structural/editor services on a public page. --}}
 @php
     $__publicRuntimeCapabilities = is_array($capabilityProjection['runtime'] ?? null)
@@ -7,6 +7,7 @@
 @endphp
 @if(in_array('theme-runtime::canvas.runtime', $__publicRuntimeCapabilities, true))
     @include('theme-runtime::canvas.runtime')
+    @includeIf('theme-runtime::canvas.block-sdk')
 @endif
 @if(in_array('theme-runtime::canvas.identity', $__publicRuntimeCapabilities, true))
     @include('theme-runtime::canvas.identity')

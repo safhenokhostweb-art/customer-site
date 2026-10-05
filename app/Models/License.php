@@ -40,11 +40,95 @@ class License extends Model
     }
 
     /**
-     * The single active license for this installation (latest record).
+     * The active license for this installation, resolved for the REQUEST HOST.
+     *
+     * Domain-aware resolution (SaaS multi-tenant safe):
+     *
+     * An installation can legitimately hold several License rows (e.g. a
+     * valid production-domain license plus a stale/invalid `127.0.0.1` row
+     * from an earlier local activation). The previous implementation picked
+     * `latest()` blindly, so a request served under `customer-site.test`
+     * could be handed the invalid localhost license and be wrongly denied
+     * by `EnsureLicenseValid` — while the matching valid license sat in the
+     * table. Selection is therefore host-scoped:
+     *
+     *   1. Licenses whose normalized domain matches the request host are
+     *      the tenant's own rows. Among them, ranked deterministically:
+     *      the newest row that is currently locally ACTIVE (isValid()
+     *      against this host) wins; only when NO row for the host is
+     *      active does the newest host-matching row resolve, so the
+     *      middleware can re-validate/record the revocation.
+     *   2. Legacy installs where the row has NO domain (activated before
+     *      domain was recorded, `WebhookTest`-style seeds): the newest
+     *      domain-less row is a compatibility fallback ONLY — it is never
+     *      returned while any host-matching row exists.
+     *   3. A host that matches no row (e.g. an unknown vhost) and finds no
+     *      domain-less fallback returns null; the caller (middleware)
+     *      already treats that as "not activated".
+     *
+     * This method intentionally does NOT filter out invalid rows entirely:
+     * the validity contract (platform_valid, expiry, domain match) is judged
+     * by `isValid()`, and `EnsureLicenseValid` must still be able to LOAD a
+     * revoked license to run its platform re-validation and record the
+     * revocation. Selecting the right tenant row and judging it are two
+     * different concerns.
+     *
+     * Deterministic ranking among a host's own rows (several historical
+     * licenses for the same domain is a legitimate state — re-activations,
+     * stale local rows):
+     *
+     *   a. the newest host-matching row that is currently locally ACTIVE
+     *      (`isValid()` against this host: key present, not expired,
+     *      platform_valid) wins, so a stale/revoked newer row can never
+     *      mask a still-active older license for the same domain;
+     *   b. otherwise (every row for the host is inactive) the newest
+     *      host-matching row is returned anyway, so the middleware can
+     *      re-validate it against the platform and record the revocation.
      */
-    public static function current(): ?self
+    public static function current(?string $requestHost = null): ?self
     {
-        return self::latest()->first();
+        $host = $requestHost ?? request()->getHost();
+        $normalizedHost = self::normalizeDomain($host);
+
+        $query = self::query()->orderByDesc('id');
+
+        if ($normalizedHost !== '') {
+            // The tenant's own rows: every license whose normalized domain
+            // equals the request host. normalizeDomain() strips the
+            // scheme/trailing slash so stored URLs match bare hosts.
+            $hostMatches = $query->get()->filter(
+                fn (self $license) => self::normalizeDomain($license->domain) === $normalizedHost
+            );
+
+            if ($hostMatches->isNotEmpty()) {
+                // Rank by current local activity (see docblock a/b): newest
+                // active row first; inactive newest row only as the last
+                // resort so revocation stays observable/re-recordable.
+                return $hostMatches->first(
+                    fn (self $license) => $license->isValid($normalizedHost)
+                ) ?? $hostMatches->first();
+            }
+
+            // Backward compatibility: legacy installation rows with no
+            // domain at all (see WebhookTest/SubscriptionUXTest seeds) must
+            // keep resolving on any host — but never outrank an explicit
+            // host match, and only when the host itself is the app's own
+            // configured host. An unknown foreign host must not inherit a
+            // domain-less license.
+            if ($normalizedHost === self::normalizeDomain(config('app.url'))) {
+                return $query->get()->first(
+                    fn (self $license) => self::normalizeDomain($license->domain) === ''
+                );
+            }
+
+            return null;
+        }
+
+        // No request host at all (console/bootstrap edge): fall back to the
+        // legacy latest-record behaviour, newest domain match first.
+        return $query->get()->first(
+            fn (self $license) => self::normalizeDomain($license->domain) !== ''
+        ) ?? $query->first();
     }
 
     /**
