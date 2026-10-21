@@ -63,7 +63,7 @@
         h4.tb-heading { font-size: var(--tb-h4-size, 1.125rem); }
         h5.tb-heading { font-size: var(--tb-h5-size, 1.125rem); }
         h6.tb-heading { font-size: var(--tb-h6-size, 1rem); }
-        .tb-section-title { margin-bottom: 1.25rem; font-size: 1.5rem; }
+        .tb-section-title { margin-bottom: 1.25rem; font-size: var(--tb-section-title-size, 1.5rem); }
         .tb-text { line-height: 1.75; color: var(--tb-text-muted, #4b5563); }
         .tb-text.prose { max-width: 65ch; }
         .tb-image { display: block; max-width: 100%; margin: 0 auto 1.5rem; }
