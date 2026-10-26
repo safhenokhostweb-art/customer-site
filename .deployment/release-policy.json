@@ -58,6 +58,13 @@
                                  "requires":  "package-lock.json"
                              }
                          ],
+    "git_dependencies":  [
+                             {
+                                 "name":  "saas-platform",
+                                 "path":  "{project_root}/../saas-platform",
+                                 "branch":  "main"
+                             }
+                         ],
     "build":  {
                   "required":  true,
                   "artifact":  "server-managed-exact-commit"

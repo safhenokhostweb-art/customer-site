@@ -10,6 +10,12 @@ isolated test database configured:
 php ../deployment-system/deployment/release-prepare.php check
 ```
 
+customer-site installs `saas-platform/packages/**` through Composer `path`
+repositories, so `git_dependencies` pins the provider: a `saas-platform`
+checkout must sit beside this release worktree (`{project_root}/../saas-platform`),
+on `main`, clean, with no unpushed commits, or `check` blocks. Its exact HEAD
+is recorded as `dependency_commits.saas-platform` in the release metadata.
+
 The required checks run the committed `tests/Feature/ThemeCanvas/` suite,
 the known-issue guard tests, and `tests/ReleaseGate/run.php`. Navigation
 assertions inspect rendered text and link destinations, so saved editor props
