@@ -52,6 +52,23 @@ class CanonicalListSchemaParityTest extends TestCase
         'pricing_cards.plans', 'services_cards.services', 'bento_grid.items',
     ];
 
+    /** Phase 0.2b (ADR-061): lists authored inside another list's items, two and three levels deep. */
+    private const NESTED = [
+        'pricing_cards.plans.features', 'nav_footer.columns.links',
+        'nav_header.nav_links.mega_columns', 'nav_header.nav_links.mega_columns.items',
+    ];
+
+    /** Phase 0.2b: every navigational URL field — top-level or nested — is a `link` field on both sides. */
+    private const LINK_FIELDS = [
+        'slider.slides.link', 'promo_banner.link', 'client_logos.logos.url', 'timeline.items.link_url',
+        'pricing_cards.plans.cta_url', 'services_cards.services.link', 'nav_header.logo_url',
+        'nav_header.nav_links.url', 'nav_header.nav_links.mega_columns.items.url',
+        'nav_header.nav_links.mega_banner_url', 'nav_header.cta_url', 'nav_footer.columns.links.url',
+        'nav_footer.links.url', 'nav_footer.social_links.url', 'about_section.btn_url',
+        'service_cards.cards.url', 'project_cards.cards.url', 'header_modern_v1.homeUrl',
+        'header_modern_v1.ctaUrl', 'foodmart_hero.slides.cta_url', 'foodmart_hero.promos.cta_url',
+    ];
+
     // The renderer's "script already emitted" flags are process-wide statics;
     // leaving them set would change what later tests in the same process
     // render (e.g. CanonicalStructuralParityTest's canonical-vs-host diff).
@@ -174,6 +191,127 @@ class CanonicalListSchemaParityTest extends TestCase
             $empty = $this->render($type, [...$base, $key => []]);
             $this->assertNotSame($empty, $authored, "{$target}: the public renderer must actually read the authored list");
         }
+    }
+
+    /** A field definition by dotted path: type.key[.childKey…] (descending through repeater `fields`). */
+    private function fieldAt(?array $definition, string $path): ?array
+    {
+        $keys = array_slice(explode('.', $path), 1);
+        $field = $definition['schema'][array_shift($keys)] ?? null;
+        foreach ($keys as $key) {
+            $field = $field['fields'][$key] ?? null;
+        }
+        return $field;
+    }
+
+    private function type(string $path): string
+    {
+        return explode('.', $path)[0];
+    }
+
+    public function test_nested_lists_are_first_class_repeaters_on_both_sides(): void
+    {
+        foreach (self::NESTED as $path) {
+            foreach (['host' => HostRegistry::get($this->type($path)), 'canonical' => CanonicalRegistry::get($this->type($path))] as $side => $definition) {
+                $field = $this->fieldAt($definition, $path);
+                $this->assertNotNull($field, "{$side}: {$path} missing");
+                $this->assertSame('repeater', $field['type'], "{$side}: {$path}");
+                $this->assertNotEmpty($field['fields'] ?? [], "{$side}: {$path} declares no child fields");
+                $this->assertNotSame('', $field['item_label'] ?? '', "{$side}: {$path} needs an item_label for its add button");
+            }
+        }
+    }
+
+    public function test_url_fields_are_link_fields_and_highlight_is_a_switch_on_both_sides(): void
+    {
+        $sides = fn (string $path) => array_filter([
+            'host' => HostRegistry::get($this->type($path)),
+            'canonical' => CanonicalRegistry::get($this->type($path)),
+        ]);
+        foreach (self::LINK_FIELDS as $path) {
+            foreach ($sides($path) as $side => $definition) {
+                $this->assertSame('link', $this->fieldAt($definition, $path)['type'] ?? null, "{$side}: {$path} must be a link field");
+            }
+        }
+        foreach ($sides('pricing_cards.plans.highlight') as $side => $definition) {
+            $highlight = $this->fieldAt($definition, 'pricing_cards.plans.highlight');
+            $this->assertSame('boolean', $highlight['type'] ?? null, "{$side}: pricing highlight must be a boolean switch");
+            $this->assertFalse($highlight['default'], "{$side}: a new plan is not highlighted");
+        }
+    }
+
+    /**
+     * Full sample props for a type, from the definition this host renders
+     * and validates against: every list gets one sample item, every scalar
+     * a real value.
+     */
+    private function sampleProps(string $type): array
+    {
+        $definition = HostRegistry::get($type) ?? CanonicalRegistry::get($type);
+        $props = $definition['defaultProps'] ?? [];
+        foreach ($definition['schema'] as $key => $def) {
+            $props[$key] = $this->normalized($def, $key)['control'] === 'repeater'
+                ? $this->sampleItems($def['fields'] ?? [], 1)
+                : ($this->sampleItems([$key => $def], 1)[0][$key]);
+        }
+        return $props;
+    }
+
+    /** Sets a value at a dotted field path inside the first item of every list on the way. */
+    private function withValueAt(array $props, string $path, mixed $value): array
+    {
+        $keys = array_slice(explode('.', $path), 1);
+        $ref = &$props;
+        foreach ($keys as $i => $key) {
+            if ($i === count($keys) - 1) {
+                $ref[$key] = $value;
+                break;
+            }
+            $ref = &$ref[$key][0];
+        }
+        unset($ref);
+        return $props;
+    }
+
+    public function test_every_link_field_renders_structured_links_and_refuses_unsafe_urls(): void
+    {
+        foreach (self::LINK_FIELDS as $i => $path) {
+            $type = $this->type($path);
+            $props = $this->sampleProps($type);
+
+            $structured = $this->render($type, $this->withValueAt($props, $path, ['url' => "/structured-ok-{$i}", 'target' => '_self']));
+            $this->assertStringContainsString("href=\"/structured-ok-{$i}\"", $structured, "{$path}: a structured {url} link must render its url");
+            $this->assertStringNotContainsString('render_error', $structured, $path);
+
+            $unsafe = $this->render($type, $this->withValueAt($props, $path, 'javascript:alert(1)'));
+            $this->assertStringNotContainsStringIgnoringCase('javascript:', $unsafe, "{$path}: an unsafe scheme must never reach an href");
+        }
+    }
+
+    public function test_nested_list_content_reaches_the_public_render(): void
+    {
+        $pricing = $this->render('pricing_cards', ['title' => 'پلن‌ها', 'plans' => [
+            ['name' => 'پایه', 'price' => '۱۰', 'highlight' => 'false', 'features' => ['ویژگی قدیمی'], 'cta_text' => 'شروع', 'cta_url' => '/basic'],
+            ['_id' => 'p2', 'name' => 'ویژه', 'price' => '۲۰', 'highlight' => true, 'features' => [['_id' => 'f1', 'text' => 'پشتیبانی ۲۴ ساعته'], ['_id' => 'f2', 'text' => 'دامنه رایگان']], 'cta_text' => 'خرید', 'cta_url' => ['url' => '/pro']],
+        ]]);
+        $this->assertStringContainsString('ویژگی قدیمی', $pricing, 'legacy scalar features still render');
+        $this->assertStringContainsString('دامنه رایگان', $pricing, 'nested {text} features render');
+        $this->assertSame(1, substr_count($pricing, 'tb-pricing-card highlighted'), 'the string "false" is not a highlight; true is');
+        $this->assertStringContainsString('href="/pro"', $pricing);
+
+        $footer = $this->render('nav_footer', ['columns' => [
+            ['title' => 'فروشگاه', 'links' => [['label' => 'محصولات', 'url' => '/products'], ['label' => 'بد', 'url' => 'javascript:alert(1)']]],
+        ]]);
+        $this->assertStringContainsString('<a href="/products">محصولات</a>', $footer);
+        $this->assertStringNotContainsStringIgnoringCase('javascript:', $footer);
+
+        $header = $this->render('nav_header', ['logo_text' => 'برند', 'nav_links' => [[
+            'label' => 'دسته‌ها', 'url' => '/shop',
+            'mega_columns' => [['title' => 'پوشاک', 'items' => [['label' => 'پیراهن', 'url' => ['url' => '/shirts']]]]],
+        ]]]);
+        $this->assertStringContainsString('پوشاک', $header, 'a mega-menu column title renders');
+        $this->assertStringContainsString('پیراهن', $header, 'a third-level mega-menu item renders');
+        $this->assertStringContainsString('href="/shirts"', $header);
     }
 
     public function test_array_and_legacy_json_storage_render_identically(): void

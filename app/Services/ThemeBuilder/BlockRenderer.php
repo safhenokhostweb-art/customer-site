@@ -867,7 +867,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $icon   = $this->escape(is_array($card) ? ($card['icon'] ?? '') : '');
             $ctitle = $this->escape(is_array($card) ? ($card['title'] ?? '') : '');
             $desc   = $this->escape(is_array($card) ? ($card['description'] ?? '') : '');
-            $url    = $this->escapeAttr(is_array($card) ? ($card['url'] ?? '') : '');
+            $url    = $this->linkHref(is_array($card) ? ($card['url'] ?? '') : '', '');
             if ($ctitle === '' && $desc === '') {
                 continue;
             }
@@ -908,7 +908,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $cat    = $this->escape(is_array($card) ? ($card['category'] ?? '') : '');
             $ctitle = $this->escape(is_array($card) ? ($card['title'] ?? '') : '');
             $desc   = $this->escape(is_array($card) ? ($card['description'] ?? '') : '');
-            $url    = $this->escapeAttr(is_array($card) ? ($card['url'] ?? '') : '');
+            $url    = $this->linkHref(is_array($card) ? ($card['url'] ?? '') : '', '');
             if ($ctitle === '' && $desc === '') {
                 continue;
             }

@@ -30,16 +30,30 @@ class InternalLinkResolver
         'hero_trust' => ['btn_primary_url', 'btn_secondary_url'],
     ];
 
-    /** Resolve every known link-capable prop for one block type. */
+    /**
+     * Resolve every known link-capable prop for one block type, plus any
+     * other top-level prop holding an internal-page reference. The Canvas
+     * editor offers the page picker on every top-level `link` field
+     * (Phase 0.2b, ADR-061: header/footer/promo/about links among them),
+     * and the {type: internal_page} shape is written only by that picker —
+     * so resolving by shape keeps every such field working without an
+     * allowlist that has to grow with the registry.
+     */
     public function resolveBlockProps(string $type, array $props): array
     {
-        foreach (self::LINK_PROPS[$type] ?? [] as $propKey) {
-            if (array_key_exists($propKey, $props)) {
-                $props[$propKey] = $this->resolveValue($props[$propKey]);
+        $known = self::LINK_PROPS[$type] ?? [];
+        foreach ($props as $propKey => $value) {
+            if (in_array($propKey, $known, true) || self::isInternalPageReference($value)) {
+                $props[$propKey] = $this->resolveValue($value);
             }
         }
 
         return $props;
+    }
+
+    private static function isInternalPageReference(mixed $value): bool
+    {
+        return is_array($value) && ($value['type'] ?? null) === 'internal_page';
     }
 
     public function resolveValue(mixed $value): string

@@ -83,6 +83,35 @@ class BuilderInternalLinkingTest extends TestCase
         $response->assertDontSee(route('page.show', 'guide-old'), false);
     }
 
+    /**
+     * Phase 0.2b (ADR-061): header/footer/promo URL fields became `link`
+     * fields, so the editor's page picker is offered on them too. A picked
+     * page must render as that page's URL on every one of them — not only
+     * on the original button/cta/hero allowlist.
+     */
+    public function test_every_top_level_link_field_resolves_a_picked_page(): void
+    {
+        $page = Page::create(['title' => 'تماس', 'slug' => 'contact-us', 'body' => '<p>x</p>', 'is_published' => true]);
+        $ref = ['type' => 'internal_page', 'page_id' => $page->id];
+        Setting::set('active_canvas_theme_data', json_encode([
+            'name' => 'Test Theme', 'slug' => 'test-theme',
+            'header_blocks' => [], 'footer_blocks' => [],
+            'pages' => [['key' => 'home', 'title' => 'Home', 'blocks' => [
+                ['id' => 'nh1', 'type' => 'nav_header', 'props' => ['logo_text' => 'برند', 'logo_url' => $ref, 'cta_text' => 'مشاوره', 'cta_url' => $ref]],
+                ['id' => 'pb1', 'type' => 'promo_banner', 'props' => ['text' => 'تخفیف ویژه', 'link' => $ref]],
+                ['id' => 'ab1', 'type' => 'about_section', 'props' => ['title' => 'درباره ما', 'btn_text' => 'بیشتر', 'btn_url' => $ref]],
+            ]]],
+            'global_styles' => [],
+        ], JSON_UNESCAPED_UNICODE), 'theme');
+        Setting::set('active_canvas_theme_name', 'Test Theme', 'theme');
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $href = 'href="' . e(route('page.show', 'contact-us')) . '"';
+        $this->assertSame(4, substr_count($html, $href), 'logo, header CTA, promo and about button all link to the picked page');
+        $this->assertStringNotContainsString('render_error', $html);
+    }
+
     public function test_a_forged_or_unpublished_page_id_resolves_to_no_link_not_a_guessed_url(): void
     {
         $this->installThemeWithButton(['type' => 'internal_page', 'page_id' => 999999]);

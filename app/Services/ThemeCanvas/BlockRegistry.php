@@ -110,7 +110,7 @@ final class BlockRegistry
                             'image'    => ['type' => 'image',  'label' => 'تصویر اسلاید', 'default' => ''],
                             'title'    => ['type' => 'string', 'label' => 'عنوان',        'default' => ''],
                             'subtitle' => ['type' => 'string', 'label' => 'زیرعنوان',      'default' => ''],
-                            'link'     => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'link'     => ['type' => 'link', 'label' => 'لینک (اختیاری)', 'default' => ''],
                             'cta_text' => ['type' => 'string', 'label' => 'متن دکمه CTA (اختیاری)', 'default' => ''],
                         ],
                     ],
@@ -347,7 +347,7 @@ final class BlockRegistry
                 'category' => self::CATEGORY_MARKETING,
                 'schema'   => [
                     'text'  => ['type' => 'string', 'label' => 'متن',   'default' => ''],
-                    'link'  => ['type' => 'string', 'label' => 'لینک',  'default' => ''],
+                    'link'  => ['type' => 'link', 'label' => 'لینک',  'default' => ''],
                     'style' => ['type' => 'select', 'label' => 'استایل', 'options' => ['info' => 'اطلاعاتی', 'success' => 'موفقیت', 'warning' => 'هشدار', 'danger' => 'خطر'], 'default' => 'info'],
                 ],
                 'defaultProps' => ['text' => '', 'link' => '', 'style' => 'info'],
@@ -686,7 +686,7 @@ final class BlockRegistry
                         'fields' => [
                             'name'  => ['type' => 'string', 'label' => 'نام برند', 'default' => ''],
                             'image' => ['type' => 'image', 'label' => 'تصویر لوگو (اختیاری)', 'default' => ''],
-                            'url'   => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'url'   => ['type' => 'link', 'label' => 'لینک (اختیاری)', 'default' => ''],
                             'alt'   => ['type' => 'string', 'label' => 'متن جایگزین تصویر (اختیاری)', 'default' => ''],
                         ],
                     ],
@@ -747,7 +747,7 @@ final class BlockRegistry
                             'icon'       => ['type' => 'string', 'label' => 'آیکون (اموجی، اختیاری)', 'default' => ''],
                             'image'      => ['type' => 'image', 'label' => 'تصویر (اختیاری، جای آیکون را می‌گیرد)', 'default' => ''],
                             'link_label' => ['type' => 'string', 'label' => 'متن دکمه (اختیاری)', 'default' => ''],
-                            'link_url'   => ['type' => 'string', 'label' => 'لینک دکمه (اختیاری)', 'default' => ''],
+                            'link_url'   => ['type' => 'link', 'label' => 'لینک دکمه (اختیاری)', 'default' => ''],
                         ],
                     ],
                 ],
@@ -858,14 +858,11 @@ final class BlockRegistry
                 'schema'   => [
                     'title'    => ['type' => 'string',  'label' => 'عنوان',       'default' => 'پلن‌های ما'],
                     'subtitle' => ['type' => 'string',  'label' => 'زیرعنوان',    'default' => ''],
-                    // 'highlight' (boolean) is a simple text-like field
-                    // ("true" or empty) rather than a checkbox control — the
-                    // Canvas nested-repeater adapter has no boolean widget at
-                    // this nesting depth. 'features' below IS a real bounded
-                    // nested repeater (one explicit extra level, exactly
-                    // like nav_footer.columns[].links — not a generic
-                    // recursive mechanism), giving customers real
-                    // add/edit/remove/reorder controls with no JSON exposed.
+                    // Phase 0.2b (ADR-061): 'highlight' is a real boolean
+                    // switch; legacy "true"/"" text values still render
+                    // correctly (BlockRenderer::flag()). 'features' is a
+                    // nested repeater with real add/edit/remove/reorder
+                    // controls and no JSON exposed.
                     'plans'    => [
                         'type' => 'repeater', 'label' => 'پلن‌ها', 'storage' => 'array',
                         'default' => [
@@ -877,15 +874,15 @@ final class BlockRegistry
                             'price'     => ['type' => 'string', 'label' => 'قیمت', 'default' => ''],
                             'period'    => ['type' => 'string', 'label' => 'دوره (مثلا / ماه)', 'default' => ''],
                             'badge'     => ['type' => 'string', 'label' => 'برچسب (اختیاری)', 'default' => ''],
-                            'highlight' => ['type' => 'string', 'label' => 'پلن ویژه؟ (true یا خالی)', 'default' => ''],
+                            'highlight' => ['type' => 'boolean', 'label' => 'پلن ویژه (برجسته)', 'default' => false],
                             'features'  => [
-                                'type' => 'repeater', 'label' => 'ویژگی‌ها', 'storage' => 'array', 'default' => [],
+                                'type' => 'repeater', 'label' => 'ویژگی‌ها', 'item_label' => 'ویژگی', 'storage' => 'array', 'default' => [],
                                 'fields' => [
                                     'text' => ['type' => 'string', 'label' => 'متن ویژگی', 'default' => ''],
                                 ],
                             ],
                             'cta_text'  => ['type' => 'string', 'label' => 'متن دکمه', 'default' => ''],
-                            'cta_url'   => ['type' => 'string', 'label' => 'لینک دکمه', 'default' => '#'],
+                            'cta_url'   => ['type' => 'link', 'label' => 'لینک دکمه', 'default' => '#'],
                         ],
                     ],
                 ],
@@ -926,7 +923,7 @@ final class BlockRegistry
                             'icon'      => ['type' => 'string', 'label' => 'آیکون', 'default' => ''],
                             'title'     => ['type' => 'string', 'label' => 'عنوان', 'default' => ''],
                             'text'      => ['type' => 'textarea', 'label' => 'متن', 'default' => ''],
-                            'link'      => ['type' => 'string', 'label' => 'لینک', 'default' => '#'],
+                            'link'      => ['type' => 'link', 'label' => 'لینک', 'default' => '#'],
                             'link_text' => ['type' => 'string', 'label' => 'متن لینک', 'default' => 'بیشتر بدانید'],
                         ],
                     ],
@@ -1018,7 +1015,7 @@ final class BlockRegistry
                 'category' => self::CATEGORY_UTILITY,
                 'schema'   => [
                     'logo_text'          => ['type' => 'string', 'label' => 'متن لوگو', 'default' => ''],
-                    'logo_url'           => ['type' => 'string', 'label' => 'لینک لوگو', 'default' => '/'],
+                    'logo_url'           => ['type' => 'link', 'label' => 'لینک لوگو', 'default' => '/'],
                     // TASK 3/3 Phase 6.5B (BLD-22) — this Canvas-editor
                     // schema is a SEPARATE copy from the shared theme-
                     // runtime package's own BlockRegistry (this class does
@@ -1055,18 +1052,20 @@ final class BlockRegistry
                         'type' => 'repeater', 'label' => 'لینک‌های منو', 'storage' => 'array', 'default' => [],
                         'fields' => [
                             'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
-                            'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                            'url'   => ['type' => 'link', 'label' => 'آدرس لینک', 'default' => '#'],
                             'mega_columns' => [
                                 'type' => 'repeater',
                                 'label' => 'ستون‌های Mega Menu (اختیاری — برای منوی چندستونی)',
+                                'item_label' => 'ستون',
                                 'fields' => [
                                     'title' => ['type' => 'string', 'label' => 'عنوان ستون', 'default' => ''],
                                     'items' => [
                                         'type' => 'repeater',
                                         'label' => 'آیتم‌های این ستون',
+                                        'item_label' => 'آیتم',
                                         'fields' => [
                                             'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
-                                            'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                                            'url'   => ['type' => 'link', 'label' => 'آدرس لینک', 'default' => '#'],
                                             'icon'  => ['type' => 'string', 'label' => 'آیکون (اموجی، اختیاری)', 'default' => ''],
                                             'image' => ['type' => 'image', 'label' => 'تصویر آیتم (اختیاری، جای آیکون را می‌گیرد)', 'default' => ''],
                                         ],
@@ -1074,7 +1073,7 @@ final class BlockRegistry
                                 ],
                             ],
                             'mega_banner_image' => ['type' => 'image', 'label' => 'تصویر بنر Mega Menu (اختیاری)', 'default' => ''],
-                            'mega_banner_url'   => ['type' => 'string', 'label' => 'لینک بنر', 'default' => '#'],
+                            'mega_banner_url'   => ['type' => 'link', 'label' => 'لینک بنر', 'default' => '#'],
                             'mega_banner_text'  => ['type' => 'string', 'label' => 'متن روی بنر', 'default' => ''],
                             'mega_show_desktop' => ['type' => 'boolean', 'label' => 'نمایش Mega Menu در دسکتاپ', 'default' => true],
                             'mega_mobile_behavior' => ['type' => 'select', 'label' => 'رفتار در موبایل', 'options' => ['accordion' => 'آکاردئونی (پیش‌فرض)', 'flat' => 'فهرست تخت بدون ستون‌بندی', 'hidden' => 'مخفی در موبایل'], 'default' => 'accordion'],
@@ -1085,7 +1084,7 @@ final class BlockRegistry
                     'text_color'         => ['type' => 'string', 'label' => 'رنگ متن', 'default' => '#111827'],
                     'phone'              => ['type' => 'string', 'label' => 'شماره تماس (اختیاری)', 'default' => ''],
                     'cta_text'           => ['type' => 'string', 'label' => 'متن دکمه CTA (اختیاری)', 'default' => ''],
-                    'cta_url'            => ['type' => 'string', 'label' => 'لینک دکمه CTA', 'default' => '#'],
+                    'cta_url'            => ['type' => 'link', 'label' => 'لینک دکمه CTA', 'default' => '#'],
                     'show_search'        => ['type' => 'boolean', 'label' => 'نمایش جستجو', 'default' => false],
                     'search_placeholder' => ['type' => 'string', 'label' => 'متن جای‌گزین جستجو', 'default' => 'جستجو...'],
                     'show_cart'          => ['type' => 'boolean', 'label' => 'نمایش سبد خرید', 'default' => false],
@@ -1110,10 +1109,10 @@ final class BlockRegistry
                         'fields' => [
                             'title' => ['type' => 'string', 'label' => 'عنوان ستون', 'default' => ''],
                             'links' => [
-                                'type' => 'repeater', 'label' => 'لینک‌های ستون', 'storage' => 'array', 'default' => [],
+                                'type' => 'repeater', 'label' => 'لینک‌های ستون', 'item_label' => 'لینک', 'storage' => 'array', 'default' => [],
                                 'fields' => [
                                     'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
-                                    'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                                    'url'   => ['type' => 'link', 'label' => 'آدرس لینک', 'default' => '#'],
                                 ],
                             ],
                         ],
@@ -1122,13 +1121,13 @@ final class BlockRegistry
                         'type' => 'repeater', 'label' => 'لینک‌های حقوقی (اختیاری)', 'storage' => 'array', 'default' => [],
                         'fields' => [
                             'label' => ['type' => 'string', 'label' => 'متن لینک', 'default' => ''],
-                            'url'   => ['type' => 'string', 'label' => 'آدرس لینک', 'default' => '#'],
+                            'url'   => ['type' => 'link', 'label' => 'آدرس لینک', 'default' => '#'],
                         ],
                     ],
                     'social_links' => [
                         'type' => 'repeater', 'label' => 'شبکه‌های اجتماعی (اختیاری)', 'storage' => 'array', 'default' => [],
                         'fields' => [
-                            'url'   => ['type' => 'string', 'label' => 'آدرس', 'default' => '#'],
+                            'url'   => ['type' => 'link', 'label' => 'آدرس', 'default' => '#'],
                             'label' => ['type' => 'string', 'label' => 'عنوان', 'default' => ''],
                         ],
                     ],
@@ -1161,7 +1160,7 @@ final class BlockRegistry
                         ],
                     ],
                     'btn_text' => ['type' => 'string', 'label' => 'متن دکمه', 'default' => ''],
-                    'btn_url'  => ['type' => 'string', 'label' => 'لینک دکمه', 'default' => '#'],
+                    'btn_url'  => ['type' => 'link', 'label' => 'لینک دکمه', 'default' => '#'],
                 ],
                 'defaultProps' => ['badge' => '', 'title' => '', 'description' => '', 'features' => [], 'stats' => [], 'btn_text' => '', 'btn_url' => '#'],
             ],
@@ -1178,7 +1177,7 @@ final class BlockRegistry
                             'icon'        => ['type' => 'string', 'label' => 'آیکون', 'default' => ''],
                             'title'       => ['type' => 'string', 'label' => 'عنوان', 'default' => ''],
                             'description' => ['type' => 'textarea', 'label' => 'توضیحات', 'default' => ''],
-                            'url'         => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'url'         => ['type' => 'link', 'label' => 'لینک (اختیاری)', 'default' => ''],
                         ],
                     ],
                 ],
@@ -1197,7 +1196,7 @@ final class BlockRegistry
                             'category'    => ['type' => 'string', 'label' => 'دسته‌بندی', 'default' => ''],
                             'title'       => ['type' => 'string', 'label' => 'عنوان', 'default' => ''],
                             'description' => ['type' => 'textarea', 'label' => 'توضیحات', 'default' => ''],
-                            'url'         => ['type' => 'string', 'label' => 'لینک (اختیاری)', 'default' => ''],
+                            'url'         => ['type' => 'link', 'label' => 'لینک (اختیاری)', 'default' => ''],
                         ],
                     ],
                 ],

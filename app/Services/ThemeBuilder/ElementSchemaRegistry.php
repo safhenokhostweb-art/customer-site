@@ -166,6 +166,9 @@ class ElementSchemaRegistry
             // {"media_id": "<uuid>"} — a JSON object, not a string. A plain
             // URL/path string remains valid as transitional legacy data.
             'image' => 'media',
+            // Phase 0.2b (ADR-061): a link is a URL string or a structured
+            // link object — see assertType('link').
+            'link' => 'link',
             // A select is a UI representation, not a persisted type. Its
             // existing defaults include both numeric and string options.
             'select' => 'mixed',
@@ -326,6 +329,18 @@ class ElementSchemaRegistry
                     return true;
                 }
                 return is_array($value) && isset($value['media_id']) && is_string($value['media_id']) && $value['media_id'] !== '';
+            case 'link':
+                // Phase 0.2b (ADR-061): the two shapes a link field holds —
+                // a URL string (legacy and custom links) or a structured
+                // {url, target, …} link — plus an {type: internal_page}
+                // reference, which InternalLinkResolver normally turns into
+                // a string before validation. URL safety itself is enforced
+                // at render time (HtmlSanitizer::escapeUrl), not here.
+                if (is_string($value)) {
+                    return true;
+                }
+                return is_array($value)
+                    && (is_string($value['url'] ?? null) || ($value['type'] ?? null) === 'internal_page');
             default:
                 return true;
         }

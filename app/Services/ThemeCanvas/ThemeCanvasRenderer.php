@@ -466,7 +466,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $style = in_array($requestedStyle, ['buttons', 'text'], true) ? $requestedStyle : 'icons';
         $items = [];
         foreach ($links as $link) {
-            $url   = $this->escapeAttr($link['url'] ?? '#');
+            if (!is_array($link)) {
+                continue;
+            }
+            // Phase 0.2b (ADR-061): a link field — URL string or {url} —
+            // validated by the shared escapeUrl(); bare attribute escaping
+            // let a javascript: URL through.
+            $url   = $this->linkHref($link['url'] ?? '#', '#');
             $label = $this->escape($link['label'] ?? '');
             $shown = match ($style) {
                 'icons' => mb_substr($label, 0, 1),
@@ -1223,7 +1229,13 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $items = [];
         foreach ($links as $link) {
-            $url   = $this->escapeAttr($link['url'] ?? '#');
+            if (!is_array($link)) {
+                continue;
+            }
+            // Phase 0.2b (ADR-061): a link field — URL string or {url} —
+            // validated by the shared escapeUrl(); bare attribute escaping
+            // let a javascript: URL through.
+            $url   = $this->linkHref($link['url'] ?? '#', '#');
             $label = $this->escape($link['label'] ?? '');
             $shown = $style === 'icons-only' ? mb_substr($label, 0, 1) : $label;
             $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"tb-social-link\" aria-label=\"{$label}\" style=\"color:{$colorCss};font-size:{$fontSize};padding:{$padding};border:1px solid currentColor;border-radius:0.5rem;text-decoration:none;\">{$shown}</a>";

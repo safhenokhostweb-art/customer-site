@@ -1004,7 +1004,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                         <template x-if="deepFieldDef.type === 'textarea'">
                                                                                                             <textarea :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                                         </template>
-                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea'">
+                                                                                                        <template x-if="deepFieldDef.type === 'link'">
+                                                                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type === 'boolean'">
+                                                                                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                                                                                <input type="checkbox" role="switch" :checked="isTruthyField(deepItem[deepFieldKey])" @change="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`">
+                                                                                                                <span class="text-[10px] text-slate-600" x-text="isTruthyField(deepItem[deepFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
+                                                                                                            </label>
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea' && deepFieldDef.type !== 'link' && deepFieldDef.type !== 'boolean'">
                                                                                                             <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                                         </template>
                                                                                                     </div>
@@ -1017,7 +1026,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                 <template x-if="nestedFieldDef.type === 'textarea'">
                                                                                     <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                 </template>
-                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater'">
+                                                                                <template x-if="nestedFieldDef.type === 'link'">
+                                                                                    <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type === 'boolean'">
+                                                                                    <label class="flex items-center gap-2 cursor-pointer">
+                                                                                        <input type="checkbox" role="switch" :checked="isTruthyField(nestedItem[nestedFieldKey])" @change="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        <span class="text-[10px] text-slate-600" x-text="isTruthyField(nestedItem[nestedFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
+                                                                                    </label>
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater' && nestedFieldDef.type !== 'link' && nestedFieldDef.type !== 'boolean'">
                                                                                     <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                 </template>
                                                                             </div>
@@ -1029,9 +1047,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                         </template>
                                                         <template x-if="fieldDef.type === 'boolean'">
                                                             <label class="flex items-center gap-2 cursor-pointer">
-                                                                <input type="checkbox" :checked="!!item[fieldKey]" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`">
-                                                                <span class="text-[11px] text-slate-600" x-text="item[fieldKey] ? 'فعال' : 'غیرفعال'"></span>
+                                                                <input type="checkbox" role="switch" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :checked="isTruthyField(item[fieldKey])" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <span class="text-[11px] text-slate-600" x-text="isTruthyField(item[fieldKey]) ? 'فعال' : 'غیرفعال'"></span>
                                                             </label>
+                                                        </template>
+                                                        <template x-if="fieldDef.type === 'link'">
+                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                         </template>
                                                         <template x-if="fieldDef.type === 'select'">
                                                             <select :value="item[fieldKey] ?? ''" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
@@ -1040,7 +1061,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                 </template>
                                                             </select>
                                                         </template>
-                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select'">
+                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select' && fieldDef.type !== 'link'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
                                                                     <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
@@ -2023,10 +2044,28 @@ function canvasEditor() {
         // genuinely nested field (nav_footer.columns[].links) — deliberately
         // not a generic recursive mechanism; these operate on
         // structuredItems()[itemIndex][fieldKey] directly.
+        // Phase 0.2b (ADR-061): a nested list may still be a legacy JSON
+        // string, and older content stores scalar items (["a", "b"] for
+        // pricing features). Both are presented in the declared shape —
+        // scalars as {firstField: value}, which every renderer accepts — so
+        // copying an item before an edit never spreads a string into
+        // {0: "a", 1: "b", …}.
+        listItems(raw, def) {
+            let items = raw;
+            if (typeof items === 'string' && items.trim() !== '') {
+                try { items = JSON.parse(items); } catch (_) { items = []; }
+            }
+            if (!Array.isArray(items)) return [];
+            const key = Object.keys(def?.fields ?? {})[0];
+            return key ? items.map(it => (typeof it === 'string' || typeof it === 'number') ? { [key]: it } : it) : items;
+        },
+        nestedSchema(propKey, fieldKey, deepFieldKey = null) {
+            const def = this.selectedSchema?.[propKey]?.fields?.[fieldKey];
+            return deepFieldKey === null ? def : def?.fields?.[deepFieldKey];
+        },
         nestedItems(propKey, itemIndex, fieldKey) {
             const items = this.structuredItems(propKey);
-            const raw = items?.[itemIndex]?.[fieldKey];
-            return Array.isArray(raw) ? raw : [];
+            return this.listItems(items?.[itemIndex]?.[fieldKey], this.nestedSchema(propKey, fieldKey));
         },
         persistNestedItems(propKey, itemIndex, fieldKey, nestedItems, schemaDef) {
             const items = this.structuredItems(propKey).map(it => ({ ...it }));
@@ -2062,8 +2101,18 @@ function canvasEditor() {
         // still not a generic recursive mechanism.
         deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey) {
             const nested = this.nestedItems(propKey, itemIndex, fieldKey);
-            const raw = nested?.[nestedIndex]?.[deepFieldKey];
-            return Array.isArray(raw) ? raw : [];
+            return this.listItems(nested?.[nestedIndex]?.[deepFieldKey], this.nestedSchema(propKey, fieldKey, deepFieldKey));
+        },
+        // A link field's editable URL: plain strings as-is, structured
+        // {url, …} links by their url; edits keep whichever shape exists.
+        linkFieldUrl(value) {
+            return (value && typeof value === 'object') ? (value.url ?? '') : (value ?? '');
+        },
+        linkFieldValue(current, url) {
+            return (current && typeof current === 'object' && !Array.isArray(current)) ? { ...current, url } : url;
+        },
+        isTruthyField(value) {
+            return value === true || value === 1 || value === '1' || value === 'true';
         },
         persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepItems, schemaDef) {
             const nested = this.nestedItems(propKey, itemIndex, fieldKey).map(it => ({ ...it }));
