@@ -820,7 +820,8 @@ final class BlockRegistry
                             'company' => ['type' => 'string', 'label' => 'شرکت (اختیاری)', 'default' => ''],
                             'avatar'  => ['type' => 'image', 'label' => 'تصویر (اختیاری)', 'default' => ''],
                             'text'    => ['type' => 'textarea', 'label' => 'متن نظر', 'default' => ''],
-                            'rating'  => ['type' => 'string', 'label' => 'امتیاز (۱ تا ۵)', 'default' => '5'],
+                            // Phase 0.2: same control as the canonical definition (ADR-060).
+                            'rating'  => ['type' => 'number', 'label' => 'امتیاز (۰ تا ۵)', 'default' => 5, 'min' => 0, 'max' => 5, 'step' => 1],
                         ],
                     ],
                     'autoplay' => ['type' => 'boolean', 'label' => 'پخش خودکار', 'default' => true],
@@ -906,32 +907,10 @@ final class BlockRegistry
                 ],
                 'defaultProps' => ['title' => 'در خبرنامه عضو شوید', 'subtitle' => '', 'placeholder' => 'ایمیل یا موبایل', 'button_text' => 'عضویت', 'background' => '#4f46e5', 'text_color' => '#ffffff'],
             ],
-            'bento_grid' => [
-                'name'     => 'گرید بنتو (Bento Grid)',
-                'category' => self::CATEGORY_LAYOUT,
-                'schema'   => [
-                    'title' => ['type' => 'string',  'label' => 'عنوان',           'default' => 'همه چیز در یک پلتفرم'],
-                    'items' => [
-                        'type' => 'repeater', 'label' => 'آیتم‌ها', 'storage' => 'array',
-                        'default' => [
-                            ['title' => 'مدیریت', 'text' => 'داشبورد جامع', 'icon' => '📊', 'size' => 'large', 'bg_color' => '#4f46e5', 'text_color' => '#fff'],
-                            ['title' => 'امنیت', 'text' => 'رمزنگاری', 'icon' => '🔒', 'size' => 'small', 'bg_color' => '#f0fdf4', 'text_color' => '#14532d'],
-                        ],
-                        'fields' => [
-                            'title'      => ['type' => 'string', 'label' => 'عنوان', 'default' => ''],
-                            'text'       => ['type' => 'textarea', 'label' => 'متن', 'default' => ''],
-                            'icon'       => ['type' => 'string', 'label' => 'آیکون', 'default' => ''],
-                            'size'       => ['type' => 'string', 'label' => 'اندازه (large/tall/featured/small)', 'default' => 'small'],
-                            'bg_color'   => ['type' => 'string', 'label' => 'رنگ پس‌زمینه', 'default' => '#f8fafc'],
-                            'text_color' => ['type' => 'string', 'label' => 'رنگ متن', 'default' => '#0f172a'],
-                        ],
-                    ],
-                ],
-                'defaultProps' => ['title' => 'همه چیز در یک پلتفرم', 'items' => [
-                    ['title' => 'مدیریت', 'text' => 'داشبورد جامع', 'icon' => '📊', 'size' => 'large', 'bg_color' => '#4f46e5', 'text_color' => '#fff'],
-                    ['title' => 'امنیت', 'text' => 'رمزنگاری', 'icon' => '🔒', 'size' => 'small', 'bg_color' => '#f0fdf4', 'text_color' => '#14532d'],
-                ]],
-            ],
+            // Phase 0.2 (ADR-060): the local bento_grid override was retired —
+            // it was a stale subset of the canonical definition (size/colours as
+            // plain text, no link/media/glow fields). The canonical shared
+            // definition is now the single authority on this host too.
             'services_cards' => [
                 'name'     => 'کارت‌های خدمات',
                 'category' => self::CATEGORY_CONTENT,
