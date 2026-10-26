@@ -22,11 +22,11 @@ foreach (ReleaseKnownIssues::SOURCE_FILES as $path) {
 $file = $root.'/'.ReleaseKnownIssues::SOURCE_FILES[0];
 $now = new DateTimeImmutable('2026-10-02T06:00:00Z');
 $descriptor = ['version'=>'test-release', 'source_commits'=>['customer-site'=>str_repeat('a', 40)]];
-$symbols = array_map(static fn (int $i): string => 'Tests\\Feature\\ThemeCanvas\\FixtureTest::test_case_'.$i, range(1, 4));
+$symbols = array_map(static fn (int $i): string => 'Tests\\Feature\\ThemeCanvas\\FixtureTest::test_case_'.$i, range(1, 3));
 $registry = [
     'schema_version'=>1, 'release_version'=>'test-release', 'source_commits'=>$descriptor['source_commits'],
     'group'=>'canvas-homepage-baseline-2026-10-02', 'recorded_at'=>'2026-10-02T00:00:00Z', 'expires_at'=>'2026-10-16T00:00:00Z',
-    'issues'=>array_map(static fn (string $symbol, int $i): array => ['id'=>'TEST-'.$i, 'test'=>$symbol, 'reason'=>'Existing baseline', 'owner'=>'Canvas'], $symbols, range(1, 4)),
+    'issues'=>array_map(static fn (string $symbol, int $i): array => ['id'=>'TEST-'.$i, 'test'=>$symbol, 'reason'=>'Existing baseline', 'owner'=>'Canvas'], $symbols, range(1, 3)),
     'fingerprint_format'=>'sha256-utf8-lf-v1', 'source_files'=>$sourceFiles,
 ];
 $passed = 0;
@@ -41,17 +41,18 @@ $check = static function (string $name, array $candidate, array $registered = []
     throw new RuntimeException('Expected fail-closed rejection: '.$name);
 };
 try {
-    if (count(ReleaseKnownIssues::validate($descriptor, $registry, $root, $symbols, $now)) !== 4) {
+    if (count(ReleaseKnownIssues::validate($descriptor, $registry, $root, $symbols, $now)) !== 3) {
         throw new RuntimeException('The exact approved registry did not validate.');
     }
-    echo "PASS exact version and four named methods\n";
+    echo "PASS exact version and three named methods\n";
     $passed++;
     $r=$registry; $r['release_version']='another-release'; $check('wrong release version', $r);
     $r=$registry; $r['source_commits']['customer-site']=str_repeat('b',40); $check('wrong source commit', $r);
     $r=$registry; $r['expires_at']='2026-10-02T05:00:00Z'; $check('expired approval', $r);
     $r=$registry; $r['expires_at']='2026-11-01T00:00:00Z'; $check('overlong approval', $r);
     $check('unregistered test excluded by group', $registry, [...$symbols, 'Tests\\Feature\\ThemeCanvas\\OtherTest::test_unexpected']);
-    $check('approved test missing from group', $registry, array_slice($symbols, 0, 3));
+    $check('approved test missing from group', $registry, array_slice($symbols, 0, 2));
+    $r=$registry; array_pop($r['issues']); $check('fewer exemptions than approved', $r, array_slice($symbols, 0, 2));
     $r=$registry; $r['issues'][1]['id']=$r['issues'][0]['id']; $check('duplicate issue identity', $r);
     $r=$registry; $r['issues'][0]['test']='Tests\\Feature\\ThemeCanvas\\*'; $check('wildcard method forbidden', $r);
     $r=$registry; $r['issues'][]=$r['issues'][0]; $check('additional exemptions forbidden', $r);

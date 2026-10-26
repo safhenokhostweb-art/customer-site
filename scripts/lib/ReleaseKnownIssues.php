@@ -34,7 +34,7 @@ final class ReleaseKnownIssues
         $expires = new DateTimeImmutable($registry['expires_at']);
         $require($recorded <= $now && $now < $expires && $expires <= $recorded->modify('+14 days'), 'Known-issue approval is expired, future-dated or exceeds 14 days.');
         $issues = $registry['issues'] ?? [];
-        $require(is_array($issues) && count($issues) === 4, 'This release approves exactly four named baseline cases.');
+        $require(is_array($issues) && count($issues) === 3, 'This release approves exactly three named baseline cases.');
         $tests = [];
         $ids = [];
         foreach ($issues as $issue) {

@@ -1,12 +1,6 @@
 {
     "issues":  [
                    {
-                       "reason":  "Committed editor retains the legacy origin-pinned bridge; the newer shared-runtime/source-identity contract exists in unrelated uncommitted authoring work.",
-                       "id":  "CANVAS-BASELINE-001",
-                       "owner":  "Canvas runtime",
-                       "test":  "Tests\\Feature\\ThemeCanvas\\CanvasPostMessageOriginTest::test_canvas_editor_page_never_targets_or_accepts_wildcard_postmessage"
-                   },
-                   {
                        "reason":  "Committed iframe retains the legacy bridge and has not migrated to shared-runtime/source-identity guards.",
                        "id":  "CANVAS-BASELINE-002",
                        "owner":  "Canvas runtime",
@@ -30,12 +24,12 @@
     "schema_version":  1,
     "group":  "canvas-homepage-baseline-2026-10-02",
     "source_files":  {
-                         "resources/views/admin/theme-design/canvas-editor.blade.php":  "bac24d070c2ec12b61833abeb663a05b4e17dfd14b8012517e1d41e2872b109b",
+                         "resources/views/admin/theme-design/canvas-editor.blade.php":  "b2f1063160da69ae5bdb1c08efd7b5856b7efd9b739935b47282fd95cc4e6fe7",
                          "vendor/saas-platform/modules-theme-runtime/resources/views/canvas/runtime.blade.php":  "4917af2997946cd743a3252956b7078bdb933ae07eb7bf1498331a1e182e1e2b",
                          "resources/views/admin/theme-design/canvas-live-preview.blade.php":  "a815ca2161ba2f1a44d93ab7773d1552fae348c221e3a35d5587cd0f79d0d268",
                          "resources/views/layouts/canvas-theme.blade.php":  "48ee4bcde23c7e7031ed03a2521075b1a8de503a9d3c6bdd61238c2896a9e689",
                          "tests/Feature/ThemeCanvas/CanvasRuntimeParityTest.php":  "7fec84d261fb78a97bcde7396a93d561d816fd372d3f1b70c6fd94fd6e6042d1",
-                         "tests/Feature/ThemeCanvas/CanvasPostMessageOriginTest.php":  "66beb2327c526999fd2e57244718a72cdb2fa1cf37e2c5f81b529b5974b603c0",
+                         "tests/Feature/ThemeCanvas/CanvasPostMessageOriginTest.php":  "1da90f7e47efaa1d78be078c0fe48e46a29df9ddf3e3cad4f8f77adfdcb5605d",
                          "resources/views/canvas-preview.blade.php":  "7182939bc24d54af5cc840eaaab76efb4903bec74f711e57a16573461734ad31",
                          "app/Services/ThemeCanvas/ThemeRuntimeDocument.php":  "9df5633c61f52c4892d9ef80b230520ead8785fb3d966d68a557a33df0525791",
                          "app/Http/Controllers/Admin/ThemeDesignController.php":  "f54dcf4ca4c2abc07fad663bb065775acb08a603410d6646eaf4500c68cf4cee"

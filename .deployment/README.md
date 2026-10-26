@@ -26,7 +26,9 @@ registry is `known-issues.canvas-homepage.json`; the canonical human entrypoint
 is `../docs/KNOWN-TEST-FAILURES.md`. `scripts/verify-release-known-issues.php`
 checks version, source commits, a maximum 14-day approval, every required
 source fingerprint, and exact method-level PHPUnit group membership before
-excluding the four named inherited cases. It rejects class-wide grouping,
+excluding the three named inherited cases (CANVAS-BASELINE-001 was resolved
+in Phases 0.2b/0.2c and removed on 2026-10-26; its test runs normally). It
+rejects class-wide grouping,
 unknown methods, expired approval and source changes. All other failures
 remain blocking. The original four menu/typography expectations are corrected
 and still run normally. Production runtime code is unchanged.
