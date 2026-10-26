@@ -909,11 +909,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                      endpoints; individual blocks never own an uploader. --}}
                                 <template x-if="isMediaControl(schemaDef, propKey, selectedBlock?.type)">
                                     <div class="space-y-2">
-                                        <template x-if="mediaSrc(selectedBlock.props[propKey])">
+                                        <template x-if="mediaSrc(selectedBlock.props[propKey]) && schemaDef.media_kind !== 'video'">
                                             <img :src="mediaSrc(selectedBlock.props[propKey])" :data-testid="'tb-media-preview-' + propKey" class="w-full h-28 object-cover rounded-lg border border-slate-200">
                                         </template>
                                         <div class="flex gap-2">
-                                            <input type="url" :value="mediaSrc(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" placeholder="آدرس تصویر (یا انتخاب از کتابخانه)" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                            <input type="url" :value="mediaSrc(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" :placeholder="schemaDef.media_kind === 'video' ? 'آدرس ویدیو (یا انتخاب از کتابخانه)' : 'آدرس تصویر (یا انتخاب از کتابخانه)'" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <button @click="openMediaPicker(propKey)" :data-testid="'tb-media-picker-' + propKey" class="px-2 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition">📁</button>
                                         </div>
                                     </div>
@@ -1145,8 +1145,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :data-testid="'tb-prop-' + propKey"
                                     >
+                                        {{-- Phase 0.2c: each option states its own selected state —
+                                             x-model alone set the value before x-for had rendered the
+                                             options, so the select could show the first option instead
+                                             of the stored value. --}}
                                         <template x-for="(label, val) in schemaDef.options" :key="val">
-                                            <option :value="val" x-text="label"></option>
+                                            <option :value="val" :selected="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val)" x-text="label"></option>
                                         </template>
                                     </select>
                                 </template>
@@ -1166,7 +1170,34 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'textarea'">
+                                {{-- Phase 0.2c: schema-less list props (type: array, no
+                                     `fields` — accordion items, manual id lists), the same
+                                     guarded JSON editor as the platform Canvas. An invalid
+                                     draft is never written to the block. --}}
+                                <template x-if="schemaDef.type === 'array'">
+                                    <div x-data="{ jsonDraft: null, jsonDraftFor: null, jsonError: '' }">
+                                        <textarea dir="ltr" rows="5" spellcheck="false" :data-testid="'tb-prop-' + propKey"
+                                            :value="(jsonDraftFor === selectedBlock.id && jsonDraft !== null) ? jsonDraft : JSON.stringify(selectedBlock.props[propKey] ?? schemaDef.default ?? [], null, 2)"
+                                            @input="
+                                                jsonDraft = $event.target.value; jsonDraftFor = selectedBlock.id;
+                                                try {
+                                                    const parsed = JSON.parse(jsonDraft);
+                                                    if (!Array.isArray(parsed)) throw new Error('not a list');
+                                                    jsonError = '';
+                                                    selectedBlock.props[propKey] = parsed;
+                                                    schedulePropUpdate();
+                                                } catch (_) { jsonError = 'JSON نامعتبر است؛ تا اصلاح نشود ذخیره نمی‌شود.'; }
+                                            "
+                                            @blur="if (!jsonError) { jsonDraft = null; jsonDraftFor = null; }"
+                                            class="w-full text-[11px] leading-5 px-2.5 py-2 rounded-lg border bg-white font-mono resize-y focus:outline-none focus:ring-2"
+                                            :class="jsonError ? 'border-rose-300 focus:ring-rose-200' : 'border-slate-200 focus:ring-indigo-300'"></textarea>
+                                        <p class="text-[10px] mt-1" :class="jsonError ? 'text-rose-600' : 'text-slate-400'" x-text="jsonError || 'ویرایش پیشرفته (فهرست JSON)'"></p>
+                                    </div>
+                                </template>
+
+                                {{-- also multi-line `text` and `rich_text` (sanitized at render
+                                     time), which had no control at all --}}
+                                <template x-if="schemaDef.type === 'textarea' || schemaDef.type === 'text' || schemaDef.type === 'rich_text'">
                                     <textarea
                                         x-model="selectedBlock.props[propKey]"
                                         @input="schedulePropUpdate()"
@@ -1772,7 +1803,10 @@ function canvasEditor() {
         },
         get selectedSchema() {
             if (!this.selectedBlock) return {};
-            return BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+            // A `blocks` field is the container's child list, authored in
+            // the children panel — it has no content-tab control.
+            const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+            return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
         },
         get selectedEditorCapabilities() {
             return this.selectedBlock

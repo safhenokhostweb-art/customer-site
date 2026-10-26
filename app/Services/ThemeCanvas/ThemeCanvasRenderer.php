@@ -278,43 +278,6 @@ class ThemeCanvasRenderer extends BlockRenderer
             . "</div>";
     }
 
-    // ── Video (bare type — real dispatch, no module gate) ──────────────────────
-    //
-    // Builder integrity audit (2026-09-11): registered since before MEDIA-4,
-    // insertable, never had a renderer anywhere in the class hierarchy —
-    // always rendered empty. `url`/`poster` resolve through the same
-    // CustomerMediaResolver path every other media-capable prop uses
-    // (resolveMediaProps() already ran before this method is reached), so
-    // this method never performs its own media lookup.
-
-    protected function renderVideo(array $props, string $inner, string $id): string
-    {
-        $url = trim((string) ($props['url'] ?? ''));
-        if ($url === '') {
-            return "<div id=\"tb-{$id}\" class=\"tb-video tb-empty-state\"><p class=\"tb-text\">ویدیویی انتخاب نشده است.</p></div>";
-        }
-
-        $poster    = trim((string) ($props['poster'] ?? ''));
-        $caption   = $this->escape($props['caption'] ?? '');
-        $autoplay  = (bool) ($props['autoplay'] ?? false);
-        $loop      = (bool) ($props['loop'] ?? false);
-        $controls  = $props['controls'] ?? true;
-
-        $attrs = [];
-        if ($controls) $attrs[] = 'controls';
-        if ($autoplay) $attrs[] = 'autoplay muted playsinline';
-        if ($loop) $attrs[] = 'loop';
-        $attrStr = implode(' ', $attrs);
-        $posterAttr = $poster !== '' ? ' poster="' . $this->escapeAttr($poster) . '"' : '';
-
-        $captionHtml = $caption ? "<figcaption class=\"tb-video-caption\">{$caption}</figcaption>" : '';
-
-        return "<figure id=\"tb-{$id}\" class=\"tb-video\">
-            <video src=\"" . $this->escapeAttr($url) . "\"{$posterAttr} {$attrStr} style=\"width:100%;border-radius:0.5rem;display:block;\"></video>
-            {$captionHtml}
-        </figure>";
-    }
-
     /**
      * BLD-09 / MOD-04 (Full Product Commercial Audit, TASK 1/3):
      * `language_switcher` was registered with a real schema and no
@@ -428,27 +391,15 @@ class ThemeCanvasRenderer extends BlockRenderer
     }
 
     /**
-     * Builder integrity audit (2026-09-11): customer-site's local
-     * 'social_icons' schema (BlockRegistry::all()) declares only a
-     * 'style' select — no 'links' field, unlike the canonical shared
-     * schema this type would otherwise inherit the renderer from. The
-     * canonical renderSocialIcons() reads $props['links'] (never present
-     * here) and ignores 'style' entirely — real data could never reach
-     * it. This host override reads the same real SocialLink model
-     * module:social_links_bar already uses and honors all 3 real style
-     * variants, matching the local schema's actual intent instead of the
-     * canonical one it silently inherited from.
+     * Explicit `links` (the block's own list, or e.g. renderNavFooter()'s
+     * `nav_footer.social_links`) win; with none, this host falls back to
+     * the site-wide SocialLink model module:social_links_bar also reads,
+     * and renders nothing when that is empty too.
      *
-     * BLD-11..13 (Full Product Commercial Audit, TASK 2A-CONTINUATION): an
-     * explicit `links` prop now wins over the global model — this override
-     * previously ignored it unconditionally, so real per-block authored
-     * data (e.g. `nav_footer.social_links`, now a real authored repeater —
-     * see renderNavFooter()'s `renderSocialIcons(['links' => $socialLinks],
-     * ...)` call) could never actually reach the render, a duplicate-
-     * authority gap the audit forbids. The site-wide SocialLink model
-     * remains the fallback only when no explicit links were supplied (the
-     * standalone `social_icons` block's own schema truly has none, per the
-     * original docblock above).
+     * Phase 0.2c (ADR-062): the style variants now live in the shared
+     * renderStyledSocialIcons(), with this host's markup unchanged; this
+     * override only supplies the tenant-data fallback and this host's
+     * `icons` default.
      */
     protected function renderSocialIcons(array $props, string $inner, string $id): string
     {
@@ -462,27 +413,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $requestedStyle = $props['style'] ?? 'icons';
-        $style = in_array($requestedStyle, ['buttons', 'text'], true) ? $requestedStyle : 'icons';
-        $items = [];
-        foreach ($links as $link) {
-            if (!is_array($link)) {
-                continue;
-            }
-            // Phase 0.2b (ADR-061): a link field — URL string or {url} —
-            // validated by the shared escapeUrl(); bare attribute escaping
-            // let a javascript: URL through.
-            $url   = $this->linkHref($link['url'] ?? '#', '#');
-            $label = $this->escape($link['label'] ?? '');
-            $shown = match ($style) {
-                'icons' => mb_substr($label, 0, 1),
-                default => $label,
-            };
-            $cls = $style === 'buttons' ? 'tb-btn tb-btn-secondary' : 'tb-social-link';
-            $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"{$cls}\" aria-label=\"{$label}\">{$shown}</a>";
-        }
-
-        return "<div id=\"tb-{$id}\" class=\"tb-social-icons tb-social-icons-{$style}\" style=\"display:flex;gap:0.5rem;flex-wrap:wrap;\">" . implode('', $items) . "</div>";
+        return $this->renderStyledSocialIcons($links, (string) ($props['style'] ?? 'icons'), $id);
     }
 
     // ── Blog ─────────────────────────────────────────────────────────────────
@@ -1259,10 +1190,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         $text = $this->escape($notification->message ?? $notification->body ?? '');
-        $link = $notification->link ?? '';
+        // Admin-entered URL: validated by the shared escapeUrl(), which
+        // refuses javascript:/data:/vbscript:. A refused or empty link
+        // renders the message as plain text rather than a dead "#" anchor.
+        $href = $this->escapeUrl((string) ($notification->link ?? ''), '');
 
-        $inner = $link
-            ? "<a href=\"" . $this->escapeAttr($link) . "\" style=\"color:inherit;text-decoration:underline;\">{$text}</a>"
+        $inner = $href !== ''
+            ? "<a href=\"{$href}\" style=\"color:inherit;text-decoration:underline;\">{$text}</a>"
             : $text;
 
         $positionStyle = $style === 'floating'
@@ -1560,7 +1494,9 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         $title = $this->escape($ad->title ?? '');
-        $link  = $this->escapeAttr($ad->link ?? '#');
+        // Admin-entered URL: validated by the shared escapeUrl() (see the
+        // notifications bar), not bare attribute escaping.
+        $link  = $this->escapeUrl((string) ($ad->link ?? ''), '#');
         $img   = !empty($ad->image_path)
             ? "<img src=\"" . e(ImageHelper::url($ad->image_path)) . "\" alt=\"{$title}\" loading=\"lazy\" style=\"max-width:100%;display:block;\">"
             : "<p class=\"tb-text\">" . $this->escape($ad->content ?? '') . "</p>";
