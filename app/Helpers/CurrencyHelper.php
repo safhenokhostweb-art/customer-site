@@ -83,9 +83,10 @@ class CurrencyHelper
         $value = $context['enabled']
             ? ($context['migrated'] ? $raw : $raw / self::DIVISOR)
             : ($context['migrated'] ? $raw * self::DIVISOR : $raw);
-        $formatted = number_format((int) round($value));
-        $persianDigits = ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹'];
-        $main = strtr($formatted, $persianDigits);
+        // Phase 0.5 follow-up (ADR-064): the same formatter as the shared
+        // theme-runtime blocks — Persian digits and the Persian thousands
+        // separator ٬ (U+066C), as fa-IR toLocaleString() prints them too.
+        $main = \SaaSPlatform\ThemeRuntime\Support\PersianNumber::format((int) round($value));
         if ($context['enabled']) {
             return $main . '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>';
         }

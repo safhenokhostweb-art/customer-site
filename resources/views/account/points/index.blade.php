@@ -82,7 +82,7 @@
         </div>
         <div>
             <p class="pts-rule__title">خرید محصول</p>
-            <p class="pts-rule__desc">به ازای هر ۱,۰۰۰ تومان خرید، ۱ امتیاز (ضربدر ضریب پلن شما) کسب کنید.</p>
+            <p class="pts-rule__desc">به ازای هر ۱٬۰۰۰ تومان خرید، ۱ امتیاز (ضربدر ضریب پلن شما) کسب کنید.</p>
         </div>
     </div>
     <div class="pts-rule">
