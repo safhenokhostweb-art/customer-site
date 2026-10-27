@@ -21,17 +21,20 @@ the known-issue guard tests, and `tests/ReleaseGate/run.php`. Navigation
 assertions inspect rendered text and link destinations, so saved editor props
 do not cause false failures.
 
-The user authorized version-specific known baseline issues. The machine
-registry is `known-issues.canvas-homepage.json`; the canonical human entrypoint
-is `../docs/KNOWN-TEST-FAILURES.md`. `scripts/verify-release-known-issues.php`
-checks version, source commits, a maximum 14-day approval, every required
-source fingerprint, and exact method-level PHPUnit group membership before
-excluding the three named inherited cases (CANVAS-BASELINE-001 was resolved
-in Phases 0.2b/0.2c and removed on 2026-10-26; its test runs normally). It
-rejects class-wide grouping,
-unknown methods, expired approval and source changes. All other failures
-remain blocking. The original four menu/typography expectations are corrected
-and still run normally. Production runtime code is unchanged.
+Known-issue exemptions are retired (2026-10-26): all four canvas-homepage
+baseline cases (CANVAS-BASELINE-001…004) pass on committed code, so the
+registry was removed and **every** ThemeCanvas test gates the release.
+`scripts/verify-release-known-issues.php` keeps them retired. It fails closed
+if `known-issues.canvas-homepage.json` reappears or any test or class carries
+the `canvas-homepage-baseline-2026-10-02` group. It then runs the whole suite
+with `--run-tests`, with no exclusions.
+
+`--run-tests` uses the dedicated `customer_site_release_test` database (MySQL,
+utf8mb4_unicode_ci; override with `RELEASE_TEST_DB_DATABASE`, which must end
+in `_release_test`), never the shared development `customer_site_test`, so a
+concurrent development suite cannot invalidate a release check. Prepare it
+once per machine with `DB_DATABASE=customer_site_release_test php artisan
+migrate:fresh --env=testing --force`.
 
 The deployment artifact still must pass the canonical validator documented in
 `../docs/RELEASE_GATE.md` before activation:

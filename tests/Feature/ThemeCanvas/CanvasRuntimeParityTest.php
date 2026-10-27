@@ -9,7 +9,6 @@ use App\Services\ThemeCanvas\ThemeAssetLocalizationService;
 use App\Services\ThemeCanvas\ThemeCanvasRenderer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery\MockInterface;
-use PHPUnit\Framework\Attributes\Group;
 use SaaSPlatform\ThemeRuntime\BlockRenderer as SharedBlockRenderer;
 use SaaSPlatform\ThemeRuntime\FoodMartBlockRendererTrait;
 use Tests\TestCase;
@@ -31,7 +30,6 @@ class CanvasRuntimeParityTest extends TestCase
         parent::tearDown();
     }
 
-    #[Group('canvas-homepage-baseline-2026-10-02')]
     public function test_foodmart_canvas_uses_the_public_document_runtime_and_customer_local_assets(): void
     {
         $theme = $this->foodMartTheme();
@@ -80,7 +78,6 @@ class CanvasRuntimeParityTest extends TestCase
         $fullPreview->assertDontSee('builder-edit-bar', false);
     }
 
-    #[Group('canvas-homepage-baseline-2026-10-02')]
     public function test_canvas_keeps_unknown_block_fallback_and_legacy_platform_defaults(): void
     {
         $theme = [
