@@ -226,7 +226,8 @@ class StructuredRepeaterAuthoringTest extends TestCase
             ],
         ]);
         $this->assertStringContainsString('MARKER-FEATURE', $html);
-        $this->assertStringContainsString('99', $html);
+        // Phase 0.5 (ADR-064): shared renderers print stat values in Persian digits.
+        $this->assertStringContainsString('۹۹', $html);
         $this->assertStringContainsString('MARKER-STAT', $html);
     }
 

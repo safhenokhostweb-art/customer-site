@@ -951,13 +951,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $title    = $this->escape($props['title'] ?? 'همین الان شروع کن!');
         $subtitle = $this->escape($props['subtitle'] ?? 'به هزاران دانشجو بپیوند');
         $btnText  = $this->escape($props['button_text'] ?? 'مشاهده دوره‌ها');
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#4f46e5');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-primary, #4f46e5)'));
         $url      = route('courses.index');
 
         return "<section id=\"tb-{$id}\" class=\"tb-cta\" style=\"background:{$bgColor}\">
             <h2 class=\"tb-cta-title\">{$title}</h2>
             <p class=\"tb-cta-subtitle\">{$subtitle}</p>
-            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:#fff;color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
+            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:var(--tb-on-primary, #fff);color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
         </section>";
     }
 
@@ -1010,13 +1010,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $title    = $this->escape($props['title'] ?? 'به کاربران ویژه بپیوند');
         $subtitle = $this->escape($props['subtitle'] ?? '');
         $btnText  = $this->escape($props['button_text'] ?? 'مشاهده پلن‌ها');
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#7c3aed');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-secondary, #7c3aed)'));
         $url      = route('pricing.index');
 
         return "<section id=\"tb-{$id}\" class=\"tb-cta\" style=\"background:{$bgColor}\">
             <h2 class=\"tb-cta-title\">{$title}</h2>
             " . ($subtitle ? "<p class=\"tb-cta-subtitle\">{$subtitle}</p>" : '') . "
-            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:#fff;color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
+            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:var(--tb-on-primary, #fff);color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
         </section>";
     }
 
@@ -1115,13 +1115,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $label    = $this->escape($props['label'] ?? 'پشتیبانی آنلاین');
         $style    = $props['style'] ?? 'floating';
         $position = $props['position'] ?? 'bottom-right';
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#4f46e5');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-primary, #4f46e5)'));
         $posStyle = $position === 'bottom-left' ? 'left:1.5rem;right:auto;' : 'right:1.5rem;left:auto;';
 
         if ($style === 'floating') {
             return "<div id=\"tb-{$id}\">
                 <a href=\"" . e(route('account.tickets.create')) . "\"
-                   style=\"position:fixed;bottom:1.5rem;{$posStyle}background:{$bgColor};color:#fff;padding:0.75rem 1.25rem;border-radius:999px;text-decoration:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:0.5rem;\"
+                   style=\"position:fixed;bottom:1.5rem;{$posStyle}background:{$bgColor};color:var(--tb-on-primary, #fff);padding:0.75rem 1.25rem;border-radius:999px;text-decoration:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:0.5rem;\"
                    aria-label=\"{$label}\">💬 {$label}</a>
             </div>";
         }
@@ -1605,7 +1605,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
         $promoText = $this->escape($props['promo_text'] ?? 'پیشنهاد ویژه — فرصت محدود!');
-        $bgColor   = $this->escapeAttr($props['bg_color'] ?? '#ef4444');
+        $bgColor   = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, '#ef4444'));
         $endIso    = $this->escapeAttr(date('c', strtotime($endDate)));
 
         return "<div id=\"tb-{$id}\" class=\"tb-module-shop-countdown\" style=\"background:{$bgColor};color:#fff;padding:1.25rem;border-radius:0.75rem;text-align:center;\">

@@ -1155,18 +1155,37 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </select>
                                 </template>
 
+                                {{-- Phase 0.5 (ADR-064): the same colour control as the platform
+                                     Canvas — theme swatches stored as var(--tb-…) so the block follows
+                                     the theme, opacity (rgba() or a color-mix() of the swatch) and
+                                     explicit transparent, on the shared theme-runtime CanvasColor. --}}
                                 <template x-if="isColorControl(schemaDef, propKey, selectedBlock?.type)">
-                                    <div class="space-y-2">
+                                    <div class="space-y-2" :data-testid="'tb-color-' + propKey">
                                         <div class="flex items-center gap-2">
-                                        <input type="color" :value="colorInputValue(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" :data-testid="'tb-prop-' + propKey">
-                                        <button type="button" @click="clearColor(propKey, schemaDef.default ?? '')" class="px-2 py-1.5 rounded border border-slate-200 text-xs text-slate-600 hover:bg-slate-50">پاک‌کردن</button>
+                                            <span class="relative w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0" style="background-image:conic-gradient(#e2e8f0 25%,#fff 0 50%,#e2e8f0 0 75%,#fff 0);background-size:10px 10px;" aria-hidden="true">
+                                                <span class="absolute inset-0" :style="'background:' + colorPreview(selectedBlock.props[propKey])" :data-testid="'tb-color-preview-' + propKey"></span>
+                                            </span>
+                                            <input type="color" :value="colorInputValue(selectedBlock.props[propKey])" @input="setColorBase(propKey, $event.target.value)" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" aria-label="انتخاب رنگ دلخواه">
+                                            <input type="text" dir="ltr" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 min-w-0 text-xs px-2.5 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" aria-label="مقدار رنگ" :data-testid="'tb-prop-' + propKey">
+                                            <button type="button" @click="clearColor(propKey, schemaDef.default ?? '')" class="px-2 py-1.5 rounded border border-slate-200 text-xs text-slate-600 hover:bg-slate-50">پاک‌کردن</button>
                                         </div>
-                                        <div class="flex flex-wrap gap-1.5" aria-label="پالت رنگ قالب">
+                                        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="رنگ‌های قالب">
                                             <template x-for="color in themePalette()" :key="color.token">
-                                                <button type="button" @click="selectThemeColor(propKey, color)" :data-testid="'tb-theme-color-' + propKey + '-' + color.token" :title="color.label" class="w-6 h-6 rounded-full border-2 border-white shadow ring-1 ring-slate-200 hover:scale-110 transition" :style="'background:' + color.value"></button>
+                                                <button type="button" @click="selectThemeColor(propKey, color)" :data-testid="'tb-theme-color-' + propKey + '-' + color.token" :title="color.label" :aria-label="color.label"
+                                                    :aria-pressed="colorParse(selectedBlock.props[propKey]).token === color.token ? 'true' : 'false'"
+                                                    :class="colorParse(selectedBlock.props[propKey]).token === color.token ? 'ring-2 ring-indigo-500 ring-offset-1' : 'ring-1 ring-slate-200'"
+                                                    class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" :style="'background:' + color.value"></button>
                                             </template>
+                                            <button type="button" @click="selectedBlock.props[propKey] = 'transparent'; schedulePropUpdate()" :aria-pressed="colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 'true' : 'false'"
+                                                :class="colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 'ring-2 ring-indigo-500' : 'ring-1 ring-slate-200'"
+                                                class="px-2 h-6 rounded-full text-[11px] text-slate-600 bg-white" :data-testid="'tb-color-transparent-' + propKey">بی‌رنگ</button>
                                         </div>
+                                        <label class="flex items-center gap-2 text-[11px] text-slate-600">
+                                            <span class="shrink-0">شفافیت</span>
+                                            <input type="range" min="0" max="100" step="5" class="flex-1 accent-indigo-600" :value="colorParse(selectedBlock.props[propKey]).alpha" @input="setColorAlpha(propKey, Number($event.target.value))"
+                                                :disabled="!['token', 'hex', 'rgba'].includes(colorParse(selectedBlock.props[propKey]).kind)" :data-testid="'tb-color-alpha-' + propKey" aria-label="میزان شفافیت رنگ">
+                                            <span class="w-9 text-left tabular-nums" x-text="(colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 0 : colorParse(selectedBlock.props[propKey]).alpha) + '٪'"></span>
+                                        </label>
                                     </div>
                                 </template>
 
@@ -1668,6 +1687,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 {{-- Phase 6.1-B: one include = runtime -> identity (version-gated) -> interaction.
      No host structural services on this surface yet ([]), kept in sync with
      the platform's own editor pages which use the same bootstrap partial. --}}
+@include('theme-runtime::canvas.color')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
@@ -2200,19 +2220,34 @@ function canvasEditor() {
                 'contact_info:background',
             ].includes(`${blockType}:${propKey}`);
         },
+        // Phase 0.5 (ADR-064): the swatches and the colour value model are the
+        // shared theme-runtime CanvasColor (canvas-color.js), same as the
+        // platform Canvas.
         themePalette() {
-            return [
-                { token: 'primary', label: 'رنگ اصلی قالب', value: this.globalStyles.primary_color || '#4f46e5' },
-                { token: 'secondary', label: 'رنگ ثانویه قالب', value: this.globalStyles.secondary_color || '#6366f1' },
-                { token: 'background', label: 'پس‌زمینه قالب', value: this.globalStyles.background_color || '#f9fafb' },
-                { token: 'text', label: 'متن قالب', value: this.globalStyles.text_color || '#111827' },
-            ];
+            return window.CanvasColor.palette(this.globalStyles);
         },
+        colorParse(value) { return window.CanvasColor.parse(value, this.themePalette()); },
+        colorPreview(value) { return window.CanvasColor.previewCss(value, this.themePalette()); },
         selectThemeColor(propKey, color) {
             if (!this.selectedBlock) return;
-            // Persist a normal CSS variable reference: ThemeTokenNormalizer
-            // remains the authority that emits each --tb-* token at runtime.
-            this.selectedBlock.props[propKey] = `var(--tb-${color.token})`;
+            // A token reference with the default-palette fallback:
+            // ThemeTokenNormalizer remains the authority that emits each
+            // --tb-* token, and a page without it still gets a colour.
+            const current = this.colorParse(this.selectedBlock.props[propKey]);
+            const alpha = ['token', 'hex', 'rgba'].includes(current.kind) ? current.alpha : 100;
+            this.selectedBlock.props[propKey] = window.CanvasColor.swatch(color.token, alpha);
+            this.schedulePropUpdate();
+        },
+        setColorBase(propKey, hex) {
+            if (!this.selectedBlock) return;
+            const current = this.colorParse(this.selectedBlock.props[propKey]);
+            const alpha = ['token', 'hex', 'rgba'].includes(current.kind) ? current.alpha : 100;
+            this.selectedBlock.props[propKey] = window.CanvasColor.fixed(hex, alpha);
+            this.schedulePropUpdate();
+        },
+        setColorAlpha(propKey, alpha) {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = window.CanvasColor.withAlpha(this.selectedBlock.props[propKey] ?? '', alpha, this.themePalette());
             this.schedulePropUpdate();
         },
         clearColor(propKey, defaultValue = '') {
@@ -2221,7 +2256,8 @@ function canvasEditor() {
             this.schedulePropUpdate();
         },
         colorInputValue(value) {
-            return /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#000000';
+            // A swatch or rgba() value shows its base colour in the native picker.
+            return window.CanvasColor.inputHex(value, this.themePalette());
         },
         getBlockByPath(path, arr) {
             arr = arr ?? this.blocks;
