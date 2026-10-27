@@ -1,40 +1,4 @@
-@font-face{
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn'), local('Vazirmatn Regular'),
-         url('/assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face{
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn Medium'),
-         url('/assets/fonts/vazirmatn/Vazirmatn-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face{
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn SemiBold'),
-         url('/assets/fonts/vazirmatn/Vazirmatn-SemiBold.woff2') format('woff2');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face{
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn Bold'),
-         url('/assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') format('woff2');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face{
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn ExtraBold'),
-         url('/assets/fonts/vazirmatn/Vazirmatn-ExtraBold.woff2') format('woff2');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
+{{-- Phase 0.4 (ADR-063): the local Vazirmatn faces now live in the shared
+     theme-runtime package, so this host and the platform Canvas preview load
+     the same fonts the same way. Output is unchanged. --}}
+@include('theme-runtime::css.fonts')
