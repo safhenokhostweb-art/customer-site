@@ -40,6 +40,11 @@ class CanonicalStructuralParityTest extends TestCase
         $this->host = new HostBlockRenderer();
         $this->host->setSchemaRegistry(new ElementSchemaRegistry());
         $this->canonical = new CanonicalBlockRenderer();
+        // Phase 0.7 (saas-platform ADR-066): the host's forms post to its real
+        // routes (siteEndpoints(), a #[HostOwnedOverride]). Same input, same
+        // output: hand the canonical renderer exactly those endpoints.
+        $endpoints = new \ReflectionMethod(HostBlockRenderer::class, 'siteEndpoints');
+        $this->canonical->setContext(['site_endpoints' => $endpoints->invoke($this->host)]);
     }
 
     /** Method names customer-site's BlockRenderer explicitly overrides (host-owned, not a canonical duplicate). */

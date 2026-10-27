@@ -181,7 +181,9 @@ class RealUniversalThemeInstallAcceptanceTest extends TestCase
         // assumption.
         $before = $this->get('/');
         $before->assertOk();
-        $before->assertDontSee('tb-search-bar-wrap', false);
+        // The element, not the class name: the shared stylesheet styles
+        // .tb-search-bar-wrap on every page (Phase 0.7, ADR-066).
+        $before->assertDontSee('class="tb-search-bar-wrap"', false);
 
         // Switch the site's default header to 'ecommerce_search' (search_bar
         // + nav_header + cart_icon) the same way an admin would from
@@ -190,7 +192,7 @@ class RealUniversalThemeInstallAcceptanceTest extends TestCase
 
         $after = $this->get('/');
         $after->assertOk();
-        $after->assertSee('tb-search-bar-wrap', false);
+        $after->assertSee('class="tb-search-bar-wrap"', false);
     }
 
     // ── 6b. Performance gate: variant resolution adds no unbounded query cost ──

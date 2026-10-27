@@ -32,6 +32,7 @@ class CanonicalBlockDefinitionParityTest extends TestCase
     private const EDITABLE_TYPES = [
         'string', 'text', 'textarea', 'rich_text', 'link', 'image', 'repeater', 'array',
         'number', 'motion', 'boolean', 'select', 'color', 'blocks',
+        'icon', // Phase 0.6 (saas-platform ADR-065): the shared icon picker
     ];
 
     private function hostTypes(): array

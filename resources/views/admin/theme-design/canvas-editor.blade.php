@@ -850,6 +850,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     >
                                 </template>
 
+                                {{-- Phase 0.6 (ADR-065): the shared searchable SVG icon picker. --}}
+                                <template x-if="schemaDef.type === 'icon'">
+                                    @include('theme-runtime::canvas.icon-picker', [
+                                        'value' => "selectedBlock.props[propKey] ?? schemaDef.default ?? ''",
+                                        'set' => "selectedBlock.props[propKey] = __icon; schedulePropUpdate()",
+                                        'id' => 'propKey',
+                                        'label' => "schemaDef.label || propKey",
+                                    ])
+                                </template>
+
                                 {{-- TASK 3/3 Phase 6.5C (BLD-28) — internal-link-capable adapter
                                      for button/CTA/hero action URL fields. A plain string stays a
                                      raw custom URL (unchanged, backward compatible); an
@@ -1013,7 +1023,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                                 <span class="text-[10px] text-slate-600" x-text="isTruthyField(deepItem[deepFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
                                                                                                             </label>
                                                                                                         </template>
-                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea' && deepFieldDef.type !== 'link' && deepFieldDef.type !== 'boolean'">
+                                                                                                        <template x-if="deepFieldDef.type === 'icon'">
+                                                                                                            @include('theme-runtime::canvas.icon-picker', [
+                                                                                                                'value' => "deepItem[deepFieldKey] ?? ''",
+                                                                                                                'set' => "updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, __icon, schemaDef)",
+                                                                                                                'id' => '`${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`',
+                                                                                                                'label' => "deepFieldDef.label || deepFieldKey",
+                                                                                                            ])
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea' && deepFieldDef.type !== 'link' && deepFieldDef.type !== 'boolean' && deepFieldDef.type !== 'icon'">
                                                                                                             <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                                         </template>
                                                                                                     </div>
@@ -1035,7 +1053,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                         <span class="text-[10px] text-slate-600" x-text="isTruthyField(nestedItem[nestedFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
                                                                                     </label>
                                                                                 </template>
-                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater' && nestedFieldDef.type !== 'link' && nestedFieldDef.type !== 'boolean'">
+                                                                                <template x-if="nestedFieldDef.type === 'icon'">
+                                                                                    @include('theme-runtime::canvas.icon-picker', [
+                                                                                        'value' => "nestedItem[nestedFieldKey] ?? ''",
+                                                                                        'set' => "updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, __icon, schemaDef)",
+                                                                                        'id' => '`${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`',
+                                                                                        'label' => "nestedFieldDef.label || nestedFieldKey",
+                                                                                    ])
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater' && nestedFieldDef.type !== 'link' && nestedFieldDef.type !== 'boolean' && nestedFieldDef.type !== 'icon'">
                                                                                     <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                 </template>
                                                                             </div>
@@ -1061,7 +1087,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                 </template>
                                                             </select>
                                                         </template>
-                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select' && fieldDef.type !== 'link'">
+                                                        <template x-if="fieldDef.type === 'icon'">
+                                                            @include('theme-runtime::canvas.icon-picker', [
+                                                                'value' => "item[fieldKey] ?? ''",
+                                                                'set' => "updateStructuredField(propKey, itemIndex, fieldKey, __icon, schemaDef)",
+                                                                'id' => '`${propKey}-${itemIndex}-${fieldKey}`',
+                                                                'label' => "fieldDef.label || fieldKey",
+                                                            ])
+                                                        </template>
+                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select' && fieldDef.type !== 'link' && fieldDef.type !== 'icon'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
                                                                     <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
@@ -1688,6 +1722,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
      No host structural services on this surface yet ([]), kept in sync with
      the platform's own editor pages which use the same bootstrap partial. --}}
 @include('theme-runtime::canvas.color')
+@include('theme-runtime::canvas.icons')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;

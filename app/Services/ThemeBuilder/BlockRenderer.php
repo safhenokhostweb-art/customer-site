@@ -388,7 +388,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
                 $post->featured_image ? \App\Helpers\ImageHelper::url($post->featured_image) : '',
                 $post->title,
                 'aspect-ratio:16/9;',
-                '📰'
+                $this->iconHtml('file-text')
             );
             $cards[] = "<a href=\"{$url}\" class=\"tb-blog-card\">{$img}<div class=\"tb-blog-card-body\"><h3 class=\"tb-blog-card-title\">{$t}</h3><p class=\"tb-blog-card-meta\">{$date}</p><p class=\"tb-blog-card-excerpt\">{$excerpt}</p></div></a>";
         }
@@ -501,15 +501,65 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     }
 
 
+    /** @var array<string, mixed>|null */
+    private ?array $siteEndpointsCache = null;
+
+    /**
+     * Phase 0.7 (saas-platform ADR-066): the canonical search_bar,
+     * nav_header search and newsletter_form render real forms from these
+     * endpoints, so the former host-owned renderSearchBar() copy is gone.
+     */
     #[HostOwnedOverride(
-        reason: 'Real route()-based form action (shop or home, depending on real host state via SiteHelper::shopEnabled()) — the canonical version has no real search backend to target (action="#"), appropriate only for the Builder preview.',
+        reason: 'This tenant\'s real routes for the theme forms: newsletter.subscribe (plus the request CSRF token for the script-less fallback) and site search — AdvancedSearchController (search.index + search.suggest, type=products|posts) when the advanced_search module is on, otherwise the shop/blog ?q= listings the site actually has. The canonical renderer has no host routes, so its forms stay inert in the Builder preview; so do this host\'s in editor mode.',
         category: HostOwnedOverride::REASON_HOST_CONTEXT,
     )]
-    protected function renderSearchBar(array $props, string $inner, string $id): string
+    protected function siteEndpoints(): array
     {
-        $placeholder = $this->escapeAttr($props['placeholder'] ?? 'جستجو...');
-        $action = \App\Helpers\SiteHelper::shopEnabled() ? route('shop.index') : route('home');
-        return "<div id=\"tb-{$id}\" class=\"tb-search-bar-wrap\"><form method=\"get\" action=\"{$action}\" role=\"search\"><input type=\"search\" name=\"q\" placeholder=\"{$placeholder}\" aria-label=\"جستجو\"></form></div>";
+        if (is_array($this->context['site_endpoints'] ?? null)) {
+            return parent::siteEndpoints();
+        }
+        // Same editor test as wrapEditorMode(): the default mode alone is not the editor.
+        if ($this->mode === 'editor' && ($this->context['editor_mode'] ?? false)) {
+            return [];
+        }
+        if ($this->siteEndpointsCache !== null) {
+            return $this->siteEndpointsCache;
+        }
+
+        $route = fn (string $name) => \Illuminate\Support\Facades\Route::has($name) ? route($name, [], false) : null;
+        $shop = \App\Helpers\SiteHelper::shopEnabled();
+        $blog = \App\Helpers\SiteHelper::blogEnabled();
+        $search = [];
+        $suggest = null;
+        if (\App\Helpers\SiteHelper::moduleEnabled('advanced_search') && ($shop || $blog) && ($results = $route('search.index'))) {
+            $search['all'] = ['action' => $results];
+            if ($shop) {
+                $search['products'] = ['action' => $results, 'params' => ['type' => 'products']];
+            }
+            if ($blog) {
+                $search['posts'] = ['action' => $results, 'params' => ['type' => 'posts']];
+            }
+            $suggest = $route('search.suggest');
+        } else {
+            if ($shop && ($products = $route('shop.index'))) {
+                $search['products'] = ['action' => $products];
+            }
+            if ($blog && ($posts = $route('blog.index'))) {
+                $search['posts'] = ['action' => $posts];
+            }
+            if ($search !== []) {
+                $search['all'] = $search['products'] ?? $search['posts'];
+            }
+        }
+
+        $session = request()->hasSession() ? request()->session() : null;
+
+        return $this->siteEndpointsCache = [
+            'newsletter' => $route('newsletter.subscribe'),
+            'csrf' => $session?->token(),
+            'search' => $search,
+            'suggest' => $suggest,
+        ];
     }
 
     /**
@@ -534,7 +584,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $count += (int) ($item['quantity'] ?? 0);
         }
         $badge = $count > 0 ? "<span style=\"background:#ef4444;color:#fff;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:999px;\">{$count}</span>" : '';
-        return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link\" aria-label=\"سبد خرید\">🛒 سبد خرید {$badge}</a>";
+        return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link\" aria-label=\"سبد خرید\">" . $this->iconHtml('shopping-cart') . " سبد خرید {$badge}</a>";
     }
 
 
@@ -663,7 +713,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             try { $url = route('courses.show', $course->slug); } catch (\Throwable $e) { $url = '#'; }
             $name = $this->escape($course->title ?? $course->name ?? '');
             $img  = !empty($course->cover_image ?? $course->thumbnail ?? '') ? \App\Helpers\ImageHelper::url($course->cover_image ?? $course->thumbnail) : '';
-            $imgHtml = $img ? "<div class=\"tb-course-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-course-card-img tb-course-noimg\">🎓</div>";
+            $imgHtml = $img ? "<div class=\"tb-course-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-course-card-img tb-course-noimg\">" . $this->iconHtml('graduation-cap') . "</div>";
             $price = '';
             if (isset($course->price)) {
                 $price = $course->price > 0 ? '<span class="tb-course-price">' . \App\Helpers\CurrencyHelper::formatPrice($course->price) . ' ' . \App\Helpers\CurrencyHelper::unitLabel() . '</span>' : '<span class="tb-course-price tb-course-free">رایگان</span>';
@@ -735,7 +785,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $name  = $this->escape($cat->name ?? $cat->title ?? '');
             $count = $cat->products_count ?? 0;
             $img   = !empty($cat->image) ? \App\Helpers\ImageHelper::url($cat->image) : '';
-            $imgHtml = $img ? "<div class=\"tb-cat-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-cat-card-img tb-cat-noimg\">🗂️</div>";
+            $imgHtml = $img ? "<div class=\"tb-cat-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-cat-card-img tb-cat-noimg\">" . $this->iconHtml('layout-grid') . "</div>";
             $cards[] = "<a href=\"{$url}\" class=\"tb-category-card\">{$imgHtml}<div class=\"tb-cat-card-body\"><span class=\"tb-cat-name\">{$name}</span><span class=\"tb-cat-count\">{$count} محصول</span></div></a>";
         }
 
@@ -772,7 +822,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $name  = $this->escape($product->title ?? $product->name ?? '');
             $price = \App\Helpers\CurrencyHelper::formatPrice($product->effective_price ?? $product->price ?? 0) . ' ' . \App\Helpers\CurrencyHelper::unitLabel();
             $img   = $product->image ? \App\Helpers\ImageHelper::url($product->image) : '';
-            $imgHtml = $img ? "<div class=\"tb-product-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-product-card-img tb-product-card-noimg\">⭐</div>";
+            $imgHtml = $img ? "<div class=\"tb-product-card-img\"><img src=\"{$this->escapeAttr($img)}\" alt=\"{$name}\" loading=\"lazy\"></div>" : "<div class=\"tb-product-card-img tb-product-card-noimg\">" . $this->iconHtml('package') . "</div>";
             $cards[] = "<a href=\"{$url}\" class=\"tb-product-card tb-featured-card\">{$imgHtml}<div class=\"tb-product-card-inner\"><h3 class=\"tb-product-title\">{$name}</h3><div class=\"tb-product-price\">{$price}</div></div></a>";
         }
 
@@ -1046,16 +1096,16 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $infoItems = [];
         if ($phone) {
-            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">📞</span><div><p class=\"tb-contact-info-label\">تلفن</p><p class=\"tb-contact-info-value\">{$phone}</p></div></div>";
+            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">" . $this->iconHtml('phone') . "</span><div><p class=\"tb-contact-info-label\">تلفن</p><p class=\"tb-contact-info-value\">{$phone}</p></div></div>";
         }
         if ($email) {
-            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">✉️</span><div><p class=\"tb-contact-info-label\">ایمیل</p><p class=\"tb-contact-info-value\">{$email}</p></div></div>";
+            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">" . $this->iconHtml('mail') . "</span><div><p class=\"tb-contact-info-label\">ایمیل</p><p class=\"tb-contact-info-value\">{$email}</p></div></div>";
         }
         if ($address) {
-            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">📍</span><div><p class=\"tb-contact-info-label\">آدرس</p><p class=\"tb-contact-info-value\">{$address}</p></div></div>";
+            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">" . $this->iconHtml('map-pin') . "</span><div><p class=\"tb-contact-info-label\">آدرس</p><p class=\"tb-contact-info-value\">{$address}</p></div></div>";
         }
         if ($hours) {
-            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">🕐</span><div><p class=\"tb-contact-info-label\">ساعات کاری</p><p class=\"tb-contact-info-value\">{$hours}</p></div></div>";
+            $infoItems[] = "<div class=\"tb-contact-info-item\"><span class=\"tb-contact-info-icon\">" . $this->iconHtml('clock') . "</span><div><p class=\"tb-contact-info-label\">ساعات کاری</p><p class=\"tb-contact-info-value\">{$hours}</p></div></div>";
         }
 
         $formHtml = $showForm ? "<div class=\"tb-contact-form-wrap\">

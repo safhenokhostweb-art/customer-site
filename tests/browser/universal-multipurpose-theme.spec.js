@@ -347,6 +347,7 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         // selector, since that also matches unrelated elements elsewhere
         // that happen to reference the same global-style token.
         await page.goto('/page/saas', { waitUntil: 'domcontentloaded' });
-        await expect(page.locator('#tb-qa_hero_gradient_28f833[style*="color:var(--tb-secondary)"]')).toBeVisible();
+        // Phase 0.5 (ADR-064): the swatch stores the token with its fallback.
+        await expect(page.locator('#tb-qa_hero_gradient_28f833[style*="color:var(--tb-secondary, #6366f1)"]')).toBeVisible();
     });
 });

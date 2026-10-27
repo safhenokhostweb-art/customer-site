@@ -161,7 +161,9 @@ class ElementSchemaRegistry
             // Canvas textarea controls intentionally persist JSON-shaped
             // values as text.  Treating those values as arrays caused valid
             // defaults such as stats_row and client_logos to be rejected.
-            'textarea', 'string', 'color', 'motion' => 'string',
+            // Phase 0.6 (ADR-065): an icon is a catalog name or a legacy
+            // emoji/text — still a string, as before the control type split.
+            'textarea', 'string', 'color', 'motion', 'icon' => 'string',
             // MEDIA-4: a canonical Media Library selection persists as
             // {"media_id": "<uuid>"} — a JSON object, not a string. A plain
             // URL/path string remains valid as transitional legacy data.
