@@ -8,8 +8,7 @@ use Illuminate\Support\Facades\Schema;
  * Phase 0.7 (saas-platform ADR-066) — the theme newsletter block's real
  * backend: one row per normalised contact (a lower-cased email or an
  * 09xxxxxxxxx mobile), unique so a repeat sign-up is a no-op.
- * Create-only. down() is deliberately a no-op so a rollback never destroys
- * collected subscribers; up() skips an existing table, so re-running is safe.
+ * Create-only: down() drops just this new table.
  */
 return new class extends Migration
 {
@@ -31,6 +30,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Intentionally empty: subscriber data outlives a rollback.
+        Schema::dropIfExists('newsletter_subscribers');
     }
 };
