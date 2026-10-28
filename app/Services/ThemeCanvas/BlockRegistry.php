@@ -22,13 +22,9 @@ final class BlockRegistry
      * difference.
      */
     public const HOST_PATCHES = [
-        // The tenant renderer (ThemeCanvasRenderer::renderModuleProductGrid)
-        // has no sales-backed query, so 'bestselling' would silently list
-        // the newest products. Drop this patch once that source reads
-        // ProductDataSource's best_selling_30d ordering.
-        'module:shop_product_grid' => [
-            'source' => ['type' => 'select', 'label' => 'منبع', 'options' => ['recent' => 'جدیدترین', 'featured' => 'ویژه'], 'default' => 'recent'],
-        ],
+        // Phase 3 (saas-platform ADR-068): empty. The last patch dropped
+        // module:shop_product_grid's 'bestselling' source; that source now
+        // reads the shared 30-day sales ordering (Product::scopeBestSelling).
     ];
 
     public static function all(): array

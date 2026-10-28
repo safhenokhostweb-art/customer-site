@@ -79,18 +79,39 @@ class CurrencyHelper
     /** @param array{enabled:bool,migrated:bool} $context */
     public static function formatPriceWithContext(float|int|string $price, array $context): string
     {
-        $raw = (float) $price;
-        $value = $context['enabled']
-            ? ($context['migrated'] ? $raw : $raw / self::DIVISOR)
-            : ($context['migrated'] ? $raw * self::DIVISOR : $raw);
+        $value = self::displayValueWithContext($price, $context);
         // Phase 0.5 follow-up (ADR-064): the same formatter as the shared
         // theme-runtime blocks — Persian digits and the Persian thousands
         // separator ٬ (U+066C), as fa-IR toLocaleString() prints them too.
         $main = \SaaSPlatform\ThemeRuntime\Support\PersianNumber::format((int) round($value));
-        if ($context['enabled']) {
-            return $main . '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>';
-        }
-        return $main;
+        return $main . self::fadedZerosHtml($context);
+    }
+
+    /**
+     * The faded «۰۰۰۰» printed after every amount while the reform is on
+     * ('' otherwise). The theme mini-cart appends it to the totals it
+     * recomputes in the browser (theme-runtime blocks/cart.js).
+     *
+     * @param array{enabled:bool,migrated:bool} $context
+     */
+    public static function fadedZerosHtml(array $context): string
+    {
+        return $context['enabled']
+            ? '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>'
+            : '';
+    }
+
+    /**
+     * The number formatPriceWithContext() prints, before rounding.
+     *
+     * @param array{enabled:bool,migrated:bool} $context
+     */
+    public static function displayValueWithContext(float|int|string $price, array $context): float
+    {
+        $raw = (float) $price;
+        return $context['enabled']
+            ? ($context['migrated'] ? $raw : $raw / self::DIVISOR)
+            : ($context['migrated'] ? $raw * self::DIVISOR : $raw);
     }
 
     /**

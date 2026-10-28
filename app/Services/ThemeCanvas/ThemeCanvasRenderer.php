@@ -566,59 +566,63 @@ class ThemeCanvasRenderer extends BlockRenderer
         $source       = $props['source'] ?? 'recent';
         $categorySlug = trim((string) ($props['category_slug'] ?? ''));
 
-        // Builder integrity audit (2026-09-11): 'featured' previously
-        // queried `is_featured`, a column that has never existed on
-        // `products` (confirmed: no migration, no model field) — every
-        // real render with source=featured (the canonical DEFAULT for
-        // module:shop_product_slider) crashed with a real SQL error,
-        // silently swallowed by renderBlock()'s catch (that catch's own
-        // missing log entry was fixed alongside this). `is_new` is a real,
-        // existing column with the closest honest semantic match.
-        $query = Product::query()->active();
-        if ($source === 'featured') {
-            $query->where('is_new', true);
-        }
-        if ($categorySlug !== '') {
-            $query->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug));
-        }
-        $products = $query->latest()->take($limit)->get();
+        $query = $this->moduleProductQuery($source, $categorySlug);
+        $products = $query->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
 
         if ($products->isEmpty()) {
+            // Phase 3 (saas-platform ADR-068): an honest empty state per source.
+            $empty = $source === 'bestselling' ? 'در ۳۰ روز گذشته هنوز فروشی ثبت نشده است.' : 'هنوز محصولی ثبت نشده است.';
             return "<div id=\"tb-{$id}\" class=\"tb-module-products\">
                 {$titleHtml}
                 <div class=\"tb-product-grid-empty\">
-                    <p>هنوز محصولی ثبت نشده است.</p>
+                    <p>{$empty}</p>
                     <a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-primary\">مشاهده فروشگاه</a>
                 </div>
             </div>";
         }
 
-        $colsClass = "tb-grid-cols-{$columns}";
+        // Phase 3 (saas-platform ADR-068): the shared commercial card — real
+        // discount, «پرامتیاز» and «جدید» overlays, rating and add-to-cart.
         $cards = [];
         foreach ($products as $product) {
-            $url     = route('shop.show', $product->slug);
-            $t       = $this->escape($product->title);
-            $price   = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $imgHtml = $product->image
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
-                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $cards[] = "<a href=\"{$url}\" class=\"tb-product-card\">{$imgHtml}
-                <div class=\"tb-product-card-inner\">
-                    <h3 class=\"tb-product-title\">{$t}</h3>
-                    <div class=\"tb-product-price\">{$price}</div>
-                </div>
-            </a>";
+            $cards[] = $this->productCard($this->productCardData($product));
         }
 
         return "<div id=\"tb-{$id}\" class=\"tb-module-products\">
             {$titleHtml}
-            <div class=\"tb-grid {$colsClass} tb-gap-md tb-section-products\">" . implode('', $cards) . "</div>
+            <div class=\"tb-grid tb-grid-cols-{$columns} tb-gap-md tb-section-products\">" . implode('', $cards) . "</div>
             <div style=\"text-align:center;margin-top:1.5rem;\">
                 <a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده فروشگاه</a>
             </div>
         </div>";
+    }
+
+    /**
+     * The module product blocks' query.
+     *  - 'featured' maps to `is_new` (Builder integrity audit, 2026-09-11):
+     *    `is_featured` has never existed on `products`, and the old query
+     *    crashed every render;
+     *  - 'bestselling' is the shared 30-day sales ordering
+     *    (Product::scopeBestSelling, same as data binding best_selling_30d);
+     *  - anything else is newest first.
+     */
+    private function moduleProductQuery(string $source, string $categorySlug = ''): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Product::query()->active();
+        if ($categorySlug !== '') {
+            $query->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug));
+        }
+        if ($source === 'bestselling') {
+            $query->bestSelling(30);
+        } else {
+            if ($source === 'featured') {
+                $query->where('is_new', true);
+            }
+            $query->latest()->orderByDesc('products.id'); // same-second inserts stay newest-first
+        }
+        return $this->withProductRatings($query);
     }
 
     /**
@@ -638,13 +642,7 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $title = $this->escape($props['title'] ?? 'محصولات پیشنهادی');
         $limit = max(1, (int) ($props['limit'] ?? 6));
-        $source = $props['source'] ?? 'featured';
-
-        $query = Product::query()->active();
-        if ($source === 'featured') {
-            $query->where('is_new', true);
-        }
-        $products = $query->latest()->take($limit)->get();
+        $products = $this->moduleProductQuery($props['source'] ?? 'featured')->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
 
@@ -654,18 +652,7 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $slidesHtml = [];
         foreach ($products as $product) {
-            $url   = route('shop.show', $product->slug);
-            $t     = $this->escape($product->title);
-            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $imgHtml = $product->image
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
-                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $slidesHtml[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"max-width:20rem;margin:0 auto;display:block;\">{$imgHtml}
-                <div class=\"tb-product-card-inner\">
-                    <h3 class=\"tb-product-title\">{$t}</h3>
-                    <div class=\"tb-product-price\">{$price}</div>
-                </div>
-            </a>";
+            $slidesHtml[] = $this->productCard($this->productCardData($product));
         }
 
         $carousel = $this->renderCarousel(
@@ -1082,6 +1069,11 @@ class ThemeCanvasRenderer extends BlockRenderer
         $limit = max(1, (int) ($props['limit'] ?? 10));
         $style = ($props['style'] ?? 'accordion') === 'list' ? 'list' : 'accordion';
         $items = array_slice(is_array($props['items'] ?? null) ? $props['items'] : [], 0, $limit);
+
+        // Phase 3 (saas-platform ADR-068): one accordion — the canonical FAQ.
+        if ($style === 'accordion') {
+            return $this->renderFaq(['title' => $props['title'] ?? 'سوالات متداول', 'items' => $items], '', $id);
+        }
 
         if (empty($items)) {
             return "<div id=\"tb-{$id}\" class=\"tb-faq\">

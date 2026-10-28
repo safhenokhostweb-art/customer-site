@@ -432,28 +432,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         return "<div id=\"tb-{$id}\" class=\"tb-testimonials\">{$html}</div>";
     }
 
-    /**
-     * FAQ block: accordion from props or empty state.
-     */
-    #[HostOwnedOverride(
-        reason: 'Richer real behavior than canonical: a helpful empty-state hint (matching this codebase\'s established EMPTY_POLICY_PLACEHOLDER convention) and title/content field aliases. Not audited/merged into canonical this phase — residual for a future pass.',
-        category: HostOwnedOverride::REASON_UNMERGED_CAPABILITY,
-    )]
-    protected function renderFaq(array $props, string $inner, string $id): string
-    {
-        $title = $this->escape($props['title'] ?? 'سوالات متداول');
-        $items = $props['items'] ?? [];
-        if (empty($items)) {
-            return "<div id=\"tb-{$id}\" class=\"tb-faq\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2><p class=\"tb-text\">سوالات متداول از پنل مدیریت قابل ویرایش است.</p></div>";
-        }
-        $out = ["<h2 class=\"tb-heading tb-section-title\">{$title}</h2>"];
-        foreach ($items as $i => $item) {
-            $q = $this->escape($item['question'] ?? $item['title'] ?? 'سوال');
-            $a = $this->sanitizeHtml($item['answer'] ?? $item['content'] ?? '');
-            $out[] = "<details class=\"tb-faq-item\"><summary class=\"tb-faq-question\">{$q}</summary><div class=\"tb-faq-answer\">{$a}</div></details>";
-        }
-        return "<div id=\"tb-{$id}\" class=\"tb-faq\">" . implode('', $out) . "</div>";
-    }
+    // Phase 3 (saas-platform ADR-068): renderFaq() is canonical only — the
+    // empty-state hint, title/content aliases and sanitized rich answers
+    // this host used to add are merged into the package's renderFaq().
 
 
     /** Page builder: row wrapper (flex row). */
@@ -553,7 +534,8 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             foreach ((array) ($session?->get('cart', []) ?? []) as $line) {
                 $count += is_array($line) ? (int) ($line['quantity'] ?? 0) : 0;
             }
-            $cart = ['page' => $route('shop.cart'), 'mini' => $mini, 'add' => $route('shop.cart.add'), 'remove' => $route('shop.cart.remove'), 'count' => $count];
+            // Phase 3 (ADR-068): `update` drives the drawer's quantity stepper.
+            $cart = ['page' => $route('shop.cart'), 'mini' => $mini, 'add' => $route('shop.cart.add'), 'update' => $route('shop.cart.update'), 'remove' => $route('shop.cart.remove'), 'count' => $count];
         }
 
         return $this->siteEndpointsCache = [
@@ -687,7 +669,8 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             'original' => $hasDiscount ? (float) $product->price : null,
             'price_html' => CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
             'original_html' => $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null,
-            'badge' => $product->is_new ? 'جدید' : null,
+            // Phase 3 (ADR-068): «جدید» and «پرامتیاز» are derived by productCard().
+            'is_new' => (bool) $product->is_new,
             'stock' => $stock,
             'stock_label' => $stockLabel,
             'rating' => $product->rating_avg !== null ? round((float) $product->rating_avg, 1) : null,

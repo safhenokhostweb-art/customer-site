@@ -77,8 +77,10 @@ class CanonicalBlockDefinitionParityTest extends TestCase
             }
         }
 
-        // The one patch today: no sales-backed source on this host's renderer.
-        $this->assertSame(['recent', 'featured'], array_keys(HostRegistry::all()['module:shop_product_grid']['schema']['source']['options']));
+        // Phase 3 (saas-platform ADR-068): no patch is left — the bestselling
+        // source reads Product::scopeBestSelling on this host too.
+        $this->assertSame([], HostRegistry::HOST_PATCHES);
+        $this->assertSame(['recent', 'featured', 'bestselling'], array_keys(HostRegistry::all()['module:shop_product_grid']['schema']['source']['options']));
     }
 
     public function test_every_field_has_a_canvas_control(): void

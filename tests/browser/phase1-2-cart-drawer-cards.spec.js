@@ -88,20 +88,37 @@ test.describe('Phase 1/2 real cart drawer and product cards', () => {
         await expect(line).toBeVisible();
         await expect(line.locator('.tb-cart-drawer__price')).toContainText('۷۹۰٬۰۰۰');
         await expect(page.locator('.tb-toast').last()).toHaveText('به سبد اضافه شد.');
+
+        // Phase 3 (saas-platform ADR-068): the stepper on shop.cart.update,
+        // then removal, which asks first, inline.
+        const [up] = await Promise.all([
+            page.waitForResponse((r) => r.url().endsWith('/shop/cart/update')),
+            line.locator('[data-tb-cart-step="1"]').click(),
+        ]);
+        expect(up.status()).toBe(200);
+        await expect(line.locator('.tb-qty__value')).toHaveText('۲');
+        await expect(line.locator('.tb-cart-drawer__price')).toContainText('۱٬۵۸۰٬۰۰۰');
+        await drawer.screenshot({ path: 'tests/browser/.runtime/phase3-drawer-stepper.png' });
+        await line.locator('[data-tb-cart-remove]').click();
+        await expect(line.locator('.tb-cart-drawer__confirm')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(line.locator('.tb-cart-drawer__confirm')).toHaveCount(0);
+        await expect(drawer).toBeVisible();
+        await line.locator('[data-tb-cart-remove]').click();
+        const [rm] = await Promise.all([
+            page.waitForResponse((r) => r.url().endsWith('/shop/cart/remove')),
+            line.locator('[data-tb-cart-confirm]').click(),
+        ]);
+        expect(rm.status()).toBe(200);
+        await expect(page.locator('.tb-cart-drawer__item', { hasText: 'کیف آزمایشی فاز ۲' })).toHaveCount(0);
         await page.keyboard.press('Escape');
         await expect(drawer).toBeHidden();
 
+        // A theme header (when the fixture has one) opens the same drawer.
         const trigger = page.locator('[data-tb-cart-open]').first();
         if (await trigger.count()) {
-            await expect(trigger.locator('[data-tb-cart-count]')).not.toHaveText('۰');
             await trigger.click();
             await expect(drawer).toBeVisible();
-            const [rm] = await Promise.all([
-                page.waitForResponse((r) => r.url().endsWith('/shop/cart/remove')),
-                page.locator('.tb-cart-drawer__item', { hasText: 'کیف آزمایشی فاز ۲' }).locator('[data-tb-cart-remove]').click(),
-            ]);
-            expect(rm.status()).toBe(200);
-            await expect(page.locator('.tb-cart-drawer__item', { hasText: 'کیف آزمایشی فاز ۲' })).toHaveCount(0);
             await page.keyboard.press('Escape');
         }
 

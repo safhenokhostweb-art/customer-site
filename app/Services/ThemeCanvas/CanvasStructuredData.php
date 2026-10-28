@@ -46,8 +46,11 @@ class CanvasStructuredData
      * Block types whose props can contribute FAQ entities, with the prop key
      * holding the repeater. 'faq' is the installed canonical type
      * (see ThemeCanvas\BlockRegistry::faq — items[{question, answer}]).
+     * Phase 3 (saas-platform ADR-068): module:faq_dynamic carries the same
+     * items; only the `limit` it shows are published (structured data must
+     * match visible content).
      */
-    private const FAQ_BLOCK_TYPES = ['faq'];
+    private const FAQ_BLOCK_TYPES = ['faq', 'module:faq_dynamic'];
 
     /**
      * @param  array<int,mixed>  $blocks  the page's block tree
@@ -133,7 +136,18 @@ class CanvasStructuredData
             if (is_string($type) && in_array($type, self::FAQ_BLOCK_TYPES, true)) {
                 $props = $block['props'] ?? $block['data'] ?? [];
                 if (is_array($props)) {
-                    foreach ($this->normalizeItems($props['items'] ?? null) as $item) {
+                    $own = $this->normalizeItems($props['items'] ?? null);
+                    if ($type === 'module:faq_dynamic') {
+                        $own = array_slice($own, 0, max(1, (int) ($props['limit'] ?? 10)));
+                    }
+                    foreach ($own as $item) {
+                        // The visible accordion also reads title/content as aliases.
+                        if (is_array($item) && !isset($item['question']) && isset($item['title'])) {
+                            $item['question'] = $item['title'];
+                        }
+                        if (is_array($item) && !isset($item['answer']) && isset($item['content'])) {
+                            $item['answer'] = $item['content'];
+                        }
                         $items[] = $item;
                     }
                 }

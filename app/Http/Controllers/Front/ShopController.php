@@ -401,7 +401,7 @@ class ShopController extends Controller
         $lineKey = $request->line_key;
         $qty = (int) $request->quantity;
         if (! isset($cart[$lineKey])) {
-            return back()->with('error', 'ردیف سبد یافت نشد.');
+            return $this->cartFail($request, 'ردیف سبد یافت نشد.');
         }
         if ($qty <= 0) {
             unset($cart[$lineKey]);
@@ -413,33 +413,33 @@ class ShopController extends Controller
             } else {
                 $variant = $vid ? $product->variants->firstWhere('id', $vid) : null;
                 if ($vid && ! $variant) {
-                    return back()->with('error', 'تنوع نامعتبر است.');
+                    return $this->cartFail($request, 'تنوع نامعتبر است.');
                 }
                 if (! $vid && $product->usesVariants()) {
-                    return back()->with('error', 'این کالا نیاز به انتخاب تنوع دارد.');
+                    return $this->cartFail($request, 'این کالا نیاز به انتخاب تنوع دارد.');
                 }
                 $minQ = $variant ? max(1, (int) $variant->min_order_qty) : max(1, (int) $product->min_order_qty);
                 $maxQ = $variant ? $variant->max_order_qty : $product->max_order_qty;
                 if ($qty < $minQ) {
-                    return back()->with('error', 'حداقل تعداد سفارش ' . $minQ . ' است.');
+                    return $this->cartFail($request, 'حداقل تعداد سفارش ' . $minQ . ' است.');
                 }
                 if ($maxQ !== null && $qty > (int) $maxQ) {
-                    return back()->with('error', 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
+                    return $this->cartFail($request, 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
                 }
                 if ($product->is_bundle) {
                     $stockOk = $this->validateBundleStock($product, $qty);
                     if ($stockOk !== true) {
-                        return back()->with('error', $stockOk);
+                        return $this->cartFail($request, $stockOk);
                     }
                 } elseif (! $this->canFulfillQty($product, $variant, $qty)) {
-                    return back()->with('error', 'تعداد درخواستی از موجودی بیشتر است.');
+                    return $this->cartFail($request, 'تعداد درخواستی از موجودی بیشتر است.');
                 }
                 $cart[$lineKey]['quantity'] = $qty;
             }
         }
         session()->put('cart', $cart);
 
-        return back()->with('success', 'سبد به‌روزرسانی شد.');
+        return $this->cartDone($request, 'سبد به‌روزرسانی شد.');
     }
 
     public function removeFromCart(Request $request)
@@ -469,16 +469,26 @@ class ShopController extends Controller
         return response()->json($this->miniCart());
     }
 
-    /** @return array{count:int, subtotal_html:string, items:list<array<string,mixed>>} */
+    /**
+     * Phase 3 (saas-platform ADR-068): `unit_amount` (the per-unit number the
+     * formatter prints) and `money_suffix_html` let the drawer's quantity
+     * stepper show the new totals at once; these server figures replace them
+     * when the update answers.
+     *
+     * @return array{count:int, subtotal_html:string, money_suffix_html:string, unit:string, items:list<array<string,mixed>>}
+     */
     protected function miniCart(): array
     {
         $cart = ShopCartHelper::normalizeCart(session()->get('cart', []));
+        $money = \App\Helpers\CurrencyHelper::displayContext();
+        $unit = \App\Helpers\CurrencyHelper::unitLabel();
         $items = [];
         $count = 0;
         $subtotal = 0;
         foreach ($cart as $key => $line) {
             $qty = (int) ($line['quantity'] ?? 0);
-            $lineTotal = (int) ($line['price'] ?? 0) * $qty;
+            $unitPrice = (int) ($line['price'] ?? 0);
+            $lineTotal = $unitPrice * $qty;
             $count += $qty;
             $subtotal += $lineTotal;
             $image = (string) ($line['image'] ?? '');
@@ -487,13 +497,16 @@ class ShopController extends Controller
                 'title' => (string) ($line['title'] ?? ''),
                 'image' => $image !== '' ? \App\Helpers\ImageHelper::url($image) : null,
                 'quantity' => $qty,
-                'total_html' => \App\Helpers\CurrencyHelper::formatPrice($lineTotal) . ' ' . \App\Helpers\CurrencyHelper::unitLabel(),
+                'unit_amount' => \App\Helpers\CurrencyHelper::displayValueWithContext($unitPrice, $money),
+                'total_html' => \App\Helpers\CurrencyHelper::formatPriceWithContext($lineTotal, $money) . ' ' . $unit,
             ];
         }
 
         return [
             'count' => $count,
-            'subtotal_html' => \App\Helpers\CurrencyHelper::formatPrice($subtotal) . ' ' . \App\Helpers\CurrencyHelper::unitLabel(),
+            'subtotal_html' => \App\Helpers\CurrencyHelper::formatPriceWithContext($subtotal, $money) . ' ' . $unit,
+            'money_suffix_html' => \App\Helpers\CurrencyHelper::fadedZerosHtml($money),
+            'unit' => $unit,
             'items' => $items,
         ];
     }
