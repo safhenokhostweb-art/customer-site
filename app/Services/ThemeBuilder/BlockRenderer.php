@@ -359,7 +359,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
         $source = $props['source'] ?? 'latest';
 
-        $query = Post::published();
+        $query = Post::published()->with(['user:id,name,avatar', 'category:id,name,slug']);
         if ($source === 'category' && !empty($props['category_id'])) {
             $query->where('category_id', (int) $props['category_id']);
         } elseif ($source === 'manual' && !empty($props['manual_ids']) && is_array($props['manual_ids'])) {
@@ -378,36 +378,28 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         if ($posts->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading\">{$title}</h2><div class=\"tb-blog-posts-empty\"><p class=\"tb-text\">هنوز مطلبی منتشر نشده است.</p><a href=\"" . $this->escapeAttr(route('blog.index')) . "\" class=\"tb-btn tb-btn-primary\">وبلاگ</a></div></div>";
         }
+        // Phase 2 (saas-platform ADR-067): the shared blog card — category
+        // pill, author avatar, Persian date «۵ آبان ۱۴۰۵», reading time.
         $cards = [];
         foreach ($posts as $post) {
-            $url = route('blog.show', $post->slug);
-            $t = $this->escape($post->title);
-            $excerpt = $this->escape($post->previewText(120));
-            $date = $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'Y/m/d') : '';
-            $img = $this->imageWithFallback(
-                $post->featured_image ? \App\Helpers\ImageHelper::url($post->featured_image) : '',
-                $post->title,
-                'aspect-ratio:16/9;',
-                $this->iconHtml('file-text')
-            );
-            $cards[] = "<a href=\"{$url}\" class=\"tb-blog-card\">{$img}<div class=\"tb-blog-card-body\"><h3 class=\"tb-blog-card-title\">{$t}</h3><p class=\"tb-blog-card-meta\">{$date}</p><p class=\"tb-blog-card-excerpt\">{$excerpt}</p></div></a>";
+            $author = $post->user;
+            $category = $post->category;
+            $cards[] = $this->blogCardHtml([
+                'title' => $post->title,
+                'url' => route('blog.show', $post->slug),
+                'image' => $post->featured_image ? \App\Helpers\ImageHelper::url($post->featured_image) : '',
+                'excerpt' => $post->previewText(120),
+                'date' => $post->published_at ? \App\Helpers\Jalali::formatFa($post->published_at, 'j F Y') : '',
+                'date_iso' => $post->published_at ? $post->published_at->toDateString() : '',
+                'reading_minutes' => $post->estimatedReadingMinutes(),
+                'category' => $category?->name ?? '',
+                'category_url' => $category ? route('blog.category', $category->slug) : '',
+                'author' => $author?->name ?? '',
+                'author_avatar' => $author?->avatar_url ?? '',
+            ]);
         }
 
-        if ($layout === 'slider') {
-            $carousel = $this->renderCarousel(
-                $cards,
-                $id . '-track',
-                (bool) ($props['autoplay'] ?? true),
-                (int) ($props['interval'] ?? 5000),
-                'tb-blog-slider',
-                ['desktop' => 3, 'tablet' => 2, 'mobile' => 1]
-            );
-            return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2>{$carousel}</div>";
-        }
-
-        $colsClass = $layout === 'list' ? 'tb-grid-cols-1' : 'tb-grid-cols-3';
-        $html = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2><div class=\"tb-grid {$colsClass} tb-gap-lg tb-blog-grid\">" . implode('', $cards) . "</div>";
-        return "<div id=\"tb-{$id}\" class=\"tb-blog-posts\">{$html}</div>";
+        return $this->blogCardsLayout($cards, ['layout' => $layout] + $props, $id, $title);
     }
 
     /**
@@ -554,11 +546,22 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $session = request()->hasSession() ? request()->session() : null;
 
+        // Phase 1/2 (ADR-067): the header drawer and instant add-to-cart.
+        $cart = null;
+        if ($shop && ($mini = $route('shop.cart.mini'))) {
+            $count = 0;
+            foreach ((array) ($session?->get('cart', []) ?? []) as $line) {
+                $count += is_array($line) ? (int) ($line['quantity'] ?? 0) : 0;
+            }
+            $cart = ['page' => $route('shop.cart'), 'mini' => $mini, 'add' => $route('shop.cart.add'), 'remove' => $route('shop.cart.remove'), 'count' => $count];
+        }
+
         return $this->siteEndpointsCache = [
             'newsletter' => $route('newsletter.subscribe'),
             'csrf' => $session?->token(),
             'search' => $search,
             'suggest' => $suggest,
+            'cart' => $cart,
         ];
     }
 
@@ -578,13 +581,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         if (!\App\Helpers\SiteHelper::shopEnabled()) {
             return '';
         }
-        $cartUrl = route('shop.cart');
-        $count = 0;
-        foreach (session('cart', []) as $item) {
-            $count += (int) ($item['quantity'] ?? 0);
-        }
-        $badge = $count > 0 ? "<span style=\"background:#ef4444;color:#fff;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:999px;\">{$count}</span>" : '';
-        return "<a id=\"tb-{$id}\" href=\"{$cartUrl}\" class=\"tb-cart-link\" aria-label=\"سبد خرید\">" . $this->iconHtml('shopping-cart') . " سبد خرید {$badge}</a>";
+        // Phase 1 (ADR-067): the shared trigger — this tenant's cart page,
+        // the mini-cart drawer and a live count badge (see siteEndpoints()).
+        return $this->cartTriggerHtml('tb-cart-link', $this->iconHtml('shopping-cart') . ' سبد خرید', " id=\"tb-{$id}\"");
     }
 
 
@@ -644,7 +643,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             return "<div id=\"tb-{$id}\" class=\"tb-grid {$colsClass} tb-gap-md tb-product-grid-wrap\"><p class=\"tb-text\">ماژول فروشگاه غیرفعال است.</p></div>";
         }
 
-        $query = Product::query()->active();
+        $query = $this->withProductRatings(Product::query()->active());
         $products = $query->latest()->take($limit)->get();
 
         if ($products->isEmpty()) {
@@ -655,21 +654,55 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $cards = [];
         foreach ($products as $product) {
-            $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
-            $cards[] = $this->productCardHtml(
-                $product->title,
-                $product->image ? \App\Helpers\ImageHelper::url($product->image) : '',
-                (float) $product->effective_price,
-                $hasDiscount ? (float) $product->price : null,
-                $product->is_new ? 'جدید' : null,
-                null,
-                route('shop.show', $product->slug),
-                CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
-                $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null
-            );
+            $cards[] = $this->productCard($this->productCardData($product));
         }
 
         return "<div id=\"tb-{$id}\" class=\"tb-grid {$colsClass} tb-gap-md tb-product-grid-wrap\">" . implode('', $cards) . "</div>";
+    }
+
+    /**
+     * Phase 2 (saas-platform ADR-067): a real Product as the shared
+     * productCard() data — Toman prices through CurrencyHelper, the real
+     * discount, stock state against the low-stock threshold, the approved
+     * review average, and whether a variant must be picked first.
+     */
+    protected function productCardData(Product $product): array
+    {
+        $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
+        $stock = null;
+        $stockLabel = null;
+        if ($product->stock !== null && !$product->allow_backorder) {
+            $left = (int) $product->stock;
+            $stock = $left <= 0 ? 'out' : ($left <= (int) ($product->low_stock_threshold ?? 5) ? 'low' : 'in');
+            $stockLabel = $stock === 'low' ? 'تنها ' . $left . ' عدد باقی مانده' : null;
+        } elseif ($product->stock === null || $product->allow_backorder) {
+            $stock = 'in';
+        }
+
+        return [
+            'title' => $product->title,
+            'image' => $product->image ? \App\Helpers\ImageHelper::url($product->image) : '',
+            'url' => route('shop.show', $product->slug),
+            'price' => (float) $product->effective_price,
+            'original' => $hasDiscount ? (float) $product->price : null,
+            'price_html' => CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
+            'original_html' => $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null,
+            'badge' => $product->is_new ? 'جدید' : null,
+            'stock' => $stock,
+            'stock_label' => $stockLabel,
+            'rating' => $product->rating_avg !== null ? round((float) $product->rating_avg, 1) : null,
+            'reviews' => (int) ($product->rating_count ?? 0),
+            'product_id' => $product->id,
+            'needs_options' => $product->usesVariants() || (bool) $product->early_access,
+        ];
+    }
+
+    /** Adds the approved-review average and count used by productCardData(). */
+    protected function withProductRatings($query)
+    {
+        return $query
+            ->withAvg(['reviews as rating_avg' => fn ($q) => $q->where('approved', true)], 'rating')
+            ->withCount(['reviews as rating_count' => fn ($q) => $q->where('approved', true)]);
     }
 
     // Alias so Str::studly('blog_posts') falls through correctly

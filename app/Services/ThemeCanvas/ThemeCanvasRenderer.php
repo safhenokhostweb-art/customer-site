@@ -1736,7 +1736,7 @@ class ThemeCanvasRenderer extends BlockRenderer
         $columns = max(2, min(4, (int) ($props['columns'] ?? 3)));
         $source = $props['source'] ?? 'latest';
 
-        $query = Product::query()->active();
+        $query = $this->withProductRatings(Product::query()->active());
         if ($source === 'new') {
             $query->where('is_new', true);
         } elseif ($source === 'category' && !empty($props['category_id'])) {
@@ -1760,28 +1760,11 @@ class ThemeCanvasRenderer extends BlockRenderer
             return "<div id=\"tb-{$id}\" class=\"tb-module-products tb-section\"><div class=\"tb-container\">{$titleHtml}</div></div>";
         }
 
+        // Phase 2 (saas-platform ADR-067): the shared commercial card with
+        // the real discount, stock, rating and instant add-to-cart.
         $cards = [];
         foreach ($products as $product) {
-            $badge = $product->is_new ? 'جدید' : null;
-            $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
-            if ($hasDiscount && $badge === null) {
-                $badge = 'تخفیف';
-            }
-            $stockLabel = $product->stock !== null
-                ? ((int) $product->stock > 0 ? (((int) $product->stock <= (int) ($product->low_stock_threshold ?? 5)) ? 'تنها ' . (int) $product->stock . ' عدد باقی مانده' : 'موجود') : 'ناموجود')
-                : null;
-
-            $cards[] = $this->productCardHtml(
-                $product->title,
-                $product->image ? ImageHelper::url($product->image) : '',
-                (float) $product->effective_price,
-                $hasDiscount ? (float) $product->price : null,
-                $badge,
-                $stockLabel,
-                route('shop.show', $product->slug),
-                CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
-                $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null
-            );
+            $cards[] = $this->productCard($this->productCardData($product));
         }
 
         $carousel = $this->renderCarousel(

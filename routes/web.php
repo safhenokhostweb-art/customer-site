@@ -335,6 +335,8 @@ Route::middleware('install.check')->group(function () {
         Route::post('/shop/stock-notify', [ShopController::class, 'stockNotify'])->middleware('throttle:shop-stock-notify')->name('shop.stock-notify');
         Route::post('/shop/{slug}/reviews', [ShopController::class, 'storeReview'])->middleware('throttle:shop-review')->name('shop.reviews.store');
         Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
+        // Phase 1/2 (saas-platform ADR-067): the theme header's mini-cart drawer.
+        Route::get('/shop/cart/mini', [ShopController::class, 'mini'])->name('shop.cart.mini');
         Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->middleware('throttle:shop-cart')->name('shop.cart.add');
         Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->middleware('throttle:shop-cart')->name('shop.cart.update');
         Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->middleware('throttle:shop-cart')->name('shop.cart.remove');
