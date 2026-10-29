@@ -680,6 +680,28 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         ];
     }
 
+    /**
+     * Phase 3b (saas-platform ADR-069): a bento cell's live product — the
+     * chosen `product_id`, or the newest when 0 — on the shared card.
+     */
+    #[HostOwnedOverride(
+        reason: 'Queries the real tenant Product for a bento product cell — the canonical version shows a labelled sample card, since saas-platform has no Product model. Real tenant-data adapter.',
+        category: HostOwnedOverride::REASON_TENANT_DATA,
+    )]
+    protected function bentoProductHtml(array $item): string
+    {
+        if (!\App\Helpers\SiteHelper::shopEnabled()) {
+            return '';
+        }
+        $id = max(0, (int) ($item['product_id'] ?? 0));
+        $query = $this->withProductRatings(Product::query()->active());
+        $product = $id > 0 ? $query->whereKey($id)->first() : $query->latest()->orderByDesc('products.id')->first();
+
+        return $product !== null
+            ? $this->productCard($this->productCardData($product))
+            : '<p class="tb-bento-note">محصولی برای نمایش پیدا نشد.</p>';
+    }
+
     /** Adds the approved-review average and count used by productCardData(). */
     protected function withProductRatings($query)
     {

@@ -110,8 +110,8 @@ class Product extends Model
     }
 
     /**
-     * Products with completed sales in the last $days days, highest revenue
-     * first — the one «پرفروش» ordering (theme data binding best_selling_30d
+     * Products sold in paid orders (Order::SOLD_STATUSES — cancelled and
+     * pending excluded) in the last $days days, highest revenue first — the one «پرفروش» ordering (theme data binding best_selling_30d
      * and module:shop_product_grid source=bestselling). Products with no sale
      * in the window are left out. Call it before withAvg()/withCount(): it
      * selects products.* only when nothing is selected yet.
@@ -120,7 +120,7 @@ class Product extends Model
     {
         $sales = \Illuminate\Support\Facades\DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.status', Order::STATUS_COMPLETED)
+            ->whereIn('orders.status', Order::SOLD_STATUSES)
             ->where('orders.created_at', '>=', now()->subDays($days))
             ->groupBy('order_items.product_id')
             ->selectRaw('order_items.product_id, SUM(order_items.total) AS binding_revenue');

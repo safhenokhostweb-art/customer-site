@@ -1332,6 +1332,19 @@ class ThemeCanvasRenderer extends BlockRenderer
 
     // ── Reviews (cross-product, distinct from renderTestimonials) ──────────────
 
+    /**
+     * Phase 3b (saas-platform ADR-069): real approved product reviews on the
+     * shared review card — SVG stars, Jalali date, avatar initial, and
+     * «خریدار تاییدشده» when the reviewer's account has a paid order
+     * (Order::SOLD_STATUSES) containing that product.
+     *
+     *  - `product_id` > 0: that product's reviews inside one schema.org
+     *    Product scope, with the breakdown as its AggregateRating (over all
+     *    its approved reviews) and each card as a nested Review;
+     *  - 0: the latest reviews of every product, each a standalone Review
+     *    whose itemReviewed is its product; the breakdown covers the store
+     *    and carries no microdata (it rates no single item).
+     */
     protected function renderModuleReviewsGrid(array $props, string $id): string
     {
         if (!SiteHelper::moduleEnabled('reviews')) {
@@ -1342,43 +1355,89 @@ class ThemeCanvasRenderer extends BlockRenderer
         $limit      = max(1, (int) ($props['limit'] ?? 6));
         $showAvatar = $props['show_avatar'] ?? true;
         $style      = ($props['style'] ?? 'cards') === 'minimal' ? 'minimal' : 'cards';
+        $productId  = max(0, (int) ($props['product_id'] ?? 0));
+        $titleHtml  = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>";
 
         if (!class_exists(\App\Models\ProductReview::class)) {
-            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
+            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">{$titleHtml}</div>";
         }
 
-        $reviews = \App\Models\ProductReview::with('product:id,title,slug')
-            ->approved()
-            ->latest()
-            ->take($limit)
-            ->get();
+        $scope = fn () => \App\Models\ProductReview::query()->approved()->when($productId > 0, fn ($q) => $q->where('product_id', $productId));
+        $reviews = $scope()->with(['product:id,title,slug', 'user:id,name'])->latest()->orderByDesc('id')->take($limit)->get();
 
         if ($reviews->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">
-                <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
+                {$titleHtml}
                 <p class=\"tb-text\">هنوز نظری ثبت نشده است.</p>
             </div>";
         }
 
+        $verified = $this->verifiedReviewPairs($reviews);
+        $product = $productId > 0 ? $reviews->first()->product : null;
+
         $cards = [];
         foreach ($reviews as $review) {
-            $name        = $this->escape($review->guest_name ?: 'کاربر');
-            $body        = $this->escape(Str::limit($review->body ?? '', 180));
-            $rating      = (int) ($review->rating ?? 5);
-            $stars       = str_repeat('★', min(5, max(0, $rating))) . str_repeat('☆', 5 - min(5, max(0, $rating)));
-            $avatar      = $showAvatar ? "<div class=\"tb-review-avatar\">" . mb_substr($name, 0, 1) . "</div>" : '';
-            $productName = $review->product->title ?? '';
-            $productLine = $productName ? "<p class=\"tb-review-product\">" . $this->escape($productName) . "</p>" : '';
-            $cards[] = $style === 'minimal'
-                ? "<div class=\"tb-review-minimal\" style=\"padding:0.75rem 0;border-bottom:1px solid #e5e7eb;\">{$avatar}<span class=\"tb-testimonial-rating\">{$stars}</span> <strong>{$name}</strong>: <span class=\"tb-testimonial-text\">{$body}</span>{$productLine}</div>"
-                : "<div class=\"tb-testimonial-card\">{$avatar}<div class=\"tb-testimonial-rating\">{$stars}</div><p class=\"tb-testimonial-text\">{$body}</p><p class=\"tb-testimonial-author\">— {$name}</p>{$productLine}</div>";
+            $name = trim((string) ($review->guest_name ?: $review->user?->name ?? '')) ?: 'کاربر';
+            if ($style === 'minimal') {
+                $body   = $this->escape(Str::limit($review->body ?? '', 180));
+                $rating = (int) ($review->rating ?? 5);
+                $stars  = str_repeat('★', min(5, max(0, $rating))) . str_repeat('☆', 5 - min(5, max(0, $rating)));
+                $avatar = $showAvatar ? "<div class=\"tb-review-avatar\">" . $this->escape(mb_substr($name, 0, 1)) . "</div>" : '';
+                $productLine = ($review->product->title ?? '') !== '' ? "<p class=\"tb-review-product\">" . $this->escape($review->product->title) . "</p>" : '';
+                $cards[] = "<div class=\"tb-review-minimal\" style=\"padding:0.75rem 0;border-bottom:1px solid #e5e7eb;\">{$avatar}<span class=\"tb-testimonial-rating\">{$stars}</span> <strong>" . $this->escape($name) . "</strong>: <span class=\"tb-testimonial-text\">{$body}</span>{$productLine}</div>";
+                continue;
+            }
+            $cards[] = $this->reviewCardHtml([
+                'name' => $name,
+                'title' => $review->title ?? '',
+                'text' => Str::limit($review->body ?? '', 280),
+                'rating' => (int) ($review->rating ?? 0),
+                'date' => $review->created_at?->format('Y-m-d') ?? '',
+                'verified' => isset($verified[$review->user_id . ':' . $review->product_id]),
+                'item' => $review->product ? ['name' => $review->product->title, 'url' => route('shop.show', $review->product->slug)] : [],
+                'schema' => $style === 'cards' ? ($product !== null ? 'nested' : 'standalone') : null,
+                'show_avatar' => $showAvatar,
+            ]);
         }
 
-        $wrapClass = $style === 'minimal' ? 'tb-reviews-minimal-list' : 'tb-testimonials-grid';
-        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews tb-module-reviews-{$style}\">
-            <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
-            <div class=\"{$wrapClass}\">" . implode('', $cards) . "</div>
-        </div>";
+        $summary = '';
+        if ($this->flag($props['show_summary'] ?? true) && $style === 'cards') {
+            $counts = $scope()->selectRaw('rating, COUNT(*) AS n')->groupBy('rating')->pluck('n', 'rating')->map(fn ($n) => (int) $n)->all();
+            $summary = $this->ratingSummaryHtml($counts, $product !== null);
+        }
+
+        $wrapClass = $style === 'minimal' ? 'tb-reviews-minimal-list' : 'tb-testimonials-grid cols-3';
+        $inner = $titleHtml . $summary . "<div class=\"{$wrapClass}\">" . implode('', $cards) . "</div>";
+        if ($product !== null && $style === 'cards') {
+            $inner = '<div itemscope itemtype="https://schema.org/Product"><meta itemprop="name" content="' . $this->escapeAttr($product->title) . '">'
+                . '<link itemprop="url" href="' . e(route('shop.show', $product->slug)) . '">' . $inner . '</div>';
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews tb-module-reviews-{$style}\">{$inner}</div>";
+    }
+
+    /**
+     * "userId:productId" pairs among these reviews whose account bought that
+     * product in a paid order — one query for the whole list.
+     *
+     * @param \Illuminate\Support\Collection<int, \App\Models\ProductReview> $reviews
+     * @return array<string, true>
+     */
+    private function verifiedReviewPairs($reviews): array
+    {
+        $userIds = $reviews->pluck('user_id')->filter()->unique()->values()->all();
+        if ($userIds === []) {
+            return [];
+        }
+        return \Illuminate\Support\Facades\DB::table('orders')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->whereIn('orders.status', \App\Models\Order::SOLD_STATUSES)
+            ->whereIn('orders.user_id', $userIds)
+            ->whereIn('order_items.product_id', $reviews->pluck('product_id')->filter()->unique()->values()->all())
+            ->distinct()
+            ->get(['orders.user_id', 'order_items.product_id'])
+            ->mapWithKeys(fn ($row) => [$row->user_id . ':' . $row->product_id => true])
+            ->all();
     }
 
     // ── Motion Graphics bridge ──────────────────────────────────────────────

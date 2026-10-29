@@ -122,22 +122,28 @@ class ThemePhase3CommerceTest extends TestCase
         $this->assertSame(['recent', 'featured', 'bestselling'], array_keys(HostRegistry::all()['module:shop_product_grid']['schema']['source']['options']));
     }
 
-    public function test_bestselling_orders_by_30_day_completed_revenue(): void
+    public function test_bestselling_orders_by_30_day_paid_revenue(): void
     {
         $low = $this->product(['title' => 'کم‌فروش']);
         $top = $this->product(['title' => 'پرفروش‌ترین']);
+        $shipped = $this->product(['title' => 'در راه']);
+        $paid = $this->product(['title' => 'پرداخت‌شده']);
         $old = $this->product(['title' => 'فروش قدیمی']);
         $pending = $this->product(['title' => 'سفارش باز']);
+        $cancelled = $this->product(['title' => 'لغوشده']);
         $this->product(['title' => 'بدون فروش']);
         $this->sell($low, 100000);
-        $this->sell($top, 900000);
+        $this->sell($top, 900000, 'processing');
         $this->sell($top, 50000);
+        $this->sell($shipped, 400000, 'shipped');
+        $this->sell($paid, 200000, 'paid');
         $this->sell($old, 5000000, 'completed', now()->subDays(31)->toDateTimeString());
         $this->sell($pending, 5000000, 'pending');
+        $this->sell($cancelled, 9000000, 'cancelled');
 
         $html = $this->live()->renderBlock(['type' => 'module:shop_product_grid', 'id' => 'g', 'props' => ['source' => 'bestselling', 'limit' => 8]]);
         preg_match_all('#<h3 class="tb-product-title">([^<]+)</h3>#u', $html, $m);
-        $this->assertSame(['پرفروش‌ترین', 'کم‌فروش'], $m[1]);
+        $this->assertSame(['پرفروش‌ترین', 'در راه', 'پرداخت‌شده', 'کم‌فروش'], $m[1], 'paid statuses count; pending, cancelled and older sales do not');
         $this->assertStringContainsString('class="tb-product-card', $html, 'the shared commercial card');
     }
 
