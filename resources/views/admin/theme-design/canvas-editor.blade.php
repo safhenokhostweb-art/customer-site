@@ -850,6 +850,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     >
                                 </template>
 
+                                {{-- Phase 0.6 (ADR-065): the shared searchable SVG icon picker. --}}
+                                <template x-if="schemaDef.type === 'icon'">
+                                    @include('theme-runtime::canvas.icon-picker', [
+                                        'value' => "selectedBlock.props[propKey] ?? schemaDef.default ?? ''",
+                                        'set' => "selectedBlock.props[propKey] = __icon; schedulePropUpdate()",
+                                        'id' => 'propKey',
+                                        'label' => "schemaDef.label || propKey",
+                                    ])
+                                </template>
+
                                 {{-- TASK 3/3 Phase 6.5C (BLD-28) — internal-link-capable adapter
                                      for button/CTA/hero action URL fields. A plain string stays a
                                      raw custom URL (unchanged, backward compatible); an
@@ -909,11 +919,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                      endpoints; individual blocks never own an uploader. --}}
                                 <template x-if="isMediaControl(schemaDef, propKey, selectedBlock?.type)">
                                     <div class="space-y-2">
-                                        <template x-if="mediaSrc(selectedBlock.props[propKey])">
+                                        <template x-if="mediaSrc(selectedBlock.props[propKey]) && schemaDef.media_kind !== 'video'">
                                             <img :src="mediaSrc(selectedBlock.props[propKey])" :data-testid="'tb-media-preview-' + propKey" class="w-full h-28 object-cover rounded-lg border border-slate-200">
                                         </template>
                                         <div class="flex gap-2">
-                                            <input type="url" :value="mediaSrc(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" placeholder="آدرس تصویر (یا انتخاب از کتابخانه)" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                            <input type="url" :value="mediaSrc(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" :data-testid="'tb-media-value-' + propKey" :placeholder="schemaDef.media_kind === 'video' ? 'آدرس ویدیو (یا انتخاب از کتابخانه)' : 'آدرس تصویر (یا انتخاب از کتابخانه)'" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                             <button @click="openMediaPicker(propKey)" :data-testid="'tb-media-picker-' + propKey" class="px-2 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 text-xs transition">📁</button>
                                         </div>
                                     </div>
@@ -1004,7 +1014,24 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                         <template x-if="deepFieldDef.type === 'textarea'">
                                                                                                             <textarea :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                                         </template>
-                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea'">
+                                                                                                        <template x-if="deepFieldDef.type === 'link'">
+                                                                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type === 'boolean'">
+                                                                                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                                                                                <input type="checkbox" role="switch" :checked="isTruthyField(deepItem[deepFieldKey])" @change="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`">
+                                                                                                                <span class="text-[10px] text-slate-600" x-text="isTruthyField(deepItem[deepFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
+                                                                                                            </label>
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type === 'icon'">
+                                                                                                            @include('theme-runtime::canvas.icon-picker', [
+                                                                                                                'value' => "deepItem[deepFieldKey] ?? ''",
+                                                                                                                'set' => "updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, __icon, schemaDef)",
+                                                                                                                'id' => '`${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`',
+                                                                                                                'label' => "deepFieldDef.label || deepFieldKey",
+                                                                                                            ])
+                                                                                                        </template>
+                                                                                                        <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea' && deepFieldDef.type !== 'link' && deepFieldDef.type !== 'boolean' && deepFieldDef.type !== 'icon'">
                                                                                                             <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                                         </template>
                                                                                                     </div>
@@ -1017,7 +1044,24 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                 <template x-if="nestedFieldDef.type === 'textarea'">
                                                                                     <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                 </template>
-                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater'">
+                                                                                <template x-if="nestedFieldDef.type === 'link'">
+                                                                                    <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type === 'boolean'">
+                                                                                    <label class="flex items-center gap-2 cursor-pointer">
+                                                                                        <input type="checkbox" role="switch" :checked="isTruthyField(nestedItem[nestedFieldKey])" @change="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        <span class="text-[10px] text-slate-600" x-text="isTruthyField(nestedItem[nestedFieldKey]) ? 'فعال' : 'غیرفعال'"></span>
+                                                                                    </label>
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type === 'icon'">
+                                                                                    @include('theme-runtime::canvas.icon-picker', [
+                                                                                        'value' => "nestedItem[nestedFieldKey] ?? ''",
+                                                                                        'set' => "updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, __icon, schemaDef)",
+                                                                                        'id' => '`${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`',
+                                                                                        'label' => "nestedFieldDef.label || nestedFieldKey",
+                                                                                    ])
+                                                                                </template>
+                                                                                <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater' && nestedFieldDef.type !== 'link' && nestedFieldDef.type !== 'boolean' && nestedFieldDef.type !== 'icon'">
                                                                                     <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                 </template>
                                                                             </div>
@@ -1029,9 +1073,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                         </template>
                                                         <template x-if="fieldDef.type === 'boolean'">
                                                             <label class="flex items-center gap-2 cursor-pointer">
-                                                                <input type="checkbox" :checked="!!item[fieldKey]" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`">
-                                                                <span class="text-[11px] text-slate-600" x-text="item[fieldKey] ? 'فعال' : 'غیرفعال'"></span>
+                                                                <input type="checkbox" role="switch" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :checked="isTruthyField(item[fieldKey])" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.checked, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <span class="text-[11px] text-slate-600" x-text="isTruthyField(item[fieldKey]) ? 'فعال' : 'غیرفعال'"></span>
                                                             </label>
+                                                        </template>
+                                                        <template x-if="fieldDef.type === 'link'">
+                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                         </template>
                                                         <template x-if="fieldDef.type === 'select'">
                                                             <select :value="item[fieldKey] ?? ''" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
@@ -1040,7 +1087,15 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                 </template>
                                                             </select>
                                                         </template>
-                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select'">
+                                                        <template x-if="fieldDef.type === 'icon'">
+                                                            @include('theme-runtime::canvas.icon-picker', [
+                                                                'value' => "item[fieldKey] ?? ''",
+                                                                'set' => "updateStructuredField(propKey, itemIndex, fieldKey, __icon, schemaDef)",
+                                                                'id' => '`${propKey}-${itemIndex}-${fieldKey}`',
+                                                                'label' => "fieldDef.label || fieldKey",
+                                                            ])
+                                                        </template>
+                                                        <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select' && fieldDef.type !== 'link' && fieldDef.type !== 'icon'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
                                                                     <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
@@ -1124,28 +1179,78 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :data-testid="'tb-prop-' + propKey"
                                     >
+                                        {{-- Phase 0.2c: each option states its own selected state —
+                                             x-model alone set the value before x-for had rendered the
+                                             options, so the select could show the first option instead
+                                             of the stored value. --}}
                                         <template x-for="(label, val) in schemaDef.options" :key="val">
-                                            <option :value="val" x-text="label"></option>
+                                            <option :value="val" :selected="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val)" x-text="label"></option>
                                         </template>
                                     </select>
                                 </template>
 
+                                {{-- Phase 0.5 (ADR-064): the same colour control as the platform
+                                     Canvas — theme swatches stored as var(--tb-…) so the block follows
+                                     the theme, opacity (rgba() or a color-mix() of the swatch) and
+                                     explicit transparent, on the shared theme-runtime CanvasColor. --}}
                                 <template x-if="isColorControl(schemaDef, propKey, selectedBlock?.type)">
-                                    <div class="space-y-2">
+                                    <div class="space-y-2" :data-testid="'tb-color-' + propKey">
                                         <div class="flex items-center gap-2">
-                                        <input type="color" :value="colorInputValue(selectedBlock.props[propKey])" @input="selectedBlock.props[propKey] = $event.target.value; schedulePropUpdate()" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text"  x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" :data-testid="'tb-prop-' + propKey">
-                                        <button type="button" @click="clearColor(propKey, schemaDef.default ?? '')" class="px-2 py-1.5 rounded border border-slate-200 text-xs text-slate-600 hover:bg-slate-50">پاک‌کردن</button>
+                                            <span class="relative w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0" style="background-image:conic-gradient(#e2e8f0 25%,#fff 0 50%,#e2e8f0 0 75%,#fff 0);background-size:10px 10px;" aria-hidden="true">
+                                                <span class="absolute inset-0" :style="'background:' + colorPreview(selectedBlock.props[propKey])" :data-testid="'tb-color-preview-' + propKey"></span>
+                                            </span>
+                                            <input type="color" :value="colorInputValue(selectedBlock.props[propKey])" @input="setColorBase(propKey, $event.target.value)" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" aria-label="انتخاب رنگ دلخواه">
+                                            <input type="text" dir="ltr" x-model="selectedBlock.props[propKey]" @input="schedulePropUpdate()" class="flex-1 min-w-0 text-xs px-2.5 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono" placeholder="#000000" aria-label="مقدار رنگ" :data-testid="'tb-prop-' + propKey">
+                                            <button type="button" @click="clearColor(propKey, schemaDef.default ?? '')" class="px-2 py-1.5 rounded border border-slate-200 text-xs text-slate-600 hover:bg-slate-50">پاک‌کردن</button>
                                         </div>
-                                        <div class="flex flex-wrap gap-1.5" aria-label="پالت رنگ قالب">
+                                        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="رنگ‌های قالب">
                                             <template x-for="color in themePalette()" :key="color.token">
-                                                <button type="button" @click="selectThemeColor(propKey, color)" :data-testid="'tb-theme-color-' + propKey + '-' + color.token" :title="color.label" class="w-6 h-6 rounded-full border-2 border-white shadow ring-1 ring-slate-200 hover:scale-110 transition" :style="'background:' + color.value"></button>
+                                                <button type="button" @click="selectThemeColor(propKey, color)" :data-testid="'tb-theme-color-' + propKey + '-' + color.token" :title="color.label" :aria-label="color.label"
+                                                    :aria-pressed="colorParse(selectedBlock.props[propKey]).token === color.token ? 'true' : 'false'"
+                                                    :class="colorParse(selectedBlock.props[propKey]).token === color.token ? 'ring-2 ring-indigo-500 ring-offset-1' : 'ring-1 ring-slate-200'"
+                                                    class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" :style="'background:' + color.value"></button>
                                             </template>
+                                            <button type="button" @click="selectedBlock.props[propKey] = 'transparent'; schedulePropUpdate()" :aria-pressed="colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 'true' : 'false'"
+                                                :class="colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 'ring-2 ring-indigo-500' : 'ring-1 ring-slate-200'"
+                                                class="px-2 h-6 rounded-full text-[11px] text-slate-600 bg-white" :data-testid="'tb-color-transparent-' + propKey">بی‌رنگ</button>
                                         </div>
+                                        <label class="flex items-center gap-2 text-[11px] text-slate-600">
+                                            <span class="shrink-0">شفافیت</span>
+                                            <input type="range" min="0" max="100" step="5" class="flex-1 accent-indigo-600" :value="colorParse(selectedBlock.props[propKey]).alpha" @input="setColorAlpha(propKey, Number($event.target.value))"
+                                                :disabled="!['token', 'hex', 'rgba'].includes(colorParse(selectedBlock.props[propKey]).kind)" :data-testid="'tb-color-alpha-' + propKey" aria-label="میزان شفافیت رنگ">
+                                            <span class="w-9 text-left tabular-nums" x-text="(colorParse(selectedBlock.props[propKey]).kind === 'transparent' ? 0 : colorParse(selectedBlock.props[propKey]).alpha) + '٪'"></span>
+                                        </label>
                                     </div>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'textarea'">
+                                {{-- Phase 0.2c: schema-less list props (type: array, no
+                                     `fields` — accordion items, manual id lists), the same
+                                     guarded JSON editor as the platform Canvas. An invalid
+                                     draft is never written to the block. --}}
+                                <template x-if="schemaDef.type === 'array'">
+                                    <div x-data="{ jsonDraft: null, jsonDraftFor: null, jsonError: '' }">
+                                        <textarea dir="ltr" rows="5" spellcheck="false" :data-testid="'tb-prop-' + propKey"
+                                            :value="(jsonDraftFor === selectedBlock.id && jsonDraft !== null) ? jsonDraft : JSON.stringify(selectedBlock.props[propKey] ?? schemaDef.default ?? [], null, 2)"
+                                            @input="
+                                                jsonDraft = $event.target.value; jsonDraftFor = selectedBlock.id;
+                                                try {
+                                                    const parsed = JSON.parse(jsonDraft);
+                                                    if (!Array.isArray(parsed)) throw new Error('not a list');
+                                                    jsonError = '';
+                                                    selectedBlock.props[propKey] = parsed;
+                                                    schedulePropUpdate();
+                                                } catch (_) { jsonError = 'JSON نامعتبر است؛ تا اصلاح نشود ذخیره نمی‌شود.'; }
+                                            "
+                                            @blur="if (!jsonError) { jsonDraft = null; jsonDraftFor = null; }"
+                                            class="w-full text-[11px] leading-5 px-2.5 py-2 rounded-lg border bg-white font-mono resize-y focus:outline-none focus:ring-2"
+                                            :class="jsonError ? 'border-rose-300 focus:ring-rose-200' : 'border-slate-200 focus:ring-indigo-300'"></textarea>
+                                        <p class="text-[10px] mt-1" :class="jsonError ? 'text-rose-600' : 'text-slate-400'" x-text="jsonError || 'ویرایش پیشرفته (فهرست JSON)'"></p>
+                                    </div>
+                                </template>
+
+                                {{-- also multi-line `text` and `rich_text` (sanitized at render
+                                     time), which had no control at all --}}
+                                <template x-if="schemaDef.type === 'textarea' || schemaDef.type === 'text' || schemaDef.type === 'rich_text'">
                                     <textarea
                                         x-model="selectedBlock.props[propKey]"
                                         @input="schedulePropUpdate()"
@@ -1616,6 +1721,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 {{-- Phase 6.1-B: one include = runtime -> identity (version-gated) -> interaction.
      No host structural services on this surface yet ([]), kept in sync with
      the platform's own editor pages which use the same bootstrap partial. --}}
+@include('theme-runtime::canvas.color')
+@include('theme-runtime::canvas.icons')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
@@ -1751,7 +1858,10 @@ function canvasEditor() {
         },
         get selectedSchema() {
             if (!this.selectedBlock) return {};
-            return BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+            // A `blocks` field is the container's child list, authored in
+            // the children panel — it has no content-tab control.
+            const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
+            return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
         },
         get selectedEditorCapabilities() {
             return this.selectedBlock
@@ -2023,10 +2133,28 @@ function canvasEditor() {
         // genuinely nested field (nav_footer.columns[].links) — deliberately
         // not a generic recursive mechanism; these operate on
         // structuredItems()[itemIndex][fieldKey] directly.
+        // Phase 0.2b (ADR-061): a nested list may still be a legacy JSON
+        // string, and older content stores scalar items (["a", "b"] for
+        // pricing features). Both are presented in the declared shape —
+        // scalars as {firstField: value}, which every renderer accepts — so
+        // copying an item before an edit never spreads a string into
+        // {0: "a", 1: "b", …}.
+        listItems(raw, def) {
+            let items = raw;
+            if (typeof items === 'string' && items.trim() !== '') {
+                try { items = JSON.parse(items); } catch (_) { items = []; }
+            }
+            if (!Array.isArray(items)) return [];
+            const key = Object.keys(def?.fields ?? {})[0];
+            return key ? items.map(it => (typeof it === 'string' || typeof it === 'number') ? { [key]: it } : it) : items;
+        },
+        nestedSchema(propKey, fieldKey, deepFieldKey = null) {
+            const def = this.selectedSchema?.[propKey]?.fields?.[fieldKey];
+            return deepFieldKey === null ? def : def?.fields?.[deepFieldKey];
+        },
         nestedItems(propKey, itemIndex, fieldKey) {
             const items = this.structuredItems(propKey);
-            const raw = items?.[itemIndex]?.[fieldKey];
-            return Array.isArray(raw) ? raw : [];
+            return this.listItems(items?.[itemIndex]?.[fieldKey], this.nestedSchema(propKey, fieldKey));
         },
         persistNestedItems(propKey, itemIndex, fieldKey, nestedItems, schemaDef) {
             const items = this.structuredItems(propKey).map(it => ({ ...it }));
@@ -2062,8 +2190,18 @@ function canvasEditor() {
         // still not a generic recursive mechanism.
         deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey) {
             const nested = this.nestedItems(propKey, itemIndex, fieldKey);
-            const raw = nested?.[nestedIndex]?.[deepFieldKey];
-            return Array.isArray(raw) ? raw : [];
+            return this.listItems(nested?.[nestedIndex]?.[deepFieldKey], this.nestedSchema(propKey, fieldKey, deepFieldKey));
+        },
+        // A link field's editable URL: plain strings as-is, structured
+        // {url, …} links by their url; edits keep whichever shape exists.
+        linkFieldUrl(value) {
+            return (value && typeof value === 'object') ? (value.url ?? '') : (value ?? '');
+        },
+        linkFieldValue(current, url) {
+            return (current && typeof current === 'object' && !Array.isArray(current)) ? { ...current, url } : url;
+        },
+        isTruthyField(value) {
+            return value === true || value === 1 || value === '1' || value === 'true';
         },
         persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepItems, schemaDef) {
             const nested = this.nestedItems(propKey, itemIndex, fieldKey).map(it => ({ ...it }));
@@ -2117,19 +2255,34 @@ function canvasEditor() {
                 'contact_info:background',
             ].includes(`${blockType}:${propKey}`);
         },
+        // Phase 0.5 (ADR-064): the swatches and the colour value model are the
+        // shared theme-runtime CanvasColor (canvas-color.js), same as the
+        // platform Canvas.
         themePalette() {
-            return [
-                { token: 'primary', label: 'رنگ اصلی قالب', value: this.globalStyles.primary_color || '#4f46e5' },
-                { token: 'secondary', label: 'رنگ ثانویه قالب', value: this.globalStyles.secondary_color || '#6366f1' },
-                { token: 'background', label: 'پس‌زمینه قالب', value: this.globalStyles.background_color || '#f9fafb' },
-                { token: 'text', label: 'متن قالب', value: this.globalStyles.text_color || '#111827' },
-            ];
+            return window.CanvasColor.palette(this.globalStyles);
         },
+        colorParse(value) { return window.CanvasColor.parse(value, this.themePalette()); },
+        colorPreview(value) { return window.CanvasColor.previewCss(value, this.themePalette()); },
         selectThemeColor(propKey, color) {
             if (!this.selectedBlock) return;
-            // Persist a normal CSS variable reference: ThemeTokenNormalizer
-            // remains the authority that emits each --tb-* token at runtime.
-            this.selectedBlock.props[propKey] = `var(--tb-${color.token})`;
+            // A token reference with the default-palette fallback:
+            // ThemeTokenNormalizer remains the authority that emits each
+            // --tb-* token, and a page without it still gets a colour.
+            const current = this.colorParse(this.selectedBlock.props[propKey]);
+            const alpha = ['token', 'hex', 'rgba'].includes(current.kind) ? current.alpha : 100;
+            this.selectedBlock.props[propKey] = window.CanvasColor.swatch(color.token, alpha);
+            this.schedulePropUpdate();
+        },
+        setColorBase(propKey, hex) {
+            if (!this.selectedBlock) return;
+            const current = this.colorParse(this.selectedBlock.props[propKey]);
+            const alpha = ['token', 'hex', 'rgba'].includes(current.kind) ? current.alpha : 100;
+            this.selectedBlock.props[propKey] = window.CanvasColor.fixed(hex, alpha);
+            this.schedulePropUpdate();
+        },
+        setColorAlpha(propKey, alpha) {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = window.CanvasColor.withAlpha(this.selectedBlock.props[propKey] ?? '', alpha, this.themePalette());
             this.schedulePropUpdate();
         },
         clearColor(propKey, defaultValue = '') {
@@ -2138,7 +2291,8 @@ function canvasEditor() {
             this.schedulePropUpdate();
         },
         colorInputValue(value) {
-            return /^#[0-9a-f]{6}$/i.test(value || '') ? value : '#000000';
+            // A swatch or rgba() value shows its base colour in the native picker.
+            return window.CanvasColor.inputHex(value, this.themePalette());
         },
         getBlockByPath(path, arr) {
             arr = arr ?? this.blocks;

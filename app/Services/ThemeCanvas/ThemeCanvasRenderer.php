@@ -278,43 +278,6 @@ class ThemeCanvasRenderer extends BlockRenderer
             . "</div>";
     }
 
-    // ── Video (bare type — real dispatch, no module gate) ──────────────────────
-    //
-    // Builder integrity audit (2026-09-11): registered since before MEDIA-4,
-    // insertable, never had a renderer anywhere in the class hierarchy —
-    // always rendered empty. `url`/`poster` resolve through the same
-    // CustomerMediaResolver path every other media-capable prop uses
-    // (resolveMediaProps() already ran before this method is reached), so
-    // this method never performs its own media lookup.
-
-    protected function renderVideo(array $props, string $inner, string $id): string
-    {
-        $url = trim((string) ($props['url'] ?? ''));
-        if ($url === '') {
-            return "<div id=\"tb-{$id}\" class=\"tb-video tb-empty-state\"><p class=\"tb-text\">ویدیویی انتخاب نشده است.</p></div>";
-        }
-
-        $poster    = trim((string) ($props['poster'] ?? ''));
-        $caption   = $this->escape($props['caption'] ?? '');
-        $autoplay  = (bool) ($props['autoplay'] ?? false);
-        $loop      = (bool) ($props['loop'] ?? false);
-        $controls  = $props['controls'] ?? true;
-
-        $attrs = [];
-        if ($controls) $attrs[] = 'controls';
-        if ($autoplay) $attrs[] = 'autoplay muted playsinline';
-        if ($loop) $attrs[] = 'loop';
-        $attrStr = implode(' ', $attrs);
-        $posterAttr = $poster !== '' ? ' poster="' . $this->escapeAttr($poster) . '"' : '';
-
-        $captionHtml = $caption ? "<figcaption class=\"tb-video-caption\">{$caption}</figcaption>" : '';
-
-        return "<figure id=\"tb-{$id}\" class=\"tb-video\">
-            <video src=\"" . $this->escapeAttr($url) . "\"{$posterAttr} {$attrStr} style=\"width:100%;border-radius:0.5rem;display:block;\"></video>
-            {$captionHtml}
-        </figure>";
-    }
-
     /**
      * BLD-09 / MOD-04 (Full Product Commercial Audit, TASK 1/3):
      * `language_switcher` was registered with a real schema and no
@@ -428,27 +391,15 @@ class ThemeCanvasRenderer extends BlockRenderer
     }
 
     /**
-     * Builder integrity audit (2026-09-11): customer-site's local
-     * 'social_icons' schema (BlockRegistry::all()) declares only a
-     * 'style' select — no 'links' field, unlike the canonical shared
-     * schema this type would otherwise inherit the renderer from. The
-     * canonical renderSocialIcons() reads $props['links'] (never present
-     * here) and ignores 'style' entirely — real data could never reach
-     * it. This host override reads the same real SocialLink model
-     * module:social_links_bar already uses and honors all 3 real style
-     * variants, matching the local schema's actual intent instead of the
-     * canonical one it silently inherited from.
+     * Explicit `links` (the block's own list, or e.g. renderNavFooter()'s
+     * `nav_footer.social_links`) win; with none, this host falls back to
+     * the site-wide SocialLink model module:social_links_bar also reads,
+     * and renders nothing when that is empty too.
      *
-     * BLD-11..13 (Full Product Commercial Audit, TASK 2A-CONTINUATION): an
-     * explicit `links` prop now wins over the global model — this override
-     * previously ignored it unconditionally, so real per-block authored
-     * data (e.g. `nav_footer.social_links`, now a real authored repeater —
-     * see renderNavFooter()'s `renderSocialIcons(['links' => $socialLinks],
-     * ...)` call) could never actually reach the render, a duplicate-
-     * authority gap the audit forbids. The site-wide SocialLink model
-     * remains the fallback only when no explicit links were supplied (the
-     * standalone `social_icons` block's own schema truly has none, per the
-     * original docblock above).
+     * Phase 0.2c (ADR-062): the style variants now live in the shared
+     * renderStyledSocialIcons(), with this host's markup unchanged; this
+     * override only supplies the tenant-data fallback and this host's
+     * `icons` default.
      */
     protected function renderSocialIcons(array $props, string $inner, string $id): string
     {
@@ -462,21 +413,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
 
-        $requestedStyle = $props['style'] ?? 'icons';
-        $style = in_array($requestedStyle, ['buttons', 'text'], true) ? $requestedStyle : 'icons';
-        $items = [];
-        foreach ($links as $link) {
-            $url   = $this->escapeAttr($link['url'] ?? '#');
-            $label = $this->escape($link['label'] ?? '');
-            $shown = match ($style) {
-                'icons' => mb_substr($label, 0, 1),
-                default => $label,
-            };
-            $cls = $style === 'buttons' ? 'tb-btn tb-btn-secondary' : 'tb-social-link';
-            $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"{$cls}\" aria-label=\"{$label}\">{$shown}</a>";
-        }
-
-        return "<div id=\"tb-{$id}\" class=\"tb-social-icons tb-social-icons-{$style}\" style=\"display:flex;gap:0.5rem;flex-wrap:wrap;\">" . implode('', $items) . "</div>";
+        return $this->renderStyledSocialIcons($links, (string) ($props['style'] ?? 'icons'), $id);
     }
 
     // ── Blog ─────────────────────────────────────────────────────────────────
@@ -629,59 +566,63 @@ class ThemeCanvasRenderer extends BlockRenderer
         $source       = $props['source'] ?? 'recent';
         $categorySlug = trim((string) ($props['category_slug'] ?? ''));
 
-        // Builder integrity audit (2026-09-11): 'featured' previously
-        // queried `is_featured`, a column that has never existed on
-        // `products` (confirmed: no migration, no model field) — every
-        // real render with source=featured (the canonical DEFAULT for
-        // module:shop_product_slider) crashed with a real SQL error,
-        // silently swallowed by renderBlock()'s catch (that catch's own
-        // missing log entry was fixed alongside this). `is_new` is a real,
-        // existing column with the closest honest semantic match.
-        $query = Product::query()->active();
-        if ($source === 'featured') {
-            $query->where('is_new', true);
-        }
-        if ($categorySlug !== '') {
-            $query->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug));
-        }
-        $products = $query->latest()->take($limit)->get();
+        $query = $this->moduleProductQuery($source, $categorySlug);
+        $products = $query->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
 
         if ($products->isEmpty()) {
+            // Phase 3 (saas-platform ADR-068): an honest empty state per source.
+            $empty = $source === 'bestselling' ? 'در ۳۰ روز گذشته هنوز فروشی ثبت نشده است.' : 'هنوز محصولی ثبت نشده است.';
             return "<div id=\"tb-{$id}\" class=\"tb-module-products\">
                 {$titleHtml}
                 <div class=\"tb-product-grid-empty\">
-                    <p>هنوز محصولی ثبت نشده است.</p>
+                    <p>{$empty}</p>
                     <a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-primary\">مشاهده فروشگاه</a>
                 </div>
             </div>";
         }
 
-        $colsClass = "tb-grid-cols-{$columns}";
+        // Phase 3 (saas-platform ADR-068): the shared commercial card — real
+        // discount, «پرامتیاز» and «جدید» overlays, rating and add-to-cart.
         $cards = [];
         foreach ($products as $product) {
-            $url     = route('shop.show', $product->slug);
-            $t       = $this->escape($product->title);
-            $price   = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $imgHtml = $product->image
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
-                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $cards[] = "<a href=\"{$url}\" class=\"tb-product-card\">{$imgHtml}
-                <div class=\"tb-product-card-inner\">
-                    <h3 class=\"tb-product-title\">{$t}</h3>
-                    <div class=\"tb-product-price\">{$price}</div>
-                </div>
-            </a>";
+            $cards[] = $this->productCard($this->productCardData($product));
         }
 
         return "<div id=\"tb-{$id}\" class=\"tb-module-products\">
             {$titleHtml}
-            <div class=\"tb-grid {$colsClass} tb-gap-md tb-section-products\">" . implode('', $cards) . "</div>
+            <div class=\"tb-grid tb-grid-cols-{$columns} tb-gap-md tb-section-products\">" . implode('', $cards) . "</div>
             <div style=\"text-align:center;margin-top:1.5rem;\">
                 <a href=\"" . e(route('shop.index')) . "\" class=\"tb-btn tb-btn-secondary\">مشاهده فروشگاه</a>
             </div>
         </div>";
+    }
+
+    /**
+     * The module product blocks' query.
+     *  - 'featured' maps to `is_new` (Builder integrity audit, 2026-09-11):
+     *    `is_featured` has never existed on `products`, and the old query
+     *    crashed every render;
+     *  - 'bestselling' is the shared 30-day sales ordering
+     *    (Product::scopeBestSelling, same as data binding best_selling_30d);
+     *  - anything else is newest first.
+     */
+    private function moduleProductQuery(string $source, string $categorySlug = ''): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Product::query()->active();
+        if ($categorySlug !== '') {
+            $query->whereHas('category', fn ($qc) => $qc->where('slug', $categorySlug));
+        }
+        if ($source === 'bestselling') {
+            $query->bestSelling(30);
+        } else {
+            if ($source === 'featured') {
+                $query->where('is_new', true);
+            }
+            $query->latest()->orderByDesc('products.id'); // same-second inserts stay newest-first
+        }
+        return $this->withProductRatings($query);
     }
 
     /**
@@ -701,13 +642,7 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $title = $this->escape($props['title'] ?? 'محصولات پیشنهادی');
         $limit = max(1, (int) ($props['limit'] ?? 6));
-        $source = $props['source'] ?? 'featured';
-
-        $query = Product::query()->active();
-        if ($source === 'featured') {
-            $query->where('is_new', true);
-        }
-        $products = $query->latest()->take($limit)->get();
+        $products = $this->moduleProductQuery($props['source'] ?? 'featured')->take($limit)->get();
 
         $titleHtml = $title ? "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>" : '';
 
@@ -717,18 +652,7 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $slidesHtml = [];
         foreach ($products as $product) {
-            $url   = route('shop.show', $product->slug);
-            $t     = $this->escape($product->title);
-            $price = CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel();
-            $imgHtml = $product->image
-                ? "<div class=\"tb-product-card-img\"><img src=\"" . e(ImageHelper::url($product->image)) . "\" alt=\"{$t}\" loading=\"lazy\"></div>"
-                : "<div class=\"tb-product-card-img tb-product-card-noimg\">📦</div>";
-            $slidesHtml[] = "<a href=\"{$url}\" class=\"tb-product-card\" style=\"max-width:20rem;margin:0 auto;display:block;\">{$imgHtml}
-                <div class=\"tb-product-card-inner\">
-                    <h3 class=\"tb-product-title\">{$t}</h3>
-                    <div class=\"tb-product-price\">{$price}</div>
-                </div>
-            </a>";
+            $slidesHtml[] = $this->productCard($this->productCardData($product));
         }
 
         $carousel = $this->renderCarousel(
@@ -1014,13 +938,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $title    = $this->escape($props['title'] ?? 'همین الان شروع کن!');
         $subtitle = $this->escape($props['subtitle'] ?? 'به هزاران دانشجو بپیوند');
         $btnText  = $this->escape($props['button_text'] ?? 'مشاهده دوره‌ها');
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#4f46e5');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-primary, #4f46e5)'));
         $url      = route('courses.index');
 
         return "<section id=\"tb-{$id}\" class=\"tb-cta\" style=\"background:{$bgColor}\">
             <h2 class=\"tb-cta-title\">{$title}</h2>
             <p class=\"tb-cta-subtitle\">{$subtitle}</p>
-            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:#fff;color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
+            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:var(--tb-on-primary, #fff);color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
         </section>";
     }
 
@@ -1073,13 +997,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $title    = $this->escape($props['title'] ?? 'به کاربران ویژه بپیوند');
         $subtitle = $this->escape($props['subtitle'] ?? '');
         $btnText  = $this->escape($props['button_text'] ?? 'مشاهده پلن‌ها');
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#7c3aed');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-secondary, #7c3aed)'));
         $url      = route('pricing.index');
 
         return "<section id=\"tb-{$id}\" class=\"tb-cta\" style=\"background:{$bgColor}\">
             <h2 class=\"tb-cta-title\">{$title}</h2>
             " . ($subtitle ? "<p class=\"tb-cta-subtitle\">{$subtitle}</p>" : '') . "
-            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:#fff;color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
+            <a href=\"{$url}\" class=\"tb-btn\" style=\"background:var(--tb-on-primary, #fff);color:{$bgColor};margin-top:0.5rem;\">{$btnText}</a>
         </section>";
     }
 
@@ -1146,6 +1070,11 @@ class ThemeCanvasRenderer extends BlockRenderer
         $style = ($props['style'] ?? 'accordion') === 'list' ? 'list' : 'accordion';
         $items = array_slice(is_array($props['items'] ?? null) ? $props['items'] : [], 0, $limit);
 
+        // Phase 3 (saas-platform ADR-068): one accordion — the canonical FAQ.
+        if ($style === 'accordion') {
+            return $this->renderFaq(['title' => $props['title'] ?? 'سوالات متداول', 'items' => $items], '', $id);
+        }
+
         if (empty($items)) {
             return "<div id=\"tb-{$id}\" class=\"tb-faq\">
                 <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
@@ -1178,13 +1107,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         $label    = $this->escape($props['label'] ?? 'پشتیبانی آنلاین');
         $style    = $props['style'] ?? 'floating';
         $position = $props['position'] ?? 'bottom-right';
-        $bgColor  = $this->escapeAttr($props['bg_color'] ?? '#4f46e5');
+        $bgColor  = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, 'var(--tb-primary, #4f46e5)'));
         $posStyle = $position === 'bottom-left' ? 'left:1.5rem;right:auto;' : 'right:1.5rem;left:auto;';
 
         if ($style === 'floating') {
             return "<div id=\"tb-{$id}\">
                 <a href=\"" . e(route('account.tickets.create')) . "\"
-                   style=\"position:fixed;bottom:1.5rem;{$posStyle}background:{$bgColor};color:#fff;padding:0.75rem 1.25rem;border-radius:999px;text-decoration:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:0.5rem;\"
+                   style=\"position:fixed;bottom:1.5rem;{$posStyle}background:{$bgColor};color:var(--tb-on-primary, #fff);padding:0.75rem 1.25rem;border-radius:999px;text-decoration:none;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:0.5rem;\"
                    aria-label=\"{$label}\">💬 {$label}</a>
             </div>";
         }
@@ -1223,7 +1152,13 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $items = [];
         foreach ($links as $link) {
-            $url   = $this->escapeAttr($link['url'] ?? '#');
+            if (!is_array($link)) {
+                continue;
+            }
+            // Phase 0.2b (ADR-061): a link field — URL string or {url} —
+            // validated by the shared escapeUrl(); bare attribute escaping
+            // let a javascript: URL through.
+            $url   = $this->linkHref($link['url'] ?? '#', '#');
             $label = $this->escape($link['label'] ?? '');
             $shown = $style === 'icons-only' ? mb_substr($label, 0, 1) : $label;
             $items[] = "<a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"tb-social-link\" aria-label=\"{$label}\" style=\"color:{$colorCss};font-size:{$fontSize};padding:{$padding};border:1px solid currentColor;border-radius:0.5rem;text-decoration:none;\">{$shown}</a>";
@@ -1247,10 +1182,13 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         $text = $this->escape($notification->message ?? $notification->body ?? '');
-        $link = $notification->link ?? '';
+        // Admin-entered URL: validated by the shared escapeUrl(), which
+        // refuses javascript:/data:/vbscript:. A refused or empty link
+        // renders the message as plain text rather than a dead "#" anchor.
+        $href = $this->escapeUrl((string) ($notification->link ?? ''), '');
 
-        $inner = $link
-            ? "<a href=\"" . $this->escapeAttr($link) . "\" style=\"color:inherit;text-decoration:underline;\">{$text}</a>"
+        $inner = $href !== ''
+            ? "<a href=\"{$href}\" style=\"color:inherit;text-decoration:underline;\">{$text}</a>"
             : $text;
 
         $positionStyle = $style === 'floating'
@@ -1394,6 +1332,19 @@ class ThemeCanvasRenderer extends BlockRenderer
 
     // ── Reviews (cross-product, distinct from renderTestimonials) ──────────────
 
+    /**
+     * Phase 3b (saas-platform ADR-069): real approved product reviews on the
+     * shared review card — SVG stars, Jalali date, avatar initial, and
+     * «خریدار تاییدشده» when the reviewer's account has a paid order
+     * (Order::SOLD_STATUSES) containing that product.
+     *
+     *  - `product_id` > 0: that product's reviews inside one schema.org
+     *    Product scope, with the breakdown as its AggregateRating (over all
+     *    its approved reviews) and each card as a nested Review;
+     *  - 0: the latest reviews of every product, each a standalone Review
+     *    whose itemReviewed is its product; the breakdown covers the store
+     *    and carries no microdata (it rates no single item).
+     */
     protected function renderModuleReviewsGrid(array $props, string $id): string
     {
         if (!SiteHelper::moduleEnabled('reviews')) {
@@ -1404,43 +1355,89 @@ class ThemeCanvasRenderer extends BlockRenderer
         $limit      = max(1, (int) ($props['limit'] ?? 6));
         $showAvatar = $props['show_avatar'] ?? true;
         $style      = ($props['style'] ?? 'cards') === 'minimal' ? 'minimal' : 'cards';
+        $productId  = max(0, (int) ($props['product_id'] ?? 0));
+        $titleHtml  = "<h2 class=\"tb-heading tb-section-title\">{$title}</h2>";
 
         if (!class_exists(\App\Models\ProductReview::class)) {
-            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\"><h2 class=\"tb-heading tb-section-title\">{$title}</h2></div>";
+            return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">{$titleHtml}</div>";
         }
 
-        $reviews = \App\Models\ProductReview::with('product:id,title,slug')
-            ->approved()
-            ->latest()
-            ->take($limit)
-            ->get();
+        $scope = fn () => \App\Models\ProductReview::query()->approved()->when($productId > 0, fn ($q) => $q->where('product_id', $productId));
+        $reviews = $scope()->with(['product:id,title,slug', 'user:id,name'])->latest()->orderByDesc('id')->take($limit)->get();
 
         if ($reviews->isEmpty()) {
             return "<div id=\"tb-{$id}\" class=\"tb-module-reviews\">
-                <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
+                {$titleHtml}
                 <p class=\"tb-text\">هنوز نظری ثبت نشده است.</p>
             </div>";
         }
 
+        $verified = $this->verifiedReviewPairs($reviews);
+        $product = $productId > 0 ? $reviews->first()->product : null;
+
         $cards = [];
         foreach ($reviews as $review) {
-            $name        = $this->escape($review->guest_name ?: 'کاربر');
-            $body        = $this->escape(Str::limit($review->body ?? '', 180));
-            $rating      = (int) ($review->rating ?? 5);
-            $stars       = str_repeat('★', min(5, max(0, $rating))) . str_repeat('☆', 5 - min(5, max(0, $rating)));
-            $avatar      = $showAvatar ? "<div class=\"tb-review-avatar\">" . mb_substr($name, 0, 1) . "</div>" : '';
-            $productName = $review->product->title ?? '';
-            $productLine = $productName ? "<p class=\"tb-review-product\">" . $this->escape($productName) . "</p>" : '';
-            $cards[] = $style === 'minimal'
-                ? "<div class=\"tb-review-minimal\" style=\"padding:0.75rem 0;border-bottom:1px solid #e5e7eb;\">{$avatar}<span class=\"tb-testimonial-rating\">{$stars}</span> <strong>{$name}</strong>: <span class=\"tb-testimonial-text\">{$body}</span>{$productLine}</div>"
-                : "<div class=\"tb-testimonial-card\">{$avatar}<div class=\"tb-testimonial-rating\">{$stars}</div><p class=\"tb-testimonial-text\">{$body}</p><p class=\"tb-testimonial-author\">— {$name}</p>{$productLine}</div>";
+            $name = trim((string) ($review->guest_name ?: $review->user?->name ?? '')) ?: 'کاربر';
+            if ($style === 'minimal') {
+                $body   = $this->escape(Str::limit($review->body ?? '', 180));
+                $rating = (int) ($review->rating ?? 5);
+                $stars  = str_repeat('★', min(5, max(0, $rating))) . str_repeat('☆', 5 - min(5, max(0, $rating)));
+                $avatar = $showAvatar ? "<div class=\"tb-review-avatar\">" . $this->escape(mb_substr($name, 0, 1)) . "</div>" : '';
+                $productLine = ($review->product->title ?? '') !== '' ? "<p class=\"tb-review-product\">" . $this->escape($review->product->title) . "</p>" : '';
+                $cards[] = "<div class=\"tb-review-minimal\" style=\"padding:0.75rem 0;border-bottom:1px solid #e5e7eb;\">{$avatar}<span class=\"tb-testimonial-rating\">{$stars}</span> <strong>" . $this->escape($name) . "</strong>: <span class=\"tb-testimonial-text\">{$body}</span>{$productLine}</div>";
+                continue;
+            }
+            $cards[] = $this->reviewCardHtml([
+                'name' => $name,
+                'title' => $review->title ?? '',
+                'text' => Str::limit($review->body ?? '', 280),
+                'rating' => (int) ($review->rating ?? 0),
+                'date' => $review->created_at?->format('Y-m-d') ?? '',
+                'verified' => isset($verified[$review->user_id . ':' . $review->product_id]),
+                'item' => $review->product ? ['name' => $review->product->title, 'url' => route('shop.show', $review->product->slug)] : [],
+                'schema' => $style === 'cards' ? ($product !== null ? 'nested' : 'standalone') : null,
+                'show_avatar' => $showAvatar,
+            ]);
         }
 
-        $wrapClass = $style === 'minimal' ? 'tb-reviews-minimal-list' : 'tb-testimonials-grid';
-        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews tb-module-reviews-{$style}\">
-            <h2 class=\"tb-heading tb-section-title\">{$title}</h2>
-            <div class=\"{$wrapClass}\">" . implode('', $cards) . "</div>
-        </div>";
+        $summary = '';
+        if ($this->flag($props['show_summary'] ?? true) && $style === 'cards') {
+            $counts = $scope()->selectRaw('rating, COUNT(*) AS n')->groupBy('rating')->pluck('n', 'rating')->map(fn ($n) => (int) $n)->all();
+            $summary = $this->ratingSummaryHtml($counts, $product !== null);
+        }
+
+        $wrapClass = $style === 'minimal' ? 'tb-reviews-minimal-list' : 'tb-testimonials-grid cols-3';
+        $inner = $titleHtml . $summary . "<div class=\"{$wrapClass}\">" . implode('', $cards) . "</div>";
+        if ($product !== null && $style === 'cards') {
+            $inner = '<div itemscope itemtype="https://schema.org/Product"><meta itemprop="name" content="' . $this->escapeAttr($product->title) . '">'
+                . '<link itemprop="url" href="' . e(route('shop.show', $product->slug)) . '">' . $inner . '</div>';
+        }
+
+        return "<div id=\"tb-{$id}\" class=\"tb-module-reviews tb-module-reviews-{$style}\">{$inner}</div>";
+    }
+
+    /**
+     * "userId:productId" pairs among these reviews whose account bought that
+     * product in a paid order — one query for the whole list.
+     *
+     * @param \Illuminate\Support\Collection<int, \App\Models\ProductReview> $reviews
+     * @return array<string, true>
+     */
+    private function verifiedReviewPairs($reviews): array
+    {
+        $userIds = $reviews->pluck('user_id')->filter()->unique()->values()->all();
+        if ($userIds === []) {
+            return [];
+        }
+        return \Illuminate\Support\Facades\DB::table('orders')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->whereIn('orders.status', \App\Models\Order::SOLD_STATUSES)
+            ->whereIn('orders.user_id', $userIds)
+            ->whereIn('order_items.product_id', $reviews->pluck('product_id')->filter()->unique()->values()->all())
+            ->distinct()
+            ->get(['orders.user_id', 'order_items.product_id'])
+            ->mapWithKeys(fn ($row) => [$row->user_id . ':' . $row->product_id => true])
+            ->all();
     }
 
     // ── Motion Graphics bridge ──────────────────────────────────────────────
@@ -1548,7 +1545,9 @@ class ThemeCanvasRenderer extends BlockRenderer
         }
 
         $title = $this->escape($ad->title ?? '');
-        $link  = $this->escapeAttr($ad->link ?? '#');
+        // Admin-entered URL: validated by the shared escapeUrl() (see the
+        // notifications bar), not bare attribute escaping.
+        $link  = $this->escapeUrl((string) ($ad->link ?? ''), '#');
         $img   = !empty($ad->image_path)
             ? "<img src=\"" . e(ImageHelper::url($ad->image_path)) . "\" alt=\"{$title}\" loading=\"lazy\" style=\"max-width:100%;display:block;\">"
             : "<p class=\"tb-text\">" . $this->escape($ad->content ?? '') . "</p>";
@@ -1657,7 +1656,7 @@ class ThemeCanvasRenderer extends BlockRenderer
             return '';
         }
         $promoText = $this->escape($props['promo_text'] ?? 'پیشنهاد ویژه — فرصت محدود!');
-        $bgColor   = $this->escapeAttr($props['bg_color'] ?? '#ef4444');
+        $bgColor   = $this->escapeAttr($this->cssColor($props['bg_color'] ?? null, '#ef4444'));
         $endIso    = $this->escapeAttr(date('c', strtotime($endDate)));
 
         return "<div id=\"tb-{$id}\" class=\"tb-module-shop-countdown\" style=\"background:{$bgColor};color:#fff;padding:1.25rem;border-radius:0.75rem;text-align:center;\">
@@ -1788,7 +1787,7 @@ class ThemeCanvasRenderer extends BlockRenderer
         $columns = max(2, min(4, (int) ($props['columns'] ?? 3)));
         $source = $props['source'] ?? 'latest';
 
-        $query = Product::query()->active();
+        $query = $this->withProductRatings(Product::query()->active());
         if ($source === 'new') {
             $query->where('is_new', true);
         } elseif ($source === 'category' && !empty($props['category_id'])) {
@@ -1812,28 +1811,11 @@ class ThemeCanvasRenderer extends BlockRenderer
             return "<div id=\"tb-{$id}\" class=\"tb-module-products tb-section\"><div class=\"tb-container\">{$titleHtml}</div></div>";
         }
 
+        // Phase 2 (saas-platform ADR-067): the shared commercial card with
+        // the real discount, stock, rating and instant add-to-cart.
         $cards = [];
         foreach ($products as $product) {
-            $badge = $product->is_new ? 'جدید' : null;
-            $hasDiscount = $product->sale_price !== null && (float) $product->sale_price < (float) $product->price;
-            if ($hasDiscount && $badge === null) {
-                $badge = 'تخفیف';
-            }
-            $stockLabel = $product->stock !== null
-                ? ((int) $product->stock > 0 ? (((int) $product->stock <= (int) ($product->low_stock_threshold ?? 5)) ? 'تنها ' . (int) $product->stock . ' عدد باقی مانده' : 'موجود') : 'ناموجود')
-                : null;
-
-            $cards[] = $this->productCardHtml(
-                $product->title,
-                $product->image ? ImageHelper::url($product->image) : '',
-                (float) $product->effective_price,
-                $hasDiscount ? (float) $product->price : null,
-                $badge,
-                $stockLabel,
-                route('shop.show', $product->slug),
-                CurrencyHelper::formatPrice($product->effective_price) . ' ' . CurrencyHelper::unitLabel(),
-                $hasDiscount ? CurrencyHelper::formatPrice($product->price) . ' ' . CurrencyHelper::unitLabel() : null
-            );
+            $cards[] = $this->productCard($this->productCardData($product));
         }
 
         $carousel = $this->renderCarousel(

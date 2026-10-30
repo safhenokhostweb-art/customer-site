@@ -223,7 +223,7 @@ class ShopController extends Controller
         $product = Product::active()->with(['variants', 'bundleLines.child'])->findOrFail($request->product_id);
 
         if ($product->early_access && ! app(MembershipBenefitService::class)->hasEarlyAccess(auth()->user())) {
-            return back()->with('error', 'این محصول فقط برای اعضای دارای دسترسی زودهنگام قابل خرید است.');
+            return $this->cartFail($request, 'این محصول فقط برای اعضای دارای دسترسی زودهنگام قابل خرید است.');
         }
 
         $variantId = $request->filled('product_variant_id') ? (int) $request->product_variant_id : null;
@@ -231,20 +231,20 @@ class ShopController extends Controller
         if ($variantId) {
             $variant = $product->variants->firstWhere('id', $variantId);
             if (! $variant) {
-                return back()->with('error', 'تنوع انتخاب‌شده معتبر نیست.');
+                return $this->cartFail($request, 'تنوع انتخاب‌شده معتبر نیست.');
             }
         } elseif ($product->usesVariants()) {
-            return back()->with('error', 'لطفاً تنوع کالا را انتخاب کنید.');
+            return $this->cartFail($request, 'لطفاً تنوع کالا را انتخاب کنید.', route('shop.show', $product->slug));
         }
 
         $qty = (int) ($request->quantity ?? 1);
         $minQ = $variant ? max(1, (int) $variant->min_order_qty) : max(1, (int) $product->min_order_qty);
         $maxQ = $variant ? $variant->max_order_qty : $product->max_order_qty;
         if ($qty < $minQ) {
-            return back()->with('error', 'حداقل تعداد سفارش ' . $minQ . ' است.');
+            return $this->cartFail($request, 'حداقل تعداد سفارش ' . $minQ . ' است.');
         }
         if ($maxQ !== null && $qty > (int) $maxQ) {
-            return back()->with('error', 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
+            return $this->cartFail($request, 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
         }
 
         $cart = ShopCartHelper::normalizeCart(session()->get('cart', []));
@@ -255,12 +255,12 @@ class ShopController extends Controller
         if ($product->is_bundle) {
             $stockOk = $this->validateBundleStock($product, $nextQty);
             if ($stockOk !== true) {
-                return back()->with('error', $stockOk);
+                return $this->cartFail($request, $stockOk);
             }
             $unitPrice = $this->bundleUnitPrice($product);
         } else {
             if (! $this->canFulfillQty($product, $variant, $nextQty)) {
-                return back()->with('error', 'موجودی کافی نیست.');
+                return $this->cartFail($request, 'موجودی کافی نیست.');
             }
             $unitPrice = $variant ? $variant->effective_price : $product->effective_price;
         }
@@ -286,7 +286,7 @@ class ShopController extends Controller
             'session_id' => substr(session()->getId(), 0, 64),
         ]);
 
-        return back()->with('success', 'به سبد اضافه شد.');
+        return $this->cartDone($request, 'به سبد اضافه شد.');
     }
 
     protected function canFulfillQty(Product $product, ?ProductVariant $variant, int $qty): bool
@@ -401,7 +401,7 @@ class ShopController extends Controller
         $lineKey = $request->line_key;
         $qty = (int) $request->quantity;
         if (! isset($cart[$lineKey])) {
-            return back()->with('error', 'ردیف سبد یافت نشد.');
+            return $this->cartFail($request, 'ردیف سبد یافت نشد.');
         }
         if ($qty <= 0) {
             unset($cart[$lineKey]);
@@ -413,33 +413,33 @@ class ShopController extends Controller
             } else {
                 $variant = $vid ? $product->variants->firstWhere('id', $vid) : null;
                 if ($vid && ! $variant) {
-                    return back()->with('error', 'تنوع نامعتبر است.');
+                    return $this->cartFail($request, 'تنوع نامعتبر است.');
                 }
                 if (! $vid && $product->usesVariants()) {
-                    return back()->with('error', 'این کالا نیاز به انتخاب تنوع دارد.');
+                    return $this->cartFail($request, 'این کالا نیاز به انتخاب تنوع دارد.');
                 }
                 $minQ = $variant ? max(1, (int) $variant->min_order_qty) : max(1, (int) $product->min_order_qty);
                 $maxQ = $variant ? $variant->max_order_qty : $product->max_order_qty;
                 if ($qty < $minQ) {
-                    return back()->with('error', 'حداقل تعداد سفارش ' . $minQ . ' است.');
+                    return $this->cartFail($request, 'حداقل تعداد سفارش ' . $minQ . ' است.');
                 }
                 if ($maxQ !== null && $qty > (int) $maxQ) {
-                    return back()->with('error', 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
+                    return $this->cartFail($request, 'حداکثر تعداد سفارش ' . $maxQ . ' است.');
                 }
                 if ($product->is_bundle) {
                     $stockOk = $this->validateBundleStock($product, $qty);
                     if ($stockOk !== true) {
-                        return back()->with('error', $stockOk);
+                        return $this->cartFail($request, $stockOk);
                     }
                 } elseif (! $this->canFulfillQty($product, $variant, $qty)) {
-                    return back()->with('error', 'تعداد درخواستی از موجودی بیشتر است.');
+                    return $this->cartFail($request, 'تعداد درخواستی از موجودی بیشتر است.');
                 }
                 $cart[$lineKey]['quantity'] = $qty;
             }
         }
         session()->put('cart', $cart);
 
-        return back()->with('success', 'سبد به‌روزرسانی شد.');
+        return $this->cartDone($request, 'سبد به‌روزرسانی شد.');
     }
 
     public function removeFromCart(Request $request)
@@ -452,7 +452,79 @@ class ShopController extends Controller
         unset($cart[$request->line_key]);
         session()->put('cart', $cart);
 
-        return back()->with('success', 'محصول از سبد حذف شد.');
+        return $this->cartDone($request, 'محصول از سبد حذف شد.');
+    }
+
+    /**
+     * Phase 1/2 (saas-platform ADR-067): the mini-cart the theme header's
+     * drawer and the product cards' instant add-to-cart read (theme-runtime
+     * blocks/cart.js). Money arrives pre-formatted by CurrencyHelper.
+     */
+    public function mini()
+    {
+        if (! SiteHelper::shopEnabled()) {
+            abort(404);
+        }
+
+        return response()->json($this->miniCart());
+    }
+
+    /**
+     * Phase 3 (saas-platform ADR-068): `unit_amount` (the per-unit number the
+     * formatter prints) and `money_suffix_html` let the drawer's quantity
+     * stepper show the new totals at once; these server figures replace them
+     * when the update answers.
+     *
+     * @return array{count:int, subtotal_html:string, money_suffix_html:string, unit:string, items:list<array<string,mixed>>}
+     */
+    protected function miniCart(): array
+    {
+        $cart = ShopCartHelper::normalizeCart(session()->get('cart', []));
+        $money = \App\Helpers\CurrencyHelper::displayContext();
+        $unit = \App\Helpers\CurrencyHelper::unitLabel();
+        $items = [];
+        $count = 0;
+        $subtotal = 0;
+        foreach ($cart as $key => $line) {
+            $qty = (int) ($line['quantity'] ?? 0);
+            $unitPrice = (int) ($line['price'] ?? 0);
+            $lineTotal = $unitPrice * $qty;
+            $count += $qty;
+            $subtotal += $lineTotal;
+            $image = (string) ($line['image'] ?? '');
+            $items[] = [
+                'key' => (string) $key,
+                'title' => (string) ($line['title'] ?? ''),
+                'image' => $image !== '' ? \App\Helpers\ImageHelper::url($image) : null,
+                'quantity' => $qty,
+                'unit_amount' => \App\Helpers\CurrencyHelper::displayValueWithContext($unitPrice, $money),
+                'total_html' => \App\Helpers\CurrencyHelper::formatPriceWithContext($lineTotal, $money) . ' ' . $unit,
+            ];
+        }
+
+        return [
+            'count' => $count,
+            'subtotal_html' => \App\Helpers\CurrencyHelper::formatPriceWithContext($subtotal, $money) . ' ' . $unit,
+            'money_suffix_html' => \App\Helpers\CurrencyHelper::fadedZerosHtml($money),
+            'unit' => $unit,
+            'items' => $items,
+        ];
+    }
+
+    /** A cart change: JSON (with the fresh mini-cart) for the theme script, redirect otherwise. */
+    protected function cartDone(Request $request, string $message)
+    {
+        return $request->expectsJson()
+            ? response()->json(['ok' => true, 'message' => $message, 'cart' => $this->miniCart()])
+            : back()->with('success', $message);
+    }
+
+    /** A refused cart change; $url sends the script to the product page (e.g. pick a variant). */
+    protected function cartFail(Request $request, string $message, ?string $url = null)
+    {
+        return $request->expectsJson()
+            ? response()->json(array_filter(['ok' => false, 'message' => $message, 'url' => $url], fn ($v) => $v !== null), 422)
+            : back()->with('error', $message);
     }
 
     public function checkout(Request $request)

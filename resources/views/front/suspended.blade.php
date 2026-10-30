@@ -18,7 +18,8 @@
             direction: rtl;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        {{-- Phase 0.4 (ADR-063): local Vazirmatn. The Google Fonts @import here came after other rules, so browsers ignored it and the page fell back to Tahoma. --}}
+        @include('partials.vazirmatn-font-faces-inline')
 
         .card {
             background: #ffffff;

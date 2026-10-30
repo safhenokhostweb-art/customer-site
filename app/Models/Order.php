@@ -24,6 +24,17 @@ class Order extends Model
         self::STATUS_CANCELLED,
     ];
 
+    /**
+     * Paid orders — every status after payment, cancelled excluded. What
+     * «پرفروش» counts (Product::scopeBestSelling).
+     */
+    public const SOLD_STATUSES = [
+        self::STATUS_PAID,
+        self::STATUS_PROCESSING,
+        self::STATUS_SHIPPED,
+        self::STATUS_COMPLETED,
+    ];
+
     protected $fillable = [
         'number', 'user_id', 'customer_name', 'customer_mobile', 'customer_phone', 'customer_address',
         'note', 'subtotal', 'shipping_cost', 'total', 'status', 'restocked_at', 'payment_method', 'coupon_id',

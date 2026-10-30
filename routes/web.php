@@ -10,6 +10,7 @@ use App\Http\Controllers\Front\ThemeCanvasPageController;
 use App\Http\Controllers\Front\BlogController;
 use App\Http\Controllers\Front\ShopController;
 use App\Http\Controllers\Front\ContactController;
+use App\Http\Controllers\Front\NewsletterController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
@@ -248,6 +249,8 @@ Route::middleware('install.check')->group(function () {
     });
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+    // Phase 0.7 (saas-platform ADR-066): the theme newsletter block.
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:6,1')->name('newsletter.subscribe');
     Route::get('/guide-search', [GuideSearchController::class, 'index'])->name('guide.search');
     Route::middleware('module:advanced_search')->group(function () {
         Route::get('/search', [AdvancedSearchController::class, 'index'])->name('search.index');
@@ -332,6 +335,8 @@ Route::middleware('install.check')->group(function () {
         Route::post('/shop/stock-notify', [ShopController::class, 'stockNotify'])->middleware('throttle:shop-stock-notify')->name('shop.stock-notify');
         Route::post('/shop/{slug}/reviews', [ShopController::class, 'storeReview'])->middleware('throttle:shop-review')->name('shop.reviews.store');
         Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
+        // Phase 1/2 (saas-platform ADR-067): the theme header's mini-cart drawer.
+        Route::get('/shop/cart/mini', [ShopController::class, 'mini'])->name('shop.cart.mini');
         Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->middleware('throttle:shop-cart')->name('shop.cart.add');
         Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->middleware('throttle:shop-cart')->name('shop.cart.update');
         Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->middleware('throttle:shop-cart')->name('shop.cart.remove');

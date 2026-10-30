@@ -161,11 +161,16 @@ class ElementSchemaRegistry
             // Canvas textarea controls intentionally persist JSON-shaped
             // values as text.  Treating those values as arrays caused valid
             // defaults such as stats_row and client_logos to be rejected.
-            'textarea', 'string', 'color', 'motion' => 'string',
+            // Phase 0.6 (ADR-065): an icon is a catalog name or a legacy
+            // emoji/text — still a string, as before the control type split.
+            'textarea', 'string', 'color', 'motion', 'icon' => 'string',
             // MEDIA-4: a canonical Media Library selection persists as
             // {"media_id": "<uuid>"} — a JSON object, not a string. A plain
             // URL/path string remains valid as transitional legacy data.
             'image' => 'media',
+            // Phase 0.2b (ADR-061): a link is a URL string or a structured
+            // link object — see assertType('link').
+            'link' => 'link',
             // A select is a UI representation, not a persisted type. Its
             // existing defaults include both numeric and string options.
             'select' => 'mixed',
@@ -326,6 +331,18 @@ class ElementSchemaRegistry
                     return true;
                 }
                 return is_array($value) && isset($value['media_id']) && is_string($value['media_id']) && $value['media_id'] !== '';
+            case 'link':
+                // Phase 0.2b (ADR-061): the two shapes a link field holds —
+                // a URL string (legacy and custom links) or a structured
+                // {url, target, …} link — plus an {type: internal_page}
+                // reference, which InternalLinkResolver normally turns into
+                // a string before validation. URL safety itself is enforced
+                // at render time (HtmlSanitizer::escapeUrl), not here.
+                if (is_string($value)) {
+                    return true;
+                }
+                return is_array($value)
+                    && (is_string($value['url'] ?? null) || ($value['type'] ?? null) === 'internal_page');
             default:
                 return true;
         }

@@ -11,8 +11,7 @@
          pinned here rather than inherited from the tenant's seo_robots
          setting. --}}
     <x-seo-meta robots="noindex, nofollow" :include-organization-json-ld="false" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- Phase 0.4 (ADR-063): no Google Fonts — app.css bundles the local Vazirmatn faces. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * { box-sizing: border-box; }

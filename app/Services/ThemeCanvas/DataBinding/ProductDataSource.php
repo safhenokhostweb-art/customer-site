@@ -5,7 +5,6 @@ namespace App\Services\ThemeCanvas\DataBinding;
 use App\Helpers\CurrencyHelper;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 final class ProductDataSource implements ThemeDataSource
 {
@@ -46,15 +45,7 @@ final class ProductDataSource implements ThemeDataSource
         } elseif ($sort === 'most_viewed') {
             $products->orderByDesc('views_count')->orderByDesc('id');
         } elseif ($sort === 'best_selling_30d') {
-            $sales = DB::table('order_items')
-                ->join('orders', 'orders.id', '=', 'order_items.order_id')
-                ->where('orders.status', 'completed')
-                ->where('orders.created_at', '>=', now()->subDays(30))
-                ->groupBy('order_items.product_id')
-                ->selectRaw('order_items.product_id, SUM(order_items.total) AS binding_revenue');
-            $products->joinSub($sales, 'binding_sales', fn ($join) => $join->on('products.id', '=', 'binding_sales.product_id'))
-                ->select('products.*')
-                ->orderByDesc('binding_sales.binding_revenue');
+            $products->bestSelling(30);
         } else {
             $products->orderBy('order')->orderByDesc('id');
         }

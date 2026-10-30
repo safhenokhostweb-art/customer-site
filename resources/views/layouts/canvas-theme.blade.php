@@ -218,8 +218,16 @@
                     {!! $headerHtml !!}
                 </div>
             </div>
+            {{-- Phase 1 (saas-platform ADR-067): when the header block carries
+                 its own links (nav_header, incl. mega menus), the phone menu
+                 shows those — copied in by the script below — instead of a
+                 fixed list that ignored them. --}}
+            @php $__blockNav = str_contains($headerHtml, 'class="tb-nav-header-link'); @endphp
             <div id="tb-mobile-menu" class="tb-mobile-menu" aria-hidden="true">
                 <div class="tb-mobile-menu-inner">
+                    @if($__blockNav)
+                        <nav class="tb-mobile-menu-nav" data-tb-mobile-nav aria-label="منوی اصلی"></nav>
+                    @else
                     <a href="{{ route('home') }}">خانه</a>
                     @if(\App\Helpers\SiteHelper::blogEnabled())
                         <a href="{{ route('blog.index') }}">وبلاگ</a>
@@ -231,6 +239,7 @@
                         <a href="{{ route('courses.index') }}">دوره‌ها</a>
                     @endif
                     <a href="{{ route('contact.show') }}">تماس</a>
+                    @endif
                     @auth
                         <a href="{{ route('account.dashboard') }}">حساب من</a>
                         @if(auth()->user()->isTenantAdmin())
@@ -252,13 +261,13 @@
                          opted in. --}}
                     @if(str_contains($headerHtml, 'tb-theme-toggle'))
                         <button type="button" id="tb-mobile-theme-toggle" class="tb-theme-toggle" aria-label="تغییر حالت رنگی" style="margin-top:.5rem;">
-                            <span class="tb-theme-toggle-icon" aria-hidden="true">🌓</span>
+                            <span class="tb-theme-toggle-icon" aria-hidden="true">{!! \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('monitor') !!}</span>
                         </button>
                         <script>(function(){
                             var btn = document.getElementById('tb-mobile-theme-toggle');
                             if (!btn || btn.dataset.tbInit) return;
                             btn.dataset.tbInit = '1';
-                            var ICONS = {light:'☀️', dark:'🌙', system:'💻'};
+                            var ICONS = {!! json_encode(['light' => \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('sun'), 'dark' => \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('moon'), 'system' => \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('monitor')], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES) !!};
                             var LABELS = {
                                 light: 'حالت رنگی: روشن — برای تغییر به تاریک کلیک کنید',
                                 dark: 'حالت رنگی: تاریک — برای تغییر به خودکار (سیستم) کلیک کنید',
@@ -267,7 +276,7 @@
                             function render() {
                                 var p = (window.__tbTheme && window.__tbTheme.get) ? window.__tbTheme.get() : 'system';
                                 var icon = btn.querySelector('.tb-theme-toggle-icon');
-                                if (icon) icon.textContent = ICONS[p] || ICONS.system;
+                                if (icon) icon.innerHTML = ICONS[p] || ICONS.system;
                                 btn.setAttribute('aria-label', LABELS[p] || LABELS.system);
                             }
                             btn.addEventListener('click', function () {
@@ -354,6 +363,15 @@
         // منوی موبایل
         var btn = document.getElementById('tb-mobile-menu-btn');
         var menu = document.getElementById('tb-mobile-menu');
+        // Phase 1 (ADR-067): copy the header block's own links (and mega
+        // menus, which site-header.js toggles by delegation) into the phone menu.
+        var mobileNav = menu && menu.querySelector('[data-tb-mobile-nav]');
+        var blockNav = document.querySelector('.tb-header-nav-wrap .tb-nav-header-links');
+        if (mobileNav && blockNav) {
+            mobileNav.innerHTML = blockNav.innerHTML;
+            mobileNav.querySelectorAll('[id]').forEach(function (el) { el.id = el.id + '-m'; });
+            mobileNav.querySelectorAll('[aria-controls]').forEach(function (el) { el.setAttribute('aria-controls', el.getAttribute('aria-controls') + '-m'); });
+        }
         if (btn && menu) {
             btn.addEventListener('click', function () {
                 var isOpen = menu.classList.toggle('is-open');

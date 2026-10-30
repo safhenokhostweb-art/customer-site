@@ -6,7 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>ویرایش: {{ $pageTitle }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- Phase 0.4 (ADR-063): local Vazirmatn, no Google Fonts. --}}
+    <style>@include('partials.vazirmatn-font-faces-inline')</style>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -1118,7 +1119,7 @@ function elBuilder() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.tailwindcss.com"><\/script>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>@include('partials.vazirmatn-font-faces-inline')</style>
 <style>
   body{font-family:'Vazirmatn',Tahoma,sans-serif;margin:0;padding:0;direction:rtl;background:#fff;min-height:100vh}
   img{max-width:100%;height:auto}

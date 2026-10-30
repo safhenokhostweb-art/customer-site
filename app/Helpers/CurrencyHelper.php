@@ -79,17 +79,39 @@ class CurrencyHelper
     /** @param array{enabled:bool,migrated:bool} $context */
     public static function formatPriceWithContext(float|int|string $price, array $context): string
     {
+        $value = self::displayValueWithContext($price, $context);
+        // Phase 0.5 follow-up (ADR-064): the same formatter as the shared
+        // theme-runtime blocks — Persian digits and the Persian thousands
+        // separator ٬ (U+066C), as fa-IR toLocaleString() prints them too.
+        $main = \SaaSPlatform\ThemeRuntime\Support\PersianNumber::format((int) round($value));
+        return $main . self::fadedZerosHtml($context);
+    }
+
+    /**
+     * The faded «۰۰۰۰» printed after every amount while the reform is on
+     * ('' otherwise). The theme mini-cart appends it to the totals it
+     * recomputes in the browser (theme-runtime blocks/cart.js).
+     *
+     * @param array{enabled:bool,migrated:bool} $context
+     */
+    public static function fadedZerosHtml(array $context): string
+    {
+        return $context['enabled']
+            ? '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>'
+            : '';
+    }
+
+    /**
+     * The number formatPriceWithContext() prints, before rounding.
+     *
+     * @param array{enabled:bool,migrated:bool} $context
+     */
+    public static function displayValueWithContext(float|int|string $price, array $context): float
+    {
         $raw = (float) $price;
-        $value = $context['enabled']
+        return $context['enabled']
             ? ($context['migrated'] ? $raw : $raw / self::DIVISOR)
             : ($context['migrated'] ? $raw * self::DIVISOR : $raw);
-        $formatted = number_format((int) round($value));
-        $persianDigits = ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹'];
-        $main = strtr($formatted, $persianDigits);
-        if ($context['enabled']) {
-            return $main . '<span class="currency-faded-zeros" style="opacity:0.4;color:inherit;font-weight:normal;">۰۰۰۰</span>';
-        }
-        return $main;
     }
 
     /**

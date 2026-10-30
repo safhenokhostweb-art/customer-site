@@ -74,7 +74,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
 
         $navHeader = $registry['nav_header']['schema']['nav_links'];
         self::assertSame('repeater', $navHeader['type']);
-        self::assertSame(['label', 'url', 'mega_columns', 'mega_banner_image', 'mega_banner_url', 'mega_banner_text', 'mega_show_desktop', 'mega_mobile_behavior'], array_keys($navHeader['fields']));
+        self::assertSame(['label', 'url', 'mega_columns', 'mega_banner_image', 'mega_banner_url', 'mega_banner_text', 'mega_banner_cta', 'mega_show_desktop', 'mega_mobile_behavior'], array_keys($navHeader['fields'])); // Phase 1 (ADR-067): mega_banner_cta
         // Commercial Productization fase-2: Mega Menu's columns are a real,
         // independent nested repeater (columns[].items[]) — not inferred by
         // matching duplicate column-title text.
@@ -92,7 +92,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
         self::assertSame('repeater', $navFooter['links']['type']);
         self::assertSame(['label', 'url'], array_keys($navFooter['links']['fields']));
         self::assertSame('repeater', $navFooter['social_links']['type']);
-        self::assertSame(['url', 'label'], array_keys($navFooter['social_links']['fields']));
+        self::assertSame(['url', 'label', 'network'], array_keys($navFooter['social_links']['fields'])); // Phase 1 (ADR-067): network → icon
 
         $about = $registry['about_section']['schema'];
         self::assertSame('repeater', $about['features']['type']);
@@ -226,7 +226,8 @@ class StructuredRepeaterAuthoringTest extends TestCase
             ],
         ]);
         $this->assertStringContainsString('MARKER-FEATURE', $html);
-        $this->assertStringContainsString('99', $html);
+        // Phase 0.5 (ADR-064): shared renderers print stat values in Persian digits.
+        $this->assertStringContainsString('۹۹', $html);
         $this->assertStringContainsString('MARKER-STAT', $html);
     }
 

@@ -8,8 +8,8 @@ $class = 'KnownIssueGuardFixture'.bin2hex(random_bytes(5)).'Test';
 $file = $root.'/tests/Feature/ThemeCanvas/'.$class.'.php';
 $group = 'canvas-homepage-baseline-2026-10-02';
 $cases = [
-    ['method docblock', '', '/** @group '.$group.' */', 'Registered baseline groups must match'],
-    ['method attribute', '', '#[\\PHPUnit\\Framework\\Attributes\\Group(\''.$group.'\')]', 'Registered baseline groups must match'],
+    ['method docblock', '', '/** @group '.$group.' */', 'exemptions are retired'],
+    ['method attribute', '', '#[\\PHPUnit\\Framework\\Attributes\\Group(\''.$group.'\')]', 'exemptions are retired'],
     ['class docblock', '/** @group '.$group.' */', '', 'cannot exclude a whole test class'],
     ['class attribute', '#[\\PHPUnit\\Framework\\Attributes\\Group(\''.$group.'\')]', '', 'cannot exclude a whole test class'],
 ];

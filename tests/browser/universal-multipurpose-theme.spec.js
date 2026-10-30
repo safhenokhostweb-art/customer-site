@@ -162,7 +162,11 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         // BlockRegistry::all() during the MASTER_THEME_MEDIA_LOCALIZATION_
         // GAP/stale-fixture fix session) — unrelated to that work,
         // corrected in passing, same as the 94→96 correction before it.
-        await expect(page.locator('[data-testid^="tb-palette-add-"]')).toHaveCount(98);
+        // 116 (2026-10-27): re-derived from BlockRegistry::byCategory() for
+        // the seven categories the palette renders — layout 18, content 29,
+        // dynamic 7, ecommerce 6, marketing 10, utility 11, module 35
+        // (foodmart/sleepshiman/forms are not palette categories).
+        await expect(page.locator('[data-testid^="tb-palette-add-"]')).toHaveCount(116);
 
         // TASK 3/3 Phase 5: retargeted to real blocks from the canonical
         // universal-multipurpose-qa export (block ids are stable because
@@ -249,14 +253,14 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         await openTreeTab(page);
         await treeNode(page, 'qa_newsletter_form_a0dcb3').click();
         await page.getByTestId('tb-theme-color-background-primary').click();
-        await expect(page.getByTestId('tb-prop-background')).toHaveValue('var(--tb-primary)');
+        await expect(page.getByTestId('tb-prop-background')).toHaveValue('var(--tb-primary, #4f46e5)');
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
 
         await switchToPage(page, 'saas');
         await openTreeTab(page);
         await treeNode(page, 'qa_hero_gradient_28f833').click();
         await page.getByTestId('tb-theme-color-text_color-secondary').click();
-        await expect(page.getByTestId('tb-prop-text_color')).toHaveValue('var(--tb-secondary)');
+        await expect(page.getByTestId('tb-prop-text_color')).toHaveValue('var(--tb-secondary, #6366f1)');
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
 
         // Publish through the real Canvas write path before public checks.
@@ -343,6 +347,7 @@ test.describe.serial('Builder integrity + universal multipurpose Theme', () => {
         // selector, since that also matches unrelated elements elsewhere
         // that happen to reference the same global-style token.
         await page.goto('/page/saas', { waitUntil: 'domcontentloaded' });
-        await expect(page.locator('#tb-qa_hero_gradient_28f833[style*="color:var(--tb-secondary)"]')).toBeVisible();
+        // Phase 0.5 (ADR-064): the swatch stores the token with its fallback.
+        await expect(page.locator('#tb-qa_hero_gradient_28f833[style*="color:var(--tb-secondary, #6366f1)"]')).toBeVisible();
     });
 });

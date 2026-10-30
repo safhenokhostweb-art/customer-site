@@ -6,7 +6,8 @@
     <title>پرداخت هزینه فعال‌سازی مجدد</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        {{-- Phase 0.4 (ADR-063): local Vazirmatn. The Google Fonts @import here came after a rule, so browsers ignored it and the page fell back to Tahoma. --}}
+        @include('partials.vazirmatn-font-faces-inline')
         body {
             font-family: 'Vazirmatn', 'Tahoma', sans-serif;
             background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f5f0ff 100%);
