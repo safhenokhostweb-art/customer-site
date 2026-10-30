@@ -12,6 +12,7 @@
                                   "routes/**",
                                   "database/**",
                                   "scripts/**",
+                                  "config/builder-element-schemas.php",
                                   ".gitignore",
                                   "composer.json",
                                   "composer.lock",
