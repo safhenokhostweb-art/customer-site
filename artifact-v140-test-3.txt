@@ -1,1 +1,0 @@
-Artifact v1.4.0 automated publish test
