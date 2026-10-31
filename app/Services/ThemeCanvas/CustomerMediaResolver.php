@@ -41,103 +41,26 @@ class CustomerMediaResolver
     private array $cache = [];
 
     /**
-     * Block type => set of its top-level media-capable prop keys.
-     * TASK 3/3 Phase 6.5 (BLD-21): made public so
-     * ThemeMediaLocalizationService can walk the SAME canonical inventory
-     * at install time (to rewrite a master-theme-hosted URL into a real
-     * {media_id}) instead of maintaining a second, independently-drifting
-     * list of "which props are images".
+     * Canvas overhaul Unit 2a: the media-capable fields of a block type are
+     * every `image` control in its registry schema, at any repeater depth
+     * (SchemaFieldMap). The hand-kept MEDIA_PROPS / MEDIA_REPEATERS lists
+     * this replaces had drifted from the registry (bento_grid named a field
+     * that does not exist; 17 of 53 image fields were never resolved).
      */
-    public const MEDIA_PROPS = [
-        'hero' => ['background_image'],
-        'section' => ['background_image'],
-        'image' => ['url'],
-        'hero_split' => ['image_url'],
-        'stats_row' => ['background_image'],
-        'module:motion' => ['fallback_image'],
-        'video' => ['url', 'poster'],
-        'sleepshiman_header' => ['logo'],
-        'sleepshiman_amazing_offers' => ['illustration'],
-        'sleepshiman_bedding_products' => ['feature_image'],
-        'sleepshiman_blanket_products' => ['feature_image'],
-        'sleepshiman_articles' => ['feature_image'],
-        'sleepshiman_sleep_banner' => ['image'],
-        'sleepshiman_editorial' => ['image'],
-    ];
-
-    /** Block type => {repeater prop key, nested media field key, storage shape}. */
-    public const MEDIA_REPEATERS = [
-        'gallery' => ['prop' => 'items', 'field' => 'url', 'storage' => 'array'],
-        // Phase 4B.5: FoodMart hero declares its editable slides through the
-        // same generic repeater contract — the canonical {media_id} value a
-        // slide stores resolves here at render time, exactly like every
-        // other media-capable prop, with no FoodMart-specific code path.
-        'foodmart_hero' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
-        'team_cards' => ['prop' => 'members', 'field' => 'image', 'storage' => 'json'],
-        'slider' => ['prop' => 'slides', 'field' => 'image', 'storage' => 'array'],
-        'bento_grid' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        // Builder integrity audit (2026-09-20) — MASTER_THEME_MEDIA_
-        // LOCALIZATION_GAP coverage fix: these four repeater fields were
-        // real, live media props on the current canonical
-        // universal-multipurpose-qa product (testimonial avatars, timeline
-        // milestone photos, client-logo images, nav mega-menu banners) that
-        // were never registered here. Since ThemeMediaLocalizationService
-        // walks this SAME canonical list at install time, an unregistered
-        // field is never even inspected — its saas-platform-hosted hotlink
-        // ships to the customer untouched regardless of origin-trust
-        // correctness, and CustomerMediaResolver (this class, at render
-        // time) would never resolve a real {media_id} stored in it either.
-        // Discovered by regenerating the stale test fixture from the real,
-        // current seeder and running it through the real localization
-        // service end to end — 21 of 54 real Platform hotlinks in that
-        // fixture were silently left un-localized by exactly this gap.
-        'testimonials_slider' => ['prop' => 'items', 'field' => 'avatar', 'storage' => 'array'],
-        // 'timeline's own BlockRegistry schema persists 'items' as a JSON
-        // STRING (its 'storage' => 'json', matching the shared canonical
-        // schema's textarea convention), unlike the other repeaters here —
-        // must match exactly, or resolveRepeater()/localizeBlockProps()
-        // silently replaces the string with a decoded array, corrupting
-        // the block's persisted shape (caught by
-        // ThemeCanvasPaletteCompatibilityTest's schema-validation sweep).
-        'timeline' => ['prop' => 'items', 'field' => 'image', 'storage' => 'json'],
-        'client_logos' => ['prop' => 'logos', 'field' => 'image', 'storage' => 'array'],
-        'nav_header' => ['prop' => 'nav_links', 'field' => 'mega_banner_image', 'storage' => 'array'],
-        'sleepshiman_amazing_offers' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_featured_product' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_mattresses' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_promo_banners' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_bedding_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_blanket_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_brands' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_published_products' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_topic_cards' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_articles' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_reviews' => ['prop' => 'items', 'field' => 'avatar', 'storage' => 'array'],
-        'sleepshiman_guide_cards' => ['prop' => 'items', 'field' => 'image', 'storage' => 'array'],
-        'sleepshiman_footer' => ['prop' => 'trust_marks', 'field' => 'image', 'storage' => 'array'],
-    ];
+    public const CONTROL_TYPE = 'image';
 
     public function __construct(private readonly CustomerMediaService $media)
     {
     }
 
     /**
-     * Resolve every known media-capable prop for one block type. Block
-     * types/props outside the known list pass through completely untouched.
+     * Resolve every media-capable prop of one block type, nested repeater
+     * fields included. Props that are not `image` controls pass through
+     * untouched.
      */
     public function resolveBlockProps(string $type, array $props): array
     {
-        foreach (self::MEDIA_PROPS[$type] ?? [] as $propKey) {
-            if (array_key_exists($propKey, $props)) {
-                $props[$propKey] = $this->resolveValue($props[$propKey]);
-            }
-        }
-
-        if ($repeater = self::MEDIA_REPEATERS[$type] ?? null) {
-            $props = $this->resolveRepeater($props, $repeater['prop'], $repeater['field'], $repeater['storage']);
-        }
-
-        return $props;
+        return SchemaFieldMap::transform($type, $props, self::CONTROL_TYPE, fn (mixed $value) => $this->resolveValue($value));
     }
 
     /**
@@ -268,24 +191,8 @@ class CustomerMediaResolver
     /** @param string[] $uuids */
     private function collectFromProps(string $type, array $props, array &$uuids): void
     {
-        foreach (self::MEDIA_PROPS[$type] ?? [] as $propKey) {
-            $this->collectUuid($props[$propKey] ?? null, $uuids);
-        }
-
-        if ($repeater = self::MEDIA_REPEATERS[$type] ?? null) {
-            $raw = $props[$repeater['prop']] ?? null;
-            $items = match (true) {
-                is_array($raw) => $raw,
-                is_string($raw) && $raw !== '' => json_decode($raw, true) ?? [],
-                default => [],
-            };
-            if (is_array($items)) {
-                foreach ($items as $item) {
-                    if (is_array($item)) {
-                        $this->collectUuid($item[$repeater['field']] ?? null, $uuids);
-                    }
-                }
-            }
+        foreach (SchemaFieldMap::values($type, $props, self::CONTROL_TYPE) as $value) {
+            $this->collectUuid($value, $uuids);
         }
     }
 
@@ -295,28 +202,5 @@ class CustomerMediaResolver
         if (is_array($value) && is_string($value['media_id'] ?? null) && $value['media_id'] !== '') {
             $uuids[] = $value['media_id'];
         }
-    }
-
-    private function resolveRepeater(array $props, string $propKey, string $field, string $storage): array
-    {
-        $raw = $props[$propKey] ?? null;
-        $items = match (true) {
-            is_array($raw) => $raw,
-            is_string($raw) && $raw !== '' => json_decode($raw, true) ?? [],
-            default => [],
-        };
-        if (!is_array($items)) {
-            return $props;
-        }
-
-        foreach ($items as $index => $item) {
-            if (is_array($item) && array_key_exists($field, $item)) {
-                $items[$index][$field] = $this->resolveValue($item[$field]);
-            }
-        }
-
-        $props[$propKey] = $storage === 'json' ? json_encode($items, JSON_UNESCAPED_UNICODE) : $items;
-
-        return $props;
     }
 }

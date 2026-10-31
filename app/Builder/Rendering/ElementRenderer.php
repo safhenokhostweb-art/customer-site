@@ -119,15 +119,20 @@ class ElementRenderer
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return $this->placeholder($id, $type);
+            // Unit 2e: the cause, for the editor only (never a public page).
+            $detail = !empty($context['editor_mode']) && ($context['mode'] ?? null) !== 'public'
+                ? \App\Services\ThemeBuilder\PlaceholderDetail::fromThrowable($e)
+                : '';
+            return $this->placeholder($id, $type, $detail);
         }
     }
 
-    protected function placeholder(string $id, string $type): string
+    protected function placeholder(string $id, string $type, string $detail = ''): string
     {
         $safeId = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
         $safeType = htmlspecialchars($type, ENT_QUOTES, 'UTF-8');
-        return '<div id="tb-' . $safeId . '" class="tb-placeholder tb-placeholder-error" data-type="' . $safeType . '" data-reason="render_error" aria-hidden="true"><span class="tb-placeholder-label">Element failed to render</span></div>';
+        $detailHtml = \App\Services\ThemeBuilder\PlaceholderDetail::html('render_error', $detail);
+        return '<div id="tb-' . $safeId . '" class="tb-placeholder tb-placeholder-error" data-type="' . $safeType . '" data-reason="render_error" aria-hidden="true"><span class="tb-placeholder-label">Element failed to render</span>' . $detailHtml . '</div>';
     }
 
     protected function collectAssets(array $assets): void

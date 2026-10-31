@@ -48,12 +48,27 @@ class ElementSchemaRegistry
         // declares. `ext:*` types never collide with canonical keys by
         // construction (Phase 3E-B), so their relative position doesn't
         // matter for (2).
+        $canvas = $this->canvasSchemas();
         $this->schemas = $this->mergeSchemaSources([
             config('builder-element-schemas.elements', []),
             \App\Builder\Extension\ProductionBuilderAdapter::schemas(),
-            $this->canvasSchemas(),
+            $canvas,
             $this->productionPaletteSchemas(),
         ]);
+
+        // Canvas overhaul Unit 2b: a registry `link` control is an exact
+        // shape contract (URL string or ADR-061 structured link), not a
+        // coarse control inference, so it wins over older config entries
+        // that still say `string`. Those rejected a structured
+        // {url, target} button link as an invalid block once the link
+        // resolver stopped wiping it to ''.
+        foreach ($canvas as $type => $definition) {
+            foreach ($definition['props'] as $propName => $rule) {
+                if ($rule['type'] === 'link' && isset($this->schemas[$type]['props'][$propName])) {
+                    $this->schemas[$type]['props'][$propName]['type'] = 'link';
+                }
+            }
+        }
     }
 
     /**

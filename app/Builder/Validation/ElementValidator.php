@@ -51,6 +51,17 @@ class ElementValidator
                 continue;
             }
 
+            // Canvas overhaul Unit 2b: a link is a URL string or an ADR-061
+            // structured {url, target, …} link. Casting the latter to
+            // string raised "Array to string conversion" and failed the
+            // whole block.
+            if ($type === 'link') {
+                $out[$key] = is_string($value) || (is_array($value) && is_string($value['url'] ?? null))
+                    ? $value
+                    : ($rules['default'] ?? '');
+                continue;
+            }
+
             if ($type === 'string' && !is_string($value)) {
                 $value = (string) $value;
             }

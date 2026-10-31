@@ -152,8 +152,8 @@ class CustomerMediaService
     /**
      * Commercial Productization fase-4 — a real, confirmed gap found via
      * an actual local end-to-end theme install (not a mocked test): the
-     * `video` block's `url` prop was already listed in
-     * CustomerMediaResolver::MEDIA_PROPS as needing localization, and
+     * `video` block's `url` prop was already an `image` control
+     * (SchemaFieldMap) needing localization, and
      * `POLICY['video']` above already exists for the manual upload() path
      * — but the remote-import path (this class's ONLY entry point for
      * ThemeMediaLocalizationService) was image-only, so any theme with a

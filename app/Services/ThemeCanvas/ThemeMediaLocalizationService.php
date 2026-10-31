@@ -26,9 +26,9 @@ use Throwable;
  * ThemeInstanceRevisionService::record() creates the immutable revision —
  * so localized {media_id} references are what actually gets frozen into
  * revision history, never a later, riskier rewrite of already-immutable
- * data. It walks the SAME canonical media-prop inventory
- * CustomerMediaResolver::MEDIA_PROPS/MEDIA_REPEATERS already defines (no
- * second, drifting list) and rewrites any URL hosted on the trusted
+ * data. It walks the SAME media-field inventory the render-time resolver
+ * uses (SchemaFieldMap: every `image` control in the registry schema, at
+ * any repeater depth) and rewrites any URL hosted on the trusted
  * allowlist into a real, locally-owned {"media_id": "<uuid>"} reference.
  *
  * Security posture — this is NOT a general-purpose remote-fetch capability:
@@ -81,7 +81,7 @@ class ThemeMediaLocalizationService
     private const TIMEOUT_SECONDS = 8;
     private const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     // Commercial Productization fase-4: the `video` block's `url` prop is
-    // already in CustomerMediaResolver::MEDIA_PROPS as real, intentional
+    // an `image` control (SchemaFieldMap) and so real, intentional
     // media needing localization (this theme's real local demo video) —
     // see CustomerMediaService::importVideoFromRemoteBytes()'s docblock
     // for the full gap this closes.
@@ -255,30 +255,12 @@ class ThemeMediaLocalizationService
     /** @param array{scheme: string, host: string, port: int} $origin */
     private function localizeBlockProps(string $type, array $props, array $origin): array
     {
-        foreach (CustomerMediaResolver::MEDIA_PROPS[$type] ?? [] as $propKey) {
-            if (isset($props[$propKey]) && is_string($props[$propKey]) && $props[$propKey] !== '') {
-                $props[$propKey] = $this->localizeUrl($props[$propKey], $origin);
-            }
-        }
-
-        if ($repeater = CustomerMediaResolver::MEDIA_REPEATERS[$type] ?? null) {
-            $raw = $props[$repeater['prop']] ?? null;
-            $items = match (true) {
-                is_array($raw) => $raw,
-                is_string($raw) && $raw !== '' => json_decode($raw, true) ?? [],
-                default => null,
-            };
-            if (is_array($items)) {
-                foreach ($items as $i => $item) {
-                    if (is_array($item) && isset($item[$repeater['field']]) && is_string($item[$repeater['field']]) && $item[$repeater['field']] !== '') {
-                        $items[$i][$repeater['field']] = $this->localizeUrl($item[$repeater['field']], $origin);
-                    }
-                }
-                $props[$repeater['prop']] = $repeater['storage'] === 'json' ? json_encode($items, JSON_UNESCAPED_UNICODE) : $items;
-            }
-        }
-
-        return $props;
+        return SchemaFieldMap::transform(
+            $type,
+            $props,
+            CustomerMediaResolver::CONTROL_TYPE,
+            fn (mixed $value) => is_string($value) && $value !== '' ? $this->localizeUrl($value, $origin) : $value,
+        );
     }
 
     /**

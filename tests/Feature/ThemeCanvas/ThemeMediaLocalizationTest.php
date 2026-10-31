@@ -169,14 +169,17 @@ class ThemeMediaLocalizationTest extends TestCase
                 ['id' => 'bento1', 'type' => 'bento_grid', 'props' => [
                     'items' => [[
                         'title' => 'فروشگاه حرفه‌ای',
-                        'image' => 'https://master-theme.test/storage/theme-media/1/bento-shop.jpg',
+                        // Canvas overhaul Unit 2a: the registry field is
+                        // `bg_image`; the old hand list named it `image`, so
+                        // a real bento background was never localized.
+                        'bg_image' => 'https://master-theme.test/storage/theme-media/1/bento-shop.jpg',
                     ]],
                 ]],
             ],
         ]])->assertOk()->assertJson(['success' => true]);
 
         $stored = json_decode(Setting::get('active_canvas_theme_data'), true);
-        $image = $stored['pages'][0]['blocks'][0]['props']['items'][0]['image'];
+        $image = $stored['pages'][0]['blocks'][0]['props']['items'][0]['bg_image'];
 
         self::assertIsArray($image);
         self::assertSame(CustomerMedia::query()->sole()->uuid, $image['media_id']);

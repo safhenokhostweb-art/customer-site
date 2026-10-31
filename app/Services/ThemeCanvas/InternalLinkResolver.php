@@ -20,35 +20,27 @@ use App\Models\Page;
  */
 class InternalLinkResolver
 {
-    /** Block type => set of its top-level internal-link-capable prop keys. */
-    public const LINK_PROPS = [
-        'button' => ['url'],
-        'cta' => ['button_url'],
-        'hero' => ['button_url'],
-        'hero_split' => ['button_url', 'button2_url'],
-        'hero_gradient' => ['button_url', 'button2_url'],
-        'hero_trust' => ['btn_primary_url', 'btn_secondary_url'],
-    ];
-
     /**
-     * Resolve every known link-capable prop for one block type, plus any
-     * other top-level prop holding an internal-page reference. The Canvas
-     * editor offers the page picker on every top-level `link` field
-     * (Phase 0.2b, ADR-061: header/footer/promo/about links among them),
-     * and the {type: internal_page} shape is written only by that picker —
-     * so resolving by shape keeps every such field working without an
-     * allowlist that has to grow with the registry.
+     * Resolve every internal-page reference of one block: any top-level
+     * prop holding one, plus every `link` control nested in a repeater
+     * (nav links, footer columns, card links — SchemaFieldMap). The
+     * {type: internal_page} shape is written only by the page picker, so
+     * resolving by shape needs no per-type allowlist.
+     *
+     * Canvas overhaul Unit 2b: only references are touched. The former
+     * LINK_PROPS allowlist also ran resolveValue() on every other value of
+     * its fields, which turned an ADR-061 structured {url, target} link on
+     * a hero/CTA button into '' (no link).
      */
     public function resolveBlockProps(string $type, array $props): array
     {
-        $known = self::LINK_PROPS[$type] ?? [];
+        $resolve = fn (mixed $value) => self::isInternalPageReference($value) ? $this->resolveValue($value) : $value;
+
         foreach ($props as $propKey => $value) {
-            if (in_array($propKey, $known, true) || self::isInternalPageReference($value)) {
-                $props[$propKey] = $this->resolveValue($value);
-            }
+            $props[$propKey] = $resolve($value);
         }
 
-        return $props;
+        return SchemaFieldMap::transform($type, $props, 'link', $resolve);
     }
 
     private static function isInternalPageReference(mixed $value): bool
