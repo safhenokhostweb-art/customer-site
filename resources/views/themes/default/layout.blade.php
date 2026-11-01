@@ -305,6 +305,8 @@
         .tb-placeholder-invalid { background: #fef3c7; border: 1px dashed #d97706; color: #92400e; }
         .tb-placeholder-error { background: #fee2e2; border: 1px dashed #dc2626; color: #991b1b; }
         .tb-placeholder-label { font-family: inherit; }
+        .tb-placeholder-detail { display: block; margin-top: 0.35rem; font-size: 0.8125rem; line-height: 1.6; }
+        .tb-placeholder-detail code { display: block; margin-top: 0.15rem; font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; opacity: 0.85; }
         .tb-grid { display: grid; gap: 1.5rem; }
         .tb-grid.tb-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .tb-grid.tb-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }

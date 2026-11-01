@@ -18,7 +18,7 @@ class HeroElement extends BaseElement
             'title' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 500],
             'subtitle' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 1000],
             'button_text' => ['type' => 'string', 'required' => false, 'default' => '', 'max' => 100],
-            'button_url' => ['type' => 'string', 'required' => false, 'default' => '#', 'max' => 2048],
+            'button_url' => ['type' => 'link', 'required' => false, 'default' => '#'],
             'background' => ['type' => 'string', 'required' => false, 'default' => 'primary', 'max' => 50],
             // MEDIA-4: already resolved to a plain URL string by
             // CustomerMediaResolver before this element ever sees it
@@ -50,9 +50,7 @@ class HeroElement extends BaseElement
         $title = self::escape($props['title'] ?? '');
         $subtitle = self::escape($props['subtitle'] ?? '');
         $btnText = self::escape($props['button_text'] ?? '');
-        $btnUrl = $props['button_url'] ?? '#';
-        if (!self::isValidUrl($btnUrl)) $btnUrl = '#';
-        $btnUrl = self::escapeAttr($btnUrl);
+        $btnUrl = self::escapeAttr(self::linkUrl($props['button_url'] ?? '#'));
         $bg = $props['background'] ?? 'primary';
         $align = in_array($props['align'] ?? 'center', ['left', 'center', 'right'], true) ? $props['align'] : 'center';
         $id = $context['id'] ?? '';

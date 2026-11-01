@@ -13,8 +13,8 @@ use Tests\TestCase;
 /**
  * Commercial Productization fase-4 — a real, confirmed gap found via an
  * actual local end-to-end theme install (not a mocked/faked test): the
- * `video` block's `url` prop is already in
- * CustomerMediaResolver::MEDIA_PROPS as real, intentional media needing
+ * `video` block's `url` prop is already an `image` control
+ * (SchemaFieldMap) and so real, intentional media needing
  * localization (this theme's own real local demo video, hero-intro.webm),
  * but ThemeMediaLocalizationService/CustomerMediaService's remote-import
  * path was image-only — so any theme with a real local demo video could

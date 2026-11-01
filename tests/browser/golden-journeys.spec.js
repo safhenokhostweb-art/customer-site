@@ -228,12 +228,12 @@ test.describe.serial('Golden journeys (Phase 6.5C)', () => {
 
         await treeNode(page, 'qa_button_65af7f').click();
 
-        await page.locator('[data-testid="tb-link-page-toggle-url"]').click();
-        const searchInput = page.locator('[data-testid="tb-link-page-search-url"]');
+        await page.locator('[data-testid="link-pick-url"]').click();
+        const searchInput = page.locator('[data-testid="tb-link-picker-search"]');
         await expect(searchInput).toBeVisible();
         await searchInput.fill('e2e-journey-target');
         await page.waitForTimeout(500);
-        await page.locator('[data-testid^="tb-link-page-result-"]').first().click();
+        await page.locator('[data-testid^="tb-link-picker-result-page-"]').first().click();
 
         expect((await waitForSaveBlocks(page, () => saveButton(page).click())).ok()).toBeTruthy();
         expect((await waitForPublish(page, () => publishButton(page).click())).ok()).toBeTruthy();
