@@ -356,8 +356,11 @@ class ElementSchemaRegistry
                 if (is_string($value)) {
                     return true;
                 }
+                // Unit 4: or an {type: entity} reference (EntityLinkCatalog).
                 return is_array($value)
-                    && (is_string($value['url'] ?? null) || ($value['type'] ?? null) === 'internal_page');
+                    && (is_string($value['url'] ?? null)
+                        || ($value['type'] ?? null) === 'internal_page'
+                        || \App\Services\ThemeCanvas\EntityLinkCatalog::isReference($value));
             default:
                 return true;
         }

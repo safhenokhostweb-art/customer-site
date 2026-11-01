@@ -449,6 +449,8 @@ Route::middleware('install.check')->group(function () {
             Route::get('theme-design/canvas/motion-assets',               [ThemeDesignController::class, 'canvasMotionAssets'])->name('theme-design.canvas-motion-assets');
             // Phase 4B.5 — tenant-safe entity options for binding selectors (read-only)
             Route::get('theme-design/canvas/binding-entities/{source}',   [ThemeDesignController::class, 'canvasBindingEntities'])->name('theme-design.canvas-binding-entities');
+            // Canvas overhaul Unit 4: unified link picker (pages, products, categories, posts, courses).
+            Route::get('theme-design/canvas/link-entities',               \App\Http\Controllers\Admin\ThemeCanvasLinkEntityController::class)->name('theme-design.canvas-link-entities');
             // Revision history — view and restore previously published canvas versions
             Route::get('theme-design/canvas/revisions',                   [ThemeDesignController::class, 'canvasRevisions'])->name('theme-design.canvas-revisions');
             Route::post('theme-design/canvas/revisions/{slot}/restore',   [ThemeDesignController::class, 'canvasRestoreRevision'])->name('theme-design.canvas-revisions-restore');

@@ -860,57 +860,20 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     ])
                                 </template>
 
-                                {{-- TASK 3/3 Phase 6.5C (BLD-28) — internal-link-capable adapter
-                                     for button/CTA/hero action URL fields. A plain string stays a
-                                     raw custom URL (unchanged, backward compatible); an
-                                     {type:'internal_page', page_id} value is resolved server-side
-                                     (InternalLinkResolver, mirroring CustomerMediaResolver's
-                                     {media_id} pattern) to the Page's CURRENT url at render time,
-                                     so a later slug rename never breaks it — reuses the exact same
-                                     bounded search endpoint Menu's own page picker uses. --}}
+                                {{-- Canvas overhaul Unit 4: one link control (custom URL or any page,
+                                     product, category, post or course via the shared entity picker).
+                                     Picked entities are stored as references and resolved to the live
+                                     permalink at render time (EntityLinkCatalog). --}}
                                 <template x-if="schemaDef.type === 'link'">
-                                    <div class="space-y-2" :data-testid="'tb-link-field-' + propKey">
-                                        <div class="flex gap-2 text-xs">
-                                            <button type="button"
-                                                    @click="setLinkCustomUrl(propKey, isInternalLinkValue(selectedBlock.props[propKey]) ? '' : (selectedBlock.props[propKey] || ''))"
-                                                    :class="!isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
-                                                    class="px-2 py-1 rounded transition">آدرس سفارشی</button>
-                                            <button type="button"
-                                                    @click="openLinkPagePicker(propKey)"
-                                                    :class="isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
-                                                    class="px-2 py-1 rounded transition"
-                                                    :data-testid="'tb-link-page-toggle-' + propKey">صفحه داخلی</button>
-                                        </div>
-
-                                        <template x-if="!isInternalLinkValue(selectedBlock.props[propKey])">
-                                            <input type="text" :value="selectedBlock.props[propKey]"
-                                                   @input="setLinkCustomUrl(propKey, $event.target.value)"
+                                    <div :data-testid="'tb-link-field-' + propKey">
+                                        <x-canvas-link-field value="selectedBlock.props[propKey]"
+                                                             set="v => { selectedBlock.props[propKey] = v; schedulePropUpdate(); }"
+                                                             testid="propKey">
+                                            <input type="text" dir="ltr" inputmode="url" :value="linkFieldUrl(selectedBlock.props[propKey])"
+                                                   @input="selectedBlock.props[propKey] = linkFieldValue(selectedBlock.props[propKey], $event.target.value); schedulePropUpdate()"
                                                    class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                                                   placeholder="https://..." :data-testid="'tb-prop-' + propKey">
-                                        </template>
-
-                                        <template x-if="isInternalLinkValue(selectedBlock.props[propKey])">
-                                            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-xs text-emerald-800"
-                                                 :data-testid="'tb-prop-' + propKey">
-                                                <span x-text="'لینک به: ' + (selectedBlock.props[propKey].page_title || ('#' + selectedBlock.props[propKey].page_id))"></span>
-                                                <button type="button" @click="openLinkPagePicker(propKey)" class="text-indigo-600 underline">تغییر</button>
-                                            </div>
-                                        </template>
-
-                                        <template x-if="linkPickerOpenFor === propKey">
-                                            <div class="border border-slate-200 rounded-lg p-2 space-y-1 bg-white">
-                                                <input type="text" x-model="linkPickerQuery" @input.debounce.300ms="searchLinkPages()"
-                                                       placeholder="جستجوی صفحه..." class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300"
-                                                       :data-testid="'tb-link-page-search-' + propKey">
-                                                <template x-for="page in linkPickerResults" :key="page.id">
-                                                    <button type="button" @click="selectLinkPage(propKey, page)"
-                                                            class="block w-full text-right text-xs px-2 py-1.5 rounded hover:bg-indigo-50"
-                                                            :data-testid="'tb-link-page-result-' + page.id"
-                                                            x-text="page.title"></button>
-                                                </template>
-                                                <p x-show="linkPickerQuery && linkPickerResults.length === 0" class="text-xs text-slate-400 px-2 py-1">صفحه‌ای یافت نشد.</p>
-                                            </div>
-                                        </template>
+                                                   placeholder="/about یا https://…" :data-testid="'tb-prop-' + propKey">
+                                        </x-canvas-link-field>
                                     </div>
                                 </template>
 
@@ -1015,7 +978,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                             <textarea :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type === 'link'">
-                                                                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                            <x-canvas-link-field value="deepItem[deepFieldKey]" set="v => updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, v, schemaDef)" testid="`deep-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`">
+                                                                                                                <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                            </x-canvas-link-field>
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type === 'boolean'">
                                                                                                             <label class="flex items-center gap-2 cursor-pointer">
@@ -1045,7 +1010,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                     <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type === 'link'">
-                                                                                    <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                    <x-canvas-link-field value="nestedItem[nestedFieldKey]" set="v => updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, v, schemaDef)" testid="`nested-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                    </x-canvas-link-field>
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type === 'boolean'">
                                                                                     <label class="flex items-center gap-2 cursor-pointer">
@@ -1078,7 +1045,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                             </label>
                                                         </template>
                                                         <template x-if="fieldDef.type === 'link'">
-                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                            <x-canvas-link-field value="item[fieldKey]" set="v => updateStructuredField(propKey, itemIndex, fieldKey, v, schemaDef)" testid="`item-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                            </x-canvas-link-field>
                                                         </template>
                                                         <template x-if="fieldDef.type === 'select'">
                                                             <select :value="item[fieldKey] ?? ''" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
@@ -1584,6 +1553,52 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
     </div>
 
+    {{-- Canvas overhaul Unit 4: unified entity link picker. One modal for every
+         link field; results come live from the database (EntityLinkCatalog),
+         each with the permalink it resolves to right now. --}}
+    <div x-show="entityPicker.open" x-cloak x-transition.opacity
+         class="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-[10vh]"
+         @keydown.escape.window="entityPicker.open && closeEntityPicker()"
+         @click.self="closeEntityPicker()" data-testid="tb-link-picker">
+        <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="انتخاب لینک">
+            <div class="p-4 border-b border-slate-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-800">انتخاب مقصد لینک</h3>
+                    <button type="button" class="text-slate-400 hover:text-slate-700 text-lg leading-none" aria-label="بستن" @click="closeEntityPicker()">×</button>
+                </div>
+                <input type="search" x-model="entityPicker.query" @input.debounce.250ms="searchEntities()"
+                       placeholder="جستجوی برگه، محصول، دسته، مقاله یا دوره…"
+                       class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                       data-testid="tb-link-picker-search">
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                    <button type="button" @click="entityPicker.entity = ''; searchEntities()"
+                            :class="entityPicker.entity === '' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-2.5 py-1 rounded-full transition">همه</button>
+                    <template x-for="(label, key) in entityPicker.entities" :key="key">
+                        <button type="button" @click="entityPicker.entity = key; searchEntities()"
+                                :class="entityPicker.entity === key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-2.5 py-1 rounded-full transition" :data-testid="'tb-link-picker-tab-' + key" x-text="label"></button>
+                    </template>
+                </div>
+            </div>
+            <div class="max-h-[50vh] overflow-y-auto p-2" :aria-busy="entityPicker.loading ? 'true' : 'false'">
+                <template x-for="result in entityPicker.results" :key="result.entity + ':' + result.id">
+                    <button type="button" @click="pickEntity(result)"
+                            class="w-full flex items-center gap-3 text-right px-3 py-2 rounded-lg hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none"
+                            :data-testid="'tb-link-picker-result-' + result.entity + '-' + result.id">
+                        <span class="shrink-0 w-24 text-[10px] font-bold text-indigo-700 bg-indigo-50 rounded px-1.5 py-0.5 text-center" x-text="result.entity_label"></span>
+                        <span class="flex-1 min-w-0">
+                            <span class="block truncate text-sm text-slate-800" x-text="result.title"></span>
+                            <span class="block truncate text-[11px] text-slate-400" dir="ltr" x-text="result.url"></span>
+                        </span>
+                    </button>
+                </template>
+                <p x-show="entityPicker.loading" class="px-3 py-6 text-center text-xs text-slate-400">در حال جستجو…</p>
+                <p x-show="!entityPicker.loading && entityPicker.results.length === 0" class="px-3 py-6 text-center text-xs text-slate-400">موردی یافت نشد. برگه یا محصول را در پیشخوان بسازید؛ اینجا بلافاصله نمایش داده می‌شود.</p>
+            </div>
+        </div>
+    </div>
+
     {{-- Media Modal --}}
     <div x-show="mediaModal.open" x-transition.opacity class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div @click.outside="closeMediaPicker()" role="dialog" aria-modal="true" aria-labelledby="tb-media-dialog-title" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height:80vh;">
@@ -1748,7 +1763,7 @@ const ROUTES = {
     // TASK 3/3 Phase 6.5C (BLD-28) — reuses the SAME bounded, already-proven
     // search endpoint Menu's own "add existing Page" picker uses
     // (MenuController::searchPages()) — no second Page-search authority.
-    linkPageSearch: '{{ route('admin.menus.pages.search') }}',
+    linkEntities: '{{ route('admin.theme-design.canvas-link-entities') }}',
 };
 
 // Phase 4B.5 — block props arriving from storage as a JSON empty array
@@ -1830,9 +1845,7 @@ function canvasEditor() {
         // canonical CustomerMedia uuid, not a raw URL — MEDIA-4.
         mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null, q: '', category: '' },
         // TASK 3/3 Phase 6.5C (BLD-28) — internal-link picker state.
-        linkPickerOpenFor: null,
-        linkPickerQuery: '',
-        linkPickerResults: [],
+        entityPicker: { open: false, query: '', entity: '', results: [], entities: {}, loading: false, set: null },
         // MEDIA-4: uuid -> resolved URL, populated as the library loads/
         // uploads, so a persisted {media_id} value can render a live
         // thumbnail in the property panel without a DB round trip per
@@ -3008,41 +3021,53 @@ function canvasEditor() {
                 .finally(() => this._mediaCacheInFlight.delete(uuid));
         },
 
-        // ── TASK 3/3 Phase 6.5C (BLD-28): internal-link picker ──────────
-        isInternalLinkValue(value) {
-            return !!value && typeof value === 'object' && value.type === 'internal_page';
+        // ── Canvas overhaul Unit 4: unified entity link picker ─────────────
+        // One modal for every link field at every depth. `set` is the field's
+        // own writer, so nested repeater items persist through their usual
+        // update path. A pick stores {type:'entity', entity, id, label}; the
+        // label is only for this chip, the server resolves the live URL.
+        isEntityLinkValue(value) {
+            return !!value && typeof value === 'object' && (value.type === 'entity' || value.type === 'internal_page');
         },
-
-        setLinkCustomUrl(propKey, url) {
-            this.selectedBlock.props[propKey] = url;
-            this.linkPickerOpenFor = null;
-            this.schedulePropUpdate();
+        entityLinkLabel(value) {
+            if (!this.isEntityLinkValue(value)) return '';
+            return value.label || value.page_title || ('#' + (value.id ?? value.page_id));
         },
-
-        openLinkPagePicker(propKey) {
-            this.linkPickerOpenFor = propKey;
-            this.linkPickerQuery = '';
-            this.linkPickerResults = [];
+        entityLinkKind(value) {
+            if (!this.isEntityLinkValue(value)) return '';
+            if (value.type === 'internal_page') return 'برگه';
+            return this.entityPicker.entities[value.entity] || ({ route: 'صفحه اصلی', page: 'برگه', product: 'محصول', product_category: 'دسته محصول', post: 'مقاله', blog_category: 'دسته وبلاگ', course: 'دوره' })[value.entity] || value.entity;
         },
-
-        async searchLinkPages() {
+        openEntityPicker(set) {
+            this.entityPicker = { ...this.entityPicker, open: true, query: '', entity: '', results: [], set };
+            this.searchEntities();
+            this.$nextTick(() => document.querySelector('[data-testid="tb-link-picker-search"]')?.focus());
+        },
+        closeEntityPicker() {
+            this.entityPicker.open = false;
+            this.entityPicker.set = null;
+        },
+        async searchEntities() {
+            const picker = this.entityPicker;
+            picker.loading = true;
             try {
                 const params = new URLSearchParams();
-                if (this.linkPickerQuery) params.set('q', this.linkPickerQuery);
-                const r = await fetch(ROUTES.linkPageSearch + '?' + params.toString(), {
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                });
+                if (picker.query) params.set('q', picker.query);
+                if (picker.entity) params.set('entity', picker.entity);
+                const r = await fetch(ROUTES.linkEntities + '?' + params.toString(), { headers: { 'Accept': 'application/json' } });
                 const d = await r.json();
-                this.linkPickerResults = d.pages ?? [];
+                picker.entities = d.entities ?? picker.entities;
+                picker.results = d.results ?? [];
             } catch (e) {
-                this.linkPickerResults = [];
+                picker.results = [];
+            } finally {
+                picker.loading = false;
             }
         },
-
-        selectLinkPage(propKey, page) {
-            this.selectedBlock.props[propKey] = { type: 'internal_page', page_id: page.id, page_title: page.title };
-            this.linkPickerOpenFor = null;
-            this.schedulePropUpdate();
+        pickEntity(result) {
+            const set = this.entityPicker.set;
+            if (typeof set === 'function') set({ type: 'entity', entity: result.entity, id: result.id, label: result.title });
+            this.closeEntityPicker();
         },
 
         openMediaPicker(propKey, target = null) {

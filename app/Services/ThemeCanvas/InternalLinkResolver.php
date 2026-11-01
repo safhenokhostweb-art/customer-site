@@ -32,9 +32,13 @@ class InternalLinkResolver
      * its fields, which turned an ADR-061 structured {url, target} link on
      * a hero/CTA button into '' (no link).
      */
+    public function __construct(private readonly EntityLinkCatalog $catalog)
+    {
+    }
+
     public function resolveBlockProps(string $type, array $props): array
     {
-        $resolve = fn (mixed $value) => self::isInternalPageReference($value) ? $this->resolveValue($value) : $value;
+        $resolve = fn (mixed $value) => self::isReference($value) ? $this->resolveValue($value) : $value;
 
         foreach ($props as $propKey => $value) {
             $props[$propKey] = $resolve($value);
@@ -43,15 +47,23 @@ class InternalLinkResolver
         return SchemaFieldMap::transform($type, $props, 'link', $resolve);
     }
 
-    private static function isInternalPageReference(mixed $value): bool
+    /**
+     * Unit 4: an entity link ({type: entity, entity, id}, EntityLinkCatalog)
+     * written by the unified picker, or a legacy {type: internal_page}.
+     */
+    public static function isReference(mixed $value): bool
     {
-        return is_array($value) && ($value['type'] ?? null) === 'internal_page';
+        return EntityLinkCatalog::isReference($value)
+            || (is_array($value) && ($value['type'] ?? null) === 'internal_page');
     }
 
     public function resolveValue(mixed $value): string
     {
         if (is_string($value)) {
             return $value;
+        }
+        if (EntityLinkCatalog::isReference($value)) {
+            return $this->catalog->resolve($value);
         }
         if (!is_array($value) || ($value['type'] ?? null) !== 'internal_page') {
             return '';
