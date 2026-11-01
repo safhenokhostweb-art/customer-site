@@ -45,6 +45,7 @@ final class EntityLinkCatalog
         'shop' => ['فروشگاه', 'shop.index', 'shop'],
         'blog' => ['وبلاگ', 'blog.index', 'blog'],
         'courses' => ['دوره‌ها', 'courses.index', 'courses'],
+        'contact' => ['تماس با ما', 'contact.show', null],
     ];
 
     /** entity => [route that renders it, module that gates it]. */

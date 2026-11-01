@@ -88,8 +88,9 @@ class EntityLinkCatalogTest extends TestCase
 
         $admin = User::factory()->create(['is_admin' => true]);
         $response = $this->actingAs($admin)->getJson($url . '?q=' . urlencode('تماس'))->assertOk();
-        $this->assertSame('page', $response->json('results.0.entity'));
-        $this->assertSame(route('page.show', 'contact-us'), $response->json('results.0.url'));
+        $byEntity = collect($response->json('results'))->keyBy('entity');
+        $this->assertSame(route('page.show', 'contact-us'), $byEntity['page']['url']);
+        $this->assertSame(route('contact.show'), $byEntity['route']['url'], 'the built-in contact page is offered too (Unit 5)');
         $this->assertArrayHasKey('product', $response->json('entities'));
 
         $only = $this->actingAs($admin)->getJson($url . '?entity=product')->assertOk()->json('results');
