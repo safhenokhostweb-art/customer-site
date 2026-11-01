@@ -49,4 +49,8 @@ class ThemeInstanceRevision extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    public function setSourceThemeIdAttribute($value): void
+    {
+        $this->attributes['source_theme_id'] = (is_numeric($value) && (int) $value > 0) ? (int) $value : null;
+    }
 }
