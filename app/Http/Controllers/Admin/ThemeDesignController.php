@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use SaaSPlatform\ThemeRuntime\Layout\LockedStructureGuard;
+use SaaSPlatform\ThemeRuntime\TemplateLibrary;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -1311,13 +1312,25 @@ class ThemeDesignController extends Controller
 
     public function canvasInsertTemplate(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'template_id' => 'required|integer|exists:site_theme_templates,id',
-        ]);
+        // Canvas overhaul Unit 5 (ADR-075): a library id ("lib:<key>") or a
+        // saved template's integer id.
+        $id = $request->input('template_id');
+        if (!TemplateLibrary::isLibraryId($id)) {
+            $id = (int) $request->validate([
+                'template_id' => 'required|integer|exists:site_theme_templates,id',
+            ])['template_id'];
+        }
 
-        $blocks = $this->templateSvc->insertBlocks((int) $data['template_id']);
+        try {
+            $inserted = $this->templateSvc->insertBlocks($id);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'قالب شامل ویجت‌های در دسترس نیست: ' . $e->getMessage(),
+            ], 422);
+        }
 
-        return response()->json(['success' => true, 'blocks' => $blocks]);
+        return response()->json(['success' => true] + $inserted);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

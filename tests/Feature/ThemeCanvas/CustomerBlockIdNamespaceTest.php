@@ -96,7 +96,7 @@ class CustomerBlockIdNamespaceTest extends TestCase
             'is_active' => true,
         ]);
 
-        $blocks = app(SiteThemeTemplateService::class)->insertBlocks($template->id);
+        $blocks = app(SiteThemeTemplateService::class)->insertBlocks($template->id)['blocks'];
 
         $this->assertStringStartsWith('cust_', $blocks[0]['id']);
         $this->assertStringStartsWith('cust_', $blocks[0]['children'][0]['id']);
