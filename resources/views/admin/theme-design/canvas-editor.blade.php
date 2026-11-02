@@ -60,35 +60,45 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
         <div class="h-6 w-px bg-slate-200 shrink-0"></div>
 
-        {{-- Page Tabs --}}
-        <div class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0" style="scrollbar-width:none;">
-            <template x-for="(page, key) in pages" :key="key">
-                <button
-                    @click="switchPage(key)"
-                    :data-testid="'tb-canvas-page-tab-' + key"
-                    :class="key === '__header__'
-                        ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
-                        : key === '__footer__'
-                            ? (currentPage === key ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200')
-                            : (currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')"
-                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap flex items-center gap-1.5 group relative"
-                >
-                    <span x-show="key === '__header__'" class="text-sm leading-none">🔝</span>
-                    <span x-show="key === '__footer__'" class="text-sm leading-none">🔚</span>
-                    <span x-text="page.title ?? key"></span>
-                    <span
-                        x-show="!page.is_home && key !== 'home' && !key.startsWith('__')"
-                        @click.stop="deletePage(key)"
-                        :class="currentPage === key ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-red-500'"
-                        class="text-xs leading-none transition hidden group-hover:inline"
-                        title="حذف صفحه"
-                    >×</span>
-                </button>
-            </template>
+        {{-- Page Tabs. ADR-076: the tabs scroll inside their own strip
+             (theme-runtime::canvas.tab-strip: chevrons, wheel, active tab kept
+             in view), so adding pages never needs a browser zoom-out. --}}
+        <div class="tbts-group" data-testid="tb-page-tabs-group">
+            <div class="tbts" data-tb-tabstrip data-testid="tb-page-tabs">
+                @include('theme-runtime::canvas.tab-strip-nav', ['dir' => 'start'])
+                <div class="tbts-viewport" data-tbts-viewport role="group" aria-label="صفحات قالب">
+                    <template x-for="(page, key) in pages" :key="key">
+                        <button
+                            @click="switchPage(key)"
+                            :data-testid="'tb-canvas-page-tab-' + key"
+                            :data-canvas-page-tab="key"
+                            :aria-current="currentPage === key ? 'page' : null"
+                            :class="key === '__header__'
+                                ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
+                                : key === '__footer__'
+                                    ? (currentPage === key ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200')
+                                    : (currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')"
+                            class="px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap flex items-center gap-1.5 group relative"
+                        >
+                            <span x-show="key === '__header__'" class="text-sm leading-none">🔝</span>
+                            <span x-show="key === '__footer__'" class="text-sm leading-none">🔚</span>
+                            <span x-text="page.title ?? key"></span>
+                            <span
+                                x-show="!page.is_home && key !== 'home' && !key.startsWith('__')"
+                                @click.stop="deletePage(key)"
+                                :class="currentPage === key ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-red-500'"
+                                class="text-xs leading-none transition hidden group-hover:inline"
+                                title="حذف صفحه"
+                            >×</span>
+                        </button>
+                    </template>
+                </div>
+                @include('theme-runtime::canvas.tab-strip-nav', ['dir' => 'end'])
+            </div>
             <button
                 @click="showAddPage = true"
                 data-testid="tb-add-page-open"
-                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap shrink-0"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 صفحه جدید
@@ -837,6 +847,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <div x-show="selectedTab === 'content'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                         <template x-for="(schemaDef, propKey) in selectedSchema" :key="propKey">
                             <div>
+                                {{-- ADR-076: a field's schema `group` opens a sidebar section
+                                     where it first appears (same contract as the platform Canvas). --}}
+                                <template x-if="fieldGroupStart(propKey)">
+                                    <p class="mt-2 mb-3 pb-1 border-b border-slate-100 text-xs font-bold tracking-wide text-indigo-700" x-text="schemaDef.group" :data-testid="'tb-field-group-' + propKey"></p>
+                                </template>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5" x-text="schemaDef.label || propKey"></label>
 
                                 <template x-if="schemaDef.type === 'string' && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
@@ -1094,7 +1109,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         x-model.number="selectedBlock.props[propKey]"
                                         @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
-                                        :min="0"
+                                        :min="schemaDef.min ?? 0" :max="schemaDef.max ?? null" :step="schemaDef.step ?? 'any'"
                                         :data-testid="'tb-prop-' + propKey"
                                     >
                                 </template>
@@ -1141,7 +1156,22 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </label>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'select'">
+                                {{-- ADR-076: segmented control for a select whose schema declares
+                                     ui: 'segmented' — one button per schema option. --}}
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui === 'segmented'">
+                                    <div class="flex gap-1 p-1 rounded-lg bg-slate-100" role="radiogroup" :aria-label="schemaDef.label || propKey" :data-testid="'tb-segmented-' + propKey">
+                                        <template x-for="(label, val) in schemaDef.options" :key="val">
+                                            <button type="button" role="radio"
+                                                :aria-checked="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val) ? 'true' : 'false'"
+                                                @click="selectedBlock.props[propKey] = val; schedulePropUpdate()"
+                                                :class="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val) ? 'bg-white text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:text-slate-800'"
+                                                class="flex-1 px-2 py-1.5 rounded-md text-xs leading-tight transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                                                x-text="label" :data-testid="'tb-segmented-' + propKey + '-' + val"></button>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui !== 'segmented'">
                                     <select
                                         x-model="selectedBlock.props[propKey]"
                                         @change="schedulePropUpdate()"
@@ -1745,6 +1775,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
      the platform's own editor pages which use the same bootstrap partial. --}}
 @include('theme-runtime::canvas.color')
 @include('theme-runtime::canvas.icons')
+@include('theme-runtime::canvas.tab-strip')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
@@ -1882,6 +1913,14 @@ function canvasEditor() {
             // the children panel — it has no content-tab control.
             const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
             return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
+        },
+        // ADR-076: true where a field's schema `group` differs from the previous field's.
+        fieldGroupStart(propKey) {
+            const schema = this.selectedSchema;
+            const keys = Object.keys(schema);
+            const index = keys.indexOf(propKey);
+            const group = schema[propKey]?.group;
+            return !!group && (index <= 0 || schema[keys[index - 1]]?.group !== group);
         },
         get selectedEditorCapabilities() {
             return this.selectedBlock
