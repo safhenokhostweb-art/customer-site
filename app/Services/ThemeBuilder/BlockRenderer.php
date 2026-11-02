@@ -211,7 +211,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
-        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}";
+        // ADR-076: data-widget-type is the stable hook browser checks and the
+        // Sentinel verifier select widgets by (same as the package wrappers).
+        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\" data-widget-type=\"{$esc}\"{$containerAttr}";
 
         // Phase 8 Step 2 — context injection for the Lifecycle Engine.
         // In public runtime mode, embed the block's props as a JSON attribute
