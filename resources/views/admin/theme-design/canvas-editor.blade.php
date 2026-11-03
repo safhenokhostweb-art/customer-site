@@ -60,35 +60,45 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
         <div class="h-6 w-px bg-slate-200 shrink-0"></div>
 
-        {{-- Page Tabs --}}
-        <div class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0" style="scrollbar-width:none;">
-            <template x-for="(page, key) in pages" :key="key">
-                <button
-                    @click="switchPage(key)"
-                    :data-testid="'tb-canvas-page-tab-' + key"
-                    :class="key === '__header__'
-                        ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
-                        : key === '__footer__'
-                            ? (currentPage === key ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200')
-                            : (currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')"
-                    class="px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap flex items-center gap-1.5 group relative"
-                >
-                    <span x-show="key === '__header__'" class="text-sm leading-none">🔝</span>
-                    <span x-show="key === '__footer__'" class="text-sm leading-none">🔚</span>
-                    <span x-text="page.title ?? key"></span>
-                    <span
-                        x-show="!page.is_home && key !== 'home' && !key.startsWith('__')"
-                        @click.stop="deletePage(key)"
-                        :class="currentPage === key ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-red-500'"
-                        class="text-xs leading-none transition hidden group-hover:inline"
-                        title="حذف صفحه"
-                    >×</span>
-                </button>
-            </template>
+        {{-- Page Tabs. ADR-076: the tabs scroll inside their own strip
+             (theme-runtime::canvas.tab-strip: chevrons, wheel, active tab kept
+             in view), so adding pages never needs a browser zoom-out. --}}
+        <div class="tbts-group" data-testid="tb-page-tabs-group">
+            <div class="tbts" data-tb-tabstrip data-testid="tb-page-tabs">
+                @include('theme-runtime::canvas.tab-strip-nav', ['dir' => 'start'])
+                <div class="tbts-viewport" data-tbts-viewport role="group" aria-label="صفحات قالب">
+                    <template x-for="(page, key) in pages" :key="key">
+                        <button
+                            @click="switchPage(key)"
+                            :data-testid="'tb-canvas-page-tab-' + key"
+                            :data-canvas-page-tab="key"
+                            :aria-current="currentPage === key ? 'page' : null"
+                            :class="key === '__header__'
+                                ? (currentPage === key ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200')
+                                : key === '__footer__'
+                                    ? (currentPage === key ? 'bg-purple-600 text-white shadow-sm' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200')
+                                    : (currentPage === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')"
+                            class="px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap flex items-center gap-1.5 group relative"
+                        >
+                            <span x-show="key === '__header__'" class="text-sm leading-none">🔝</span>
+                            <span x-show="key === '__footer__'" class="text-sm leading-none">🔚</span>
+                            <span x-text="page.title ?? key"></span>
+                            <span
+                                x-show="!page.is_home && key !== 'home' && !key.startsWith('__')"
+                                @click.stop="deletePage(key)"
+                                :class="currentPage === key ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-red-500'"
+                                class="text-xs leading-none transition hidden group-hover:inline"
+                                title="حذف صفحه"
+                            >×</span>
+                        </button>
+                    </template>
+                </div>
+                @include('theme-runtime::canvas.tab-strip-nav', ['dir' => 'end'])
+            </div>
             <button
                 @click="showAddPage = true"
                 data-testid="tb-add-page-open"
-                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap shrink-0"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 صفحه جدید
@@ -123,7 +133,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             </span>
 
             {{-- TB6: Template Library --}}
-            <button @click="openTemplateLibrary()"
+            <button type="button" data-testid="tb-open-templates" @click="openTemplateLibrary()"
                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-medium transition"
                 title="کتابخانه قالب‌ها">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
@@ -595,7 +605,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">اندازه فونت (px)<span x-show="hasResponsiveOverride('fontSize', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
-                                        <input type="number" min="8" max="120" :value="getCascadedValue('fontSize', '')" @input="updateStyle('fontSize', $event.target.value===''?'':Number($event.target.value))" placeholder="پیش‌فرض" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="8" max="120" :value="getCascadedValue('fontSize', '')" @input.debounce.300ms="updateStyle('fontSize', $event.target.value===''?'':Number($event.target.value))" placeholder="پیش‌فرض" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">وزن فونت<span x-show="hasResponsiveOverride('fontWeight', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
@@ -620,7 +630,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-500 mb-1 block">فاصله خطوط</label>
-                                        <input type="number" min="1" max="4" step="0.1" :value="getCascadedValue('lineHeight', '')" @input="updateStyle('lineHeight', $event.target.value===''?'':Number($event.target.value))" placeholder="۱.۵" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="1" max="4" step="0.1" :value="getCascadedValue('lineHeight', '')" @input.debounce.300ms="updateStyle('lineHeight', $event.target.value===''?'':Number($event.target.value))" placeholder="۱.۵" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -638,7 +648,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">رنگ پس‌زمینه<span x-show="hasResponsiveOverride('bgColor', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
                                     <div class="flex items-center gap-2">
                                         <input type="color" :value="getCascadedValue('bgColor', '#ffffff')" @change="updateStyle('bgColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text" :value="getCascadedValue('bgColor', '')" @input="updateStyle('bgColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="text" :value="getCascadedValue('bgColor', '')" @input.debounce.300ms="updateStyle('bgColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                         <button x-show="getCascadedValue('bgColor')" @click="updateStyle('bgColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
                                     </div>
                                 </div>
@@ -646,7 +656,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     <label class="text-xs text-slate-500 mb-1 block flex items-center gap-1">رنگ متن<span x-show="hasResponsiveOverride('textColor', activeBreakpoint) && activeBreakpoint !== 'desktop'" class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block"></span></label>
                                     <div class="flex items-center gap-2">
                                         <input type="color" :value="getCascadedValue('textColor', '#000000')" @change="updateStyle('textColor', $event.target.value)" class="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0.5">
-                                        <input type="text" :value="getCascadedValue('textColor', '')" @input="updateStyle('textColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="text" :value="getCascadedValue('textColor', '')" @input.debounce.300ms="updateStyle('textColor', $event.target.value)" placeholder="بدون رنگ" class="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                         <button x-show="getCascadedValue('textColor')" @click="updateStyle('textColor', '')" class="text-slate-400 hover:text-red-500 text-sm">×</button>
                                     </div>
                                 </div>
@@ -690,27 +700,27 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ بالا</label>
-                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingTop', '')" @input="updateStyle('paddingTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingTop', '')" @input.debounce.300ms="updateStyle('paddingTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ پایین</label>
-                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingBottom', '')" @input="updateStyle('paddingBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingBottom', '')" @input.debounce.300ms="updateStyle('paddingBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ راست</label>
-                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingRight', '')" @input="updateStyle('paddingRight', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingRight', '')" @input.debounce.300ms="updateStyle('paddingRight', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">پدینگ چپ</label>
-                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingLeft', '')" @input="updateStyle('paddingLeft', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="200" :value="getCascadedValue('paddingLeft', '')" @input.debounce.300ms="updateStyle('paddingLeft', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">مارجین بالا</label>
-                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginTop', '')" @input="updateStyle('marginTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginTop', '')" @input.debounce.300ms="updateStyle('marginTop', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">مارجین پایین</label>
-                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginBottom', '')" @input="updateStyle('marginBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="-100" max="200" :value="getCascadedValue('marginBottom', '')" @input.debounce.300ms="updateStyle('marginBottom', $event.target.value===''?'':Number($event.target.value))" placeholder="px" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -727,7 +737,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">ضخامت (px)</label>
-                                        <input type="number" min="0" max="20" :value="getCascadedValue('borderWidth', '')" @input="updateStyle('borderWidth', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="20" :value="getCascadedValue('borderWidth', '')" @input.debounce.300ms="updateStyle('borderWidth', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">سبک</label>
@@ -743,7 +753,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                     <div>
                                         <label class="text-xs text-slate-400 mb-1 block">گوشه گرد (px)</label>
-                                        <input type="number" min="0" max="100" :value="getCascadedValue('borderRadius', '')" @input="updateStyle('borderRadius', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                        <input type="number" min="0" max="100" :value="getCascadedValue('borderRadius', '')" @input.debounce.300ms="updateStyle('borderRadius', $event.target.value===''?'':Number($event.target.value))" placeholder="۰" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                     </div>
                                 </div>
                             </div>
@@ -776,7 +786,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </button>
                             <div x-show="styleSection.opacity" class="p-3">
                                 <div class="flex items-center gap-2">
-                                    <input type="range" min="0.1" max="1" step="0.05" :value="getCascadedValue('opacity', 1)" @input="updateStyle('opacity', Number($event.target.value))" class="flex-1">
+                                    <input type="range" min="0.1" max="1" step="0.05" :value="getCascadedValue('opacity', 1)" @input.debounce.300ms="updateStyle('opacity', Number($event.target.value))" class="flex-1">
                                     <span class="text-xs text-slate-500 w-10 text-left" x-text="Math.round(getCascadedValue('opacity', 1) * 100) + '%'"></span>
                                 </div>
                             </div>
@@ -795,7 +805,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <div x-show="selectedTab === 'advanced'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                         <div x-show="selectedEditorCapabilities.allowCustomCss">
                             <label class="block text-xs font-semibold text-slate-600 mb-1.5">کلاس CSS سفارشی</label>
-                            <input type="text" :value="selectedBlock.style?.customClass ?? ''" @input="updateStyle('customClass', $event.target.value)"
+                            <input type="text" :value="selectedBlock.style?.customClass ?? ''" @input.debounce.300ms="updateStyle('customClass', $event.target.value)"
                                 placeholder="my-class another-class" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono">
                         </div>
                         <div>
@@ -828,7 +838,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
                         <div x-show="selectedBlock.style?.animation && selectedBlock.style.animation !== ''">
                             <label class="block text-xs font-semibold text-slate-600 mb-1.5">مدت زمان (ثانیه)</label>
-                            <input type="number" min="0.2" max="3" step="0.1" :value="selectedBlock.style?.animationDuration ?? 0.6" @input="updateStyle('animationDuration', Number($event.target.value))"
+                            <input type="number" min="0.2" max="3" step="0.1" :value="selectedBlock.style?.animationDuration ?? 0.6" @input.debounce.300ms="updateStyle('animationDuration', Number($event.target.value))"
                                 class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         </div>
                     </div>
@@ -837,6 +847,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <div x-show="selectedTab === 'content'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                         <template x-for="(schemaDef, propKey) in selectedSchema" :key="propKey">
                             <div>
+                                {{-- ADR-076: a field's schema `group` opens a sidebar section
+                                     where it first appears (same contract as the platform Canvas). --}}
+                                <template x-if="fieldGroupStart(propKey)">
+                                    <p class="mt-2 mb-3 pb-1 border-b border-slate-100 text-xs font-bold tracking-wide text-indigo-700" x-text="schemaDef.group" :data-testid="'tb-field-group-' + propKey"></p>
+                                </template>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5" x-text="schemaDef.label || propKey"></label>
 
                                 <template x-if="schemaDef.type === 'string' && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
@@ -860,57 +875,20 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     ])
                                 </template>
 
-                                {{-- TASK 3/3 Phase 6.5C (BLD-28) — internal-link-capable adapter
-                                     for button/CTA/hero action URL fields. A plain string stays a
-                                     raw custom URL (unchanged, backward compatible); an
-                                     {type:'internal_page', page_id} value is resolved server-side
-                                     (InternalLinkResolver, mirroring CustomerMediaResolver's
-                                     {media_id} pattern) to the Page's CURRENT url at render time,
-                                     so a later slug rename never breaks it — reuses the exact same
-                                     bounded search endpoint Menu's own page picker uses. --}}
+                                {{-- Canvas overhaul Unit 4: one link control (custom URL or any page,
+                                     product, category, post or course via the shared entity picker).
+                                     Picked entities are stored as references and resolved to the live
+                                     permalink at render time (EntityLinkCatalog). --}}
                                 <template x-if="schemaDef.type === 'link'">
-                                    <div class="space-y-2" :data-testid="'tb-link-field-' + propKey">
-                                        <div class="flex gap-2 text-xs">
-                                            <button type="button"
-                                                    @click="setLinkCustomUrl(propKey, isInternalLinkValue(selectedBlock.props[propKey]) ? '' : (selectedBlock.props[propKey] || ''))"
-                                                    :class="!isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
-                                                    class="px-2 py-1 rounded transition">آدرس سفارشی</button>
-                                            <button type="button"
-                                                    @click="openLinkPagePicker(propKey)"
-                                                    :class="isInternalLinkValue(selectedBlock.props[propKey]) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'"
-                                                    class="px-2 py-1 rounded transition"
-                                                    :data-testid="'tb-link-page-toggle-' + propKey">صفحه داخلی</button>
-                                        </div>
-
-                                        <template x-if="!isInternalLinkValue(selectedBlock.props[propKey])">
-                                            <input type="text" :value="selectedBlock.props[propKey]"
-                                                   @input="setLinkCustomUrl(propKey, $event.target.value)"
+                                    <div :data-testid="'tb-link-field-' + propKey">
+                                        <x-canvas-link-field value="selectedBlock.props[propKey]"
+                                                             set="v => { selectedBlock.props[propKey] = v; schedulePropUpdate(); }"
+                                                             testid="propKey">
+                                            <input type="text" dir="ltr" inputmode="url" :value="linkFieldUrl(selectedBlock.props[propKey])"
+                                                   @input="selectedBlock.props[propKey] = linkFieldValue(selectedBlock.props[propKey], $event.target.value); schedulePropUpdate()"
                                                    class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                                                   placeholder="https://..." :data-testid="'tb-prop-' + propKey">
-                                        </template>
-
-                                        <template x-if="isInternalLinkValue(selectedBlock.props[propKey])">
-                                            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-xs text-emerald-800"
-                                                 :data-testid="'tb-prop-' + propKey">
-                                                <span x-text="'لینک به: ' + (selectedBlock.props[propKey].page_title || ('#' + selectedBlock.props[propKey].page_id))"></span>
-                                                <button type="button" @click="openLinkPagePicker(propKey)" class="text-indigo-600 underline">تغییر</button>
-                                            </div>
-                                        </template>
-
-                                        <template x-if="linkPickerOpenFor === propKey">
-                                            <div class="border border-slate-200 rounded-lg p-2 space-y-1 bg-white">
-                                                <input type="text" x-model="linkPickerQuery" @input.debounce.300ms="searchLinkPages()"
-                                                       placeholder="جستجوی صفحه..." class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-300"
-                                                       :data-testid="'tb-link-page-search-' + propKey">
-                                                <template x-for="page in linkPickerResults" :key="page.id">
-                                                    <button type="button" @click="selectLinkPage(propKey, page)"
-                                                            class="block w-full text-right text-xs px-2 py-1.5 rounded hover:bg-indigo-50"
-                                                            :data-testid="'tb-link-page-result-' + page.id"
-                                                            x-text="page.title"></button>
-                                                </template>
-                                                <p x-show="linkPickerQuery && linkPickerResults.length === 0" class="text-xs text-slate-400 px-2 py-1">صفحه‌ای یافت نشد.</p>
-                                            </div>
-                                        </template>
+                                                   placeholder="/about یا https://…" :data-testid="'tb-prop-' + propKey">
+                                        </x-canvas-link-field>
                                     </div>
                                 </template>
 
@@ -1012,10 +990,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                             </div>
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type === 'textarea'">
-                                                                                                            <textarea :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                                                            <textarea :value="deepItem[deepFieldKey] ?? ''" @input.debounce.300ms="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type === 'link'">
-                                                                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                            <x-canvas-link-field value="deepItem[deepFieldKey]" set="v => updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, v, schemaDef)" testid="`deep-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`">
+                                                                                                                <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(deepItem[deepFieldKey])" @input.debounce.300ms="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, linkFieldValue(deepItem[deepFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                            </x-canvas-link-field>
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type === 'boolean'">
                                                                                                             <label class="flex items-center gap-2 cursor-pointer">
@@ -1032,7 +1012,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                                             ])
                                                                                                         </template>
                                                                                                         <template x-if="deepFieldDef.type !== 'image' && deepFieldDef.type !== 'textarea' && deepFieldDef.type !== 'link' && deepFieldDef.type !== 'boolean' && deepFieldDef.type !== 'icon'">
-                                                                                                            <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                                            <input type="text" :value="deepItem[deepFieldKey] ?? ''" @input.debounce.300ms="updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, deepIndex, deepFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-deep-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}-${deepIndex}-${deepFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                                         </template>
                                                                                                     </div>
                                                                                                 </template>
@@ -1042,10 +1022,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                     </div>
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type === 'textarea'">
-                                                                                    <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                                    <textarea :value="nestedItem[nestedFieldKey] ?? ''" @input.debounce.300ms="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type === 'link'">
-                                                                                    <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                    <x-canvas-link-field value="nestedItem[nestedFieldKey]" set="v => updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, v, schemaDef)" testid="`nested-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`">
+                                                                                        <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :value="linkFieldUrl(nestedItem[nestedFieldKey])" @input.debounce.300ms="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, linkFieldValue(nestedItem[nestedFieldKey], $event.target.value), schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                    </x-canvas-link-field>
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type === 'boolean'">
                                                                                     <label class="flex items-center gap-2 cursor-pointer">
@@ -1062,7 +1044,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                                     ])
                                                                                 </template>
                                                                                 <template x-if="nestedFieldDef.type !== 'textarea' && nestedFieldDef.type !== 'image' && nestedFieldDef.type !== 'repeater' && nestedFieldDef.type !== 'link' && nestedFieldDef.type !== 'boolean' && nestedFieldDef.type !== 'icon'">
-                                                                                    <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                                    <input type="text" :value="nestedItem[nestedFieldKey] ?? ''" @input.debounce.300ms="updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, $event.target.value, schemaDef)" :data-testid="`tb-nested-field-${propKey}-${itemIndex}-${fieldKey}-${nestedIndex}-${nestedFieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                                 </template>
                                                                             </div>
                                                                         </template>
@@ -1078,7 +1060,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                             </label>
                                                         </template>
                                                         <template x-if="fieldDef.type === 'link'">
-                                                            <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                            <x-canvas-link-field value="item[fieldKey]" set="v => updateStructuredField(propKey, itemIndex, fieldKey, v, schemaDef)" testid="`item-${propKey}-${itemIndex}-${fieldKey}`">
+                                                                <input type="text" dir="ltr" inputmode="url" placeholder="/products یا https://…" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="linkFieldUrl(item[fieldKey])" @input.debounce.300ms="updateStructuredField(propKey, itemIndex, fieldKey, linkFieldValue(item[fieldKey], $event.target.value), schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                            </x-canvas-link-field>
                                                         </template>
                                                         <template x-if="fieldDef.type === 'select'">
                                                             <select :value="item[fieldKey] ?? ''" @change="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
@@ -1098,10 +1082,10 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                         <template x-if="fieldDef.type !== 'image' && fieldDef.type !== 'repeater' && fieldDef.type !== 'boolean' && fieldDef.type !== 'select' && fieldDef.type !== 'link' && fieldDef.type !== 'icon'">
                                                             <div>
                                                                 <template x-if="fieldDef.type === 'textarea'">
-                                                                    <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
+                                                                    <textarea :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input.debounce.300ms="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" rows="2" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"></textarea>
                                                                 </template>
                                                                 <template x-if="fieldDef.type !== 'textarea'">
-                                                                    <input type="text" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                                                                    <input type="text" :id="`tb-structured-${propKey}-${itemIndex}-${fieldKey}`" :value="item[fieldKey] ?? ''" @input.debounce.300ms="updateStructuredField(propKey, itemIndex, fieldKey, $event.target.value, schemaDef)" :data-testid="`tb-structured-field-${propKey}-${itemIndex}-${fieldKey}`" class="w-full text-xs px-2 py-1.5 rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
                                                                 </template>
                                                             </div>
                                                         </template>
@@ -1125,7 +1109,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         x-model.number="selectedBlock.props[propKey]"
                                         @input="schedulePropUpdate()"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
-                                        :min="0"
+                                        :min="schemaDef.min ?? 0" :max="schemaDef.max ?? null" :step="schemaDef.step ?? 'any'"
                                         :data-testid="'tb-prop-' + propKey"
                                     >
                                 </template>
@@ -1172,7 +1156,22 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </label>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'select'">
+                                {{-- ADR-076: segmented control for a select whose schema declares
+                                     ui: 'segmented' — one button per schema option. --}}
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui === 'segmented'">
+                                    <div class="flex gap-1 p-1 rounded-lg bg-slate-100" role="radiogroup" :aria-label="schemaDef.label || propKey" :data-testid="'tb-segmented-' + propKey">
+                                        <template x-for="(label, val) in schemaDef.options" :key="val">
+                                            <button type="button" role="radio"
+                                                :aria-checked="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val) ? 'true' : 'false'"
+                                                @click="selectedBlock.props[propKey] = val; schedulePropUpdate()"
+                                                :class="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val) ? 'bg-white text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:text-slate-800'"
+                                                class="flex-1 px-2 py-1.5 rounded-md text-xs leading-tight transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                                                x-text="label" :data-testid="'tb-segmented-' + propKey + '-' + val"></button>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui !== 'segmented'">
                                     <select
                                         x-model="selectedBlock.props[propKey]"
                                         @change="schedulePropUpdate()"
@@ -1301,7 +1300,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         </div>
                                         <div x-show="selectedBindingDef.source === 'products'">
                                             <label class="block text-xs font-medium text-slate-600 mb-1">Category ID (optional)</label>
-                                            <input type="number" min="1" :value="selectedBlock.binding.query.category_id ?? ''" @input="updateBindingQuery('category_id', $event.target.value ? Number($event.target.value) : null)" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-category">
+                                            <input type="number" min="1" :value="selectedBlock.binding.query.category_id ?? ''" @input.debounce.300ms="updateBindingQuery('category_id', $event.target.value ? Number($event.target.value) : null)" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-category">
                                         </div>                                            <div x-show="selectedBlock.binding.query.sort === 'manual'" x-effect="bindingEntitiesActive">
                                             <label class="block text-xs font-medium text-slate-600 mb-1">انتخاب موارد</label>
                                             <div x-show="bindingEntitiesLoading" class="text-[11px] text-slate-400 py-1">در حال بارگذاری موارد…</div>
@@ -1322,7 +1321,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-slate-600 mb-1">Item limit</label>
-                                            <input type="number" min="1" max="24" :value="selectedBlock.binding.query.limit" @input="updateBindingQuery('limit', Number($event.target.value))" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-limit">
+                                            <input type="number" min="1" max="24" :value="selectedBlock.binding.query.limit" @input.debounce.300ms="updateBindingQuery('limit', Number($event.target.value))" class="w-full text-xs px-2 py-2 rounded border border-slate-200 bg-white" data-testid="tb-binding-limit">
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-slate-600 mb-1">When no data exists</label>
@@ -1457,14 +1456,18 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <select x-model="templateLibrary.category" @change="fetchTemplates()"
                     class="text-sm px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none">
                     <option value="">همه دسته‌ها</option>
+                    <option value="navigation">ناوبری</option>
                     <option value="hero">هیرو</option>
-                    <option value="features">ویژگی‌ها</option>
+                    <option value="features">ویژگی‌ها و بنتو</option>
+                    <option value="product">محصول</option>
+                    <option value="store">فروشگاه</option>
+                    <option value="blog">وبلاگ</option>
+                    <option value="testimonials">اعتماد و آمار</option>
                     <option value="pricing">قیمت‌گذاری</option>
-                    <option value="testimonials">نظرات</option>
+                    <option value="faq">سؤالات متداول</option>
+                    <option value="corporate">شرکتی</option>
                     <option value="contact">تماس</option>
                     <option value="gallery">گالری</option>
-                    <option value="blog">وبلاگ</option>
-                    <option value="product">محصول</option>
                 </select>
             </div>
             <div class="flex-1 overflow-y-auto p-5">
@@ -1477,25 +1480,28 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <div x-show="!templateLibrary.loading && templateLibrary.templates.length > 0"
                     class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     <template x-for="tpl in templateLibrary.templates" :key="tpl.id">
-                        <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition cursor-pointer group flex flex-col"
+                        <button type="button" class="text-start border border-slate-200 rounded-xl overflow-hidden hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition cursor-pointer group flex flex-col disabled:opacity-60 disabled:cursor-wait"
+                            :data-testid="'tpl-card-' + tpl.id" :disabled="templateLibrary.inserting"
                             @click="insertTemplate(tpl.id)">
-                            <div class="aspect-video bg-gradient-to-br from-slate-100 to-purple-50 flex items-center justify-center relative overflow-hidden">
+                            <div class="aspect-video w-full bg-gradient-to-br from-slate-100 to-purple-50 flex items-center justify-center relative overflow-hidden">
                                 <template x-if="tpl.thumbnail_url">
-                                    <img :src="tpl.thumbnail_url" class="w-full h-full object-cover">
+                                    <img :src="tpl.thumbnail_url" :alt="tpl.name" loading="lazy" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
                                 </template>
                                 <template x-if="!tpl.thumbnail_url">
                                     <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"/></svg>
                                 </template>
                                 <span class="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/90 text-purple-700" x-text="tpl.type_label"></span>
+                                <span x-show="tpl.source === 'library'" class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-600 text-white">آماده</span>
                                 <div class="absolute inset-0 bg-purple-600/0 group-hover:bg-purple-600/10 transition flex items-center justify-center">
-                                    <span class="opacity-0 group-hover:opacity-100 bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">درج</span>
+                                    <span class="opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition" x-text="templateLibrary.inserting ? 'در حال درج…' : 'درج'"></span>
                                 </div>
                             </div>
-                            <div class="p-3">
+                            <div class="p-3 w-full">
                                 <p class="text-xs font-semibold text-slate-800 truncate" x-text="tpl.name"></p>
                                 <p class="text-[10px] text-slate-400 mt-0.5" x-text="tpl.category_label"></p>
+                                <p x-show="tpl.description" class="text-[10px] leading-relaxed text-slate-500 mt-1 line-clamp-2" x-text="tpl.description"></p>
                             </div>
-                        </div>
+                        </button>
                     </template>
                 </div>
             </div>
@@ -1580,6 +1586,52 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
             <div class="flex gap-2 mt-5">
                 <button @click="confirmAddPage()" data-testid="tb-add-page-confirm" :disabled="!newPageTitle" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition">افزودن</button>
                 <button @click="showAddPage = false; newPageTitle=''; newPageSlug=''" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Canvas overhaul Unit 4: unified entity link picker. One modal for every
+         link field; results come live from the database (EntityLinkCatalog),
+         each with the permalink it resolves to right now. --}}
+    <div x-show="entityPicker.open" x-cloak x-transition.opacity
+         class="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-[10vh]"
+         @keydown.escape.window="entityPicker.open && closeEntityPicker()"
+         @click.self="closeEntityPicker()" data-testid="tb-link-picker">
+        <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="انتخاب لینک">
+            <div class="p-4 border-b border-slate-100 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-800">انتخاب مقصد لینک</h3>
+                    <button type="button" class="text-slate-400 hover:text-slate-700 text-lg leading-none" aria-label="بستن" @click="closeEntityPicker()">×</button>
+                </div>
+                <input type="search" x-model="entityPicker.query" @input.debounce.250ms="searchEntities()"
+                       placeholder="جستجوی برگه، محصول، دسته، مقاله یا دوره…"
+                       class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                       data-testid="tb-link-picker-search">
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                    <button type="button" @click="entityPicker.entity = ''; searchEntities()"
+                            :class="entityPicker.entity === '' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-2.5 py-1 rounded-full transition">همه</button>
+                    <template x-for="(label, key) in entityPicker.entities" :key="key">
+                        <button type="button" @click="entityPicker.entity = key; searchEntities()"
+                                :class="entityPicker.entity === key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-2.5 py-1 rounded-full transition" :data-testid="'tb-link-picker-tab-' + key" x-text="label"></button>
+                    </template>
+                </div>
+            </div>
+            <div class="max-h-[50vh] overflow-y-auto p-2" :aria-busy="entityPicker.loading ? 'true' : 'false'">
+                <template x-for="result in entityPicker.results" :key="result.entity + ':' + result.id">
+                    <button type="button" @click="pickEntity(result)"
+                            class="w-full flex items-center gap-3 text-right px-3 py-2 rounded-lg hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none"
+                            :data-testid="'tb-link-picker-result-' + result.entity + '-' + result.id">
+                        <span class="shrink-0 w-24 text-[10px] font-bold text-indigo-700 bg-indigo-50 rounded px-1.5 py-0.5 text-center" x-text="result.entity_label"></span>
+                        <span class="flex-1 min-w-0">
+                            <span class="block truncate text-sm text-slate-800" x-text="result.title"></span>
+                            <span class="block truncate text-[11px] text-slate-400" dir="ltr" x-text="result.url"></span>
+                        </span>
+                    </button>
+                </template>
+                <p x-show="entityPicker.loading" class="px-3 py-6 text-center text-xs text-slate-400">در حال جستجو…</p>
+                <p x-show="!entityPicker.loading && entityPicker.results.length === 0" class="px-3 py-6 text-center text-xs text-slate-400">موردی یافت نشد. برگه یا محصول را در پیشخوان بسازید؛ اینجا بلافاصله نمایش داده می‌شود.</p>
             </div>
         </div>
     </div>
@@ -1723,6 +1775,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
      the platform's own editor pages which use the same bootstrap partial. --}}
 @include('theme-runtime::canvas.color')
 @include('theme-runtime::canvas.icons')
+@include('theme-runtime::canvas.tab-strip')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
@@ -1748,7 +1801,7 @@ const ROUTES = {
     // TASK 3/3 Phase 6.5C (BLD-28) — reuses the SAME bounded, already-proven
     // search endpoint Menu's own "add existing Page" picker uses
     // (MenuController::searchPages()) — no second Page-search authority.
-    linkPageSearch: '{{ route('admin.menus.pages.search') }}',
+    linkEntities: '{{ route('admin.theme-design.canvas-link-entities') }}',
 };
 
 // Phase 4B.5 — block props arriving from storage as a JSON empty array
@@ -1830,9 +1883,7 @@ function canvasEditor() {
         // canonical CustomerMedia uuid, not a raw URL — MEDIA-4.
         mediaModal: { open: false, tab: 'library', images: [], loading: false, uploading: false, selected: null, propKey: null, target: null, returnFocus: null, q: '', category: '' },
         // TASK 3/3 Phase 6.5C (BLD-28) — internal-link picker state.
-        linkPickerOpenFor: null,
-        linkPickerQuery: '',
-        linkPickerResults: [],
+        entityPicker: { open: false, query: '', entity: '', results: [], entities: {}, loading: false, set: null },
         // MEDIA-4: uuid -> resolved URL, populated as the library loads/
         // uploads, so a persisted {media_id} value can render a live
         // thumbnail in the property panel without a DB round trip per
@@ -1843,7 +1894,7 @@ function canvasEditor() {
         // TB6: template library
         showTemplateLibrary: false,
         showSaveAsTemplate: false,
-        templateLibrary: { loading: false, templates: [], type: '', category: '', search: '' },
+        templateLibrary: { loading: false, inserting: false, templates: [], type: '', category: '', search: '' },
         saveTemplateForm: { name: '', type: 'section', category: 'hero', scope: 'block', saving: false },
 
         // ── Computed ──────────────────────────────────────────
@@ -1862,6 +1913,14 @@ function canvasEditor() {
             // the children panel — it has no content-tab control.
             const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
             return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
+        },
+        // ADR-076: true where a field's schema `group` differs from the previous field's.
+        fieldGroupStart(propKey) {
+            const schema = this.selectedSchema;
+            const keys = Object.keys(schema);
+            const index = keys.indexOf(propKey);
+            const group = schema[propKey]?.group;
+            return !!group && (index <= 0 || schema[keys[index - 1]]?.group !== group);
         },
         get selectedEditorCapabilities() {
             return this.selectedBlock
@@ -3008,41 +3067,53 @@ function canvasEditor() {
                 .finally(() => this._mediaCacheInFlight.delete(uuid));
         },
 
-        // ── TASK 3/3 Phase 6.5C (BLD-28): internal-link picker ──────────
-        isInternalLinkValue(value) {
-            return !!value && typeof value === 'object' && value.type === 'internal_page';
+        // ── Canvas overhaul Unit 4: unified entity link picker ─────────────
+        // One modal for every link field at every depth. `set` is the field's
+        // own writer, so nested repeater items persist through their usual
+        // update path. A pick stores {type:'entity', entity, id, label}; the
+        // label is only for this chip, the server resolves the live URL.
+        isEntityLinkValue(value) {
+            return !!value && typeof value === 'object' && (value.type === 'entity' || value.type === 'internal_page');
         },
-
-        setLinkCustomUrl(propKey, url) {
-            this.selectedBlock.props[propKey] = url;
-            this.linkPickerOpenFor = null;
-            this.schedulePropUpdate();
+        entityLinkLabel(value) {
+            if (!this.isEntityLinkValue(value)) return '';
+            return value.label || value.page_title || ('#' + (value.id ?? value.page_id));
         },
-
-        openLinkPagePicker(propKey) {
-            this.linkPickerOpenFor = propKey;
-            this.linkPickerQuery = '';
-            this.linkPickerResults = [];
+        entityLinkKind(value) {
+            if (!this.isEntityLinkValue(value)) return '';
+            if (value.type === 'internal_page') return 'برگه';
+            return this.entityPicker.entities[value.entity] || ({ route: 'صفحه اصلی', page: 'برگه', product: 'محصول', product_category: 'دسته محصول', post: 'مقاله', blog_category: 'دسته وبلاگ', course: 'دوره' })[value.entity] || value.entity;
         },
-
-        async searchLinkPages() {
+        openEntityPicker(set) {
+            this.entityPicker = { ...this.entityPicker, open: true, query: '', entity: '', results: [], set };
+            this.searchEntities();
+            this.$nextTick(() => document.querySelector('[data-testid="tb-link-picker-search"]')?.focus());
+        },
+        closeEntityPicker() {
+            this.entityPicker.open = false;
+            this.entityPicker.set = null;
+        },
+        async searchEntities() {
+            const picker = this.entityPicker;
+            picker.loading = true;
             try {
                 const params = new URLSearchParams();
-                if (this.linkPickerQuery) params.set('q', this.linkPickerQuery);
-                const r = await fetch(ROUTES.linkPageSearch + '?' + params.toString(), {
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
-                });
+                if (picker.query) params.set('q', picker.query);
+                if (picker.entity) params.set('entity', picker.entity);
+                const r = await fetch(ROUTES.linkEntities + '?' + params.toString(), { headers: { 'Accept': 'application/json' } });
                 const d = await r.json();
-                this.linkPickerResults = d.pages ?? [];
+                picker.entities = d.entities ?? picker.entities;
+                picker.results = d.results ?? [];
             } catch (e) {
-                this.linkPickerResults = [];
+                picker.results = [];
+            } finally {
+                picker.loading = false;
             }
         },
-
-        selectLinkPage(propKey, page) {
-            this.selectedBlock.props[propKey] = { type: 'internal_page', page_id: page.id, page_title: page.title };
-            this.linkPickerOpenFor = null;
-            this.schedulePropUpdate();
+        pickEntity(result) {
+            const set = this.entityPicker.set;
+            if (typeof set === 'function') set({ type: 'entity', entity: result.entity, id: result.id, label: result.title });
+            this.closeEntityPicker();
         },
 
         openMediaPicker(propKey, target = null) {
@@ -3184,23 +3255,50 @@ function canvasEditor() {
                 this.templateLibrary.loading = false;
             }
         },
+        // Canvas overhaul Unit 5 (ADR-075): a template lands in its own zone
+        // (header/footer templates on the virtual __header__/__footer__
+        // pages, never in a page body), a header/footer template replaces
+        // the current one after confirmation, and the canvas re-renders at
+        // once through the same autoSaveAndReload() every other insert uses.
+        // History is pushed BEFORE the change, as addBlock() does, so one
+        // undo restores the pre-insert tree.
         async insertTemplate(id) {
+            if (this.templateLibrary.inserting) return;
+            this.templateLibrary.inserting = true;
             try {
                 const res = await fetch('{{ route('admin.theme-design.canvas.insert-template') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content, 'Accept': 'application/json' },
                     body: JSON.stringify({ template_id: id }),
                 });
-                const json = await res.json();
-                if (json.success && json.blocks) {
-                    this.blocks = [...this.blocks, ...json.blocks];
-                    this.pushHistory();
-                    this.isDirty = true;
-                    this.showTemplateLibrary = false;
-                    this.showToast('قالب درج شد', 'success');
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok || !json.success || !Array.isArray(json.blocks)) {
+                    this.showToast(json.message || 'درج قالب ممکن نشد.', 'error');
+                    return;
                 }
+                const zonePage = { header: '__header__', footer: '__footer__' }[json.zone] ?? null;
+                if (zonePage && this.currentPage !== zonePage && this.pages[zonePage]) {
+                    this.switchPage(zonePage);
+                } else if (!zonePage && this.currentPage.startsWith('__')) {
+                    this.switchPage(Object.keys(this.pages).find(k => !k.startsWith('__')) ?? 'home');
+                }
+                const replace = !!zonePage && this.blocks.length > 0;
+                if (replace && !confirm(`${json.zone === 'header' ? 'هدر' : 'فوتر'} فعلی با این قالب جایگزین شود؟ (با «بازگردانی» قابل برگشت است)`)) return;
+
+                this.pushHistory();
+                const inserted = json.blocks.map(raw => this.normalizeBlock(JSON.parse(JSON.stringify(raw))));
+                const start = replace ? 0 : this.blocks.length;
+                this.pages[this.currentPage].blocks = replace ? inserted : [...this.blocks, ...inserted];
+                this.selectedPath = inserted.length ? [start] : null;
+                this.showTemplateLibrary = false;
+                this.isDirty = true;
+                await this.autoSaveAndReload();
+                this.showToast('قالب درج شد', 'success');
             } catch (e) {
+                console.error('[template-insert]', e);
                 this.showToast('خطا در درج قالب', 'error');
+            } finally {
+                this.templateLibrary.inserting = false;
             }
         },
         async saveAsTemplate() {

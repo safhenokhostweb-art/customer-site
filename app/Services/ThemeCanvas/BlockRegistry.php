@@ -127,6 +127,7 @@ final class BlockRegistry
     public static function reset(): void
     {
         self::$blocks = null;
+        SchemaFieldMap::reset();
     }
 
     /**

@@ -535,8 +535,8 @@
                                                         <template x-for="(subDef,subKey) in (schemaDef.item_schema||{})" :key="subKey">
                                                             <div>
                                                                 <label class="block text-[9px] font-medium mb-0.5" style="color:#64748b" x-text="subDef.label||subKey"></label>
-                                                                <template x-if="subDef.type==='string'"><input type="text" :value="item[subKey]??''" @input="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px]" :placeholder="subDef.default??''"></template>
-                                                                <template x-if="subDef.type==='textarea'"><textarea :value="item[subKey]??''" @input="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" rows="2" class="inp text-[11px] resize-y"></textarea></template>
+                                                                <template x-if="subDef.type==='string'"><input type="text" :value="item[subKey]??''" @input.debounce.300ms="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px]" :placeholder="subDef.default??''"></template>
+                                                                <template x-if="subDef.type==='textarea'"><textarea :value="item[subKey]??''" @input.debounce.300ms="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" rows="2" class="inp text-[11px] resize-y"></textarea></template>
                                                                 <template x-if="subDef.type==='boolean'">
                                                                     <div class="flex items-center gap-2">
                                                                         <div class="tgl-track" :class="(item[subKey]??false)?'on':''" @click="updateRepItem(propKey,itemIdx,subKey,!(item[subKey]??false))"><div class="tgl-thumb"></div></div>
@@ -545,7 +545,7 @@
                                                                 </template>
                                                                 <template x-if="subDef.type==='select'"><select :value="item[subKey]??subDef.default??''" @change="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px]"><template x-for="(lbl,val) in (subDef.options||{})" :key="val"><option :value="val" x-text="lbl" :selected="(item[subKey]??subDef.default)==val"></option></template></select></template>
                                                                 <template x-if="subDef.type==='color'">
-                                                                    <div class="flex gap-2 items-center"><input type="color" :value="item[subKey]||'#6366f1'" @input="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="w-8 h-8 rounded border bg-transparent cursor-pointer p-0.5" style="border-color:#334155"><input type="text" :value="item[subKey]??''" @input="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px] font-mono" placeholder="#000000"></div>
+                                                                    <div class="flex gap-2 items-center"><input type="color" :value="item[subKey]||'#6366f1'" @input.debounce.300ms="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="w-8 h-8 rounded border bg-transparent cursor-pointer p-0.5" style="border-color:#334155"><input type="text" :value="item[subKey]??''" @input.debounce.300ms="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px] font-mono" placeholder="#000000"></div>
                                                                 </template>
                                                                 <template x-if="subDef.type==='image'">
                                                                     <div class="space-y-1">
@@ -554,7 +554,7 @@
                                                                             <button @click="updateRepItem(propKey,itemIdx,subKey,'')" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition">×</button>
                                                                         </div>
                                                                         <div class="flex gap-1.5">
-                                                                            <input type="text" :value="item[subKey]??''" @input="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px] flex-1" placeholder="URL">
+                                                                            <input type="text" :value="item[subKey]??''" @input.debounce.300ms="updateRepItem(propKey,itemIdx,subKey,$event.target.value)" class="inp text-[11px] flex-1" placeholder="URL">
                                                                             <label class="cursor-pointer px-2 py-1 rounded-md text-[10px] font-medium transition flex items-center" style="border:1px solid #4f46e5;color:#818cf8" :class="uploadingRepKey===propKey+'_'+itemIdx+'_'+subKey?'opacity-50':''">
                                                                                 <span x-show="uploadingRepKey!==propKey+'_'+itemIdx+'_'+subKey">📷</span>
                                                                                 <span x-show="uploadingRepKey===propKey+'_'+itemIdx+'_'+subKey" class="upload-spinner"></span>

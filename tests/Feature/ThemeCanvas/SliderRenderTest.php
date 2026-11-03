@@ -147,7 +147,10 @@ class SliderRenderTest extends TestCase
         $this->assertStringContainsString('data-autoplay="true"', $html);
         $this->assertStringContainsString('data-interval="7000"', $html);
         $this->assertSame(3, substr_count($html, 'class="tb-carousel-slide"'));
-        $this->assertSame(3, substr_count($html, 'class="tb-carousel-dot"'));
+        // WU-B: the first dot carries the server-rendered active state, so
+        // count the dot class token, then the single initial active dot.
+        $this->assertSame(3, preg_match_all('/class="tb-carousel-dot(?: is-active)?"/', $html));
+        $this->assertSame(1, substr_count($html, 'class="tb-carousel-dot is-active" aria-label="رفتن به اسلاید ۱" aria-current="true"'));
         $this->assertStringContainsString('class="tb-carousel-progress"', $html);
         $this->assertStringContainsString('class="tb-carousel-pause"', $html);
         $this->assertSame(3, substr_count($html, 'class="tb-carousel-thumb"'));

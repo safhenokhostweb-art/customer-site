@@ -6,6 +6,8 @@ use App\Helpers\CurrencyHelper;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\ThemeCanvas\CustomerMediaResolver;
+use App\Services\ThemeCanvas\InternalLinkResolver;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SaaSPlatform\ThemeRuntime\Attributes\HostOwnedOverride;
@@ -65,6 +67,11 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
      */
     protected array $extensionAssetsByType = [];
 
+    /** Request-scoped, like this renderer (see CustomerMediaResolver's cache notes). */
+    protected ?CustomerMediaResolver $mediaResolver = null;
+
+    protected ?InternalLinkResolver $linkResolver = null;
+
     public function setSchemaRegistry(?ElementSchemaRegistry $registry): self
     {
         $this->schemaRegistry = $registry;
@@ -110,6 +117,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     {
         $type = $block['type'] ?? 'text';
         $id = $block['id'] ?? Str::random(8);
+        $block = $this->prepareBlock($block);
 
         $registry = $this->schemaRegistry ?? app()->make(ElementSchemaRegistry::class);
         if (!$registry->validate($block)) {
@@ -118,7 +126,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
                 'type' => $type,
                 'errors' => $registry->getLastErrors(),
             ]);
-            $html = $this->renderPlaceholder($id, $type, 'invalid_schema');
+            $html = $this->renderPlaceholder($id, $type, 'invalid_schema', PlaceholderDetail::fromErrors($registry->getLastErrors()));
         } else {
             try {
                 $html = $this->renderBlockUnsafe($block);
@@ -129,7 +137,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
                     'message' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                 ]);
-                $html = $this->renderPlaceholder($id, $type, 'render_error');
+                $html = $this->renderPlaceholder($id, $type, 'render_error', PlaceholderDetail::fromThrowable($e));
             }
         }
 
@@ -138,6 +146,50 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
             $this->wrapEditorMode($html, $id, $type, $block['props'] ?? []),
             $block, $id, $type,
         );
+    }
+
+    /**
+     * Canvas overhaul Unit 2b: the one pre-render step every host render
+     * path shares. It turns canonical {media_id} and internal-page values
+     * into real URLs before validation and rendering. It used to live only
+     * in ThemeCanvasRenderer, so the default theme layout (header/footer),
+     * home.blade and the page/content builder controllers rendered
+     * unresolved arrays, and nav_header crashed with "Array to string
+     * conversion" on a Media Library mega-menu banner (production log,
+     * 2026-10-31). Children re-enter renderBlock(), so they are prepared
+     * too. Both resolvers leave plain strings unchanged, so running this
+     * twice on one block is harmless.
+     */
+    protected function prepareBlock(array $block): array
+    {
+        $key = isset($block['props']) ? 'props' : (isset($block['data']) ? 'data' : null);
+        if ($key === null || !is_array($block[$key])) {
+            return $block;
+        }
+        $type = (string) ($block['type'] ?? 'text');
+
+        $this->mediaResolver ??= app(CustomerMediaResolver::class);
+        $this->linkResolver ??= app(InternalLinkResolver::class);
+        $props = $this->mediaResolver->resolveBlockProps($type, $block[$key]);
+        $block[$key] = $this->linkResolver->resolveBlockProps($type, $props);
+
+        return $block;
+    }
+
+    /**
+     * Bulk-load every {media_id} referenced across the given block lists in
+     * one query before rendering them (BLD-32). Optional: without it,
+     * prepareBlock() still resolves each value with a memoized per-UUID
+     * lookup.
+     */
+    public function preloadMediaFor(array ...$blockLists): void
+    {
+        $this->mediaResolver ??= app(CustomerMediaResolver::class);
+        $uuids = [];
+        foreach ($blockLists as $blocks) {
+            $uuids = array_merge($uuids, $this->mediaResolver->collectMediaIds($blocks));
+        }
+        $this->mediaResolver->preload($uuids);
     }
 
     /**
@@ -159,7 +211,9 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
-        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\"{$containerAttr}";
+        // ADR-076: data-widget-type is the stable hook browser checks and the
+        // Sentinel verifier select widgets by (same as the package wrappers).
+        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\" data-widget-type=\"{$esc}\"{$containerAttr}";
 
         // Phase 8 Step 2 — context injection for the Lifecycle Engine.
         // In public runtime mode, embed the block's props as a JSON attribute
@@ -185,12 +239,14 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     /**
      * Safe fallback UI when element is invalid or crashes. Does not break the page.
      */
-    protected function renderPlaceholder(string $id, string $type, string $reason): string
+    protected function renderPlaceholder(string $id, string $type, string $reason, string $detail = ''): string
     {
         $reasonLabel = $reason === 'invalid_schema' ? 'invalid' : 'error';
         $safeType = $this->escapeAttr($type);
         $safeId = $this->escapeAttr($id);
-        return "<div id=\"tb-{$safeId}\" class=\"tb-placeholder tb-placeholder-{$reasonLabel}\" data-type=\"{$safeType}\" data-reason=\"{$this->escapeAttr($reason)}\" aria-hidden=\"true\"><span class=\"tb-placeholder-label\">[{$reasonLabel}] {$safeType}</span></div>";
+        // Unit 2e: the cause is shown to the editor only, never on a public page.
+        $detailHtml = $this->isEditorRendering() ? PlaceholderDetail::html($reason, $detail) : '';
+        return "<div id=\"tb-{$safeId}\" class=\"tb-placeholder tb-placeholder-{$reasonLabel}\" data-type=\"{$safeType}\" data-reason=\"{$this->escapeAttr($reason)}\" aria-hidden=\"true\"><span class=\"tb-placeholder-label\">[{$reasonLabel}] {$safeType}</span>{$detailHtml}</div>";
     }
 
     /**

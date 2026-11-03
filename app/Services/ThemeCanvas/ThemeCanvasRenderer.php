@@ -23,9 +23,6 @@ class ThemeCanvasRenderer extends BlockRenderer
 {
     protected array $themeData = [];
 
-    private ?CustomerMediaResolver $mediaResolver = null;
-    private ?InternalLinkResolver $linkResolver = null;
-
     public function setThemeData(array $themeData): self
     {
         $this->themeData = $themeData;
@@ -49,10 +46,9 @@ class ThemeCanvasRenderer extends BlockRenderer
     {
         $type = $block['type'] ?? 'text';
         $id   = $block['id'] ?? Str::random(8);
-        $block = $this->resolveMediaProps($block, $type);
-        $block = $this->resolveInternalLinkProps($block, $type);
 
         if (str_starts_with($type, 'module:')) {
+            $block = $this->prepareBlock($block);
             try {
                 $props = $block['props'] ?? $block['data'] ?? [];
                 $html  = $this->renderModuleBlock($type, $props, $id);
@@ -68,7 +64,7 @@ class ThemeCanvasRenderer extends BlockRenderer
                     'element_id' => $id, 'type' => $type,
                     'message' => $e->getMessage(), 'trace' => $e->getTraceAsString(),
                 ]);
-                $html = $this->renderPlaceholder($id, $type, 'render_error');
+                $html = $this->renderPlaceholder($id, $type, 'render_error', \App\Services\ThemeBuilder\PlaceholderDetail::fromThrowable($e));
             }
             return $this->wrapEditorMode($html, $id, $type);
         }
@@ -76,64 +72,9 @@ class ThemeCanvasRenderer extends BlockRenderer
         return parent::renderBlock($block);
     }
 
-    /**
-     * MEDIA-4: the one bounded integration point that turns every
-     * canonical `{media_id}` prop into a real URL before any renderer
-     * (module or standard) sees it, so individual renderers never perform
-     * their own media lookup. Recurses automatically: every nested/child
-     * block (including slider slides) re-enters renderBlock() and is
-     * resolved here too. Block types/props CustomerMediaResolver doesn't
-     * know about pass through completely untouched.
-     */
-    private function resolveMediaProps(array $block, string $type): array
-    {
-        $key = isset($block['props']) ? 'props' : (isset($block['data']) ? 'data' : null);
-        if ($key === null || !is_array($block[$key])) {
-            return $block;
-        }
-        $this->mediaResolver ??= app(CustomerMediaResolver::class);
-        $block[$key] = $this->mediaResolver->resolveBlockProps($type, $block[$key]);
-
-        return $block;
-    }
-
-    /**
-     * TASK 3/3 Phase 6.5E (BLD-32) — bulk-preloads every media reference
-     * across any number of block lists (e.g. header + footer + page
-     * content) in ONE query before rendering, instead of letting
-     * resolveMediaProps() above discover and query them one at a time as
-     * the tree is walked. Call this before renderBlocks() for a page; a
-     * caller that skips it still renders correctly (resolveMediaProps()
-     * falls back to a per-UUID lookup, still memoized) — this is a pure
-     * performance boundary, never a correctness one.
-     */
-    public function preloadMediaFor(array ...$blockLists): void
-    {
-        $this->mediaResolver ??= app(CustomerMediaResolver::class);
-        $uuids = [];
-        foreach ($blockLists as $blocks) {
-            $uuids = array_merge($uuids, $this->mediaResolver->collectMediaIds($blocks));
-        }
-        $this->mediaResolver->preload($uuids);
-    }
-
-    /**
-     * TASK 3/3 Phase 6.5C (BLD-28) — the same bounded integration point as
-     * resolveMediaProps() above, for internal-page-capable link props
-     * (button/CTA/hero action URLs). See InternalLinkResolver's own
-     * docblock.
-     */
-    private function resolveInternalLinkProps(array $block, string $type): array
-    {
-        $key = isset($block['props']) ? 'props' : (isset($block['data']) ? 'data' : null);
-        if ($key === null || !is_array($block[$key])) {
-            return $block;
-        }
-        $this->linkResolver ??= app(InternalLinkResolver::class);
-        $block[$key] = $this->linkResolver->resolveBlockProps($type, $block[$key]);
-
-        return $block;
-    }
+    // Media and internal-link resolution moved to the shared
+    // BlockRenderer::prepareBlock() (Canvas overhaul Unit 2b), together
+    // with preloadMediaFor(), so every host render path resolves them.
 
     // ── Module block dispatcher ───────────────────────────────────────────────
 

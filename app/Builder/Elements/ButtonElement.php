@@ -13,7 +13,7 @@ class ButtonElement extends BaseElement
     {
         return [
             'text' => ['type' => 'string', 'required' => false, 'default' => 'دکمه', 'max' => 200],
-            'url' => ['type' => 'string', 'required' => false, 'default' => '#', 'max' => 2048, 'control' => 'url'],
+            'url' => ['type' => 'link', 'required' => false, 'default' => '#', 'control' => 'url'],
             'style' => ['type' => 'enum', 'values' => ['primary', 'secondary'], 'default' => 'primary'],
         ];
     }
@@ -22,9 +22,7 @@ class ButtonElement extends BaseElement
     {
         $id = $context['id'] ?? '';
         $text = self::escape((string) ($props['text'] ?? ''));
-        $url = (string) ($props['url'] ?? '#');
-        if (!self::isValidUrl($url)) $url = '#';
-        $url = self::escapeAttr($url);
+        $url = self::escapeAttr(self::linkUrl($props['url'] ?? '#'));
         $style = in_array($props['style'] ?? 'primary', ['primary', 'secondary'], true) ? $props['style'] : 'primary';
         return app(\SaaSPlatform\ThemeRuntime\BlockRenderer::class)
             ->dispatchStructural('button', $props, $context['inner'] ?? '', $id)

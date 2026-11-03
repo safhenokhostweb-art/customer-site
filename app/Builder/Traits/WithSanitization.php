@@ -39,4 +39,16 @@ trait WithSanitization
     {
         return HtmlSanitizer::isValidUrl($url);
     }
+
+    /**
+     * The URL of a `link` value — a plain string or an ADR-061 structured
+     * {url, …} link — or $fallback when it is empty or unsafe.
+     */
+    protected static function linkUrl(mixed $value, string $fallback = '#'): string
+    {
+        $url = is_array($value) ? ($value['url'] ?? '') : $value;
+        $url = is_string($url) ? trim($url) : '';
+
+        return $url !== '' && self::isValidUrl($url) ? $url : $fallback;
+    }
 }

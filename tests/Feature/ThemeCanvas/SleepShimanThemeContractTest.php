@@ -5,6 +5,7 @@ namespace Tests\Feature\ThemeCanvas;
 use App\Services\ThemeCanvas\BlockRegistry;
 use App\Services\ThemeCanvas\CustomerMediaResolver;
 use App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry;
+use App\Services\ThemeCanvas\SchemaFieldMap;
 use App\Services\ThemeCanvas\ThemeCanvasRenderer;
 use App\Services\ThemeCanvas\ThemePresentationCapabilityRegistry;
 use Tests\TestCase;
@@ -35,9 +36,10 @@ final class SleepShimanThemeContractTest extends TestCase
 
     public function test_sleep_shiman_media_fields_use_canonical_customer_media_resolver_inventory(): void
     {
-        self::assertSame(['logo'], CustomerMediaResolver::MEDIA_PROPS['sleepshiman_header']);
-        self::assertSame('image', CustomerMediaResolver::MEDIA_REPEATERS['sleepshiman_mattresses']['field']);
-        self::assertSame('avatar', CustomerMediaResolver::MEDIA_REPEATERS['sleepshiman_reviews']['field']);
+        $inventory = SchemaFieldMap::inventory(CustomerMediaResolver::CONTROL_TYPE);
+        self::assertContains('logo', $inventory['sleepshiman_header'] ?? []);
+        self::assertContains('items[].image', $inventory['sleepshiman_mattresses'] ?? []);
+        self::assertContains('items[].avatar', $inventory['sleepshiman_reviews'] ?? []);
     }
 
     public function test_tenant_renderer_uses_shared_manual_markup_and_escapes_content(): void
