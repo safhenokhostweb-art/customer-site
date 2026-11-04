@@ -5693,11 +5693,11 @@
         },
         {
             "name": "saas-platform/modules-theme-runtime",
-            "version": "dev-feat/header-mobile-search-glow",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/theme-runtime",
-                "reference": "041df047743fa0eb3d1827cd6f47b85a8a892f2f"
+                "reference": "5d87935440c7159004d51895afdbe7c2bae21739"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
