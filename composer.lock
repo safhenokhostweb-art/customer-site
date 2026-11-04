@@ -5697,7 +5697,7 @@
             "dist": {
                 "type": "path",
                 "url": "../saas-platform/packages/saas-platform/modules/theme-runtime",
-                "reference": "ac026053f682896036712d5fae7c6dc20c57e750"
+                "reference": "5c2b7d94514359dd95da4a668872d3292536587e"
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
