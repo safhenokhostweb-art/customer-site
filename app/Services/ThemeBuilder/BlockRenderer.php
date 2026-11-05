@@ -210,10 +210,12 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
         $esc   = htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $idEsc = htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $containerAttr = self::isContainerType($type) ? ' data-tb-container="1"' : '';
         // ADR-076: data-widget-type is the stable hook browser checks and the
         // Sentinel verifier select widgets by (same as the package wrappers).
-        $metadata = " data-tb-block-id=\"{$idEsc}\" data-tb-block-type=\"{$esc}\" data-widget-type=\"{$esc}\"{$containerAttr}";
+        $attributes = ['data-tb-block-id' => $idEsc, 'data-tb-block-type' => $esc, 'data-widget-type' => $esc];
+        if (self::isContainerType($type)) {
+            $attributes['data-tb-container'] = '1';
+        }
 
         // Phase 8 Step 2 — context injection for the Lifecycle Engine.
         // In public runtime mode, embed the block's props as a JSON attribute
@@ -222,15 +224,37 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         // via iframe RPC, never via DOM attributes).
         if ($isPublicRuntime && $props !== []) {
             $propsJson = json_encode($props, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-            $propsAttr = ' data-tb-block-props="' . htmlspecialchars($propsJson, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
-            $metadata .= $propsAttr;
+            $attributes['data-tb-block-props'] = htmlspecialchars($propsJson, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         }
 
         // Keep editor hooks metadata-only. Adding a class here can collide
         // with theme selectors and change typography or layout in preview.
-        $decorated = preg_replace('/^(\s*<[a-zA-Z][a-zA-Z0-9:-]*)(?=\s|>)/', '$1'.$metadata, $html, 1, $rootCount);
+        // The hooks go on the block's first rendered element: a renderer may
+        // open with its own <style> (nav_header), which must not carry them,
+        // and an attribute the element already has is not repeated.
+        $decorated = preg_replace_callback(
+            '/^((?:\s*<style\b[^>]*>.*?<\/style>)*\s*<[a-zA-Z][a-zA-Z0-9:-]*)((?:[^>"\']|"[^"]*"|\'[^\']*\')*>)/s',
+            static function (array $m) use ($attributes): string {
+                $metadata = '';
+                foreach ($attributes as $name => $value) {
+                    if (! preg_match('/\s' . preg_quote($name, '/') . '\s*=/', $m[2])) {
+                        $metadata .= " {$name}=\"{$value}\"";
+                    }
+                }
+
+                return $m[1] . $metadata . $m[2];
+            },
+            $html,
+            1,
+            $rootCount
+        );
         if ($rootCount === 1) {
             return $decorated;
+        }
+
+        $metadata = '';
+        foreach ($attributes as $name => $value) {
+            $metadata .= " {$name}=\"{$value}\"";
         }
 
         return "<div{$metadata}>{$html}</div>";

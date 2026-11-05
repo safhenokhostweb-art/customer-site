@@ -56,6 +56,33 @@ class CanvasInspectHostTest extends TestCase
         $this->assertStringContainsString('کپی پرامپت اصلاحی', $view);
     }
 
+    /**
+     * ADR-076 on the host: the header opens with its own <style>, so the
+     * hooks go on the first rendered element (the header root), once — not
+     * on the stylesheet, and no attribute the root already has is repeated.
+     */
+    public function test_a_block_that_opens_with_a_style_gets_one_hook_on_its_root(): void
+    {
+        foreach (['public' => [], 'editor' => ['editor_mode' => true]] as $mode => $context) {
+            $html = (new BlockRenderer())->setMode($mode)->setContext($context)
+                ->renderBlock(['type' => 'nav_header', 'id' => 'hdr1', 'props' => ['logo_text' => 'برند', 'sticky' => true]]);
+
+            $doc = new \DOMDocument();
+            @$doc->loadHTML('<?xml encoding="utf-8"?><body>' . $html . '</body>');
+            $hooks = (new \DOMXPath($doc))->query('//*[@data-widget-type]');
+            $this->assertSame(1, $hooks->length, "{$mode}: one hook");
+            $root = $hooks->item(0);
+            $this->assertSame('div', $root->nodeName, "{$mode}: never on the <style>");
+            $this->assertSame('tb-hdr1', $root->getAttribute('id'));
+            $this->assertSame('nav_header', $root->getAttribute('data-widget-type'));
+
+            preg_match('/<div id="tb-hdr1"[^>]*>/', $html, $tag);
+            preg_match_all('/\s([a-z-]+)=/', $tag[0] ?? '', $names);
+            $this->assertSame(array_unique($names[1]), $names[1], "{$mode}: no attribute repeated on the root");
+        }
+        $this->assertSame(0, preg_match('/<style[^>]*data-widget-type/', $html));
+    }
+
     public function test_no_local_copy_of_the_scripts(): void
     {
         foreach (['canvas-inspect.js', 'canvas-audit.js', 'canvas-health.js'] as $file) {
