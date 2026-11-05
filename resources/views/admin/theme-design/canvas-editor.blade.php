@@ -1830,12 +1830,12 @@ const HEADER_ORDER_ITEMS = [
     { key: 'search',  label: 'جستجو' },
     { key: 'social',  label: 'شبکه‌های اجتماعی' },
     { key: 'phone',   label: 'شماره تماس' },
-    { key: 'cta',     label: 'دکمه فراخوان (CTA)' },
+    { key: 'cta',     label: 'دکمه اقدام (CTA)' },
     { key: 'cart',    label: 'سبد خرید' },
     { key: 'account', label: 'ورود / حساب کاربری' },
     { key: 'menu',    label: 'منوی ناوبری' },
-    { key: 'dark_toggle', label: 'تغییر حالت تاریک' },
     { key: 'burger',  label: 'منوی همبرگری (موبایل)' },
+    { key: 'dark_toggle', label: 'دکمه تغییر حالت تاریک' },
 ];
 const ROUTES = {
     saveBlocks:   '{{ route('admin.theme-design.canvas-save-blocks') }}',
@@ -1971,9 +1971,15 @@ function canvasEditor() {
         },
         // header_order — the element order as a stable, complete list: the
         // stored order first (unknown keys preserved), then every known header
-        // element the stored value does not mention yet.
+        // element the stored value does not mention yet. An empty stored value
+        // shows the schema default, which is also what the renderer falls back
+        // to, so the list always matches the rendered header.
         headerOrderItems(propKey) {
-            const stored = Array.isArray(this.selectedBlock?.props?.[propKey]) ? this.selectedBlock.props[propKey] : [];
+            let stored = Array.isArray(this.selectedBlock?.props?.[propKey]) ? this.selectedBlock.props[propKey] : [];
+            if (stored.length === 0) {
+                const fallback = BLOCK_SCHEMAS[this.selectedBlock?.type]?.schema?.[propKey]?.default;
+                stored = Array.isArray(fallback) ? fallback : [];
+            }
             const labels = Object.fromEntries(HEADER_ORDER_ITEMS.map(i => [i.key, i.label]));
             const items = [];
             const seen = new Set();
