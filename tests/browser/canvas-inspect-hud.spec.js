@@ -136,4 +136,55 @@ test.describe('Canvas Inspect Mode + Design HUD (customer host)', () => {
         await expect(frame.locator('html[data-tb-inspect]')).toHaveCount(0);
         expect(realErrorsOnly(errors), realErrorsOnly(errors).join('\n')).toHaveLength(0);
     });
+
+    // WU-3 «سلامت ویجت» (theme-runtime::canvas.health), Inspect OFF.
+    test('widget health tab: red row, details, fix prompt, row selects the block, stops on close', async ({ page, context }) => {
+        test.setTimeout(120_000);
+        const errors = collectConsoleErrors(page);
+        await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(BASE_URL).origin });
+        const clip = () => page.evaluate(() => navigator.clipboard.readText());
+
+        await loginAsAdmin(page);
+        await openCanvasEditor(page);
+        await switchToPage(page, 'home');
+        await expect.poll(async () => (await editorState(page)).iframeReady, { timeout: 20_000 }).toBe(true);
+
+        const frame = canvasIframe(page);
+        const widget = frame.locator('[data-tb-block-id="canvas_section_1"][data-widget-type="section"]');
+        const running = () => frame.locator('body').evaluate(() => window.TbAudit.isRunning());
+        await editor(page, `(s) => s.setDevice('mobile')`);
+        await expect.poll(() => frame.locator('body').evaluate(() => document.documentElement.clientWidth)).toBeLessThan(500);
+        await widget.evaluate((el) => {
+            const p = document.createElement('p');
+            p.setAttribute('data-planted', '1');
+            p.style.cssText = 'white-space:nowrap;display:inline-block;width:800px';
+            p.textContent = '۰۹۱۲ ۳۴۵ ۶۷۸۹';
+            el.appendChild(p);
+        });
+        expect(await running(), 'nothing audits before the tab opens').toBe(false);
+
+        await page.locator('[data-testid="tb-canvas-health-tab"]').click();
+        const panel = page.locator('[data-tb-health]');
+        const row = panel.locator('[data-tb-health-row="section#canvas_section_1"]');
+        await expect(row).toHaveAttribute('data-tone', 'error', { timeout: 15_000 });
+        await expect(row.locator('.tbh-badge')).toContainText('خطا');
+        await expect(panel.locator('[data-tb-health-headline]')).toContainText('ایراد دارد');
+        await expect(page.locator('[data-tb-inspect-toggle]')).toHaveAttribute('aria-pressed', 'false');
+
+        await row.getByRole('button', { name: 'جزئیات' }).click();
+        expect(await row.locator('.tbh-findings code').allTextContents()).toContain('WIDGET_OVERFLOW');
+        await row.locator('[data-tb-health-copy]').click();
+        await expect.poll(clip).toContain('section#canvas_section_1');
+        expect(await clip()).toContain('[blocker] WIDGET_OVERFLOW');
+        await expect(row.locator('[data-tb-health-copy]')).toHaveText('کپی شد ✓');
+        await panel.screenshot({ path: 'tests/browser/.runtime/health-tab-customer-mobile.png' });
+
+        await row.locator('.tbh-main').click();
+        await expect.poll(() => editor(page, '(s) => s.selectedBlock?.id ?? null')).toBe('canvas_section_1');
+
+        await page.locator('button', { hasText: 'بلوک‌ها' }).first().click();
+        await expect.poll(running).toBe(false);
+        await editor(page, `(s) => s.setDevice('desktop')`);
+        expect(realErrorsOnly(errors), realErrorsOnly(errors).join('\n')).toHaveLength(0);
+    });
 });

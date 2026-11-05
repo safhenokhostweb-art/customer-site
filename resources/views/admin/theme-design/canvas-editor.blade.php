@@ -287,6 +287,14 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <button @click="leftPanelTab='tree'" data-testid="tb-canvas-tree-tab"
                     :class="leftPanelTab==='tree' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
                     class="flex-1 py-2 text-xs text-center transition">ساختار</button>
+                <button @click="leftPanelTab='health'" data-testid="tb-canvas-health-tab"
+                    :class="leftPanelTab==='health' ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-700'"
+                    class="flex-1 py-2 text-xs text-center transition">سلامت ویجت</button>
+            </div>
+
+            {{-- WU-3: «سلامت ویجت» — the Design HUD as a per-widget list (theme-runtime::canvas.health). --}}
+            <div x-show="leftPanelTab==='health'" x-cloak class="flex-1 overflow-y-auto">
+                @include('theme-runtime::canvas.health', ['active' => "leftPanelTab === 'health'"])
             </div>
 
             {{-- TB4: Structure Tree Tab --}}
@@ -1911,7 +1919,7 @@ function canvasEditor() {
         currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
         selectedPath:  null,          // null | [0] | [0, 1] | ...
         selectedLogicalItem: null,
-        leftPanelTab:  'blocks',      // 'blocks' | 'tree'
+        leftPanelTab:  'blocks',      // 'blocks' | 'tree' | 'health' (WU-3)
         treeExpanded:  {},
         showAddChildModal: false,
         moduleChooser: { open: false, capability: null, definition: null },
@@ -3470,6 +3478,8 @@ function canvasEditor() {
                 describe: (type) => ({ label: BLOCK_LABELS[type] || '', schema: BLOCK_SCHEMAS[type]?.schema || null, defaults: BLOCK_SCHEMAS[type]?.defaultProps || null }),
                 onChange: (on) => { this.inspectOn = on; if (!on) this.auditSummary = null; },
                 onAudit: (summary) => { this.auditSummary = this.inspectOn ? summary : null; },
+                // WU-3: a «سلامت ویجت» row selects its block.
+                select: (blockId) => { const path = this.findBlockPath(blockId); if (path) this.selectBlock(path); },
             }) ?? null;
 
             // TB3-S2: Keyboard shortcuts

@@ -44,9 +44,21 @@ class CanvasInspectHostTest extends TestCase
         $this->assertStringContainsString('data-widget-type="heading"', $html);
     }
 
+    public function test_the_customer_editor_has_the_widget_health_tab(): void
+    {
+        $editor = (string) file_get_contents(resource_path('views/admin/theme-design/canvas-editor.blade.php'));
+        $this->assertSame(1, substr_count($editor, "@include('theme-runtime::canvas.health', ['active' => \"leftPanelTab === 'health'\"])"));
+        $this->assertStringContainsString('data-testid="tb-canvas-health-tab"', $editor);
+        $this->assertStringContainsString('select: (blockId) => { const path = this.findBlockPath(blockId); if (path) this.selectBlock(path); },', $editor);
+
+        $view = view('theme-runtime::canvas.health', ['active' => "leftPanelTab === 'health'"])->render();
+        $this->assertStringContainsString('root.tbHealthPanel = panel;', $view);
+        $this->assertStringContainsString('کپی پرامپت اصلاحی', $view);
+    }
+
     public function test_no_local_copy_of_the_scripts(): void
     {
-        foreach (['canvas-inspect.js', 'canvas-audit.js'] as $file) {
+        foreach (['canvas-inspect.js', 'canvas-audit.js', 'canvas-health.js'] as $file) {
             $this->assertFileDoesNotExist(resource_path('js/' . $file));
             $this->assertFileDoesNotExist(public_path('js/' . $file));
         }
