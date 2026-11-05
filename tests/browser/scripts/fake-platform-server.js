@@ -18,6 +18,46 @@ function json(response, status, body) {
     response.end(JSON.stringify(body));
 }
 
+// ADR-079 (saas-platform): a one-asset Motion Graphics runtime manifest whose
+// asset declares runtime parameters, and the SVG it points at. The SVG echoes
+// the `window_title` query value so a spec can prove an inspector edit
+// reached the rendered page.
+const motionManifest = {
+    available: true,
+    schema_version: '1.0',
+    site_reference: '1',
+    template_reference: 'motion-library:core',
+    package_id: '00000000-0000-4000-8000-000000000e2e',
+    package_version: 1,
+    generated_at: '2026-11-06T00:00:00+00:00',
+    manifest_checksum: 'e'.repeat(64),
+    assets: [{
+        asset_id: 'e2e-hero-motion',
+        published_version: 2,
+        optimized_reference: '/motion/e2e-hero/v2/animation.svg',
+        checksum: 'a'.repeat(64),
+        asset_type: 'svg',
+        theme_tokens: {},
+        placement_rules: { dimensions: { width: 960, height: 540, viewBox: '0 0 960 540' } },
+        responsive_rules: {},
+        name: 'موشن آزمایشی هیرو',
+        category: 'hero-motion',
+        parameters: [
+            { key: 'window_title', type: 'text', group: 'content', label: 'عنوان داشبورد', default: 'داشبورد هوشمند سازمان', max: 28 },
+            { key: 'primary', type: 'color', group: 'style', label: 'رنگ اصلی', default: '#2563eb' },
+            { key: 'share', type: 'number', group: 'content', label: 'سهم (درصد)', min: 0, max: 100, step: 1, default: 36, format: 'percent' },
+            { key: 'loop', type: 'boolean', group: 'motion', label: 'حرکت پیوسته (لوپ)', default: true },
+            { key: 'speed', type: 'select', group: 'motion', label: 'سرعت انیمیشن', options: { slow: 'آرام', normal: 'عادی', fast: 'تند' }, default: 'normal' },
+            { key: 'Bad Key', type: 'text', label: 'dropped by the reader', default: 'x' },
+        ],
+    }],
+};
+
+function motionSvg(title) {
+    const safe = String(title).replace(/[<>&"]/g, '');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img"><title>${safe}</title><rect width="960" height="540" fill="#e0e7ff"/><text x="480" y="270" text-anchor="middle" font-size="40">${safe}</text></svg>`;
+}
+
 createServer((request, response) => {
     const url = new URL(request.url, `http://127.0.0.1:${port}`);
     if (request.method === 'GET' && url.pathname === '/api/support-tickets/unread-count') {
@@ -25,6 +65,11 @@ createServer((request, response) => {
         return json(response, 200, { success: true, count: 0 });
     }
     if (request.method === 'GET' && url.pathname === '/health') return json(response, 200, { ok: true });
+    if (request.method === 'GET' && url.pathname === '/api/motion-runtime/manifest') return json(response, 200, motionManifest);
+    if (request.method === 'GET' && url.pathname === '/motion/e2e-hero/v2/animation.svg') {
+        response.writeHead(200, { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cross-Origin-Resource-Policy': 'cross-origin' });
+        return response.end(motionSvg(url.searchParams.get('window_title') || 'داشبورد هوشمند سازمان'));
+    }
     if (request.method === 'GET' && url.pathname === '/api/theme-marketplace') return json(response, 200, { success: true, themes: themes.map((item) => theme(item.id)) });
     if (request.method === 'GET' && url.pathname === '/api/theme-marketplace/my-licenses') {
         return json(response, 200, { success: true, licenses: [...licensed].map((id) => ({ license_key: `BROWSER-THEME-${id}`, purchased_at: '2026-09-21', is_permanent: true, expires_at: null, installed_version: null, is_outdated_by_ledger: null, theme: theme(id) })) });

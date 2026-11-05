@@ -30,9 +30,21 @@ namespace App\Services\MotionGraphics;
  */
 final class MotionRuntimeRenderer
 {
-    public function render(array $asset): ?string
+    /**
+     * @param array<string, mixed>|string $params the block's `motion_params`
+     *   (ADR-079). Only declared, valid, non-default values are forwarded;
+     *   the platform validates them again before applying.
+     */
+    public function render(array $asset, array|string $params = []): ?string
     {
         $ref = $asset['full_reference'] ?? null;
+        if ($ref !== null && ($asset['asset_type'] ?? null) === 'svg') {
+            $query = MotionRuntimeParameters::query(MotionRuntimeParameters::normalizeDefinitions($asset['parameters'] ?? []), $params);
+            if ($query !== []) {
+                $ref .= (str_contains($ref, '?') ? '&' : '?').http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+            }
+            $asset['full_reference'] = $ref;
+        }
         $type = $asset['asset_type'] ?? null;
         $assetId = e($asset['asset_id'] ?? '');
 

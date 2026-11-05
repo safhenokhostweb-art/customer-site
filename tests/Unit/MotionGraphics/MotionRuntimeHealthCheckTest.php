@@ -20,6 +20,9 @@ class MotionRuntimeHealthCheckTest extends TestCase
         parent::setUp();
         Config::set('site.platform_url', 'https://platform.test');
         License::create(['license_key' => 'test-license-key-1234', 'domain' => 'customer.test']);
+        // License::current() matches the license by the request host (since
+        // 0495b2a); serve these reads from the licensed customer.test host.
+        $this->app->instance('request', \Illuminate\Http\Request::create('http://customer.test/'));
     }
 
     private function payload(string $checksum): array

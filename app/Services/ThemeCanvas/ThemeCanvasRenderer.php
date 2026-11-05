@@ -1403,9 +1403,13 @@ class ThemeCanvasRenderer extends BlockRenderer
 
         $html = '';
         try {
+            // ADR-079: the block's per-asset runtime parameters (texts,
+            // colours, animate/loop/speed), forwarded as-is; the renderer
+            // keeps only declared, valid values.
+            $params = $props['motion_params'] ?? [];
             $html = trim(\Illuminate\Support\Facades\Blade::render(
-                '<x-motion.graphics :name="$assetId" class="tb-module-motion" />',
-                ['assetId' => $assetId]
+                '<x-motion.graphics :name="$assetId" :params="$params" class="tb-module-motion" />',
+                ['assetId' => $assetId, 'params' => is_array($params) || is_string($params) ? $params : []]
             ));
         } catch (\Throwable $e) {
             $html = '';

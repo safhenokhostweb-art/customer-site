@@ -21,6 +21,9 @@ class MotionRuntimeManifestReaderTest extends TestCase
         Config::set('site.platform_url', 'https://platform.test');
         Cache::flush();
         License::create(['license_key' => 'test-license-key-1234', 'domain' => 'customer.test']);
+        // License::current() matches the license by the request host (since
+        // 0495b2a); serve these reads from the licensed customer.test host.
+        $this->app->instance('request', \Illuminate\Http\Request::create('http://customer.test/'));
     }
 
     private function validManifestPayload(array $overrides = []): array
@@ -50,6 +53,23 @@ class MotionRuntimeManifestReaderTest extends TestCase
     private function reader(): MotionRuntimeManifestReader
     {
         return new MotionRuntimeManifestReader(new MotionRuntimeCache());
+    }
+
+    public function test_runtime_parameters_are_normalized_and_malformed_ones_dropped(): void
+    {
+        $payload = $this->validManifestPayload();
+        $payload['assets'][0]['parameters'] = [
+            ['key' => 'window_title', 'type' => 'text', 'label' => 'عنوان', 'default' => 'داشبورد', 'max' => 999],
+            ['key' => 'Bad Key', 'type' => 'text', 'label' => 'x', 'default' => 'x'],
+            ['key' => 'html', 'type' => 'raw_html', 'label' => 'x', 'default' => '<b>'],
+        ];
+        Http::fake(['*' => Http::response($payload)]);
+
+        $manifest = $this->reader()->readFresh();
+
+        $this->assertNotNull($manifest, 'a malformed parameter never rejects the whole manifest');
+        $this->assertSame(['window_title'], array_column($manifest['assets'][0]['parameters'], 'key'));
+        $this->assertSame(80, $manifest['assets'][0]['parameters'][0]['max'], 'max is capped');
     }
 
     public function test_it_accepts_a_valid_manifest_and_resolves_the_reference(): void

@@ -85,7 +85,13 @@ final class MotionRuntimeManifestReader
         }
 
         $manifest['assets'] = array_map(
-            fn (array $asset): array => [...$asset, 'full_reference' => $this->resolveReference($platform, $asset['optimized_reference'] ?? null)],
+            fn (array $asset): array => [
+                ...$asset,
+                'full_reference' => $this->resolveReference($platform, $asset['optimized_reference'] ?? null),
+                // ADR-079: only well-formed runtime-parameter definitions
+                // survive; a malformed one is dropped, never trusted.
+                'parameters' => MotionRuntimeParameters::normalizeDefinitions($asset['parameters'] ?? []),
+            ],
             $manifest['assets']
         );
 

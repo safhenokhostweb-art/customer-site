@@ -785,6 +785,9 @@ class ThemeDesignController extends Controller
             'category' => $a['category'] ?? null,
             'type'     => $a['asset_type'] ?? null,
             'thumbnail' => $a['full_reference'] ?? null,
+            // ADR-079: the inspector builds this asset's controls from these
+            // (already normalized by the reader).
+            'parameters' => $a['parameters'] ?? [],
         ])->filter(fn(array $a) => !empty($a['asset_id']))->values();
 
         return response()->json(['assets' => $assets]);

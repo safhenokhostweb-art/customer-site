@@ -103,12 +103,12 @@ class ElementSchemaRegistry
         $schemas = [];
 
         foreach (\App\Services\ThemeCanvas\BlockRegistry::all() as $type => $definition) {
-            // module:* blocks are dispatched by ThemeCanvasRenderer to their
-            // tenant-data adapters and have never entered this validator.
-            if (str_starts_with($type, 'module:')) {
-                continue;
-            }
-
+            // module:* blocks are registered too (ADR-079). At top level
+            // ThemeCanvasRenderer dispatches them before validation, but a
+            // container validates its whole subtree here: a module:motion
+            // child of flex_container/section/grid used to fail as
+            // "Unknown element type" and placeholder the entire container.
+            // They are leaves (children 'none') with the same typed props.
             $props = [];
             foreach (($definition['schema'] ?? []) as $name => $control) {
                 $props[$name] = [
@@ -179,6 +179,9 @@ class ElementSchemaRegistry
             // Phase 0.6 (ADR-065): an icon is a catalog name or a legacy
             // emoji/text — still a string, as before the control type split.
             'textarea', 'string', 'color', 'motion', 'icon' => 'string',
+            // ADR-079: the selected motion's {key: value} runtime parameters
+            // — an object from the inspector, or its JSON-encoded form.
+            'motion_params' => 'json_array',
             // MEDIA-4: a canonical Media Library selection persists as
             // {"media_id": "<uuid>"} — a JSON object, not a string. A plain
             // URL/path string remains valid as transitional legacy data.

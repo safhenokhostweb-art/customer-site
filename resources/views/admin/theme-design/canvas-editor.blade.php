@@ -1168,9 +1168,67 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         <template x-if="!selectedBlock.props[propKey]">
                                             <p class="text-xs text-slate-400">موشنی انتخاب نشده — این بلوک چیزی نمایش نمی‌دهد.</p>
                                         </template>
-                                        <button @click="openMotionPicker(propKey)" class="w-full text-xs px-3 py-2 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition font-medium">
+                                        <button @click="openMotionPicker(propKey)" :data-testid="'tb-motion-pick-' + propKey" class="w-full text-xs px-3 py-2 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition font-medium">
                                             🎬 انتخاب موشن از موشن‌های مجاز این سایت
                                         </button>
+                                    </div>
+                                </template>
+
+                                {{-- ADR-079 (saas-platform): the selected motion's own runtime
+                                     parameters — texts, colours, animate/loop/speed — built
+                                     from its manifest `parameters`. Stored as {key: value}
+                                     overrides; an untouched field keeps the asset default. --}}
+                                <template x-if="schemaDef.type === 'motion_params'">
+                                    <div class="space-y-3" x-init="ensureMotionAssets()" data-testid="tb-motion-params">
+                                        <template x-if="!motionParamDefs().length">
+                                            <p class="text-xs text-slate-400" x-text="selectedBlock.props.motion_asset_id ? (motionModal.loading ? 'در حال بارگذاری تنظیمات موشن…' : 'این موشن تنظیمات اختصاصی ندارد.') : 'ابتدا یک موشن انتخاب کنید.'"></p>
+                                        </template>
+                                        <template x-for="group in motionParamGroups()" :key="group.key">
+                                            <fieldset class="space-y-2.5 border border-slate-200 rounded-lg p-2.5">
+                                                <legend class="text-[11px] font-semibold text-slate-500 px-1" x-text="group.label"></legend>
+                                                <template x-for="p in group.items" :key="p.key">
+                                                    <div class="space-y-1">
+                                                        <label class="block text-xs text-slate-600" :for="'tb-mp-' + p.key" x-text="p.label"></label>
+                                                        <template x-if="p.type === 'text'">
+                                                            <input type="text" :id="'tb-mp-' + p.key" :maxlength="p.max" :value="motionParamValue(propKey, p)" :placeholder="p.default"
+                                                                @input="setMotionParam(propKey, p, $event.target.value)" :data-testid="'tb-mp-' + p.key"
+                                                                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                                        </template>
+                                                        <template x-if="p.type === 'color'">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="color" :id="'tb-mp-' + p.key" :value="motionParamValue(propKey, p)" @input="setMotionParam(propKey, p, $event.target.value)" :data-testid="'tb-mp-' + p.key" class="w-9 h-8 rounded border border-slate-200 bg-white cursor-pointer">
+                                                                <input type="text" dir="ltr" maxlength="7" :value="motionParamValue(propKey, p)" @change="/^#[0-9a-fA-F]{6}$/.test($event.target.value) && setMotionParam(propKey, p, $event.target.value.toLowerCase())" class="flex-1 text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white font-mono" :aria-label="p.label + ' (کد رنگ)'">
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="p.type === 'number'">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="range" :id="'tb-mp-' + p.key" :min="p.min" :max="p.max" :step="p.step" :value="motionParamValue(propKey, p)" @input="setMotionParam(propKey, p, $event.target.value)" :data-testid="'tb-mp-' + p.key" class="flex-1 accent-indigo-500">
+                                                                <span class="text-xs text-slate-600 w-10 text-left" x-text="motionParamValue(propKey, p) + (p.format === 'percent' ? '٪' : '')"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="p.type === 'boolean'">
+                                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                                <div class="relative">
+                                                                    <input type="checkbox" :id="'tb-mp-' + p.key" :checked="motionParamValue(propKey, p) === true" @change="setMotionParam(propKey, p, $event.target.checked)" class="sr-only peer" :data-testid="'tb-mp-' + p.key">
+                                                                    <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
+                                                                    <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
+                                                                </div>
+                                                                <span class="text-xs text-slate-600" x-text="motionParamValue(propKey, p) ? 'فعال' : 'غیرفعال'"></span>
+                                                            </label>
+                                                        </template>
+                                                        <template x-if="p.type === 'select'">
+                                                            <select :id="'tb-mp-' + p.key" :value="motionParamValue(propKey, p)" @change="setMotionParam(propKey, p, $event.target.value)" :data-testid="'tb-mp-' + p.key" class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white">
+                                                                <template x-for="(optLabel, optVal) in p.options" :key="optVal">
+                                                                    <option :value="optVal" x-text="optLabel" :selected="optVal === motionParamValue(propKey, p)"></option>
+                                                                </template>
+                                                            </select>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </fieldset>
+                                        </template>
+                                        <button type="button" x-show="hasMotionParams(propKey)" @click="resetMotionParams(propKey)" data-testid="tb-motion-params-reset"
+                                            class="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">بازگشت به مقادیر پیش‌فرض موشن</button>
                                     </div>
                                 </template>
 
@@ -1779,7 +1837,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <template x-for="asset in motionModal.assets" :key="asset.asset_id">
                         <div class="relative group rounded-xl overflow-hidden border-2 cursor-pointer transition p-3 flex items-center gap-3"
                              :class="motionModal.selected === asset.asset_id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'"
-                             @click="motionModal.selected = (motionModal.selected === asset.asset_id ? null : asset.asset_id)">
+                             @click="motionModal.selected = (motionModal.selected === asset.asset_id ? null : asset.asset_id)" :data-testid="'tb-motion-asset-' + asset.asset_id">
                             <template x-if="asset.thumbnail">
                                 <img :src="asset.thumbnail" class="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200 shrink-0">
                             </template>
@@ -1795,7 +1853,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 </div>
             </div>
             <div class="flex gap-2 px-4 py-3 border-t border-slate-100 shrink-0">
-                <button x-show="motionModal.selected" @click="confirmMotionSelect()" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">انتخاب این موشن</button>
+                <button x-show="motionModal.selected" @click="confirmMotionSelect()" data-testid="tb-motion-confirm" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">انتخاب این موشن</button>
                 <button @click="motionModal.open = false" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">بستن</button>
             </div>
         </div>
@@ -3130,7 +3188,13 @@ function canvasEditor() {
         confirmMotionSelect() {
             if (!this.motionModal.propKey) return;
             if (this.selectedBlock) {
-                this.selectedBlock.props[this.motionModal.propKey] = this.motionModal.selected || '';
+                const next = this.motionModal.selected || '';
+                // ADR-079: overrides belong to one asset — a different motion
+                // starts from its own defaults.
+                if (this.selectedBlock.props[this.motionModal.propKey] !== next && 'motion_params' in this.selectedBlock.props) {
+                    this.selectedBlock.props.motion_params = {};
+                }
+                this.selectedBlock.props[this.motionModal.propKey] = next;
                 this.schedulePropUpdate();
             }
             this.motionModal.open = false;
@@ -3139,8 +3203,70 @@ function canvasEditor() {
         clearMotionSelect(propKey) {
             if (this.selectedBlock) {
                 this.selectedBlock.props[propKey] = '';
+                if ('motion_params' in this.selectedBlock.props) this.selectedBlock.props.motion_params = {};
                 this.schedulePropUpdate();
             }
+        },
+
+        // ── Motion runtime parameters (ADR-079) ─────────────────────
+        // Controls come from the selected asset's manifest `parameters`
+        // (ROUTES.motionAssets). Values are stored sparsely: only keys that
+        // differ from the asset default; the server re-validates them all.
+        ensureMotionAssets() {
+            if (!this.motionModal.loaded && !this.motionModal.loading) this.fetchMotionAssets();
+        },
+
+        motionParamDefs() {
+            const asset = this.motionAssetById(this.selectedBlock?.props?.motion_asset_id);
+            return Array.isArray(asset?.parameters) ? asset.parameters : [];
+        },
+
+        motionParamGroups() {
+            const labels = { content: 'متن‌ها و ارقام', style: 'رنگ‌ها', motion: 'انیمیشن' };
+            return ['content', 'style', 'motion']
+                .map(key => ({ key, label: labels[key], items: this.motionParamDefs().filter(p => (p.group || 'content') === key) }))
+                .filter(group => group.items.length > 0);
+        },
+
+        motionParamStore(propKey) {
+            const v = this.selectedBlock?.props?.[propKey];
+            return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+        },
+
+        motionParamValue(propKey, p) {
+            const store = this.motionParamStore(propKey);
+            return Object.prototype.hasOwnProperty.call(store, p.key) ? store[p.key] : p.default;
+        },
+
+        // Stores on every input event: schedulePropUpdate() is already
+        // debounced, and a per-field debounce would read the input after a
+        // re-render had reset it to the stored value (losing typed text when
+        // another control changed first). An emptied text field is kept as ''
+        // — the server treats it as "use the default" — so the field does not
+        // snap back to the default text while the user is retyping.
+        setMotionParam(propKey, p, raw) {
+            if (!this.selectedBlock) return;
+            const store = { ...this.motionParamStore(propKey) };
+            let value = raw;
+            if (p.type === 'number') value = Number(raw);
+            if (p.type === 'text') value = String(raw).slice(0, p.max || 80);
+            if (value === p.default || (p.type === 'number' && Number.isNaN(value))) {
+                delete store[p.key];
+            } else {
+                store[p.key] = value;
+            }
+            this.selectedBlock.props[propKey] = store;
+            this.schedulePropUpdate();
+        },
+
+        hasMotionParams(propKey) {
+            return Object.keys(this.motionParamStore(propKey)).length > 0;
+        },
+
+        resetMotionParams(propKey) {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = {};
+            this.schedulePropUpdate();
         },
 
         /**
