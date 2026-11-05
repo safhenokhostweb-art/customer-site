@@ -107,6 +107,27 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
         {{-- Actions --}}
         <div class="flex items-center gap-2 shrink-0">
+            {{-- WU-1: Inspect Mode (theme-runtime::canvas.inspect) — outlines,
+                 widget ids and the copy action bar inside the preview. --}}
+            <button type="button" @click="toggleInspect()" data-tb-inspect-toggle
+                :aria-pressed="inspectOn ? 'true' : 'false'"
+                title="حالت بازرسی (Ctrl+I)"
+                class="flex items-center gap-1 h-7 px-2 rounded-lg border text-xs font-medium transition"
+                :class="inspectOn ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-300'">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V5a1 1 0 011-1h3m8 0h3a1 1 0 011 1v3m0 8v3a1 1 0 01-1 1h-3m-8 0H5a1 1 0 01-1-1v-3M9.5 9.5l5 5m0-5l-5 5"/></svg>
+                بازرسی
+            </button>
+            {{-- WU-2: Design HUD summary from the preview (TbAudit, Sentinel codes). --}}
+            <span x-show="inspectOn && auditSummary" x-cloak data-tb-audit-chip
+                :data-tone="auditSummary?.tone"
+                role="status" aria-live="polite"
+                :title="auditSummary ? `سلامت بوم در عرض ${auditSummary.width}px` : ''"
+                class="flex items-center gap-1.5 h-7 px-2 rounded-lg border text-xs font-medium"
+                :class="{ 'border-rose-200 bg-rose-50 text-rose-700': auditSummary?.tone === 'error', 'border-amber-200 bg-amber-50 text-amber-800': auditSummary?.tone === 'warn', 'border-emerald-200 bg-emerald-50 text-emerald-700': auditSummary?.tone === 'ok' }">
+                <span class="w-2 h-2 rounded-full" aria-hidden="true"
+                    :class="{ 'bg-rose-500': auditSummary?.tone === 'error', 'bg-amber-500': auditSummary?.tone === 'warn', 'bg-emerald-500': auditSummary?.tone === 'ok' }"></span>
+                <span x-text="!auditSummary ? '' : (auditSummary.tone === 'ok' ? 'سالم' : [auditSummary.counts.blocker ? `${auditSummary.counts.blocker} خطا` : '', auditSummary.counts.warning ? `${auditSummary.counts.warning} هشدار` : ''].filter(Boolean).join(' · '))"></span>
+            </span>
 
             {{-- Undo / Redo --}}
             <button @click="undo()" :disabled="historyIndex <= 0"
@@ -1813,6 +1834,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 @include('theme-runtime::canvas.color')
 @include('theme-runtime::canvas.icons')
 @include('theme-runtime::canvas.tab-strip')
+@include('theme-runtime::canvas.inspect')
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
 <script>
 const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]').content;
@@ -1913,6 +1935,9 @@ function canvasEditor() {
         // TB3-02: iframe
         device:        'desktop',
         iframeTimestamp: Date.now(),
+        inspectOn:     false,
+        inspectHost:   null,
+        auditSummary:  null,
         iframeLoading:  true,
         iframeReady:    false,
         propUpdateTimer: null,
@@ -2973,6 +2998,7 @@ function canvasEditor() {
         },
 
         setDevice(d) { this.device = d; this.activeBreakpoint = d; },
+        toggleInspect() { this.inspectHost?.toggle(); },
 
         // ── TB3-03: Drag from Library ─────────────────────────
         startDragBlock(event, blockType) {
@@ -3429,6 +3455,16 @@ function canvasEditor() {
 
             // TB3-02: postMessage bridge
             window.addEventListener('message', (e) => this.handleIframeMessage(e));
+
+            // WU-1: Inspect Mode. The preview finds window.TbInspectHost on
+            // this window (same origin) and re-applies the state after reloads.
+            // attachHost() is idempotent: init() runs twice (x-init + Alpine).
+            this.inspectHost = window.TbInspect?.attachHost({
+                frame: () => this.getIframe(),
+                describe: (type) => ({ label: BLOCK_LABELS[type] || '', schema: BLOCK_SCHEMAS[type]?.schema || null, defaults: BLOCK_SCHEMAS[type]?.defaultProps || null }),
+                onChange: (on) => { this.inspectOn = on; if (!on) this.auditSummary = null; },
+                onAudit: (summary) => { this.auditSummary = this.inspectOn ? summary : null; },
+            }) ?? null;
 
             // TB3-S2: Keyboard shortcuts
             window.addEventListener('keydown', (e) => {
