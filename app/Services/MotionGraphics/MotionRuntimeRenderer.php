@@ -46,8 +46,36 @@ final class MotionRuntimeRenderer
                 $assetId, (int) ($asset['published_version'] ?? 0), e($ref),
                 base64_encode((string) hex2bin((string) ($asset['checksum'] ?? '')))
             ),
-            'svg' => $ref === null ? null : sprintf('<img src="%s" alt="%s" loading="lazy">', e($ref), $assetId),
+            'svg' => $ref === null ? null : sprintf(
+                '<img src="%s" alt="%s"%s loading="lazy" decoding="async" class="tb-motion-svg">',
+                e($ref), e($this->label($asset)), $this->intrinsicSize($asset)
+            ),
             default => null, // lottie / motion-json / unknown — no player wired yet, safe no-op
         };
+    }
+
+    /**
+     * ADR-078: the manifest's display name (e.g. «موشن قهرمان سازمانی») is
+     * the accessible label; the opaque asset uuid is only a last resort.
+     */
+    private function label(array $asset): string
+    {
+        $name = trim((string) ($asset['name'] ?? ''));
+
+        return $name !== '' ? $name : (string) ($asset['asset_id'] ?? '');
+    }
+
+    /**
+     * Intrinsic width/height from the manifest's placement dimensions, so the
+     * browser reserves the box before the SVG arrives (no layout shift).
+     * Only sane positive integers are emitted; anything else is omitted.
+     */
+    private function intrinsicSize(array $asset): string
+    {
+        $dimensions = $asset['placement_rules']['dimensions'] ?? null;
+        $width = is_array($dimensions) ? filter_var($dimensions['width'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 10000]]) : false;
+        $height = is_array($dimensions) ? filter_var($dimensions['height'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 10000]]) : false;
+
+        return $width !== false && $height !== false ? sprintf(' width="%d" height="%d"', $width, $height) : '';
     }
 }

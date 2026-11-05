@@ -45,6 +45,39 @@ class MotionRuntimeRendererTest extends TestCase
         $this->assertStringNotContainsString('<script', $html);
     }
 
+    public function test_svg_asset_uses_the_display_name_as_alt_and_reserves_its_box(): void
+    {
+        $html = (new MotionRuntimeRenderer())->render($this->asset([
+            'asset_type' => 'svg',
+            'name' => 'موشن قهرمان سازمانی',
+            'placement_rules' => ['dimensions' => ['width' => 960, 'height' => 540, 'viewBox' => '0 0 960 540']],
+        ]));
+
+        $this->assertStringContainsString('alt="موشن قهرمان سازمانی"', $html);
+        $this->assertStringContainsString('width="960" height="540"', $html);
+        $this->assertStringContainsString('decoding="async"', $html);
+    }
+
+    public function test_svg_alt_is_escaped_and_bogus_dimensions_are_dropped(): void
+    {
+        $html = (new MotionRuntimeRenderer())->render($this->asset([
+            'asset_type' => 'svg',
+            'name' => '"><script>alert(1)</script>',
+            'placement_rules' => ['dimensions' => ['width' => '100" onload="x', 'height' => -5]],
+        ]));
+
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        $this->assertStringNotContainsString('onload', $html);
+        $this->assertStringNotContainsString('width=', $html);
+    }
+
+    public function test_svg_without_a_name_falls_back_to_the_asset_id(): void
+    {
+        $html = (new MotionRuntimeRenderer())->render($this->asset(['asset_type' => 'svg']));
+
+        $this->assertStringContainsString('alt="motion-1"', $html);
+    }
+
     public function test_lottie_asset_renders_nothing_no_player_wired_yet(): void
     {
         $html = (new MotionRuntimeRenderer())->render($this->asset(['asset_type' => 'lottie']));
