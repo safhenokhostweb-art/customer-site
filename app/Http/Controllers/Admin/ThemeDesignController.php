@@ -72,9 +72,13 @@ class ThemeDesignController extends Controller
         ];
 
         return view('admin.theme-design.index', compact(
-            'settings', 'buttonStyles',
-            'activeSitePreset', 'activeDashPreset',
-            'presets', 'canvasActive', 'canvasName',
+            'settings',
+            'buttonStyles',
+            'activeSitePreset',
+            'activeDashPreset',
+            'presets',
+            'canvasActive',
+            'canvasName',
             'dashCustomColors'
         ));
     }
@@ -389,8 +393,16 @@ class ThemeDesignController extends Controller
         ];
 
         return view('admin.theme-design.canvas-editor', compact(
-            'themeData', 'pages', 'byCategory', 'catLabels', 'catIcons', 'registry', 'globalStyles',
-            'hasDraft', 'previewToken', 'modulePresentations'
+            'themeData',
+            'pages',
+            'byCategory',
+            'catLabels',
+            'catIcons',
+            'registry',
+            'globalStyles',
+            'hasDraft',
+            'previewToken',
+            'modulePresentations'
         ));
     }
 
@@ -438,7 +450,7 @@ class ThemeDesignController extends Controller
             $structure = LockedStructureGuard::validate(
                 $current,
                 $reconciled,
-                static fn (string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
+                static fn(string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
             );
             if (!$structure['ok']) {
                 return response()->json([
@@ -484,7 +496,7 @@ class ThemeDesignController extends Controller
         $structure = LockedStructureGuard::validate(
             $current,
             $reconciled,
-            static fn (string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
+            static fn(string $type): array => BlockRegistry::all()[$type]['editor'] ?? []
         );
         if (!$structure['ok']) {
             return response()->json([
@@ -767,13 +779,13 @@ class ThemeDesignController extends Controller
     public function canvasMotionAssets(MotionRuntimeManifestReader $reader): JsonResponse
     {
         $manifest = $reader->read();
-        $assets = collect($manifest['assets'] ?? [])->map(fn (array $a): array => [
+        $assets = collect($manifest['assets'] ?? [])->map(fn(array $a): array => [
             'asset_id' => $a['asset_id'] ?? null,
             'name'     => $a['name'] ?? null,
             'category' => $a['category'] ?? null,
             'type'     => $a['asset_type'] ?? null,
-            'thumbnail'=> $a['full_reference'] ?? null,
-        ])->filter(fn (array $a) => !empty($a['asset_id']))->values();
+            'thumbnail' => $a['full_reference'] ?? null,
+        ])->filter(fn(array $a) => !empty($a['asset_id']))->values();
 
         return response()->json(['assets' => $assets]);
     }
@@ -798,7 +810,7 @@ class ThemeDesignController extends Controller
             : \App\Models\ProductCategory::query()->orderBy('order')->orderBy('id')->limit(200)->get(['id', 'name']);
 
         return response()->json([
-            'entities' => $entities->map(fn ($e): array => [
+            'entities' => $entities->map(fn($e): array => [
                 'id' => (int) $e->id,
                 'label' => (string) ($e->title ?? $e->name),
             ])->all(),
@@ -878,7 +890,7 @@ class ThemeDesignController extends Controller
         $list = $this->revisions->listForCurrentTheme();
         $activeId = (int) Setting::get('active_theme_revision_id');
 
-        $revisions = $list->map(fn (ThemeInstanceRevision $r) => [
+        $revisions = $list->map(fn(ThemeInstanceRevision $r) => [
             'id'              => $r->id,
             'revision_number' => $r->revision_number,
             'type'            => $r->type,
@@ -1070,17 +1082,16 @@ class ThemeDesignController extends Controller
         $viewData = $this->runtimeDocument
             ->forMode(ThemeRuntimeDocument::MODE_PUBLIC)
             ->build(
-            $themeData,
-            is_array($page['blocks'] ?? null) ? $page['blocks'] : [],
-            (string) ($page['title'] ?? 'Preview'),
-            $pageKey,
+                $themeData,
+                is_array($page['blocks'] ?? null) ? $page['blocks'] : [],
+                (string) ($page['title'] ?? 'Preview'),
+                $pageKey,
             );
         $viewData['showBuilderEditBar'] = false;
 
         return response()
             ->view('canvas-preview', $viewData)
             ->header('Content-Type', 'text/html; charset=UTF-8');
-
     }
 
     /** فعال‌سازی پریست تم سایت */
@@ -1206,16 +1217,26 @@ class ThemeDesignController extends Controller
     public function update(Request $request): RedirectResponse
     {
         // Normalize color values: trim whitespace, expand 3-digit hex (#FFF → #FFFFFF)
-        $colorFields = ['primary_color','secondary_color','accent_color','background_color',
-                        'surface_color','text_color','muted_color','border_color','link_color',
-                        'header_bg','footer_bg'];
+        $colorFields = [
+            'primary_color',
+            'secondary_color',
+            'accent_color',
+            'background_color',
+            'surface_color',
+            'text_color',
+            'muted_color',
+            'border_color',
+            'link_color',
+            'header_bg',
+            'footer_bg'
+        ];
         $normalized = [];
         foreach ($colorFields as $field) {
             $val = trim((string) $request->input($field, ''));
             if ($val === '') {
                 $normalized[$field] = null;
             } elseif (preg_match('/^#([0-9A-Fa-f]{3})$/', $val, $m)) {
-                $normalized[$field] = '#'.$m[1][0].$m[1][0].$m[1][1].$m[1][1].$m[1][2].$m[1][2];
+                $normalized[$field] = '#' . $m[1][0] . $m[1][0] . $m[1][1] . $m[1][1] . $m[1][2] . $m[1][2];
             } else {
                 $normalized[$field] = $val;
             }
@@ -1287,10 +1308,12 @@ class ThemeDesignController extends Controller
 
     public function canvasTemplates(Request $request): JsonResponse
     {
+        // No default type/category: an unfiltered request must return every
+        // template, not only the header/navigation slice.
         $templates = $this->templateSvc->list(
-            type:     $request->input('type'),
-            category: $request->input('category'),
-            term:     $request->input('search'),
+            type: $request->query('type') ?: null,
+            category: $request->query('category') ?: null,
+            term: $request->query('search') ?: null,
         );
 
         return response()->json(['templates' => $templates]);

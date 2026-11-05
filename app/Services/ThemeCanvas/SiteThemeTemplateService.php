@@ -14,13 +14,16 @@ class SiteThemeTemplateService
      */
     public function list(?string $type = null, ?string $category = null, ?string $term = null): array
     {
+        // No implicit defaults: a null type/category means "no filter", so an
+        // unfiltered call returns every template (footer, hero, …), never
+        // just header/navigation.
         $q = SiteThemeTemplate::active()->orderByDesc('usage_count')->orderByDesc('created_at');
 
         if ($type)     $q->byType($type);
         if ($category) $q->byCategory($category);
         if ($term)     $q->where('name', 'like', "%{$term}%");
 
-        $saved = $q->get(['id','name','description','type','category','thumbnail_url','tags','usage_count'])
+        $saved = $q->get(['id', 'name', 'description', 'type', 'category', 'thumbnail_url', 'tags', 'usage_count'])
             ->map(fn($t) => [
                 'id'            => $t->id,
                 'source'        => 'saved',
@@ -29,7 +32,7 @@ class SiteThemeTemplateService
                 'type'          => $t->type,
                 'type_label'    => $t->typeLabel(),
                 'category'      => $t->category,
-                'category_label'=> $t->categoryLabel(),
+                'category_label' => $t->categoryLabel(),
                 'zone'          => TemplateLibrary::zone((string) $t->type),
                 'thumbnail_url' => $t->thumbnail_url,
                 'tags'          => $t->tags ?? [],
@@ -48,7 +51,7 @@ class SiteThemeTemplateService
             'description'  => $data['description'] ?? null,
             'tags'         => $data['tags'] ?? [],
             'blocks'       => $data['blocks'] ?? [],
-            'global_styles'=> $data['global_styles'] ?? null,
+            'global_styles' => $data['global_styles'] ?? null,
             'is_active'    => true,
         ]);
     }

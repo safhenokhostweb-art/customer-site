@@ -1222,11 +1222,48 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                 </template>
 
+                                {{-- header_order is an ordered list of header elements, not a
+                                     raw list value: author it by dragging, and persist the
+                                     resulting key order through schedulePropUpdate(). --}}
+                                <template x-if="schemaDef.type === 'array' && propKey === 'header_order'">
+                                    <div dir="rtl" data-testid="tb-header-order">
+                                        <p class="text-[10px] text-slate-400 mb-1.5">برای تغییر ترتیب، هر آیتم را بکشید و رها کنید.</p>
+                                        <ul class="space-y-1.5">
+                                            <template x-for="item in headerOrderItems(propKey)" :key="item.key">
+                                                <li draggable="true"
+                                                    :data-testid="'tb-header-order-item-' + item.key"
+                                                    class="flex items-center gap-2 px-2.5 py-2 rounded-lg border bg-white text-xs cursor-move select-none transition"
+                                                    :class="headerDragOverKey === item.key ? 'border-indigo-400 ring-1 ring-indigo-200 opacity-80' : 'border-slate-200'"
+                                                    @dragstart="headerDragKey = item.key; headerDragOverKey = item.key; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', item.key);"
+                                                    @dragover.prevent="headerDragOverKey = item.key; if ($event.dataTransfer) $event.dataTransfer.dropEffect = 'move';"
+                                                    @drop.prevent="
+                                                        const from = headerDragKey ?? $event.dataTransfer.getData('text/plain');
+                                                        const to = item.key;
+                                                        headerDragKey = null; headerDragOverKey = null;
+                                                        if (!from || from === to) return;
+                                                        const keys = headerOrderItems(propKey).map(i => i.key);
+                                                        const fromIndex = keys.indexOf(from);
+                                                        const toIndex = keys.indexOf(to);
+                                                        if (fromIndex === -1 || toIndex === -1) return;
+                                                        keys.splice(toIndex, 0, keys.splice(fromIndex, 1)[0]);
+                                                        schedulePropUpdate('header_order', keys);
+                                                    "
+                                                    @dragend="headerDragKey = null; headerDragOverKey = null;"
+                                                >
+                                                    <span class="text-slate-300" aria-hidden="true">⠿</span>
+                                                    <span class="flex-1 text-slate-700" x-text="item.label"></span>
+                                                    <span class="font-mono text-[10px] text-slate-400" x-text="item.key"></span>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+
                                 {{-- Phase 0.2c: schema-less list props (type: array, no
                                      `fields` — accordion items, manual id lists), the same
                                      guarded JSON editor as the platform Canvas. An invalid
                                      draft is never written to the block. --}}
-                                <template x-if="schemaDef.type === 'array'">
+                                <template x-if="schemaDef.type === 'array' && propKey !== 'header_order'">
                                     <div x-data="{ jsonDraft: null, jsonDraftFor: null, jsonError: '' }">
                                         <textarea dir="ltr" rows="5" spellcheck="false" :data-testid="'tb-prop-' + propKey"
                                             :value="(jsonDraftFor === selectedBlock.id && jsonDraft !== null) ? jsonDraft : JSON.stringify(selectedBlock.props[propKey] ?? schemaDef.default ?? [], null, 2)"
@@ -1785,6 +1822,21 @@ const MODULE_PRESENTATIONS = @json($modulePresentations);
 const BINDING_CAPABILITIES = @json(\App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry::capabilities());
 const INITIAL_PAGES = @json($pages);
 const GLOBAL_STYLES = @json($globalStyles);
+// Header element order controlled by the header block's `header_order` prop.
+// Kept here so the drag list always offers every known element, even when the
+// stored order is partial or empty.
+const HEADER_ORDER_ITEMS = [
+    { key: 'logo',    label: 'لوگو / برند' },
+    { key: 'search',  label: 'جستجو' },
+    { key: 'social',  label: 'شبکه‌های اجتماعی' },
+    { key: 'phone',   label: 'شماره تماس' },
+    { key: 'cta',     label: 'دکمه فراخوان (CTA)' },
+    { key: 'cart',    label: 'سبد خرید' },
+    { key: 'account', label: 'ورود / حساب کاربری' },
+    { key: 'menu',    label: 'منوی ناوبری' },
+    { key: 'dark_toggle', label: 'تغییر حالت تاریک' },
+    { key: 'burger',  label: 'منوی همبرگری (موبایل)' },
+];
 const ROUTES = {
     saveBlocks:   '{{ route('admin.theme-design.canvas-save-blocks') }}',
     addPage:      '{{ route('admin.theme-design.canvas-add-page') }}',
@@ -1865,6 +1917,9 @@ function canvasEditor() {
         iframeReady:    false,
         propUpdateTimer: null,
         pendingPropUpdate: false,
+        // header_order drag & drop (content tab)
+        headerDragKey:     null,
+        headerDragOverKey: null,
         // TB3-03: drag
         isDraggingBlock:      false,
         draggedBlockType:     null,
@@ -1914,6 +1969,26 @@ function canvasEditor() {
             const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
             return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
         },
+        // header_order — the element order as a stable, complete list: the
+        // stored order first (unknown keys preserved), then every known header
+        // element the stored value does not mention yet.
+        headerOrderItems(propKey) {
+            const stored = Array.isArray(this.selectedBlock?.props?.[propKey]) ? this.selectedBlock.props[propKey] : [];
+            const labels = Object.fromEntries(HEADER_ORDER_ITEMS.map(i => [i.key, i.label]));
+            const items = [];
+            const seen = new Set();
+            for (const raw of stored) {
+                const key = String(raw);
+                if (key === '' || seen.has(key)) continue;
+                seen.add(key);
+                items.push({ key, label: labels[key] ?? key });
+            }
+            for (const item of HEADER_ORDER_ITEMS) {
+                if (!seen.has(item.key)) items.push({ ...item });
+            }
+            return items;
+        },
+
         // ADR-076: true where a field's schema `group` differs from the previous field's.
         fieldGroupStart(propKey) {
             const schema = this.selectedSchema;
@@ -2664,7 +2739,13 @@ function canvasEditor() {
             this.autoSaveAndReload();
         },
 
-        schedulePropUpdate() {
+        schedulePropUpdate(propKey = null, value = null) {
+            // Optional explicit prop write (used by reordering controls such as
+            // header_order) so a whole replacement array is assigned through one
+            // reactive update; every existing zero-argument call is unchanged.
+            if (propKey && this.selectedBlock) {
+                this.selectedBlock.props[propKey] = value;
+            }
             this.isDirty = true;
             clearTimeout(this.propUpdateTimer);
             this.propUpdateTimer = setTimeout(() => this.pushPropUpdate(), 350);
