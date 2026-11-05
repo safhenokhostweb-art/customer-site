@@ -155,6 +155,7 @@ body.tb-drag-active .tb-drop-zone {
      Render/inline-edit surface: no structural services ([]), same bootstrap
      as the customer editor and the platform's live preview. --}}
 @include('theme-runtime::canvas.editor-bootstrap', ['canvasStructuralServices' => []])
+@include('theme-runtime::canvas.inspect')
 <script>
 (function () {
     'use strict';
