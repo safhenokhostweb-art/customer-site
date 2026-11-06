@@ -128,6 +128,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     :class="{ 'bg-rose-500': auditSummary?.tone === 'error', 'bg-amber-500': auditSummary?.tone === 'warn', 'bg-emerald-500': auditSummary?.tone === 'ok' }"></span>
                 <span x-text="!auditSummary ? '' : (auditSummary.tone === 'ok' ? 'سالم' : [auditSummary.counts.blocker ? `${auditSummary.counts.blocker} خطا` : '', auditSummary.counts.warning ? `${auditSummary.counts.warning} هشدار` : ''].filter(Boolean).join(' · '))"></span>
             </span>
+            {{-- AI Dev HUD (?ai_dev=1 or Ctrl+Shift+D): chip + floating bar over the selected block. --}}
+            @include('admin.theme-design.partials.ai-dev-hud', ['part' => 'toolbar'])
 
             {{-- Undo / Redo --}}
             <button @click="undo()" :disabled="historyIndex <= 0"
@@ -294,6 +296,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
             {{-- WU-3: «سلامت ویجت» — the Design HUD as a per-widget list (theme-runtime::canvas.health). --}}
             <div x-show="leftPanelTab==='health'" x-cloak class="flex-1 overflow-y-auto">
+                @include('admin.theme-design.partials.ai-dev-hud', ['part' => 'health'])
                 @include('theme-runtime::canvas.health', ['active' => "leftPanelTab === 'health'"])
             </div>
 
@@ -3607,6 +3610,9 @@ function canvasEditor() {
                 // WU-3: a «سلامت ویجت» row selects its block.
                 select: (blockId) => { const path = this.findBlockPath(blockId); if (path) this.selectBlock(path); },
             }) ?? null;
+
+            // AI Dev HUD (partials/ai-dev-hud): read-only, absent when the site turns it off.
+            window.TbDevHud?.attach(this, { frame: () => this.getIframe() });
 
             // TB3-S2: Keyboard shortcuts
             window.addEventListener('keydown', (e) => {
