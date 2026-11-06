@@ -1177,8 +1177,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                 </template>
 
-                                {{-- ADR-079 (saas-platform): the selected motion's own runtime
-                                     parameters — texts, colours, animate/loop/speed — built
+                                {{-- ADR-079/080 (saas-platform): the selected motion's own runtime
+                                     parameters — texts, colours, colour scheme, section
+                                     switches, animate/loop/speed — built
                                      from its manifest `parameters`. Stored as {key: value}
                                      overrides; an untouched field keeps the asset default. --}}
                                 <template x-if="schemaDef.type === 'motion_params'">
@@ -1216,7 +1217,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                                     <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
                                                                     <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
                                                                 </div>
-                                                                <span class="text-xs text-slate-600" x-text="motionParamValue(propKey, p) ? 'فعال' : 'غیرفعال'"></span>
+                                                                <span class="text-xs text-slate-600" x-text="p.group === 'sections' ? (motionParamValue(propKey, p) ? 'نمایش' : 'پنهان') : (motionParamValue(propKey, p) ? 'فعال' : 'غیرفعال')"></span>
                                                             </label>
                                                         </template>
                                                         <template x-if="p.type === 'select'">
@@ -3264,8 +3265,9 @@ function canvasEditor() {
         },
 
         motionParamGroups() {
-            const labels = { content: 'متن‌ها و ارقام', style: 'رنگ‌ها', motion: 'انیمیشن' };
-            return ['content', 'style', 'motion']
+            // ADR-080 (saas-platform): `sections` = show/hide switches per part.
+            const labels = { content: 'متن‌ها و ارقام', style: 'رنگ‌ها و حالت رنگی', sections: 'بخش‌های موشن', motion: 'انیمیشن' };
+            return ['content', 'style', 'sections', 'motion']
                 .map(key => ({ key, label: labels[key], items: this.motionParamDefs().filter(p => (p.group || 'content') === key) }))
                 .filter(group => group.items.length > 0);
         },

@@ -57,8 +57,17 @@ test.describe('Canvas editor — Motion Graphics widget (ADR-079)', () => {
         // The malformed definition ("Bad Key") never reaches the inspector.
         await expect(page.locator('[data-testid="tb-motion-params"] label', { hasText: 'dropped by the reader' })).toHaveCount(0);
 
+        // ADR-080: section switches get their own group, and a scheme select.
+        const sections = page.locator('[data-testid="tb-motion-params"] fieldset', { hasText: 'بخش‌های موشن' });
+        await expect(sections).toBeVisible();
+        await expect(sections.getByText('نمایش')).toBeVisible();
+        await expect(page.locator('[data-testid="tb-mp-scheme"]')).toHaveValue('auto');
+
         await title.fill('پنل مدیریت آریا');
         await page.locator('[data-testid="tb-mp-speed"]').selectOption('fast');
+        await page.locator('[data-testid="tb-mp-scheme"]').selectOption('dark');
+        await sections.locator('label', { hasText: 'نمایش' }).click();
+        await expect(sections.getByText('پنهان')).toBeVisible();
         await page.waitForTimeout(600); // inspector debounce
 
         const response = await waitForSaveBlocks(page, () => saveButton(page).click());
@@ -71,6 +80,8 @@ test.describe('Canvas editor — Motion Graphics widget (ADR-079)', () => {
         await page.locator('[data-testid^="tb-tree-node-"]').filter({ hasText: 'موشن گرافیک' }).first().click();
         await expect(page.locator('[data-testid="tb-mp-window_title"]')).toHaveValue('پنل مدیریت آریا', { timeout: 10_000 });
         await expect(page.locator('[data-testid="tb-mp-speed"]')).toHaveValue('fast');
+        await expect(page.locator('[data-testid="tb-mp-scheme"]')).toHaveValue('dark');
+        await expect(page.locator('[data-testid="tb-mp-show_kpis"]')).not.toBeChecked();
 
         // Render: the section is not placeholdered and the motion URL carries
         // the edited parameters (only declared, non-default ones).
@@ -81,6 +92,8 @@ test.describe('Canvas editor — Motion Graphics widget (ADR-079)', () => {
         expect(src).toContain('/motion/e2e-hero/v2/animation.svg?');
         expect(src).toContain('window_title=پنل مدیریت آریا');
         expect(src).toContain('speed=fast');
+        expect(src).toContain('scheme=dark');
+        expect(src).toContain('show_kpis=0');
         expect(src).not.toContain('primary=');
         await expect(img).toHaveAttribute('alt', 'موشن آزمایشی هیرو');
         await expect(frame.getByText('Unknown element type')).toHaveCount(0);

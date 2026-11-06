@@ -46,6 +46,25 @@ class MotionRuntimeParametersTest extends TestCase
         $this->assertSame(['loop' => '0', 'primary' => '#0f766e', 'window_title' => 'پنل مدیریت'], $query);
     }
 
+    public function test_adr080_sections_scheme_and_large_parameter_sets_survive(): void
+    {
+        $declared = [
+            ['key' => 'scheme', 'type' => 'select', 'group' => 'style', 'label' => 'حالت رنگی', 'options' => ['auto' => 'خودکار', 'light' => 'روشن', 'dark' => 'تیره'], 'default' => 'auto'],
+            ['key' => 'show_kpis', 'type' => 'boolean', 'role' => 'show', 'group' => 'sections', 'label' => 'کارت‌های شاخص', 'default' => true],
+        ];
+        for ($i = 1; $i <= 60; $i++) {
+            $declared[] = ['key' => 'text_'.$i, 'type' => 'text', 'label' => 'متن '.$i, 'default' => 'متن', 'max' => 10];
+        }
+        $definitions = MotionRuntimeParameters::normalizeDefinitions($declared);
+
+        $this->assertCount(62, $definitions, 'a v3 motion declares more than ADR-079\'s 40 parameters');
+        $this->assertSame('sections', $definitions[1]['group'], 'the inspector groups show/hide switches under «بخش‌ها»');
+        $this->assertSame(
+            ['scheme' => 'dark', 'show_kpis' => '0', 'text_60' => 'آخر'],
+            MotionRuntimeParameters::query($definitions, ['show_kpis' => false, 'scheme' => 'dark', 'text_60' => 'آخر'])
+        );
+    }
+
     public function test_json_encoded_params_are_accepted(): void
     {
         $this->assertSame(['share' => '55'], MotionRuntimeParameters::query($this->definitions(), json_encode(['share' => 55])));
