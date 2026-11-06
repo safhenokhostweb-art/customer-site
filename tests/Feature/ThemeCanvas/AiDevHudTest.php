@@ -66,6 +66,22 @@ class AiDevHudTest extends TestCase
         }
     }
 
+    public function test_content_gaps_are_split_from_code_issues_with_a_deep_link(): void
+    {
+        $html = $this->render('toolbar') . $this->render('health');
+        foreach ([
+            'function contentIssues(', 'function deadLinksIn(', 'function requiredPropIssue(', 'focusField(field) {',
+            "f.code !== 'DEAD_LINK'",                                  // the HUD's DEAD_LINK is content, not core
+            '- **نواقص محتوایی قابل تنظیم توسط مدیر:**',
+            'برایشان سورس PHP/CSS را تغییر نده، مگر اینکه اسکیما یا بایندینگ همان فیلد خراب باشد.',
+            'data-ai-dev-fix-field', 'data-ai-dev-content', 'data-ai-dev-core', 'تنظیم فیلد در پنل ادیتور',
+        ] as $needle) {
+            $this->assertStringContainsString($needle, $html, $needle);
+        }
+        preg_match('/var NETWORKS = (\{.*?\});\n/s', $html, $m);
+        $this->assertSame(\SaaSPlatform\ThemeRuntime\Support\SocialNetworks::label('bale'), json_decode($m[1] ?? '{}', true)['bale'] ?? null, 'messages name a network as the site does');
+    }
+
     public function test_the_add_child_modal_is_searchable(): void
     {
         $editor = (string) file_get_contents(resource_path('views/admin/theme-design/canvas-editor.blade.php'));

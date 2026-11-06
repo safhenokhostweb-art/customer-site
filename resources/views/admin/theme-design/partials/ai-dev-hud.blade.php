@@ -54,6 +54,11 @@
         ], static fn ($v) => $v !== null);
     }
     $aiDevPolicy = ['types' => $aiDevTypes, 'maxDepth' => \SaaSPlatform\ThemeRuntime\Layout\DocumentValidator::MAX_DEPTH];
+    // Social network names as the site shows them (bale → بله).
+    $aiDevNetworks = [];
+    foreach (\SaaSPlatform\ThemeRuntime\Support\SocialNetworks::keys() as $aiDevNetwork) {
+        $aiDevNetworks[$aiDevNetwork] = \SaaSPlatform\ThemeRuntime\Support\SocialNetworks::label($aiDevNetwork);
+    }
 @endphp
 <style>
 .tbdh-bar { position: fixed; z-index: 60; display: flex; align-items: center; gap: .375rem; max-width: min(34rem, calc(100vw - 1rem)); padding: .3rem .375rem; border: 1px solid #c7d2fe; border-radius: .625rem; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 16%); font-size: .75rem; color: #1e293b; }
@@ -91,6 +96,15 @@
 .tbdh-slot-head { display: flex; align-items: baseline; gap: .375rem; min-width: 0; overflow-wrap: anywhere; }
 .tbdh-slot-error { color: #9f1239; overflow-wrap: anywhere; }
 .tbdh-ok { color: #047857; font-weight: 600; }
+.tbdh-group { margin: .625rem 0 0; font-size: .6875rem; font-weight: 700; color: #475569; }
+.tbdh-card li[data-kind="content"] { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; background: #fffbeb; color: #92400e; }
+.tbdh-path { font-size: .625rem; color: #78350f; }
+.tbdh-fix { flex: none; height: 1.75rem; padding: 0 .5rem; border: 1px solid #f59e0b; border-radius: .5rem; background: #fffbeb; color: #92400e; font: inherit; font-size: .6875rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.tbdh-fix:hover { background: #fef3c7; }
+.tbdh-fix:focus-visible { outline: 2px solid #f59e0b; outline-offset: 1px; }
+/* The Inspector field a deep-link landed on. */
+.tbdh-target { outline: 2px solid #f59e0b !important; outline-offset: 2px; box-shadow: 0 0 0 6px rgb(245 158 11 / 25%) !important; transition: box-shadow .3s; }
+@media (prefers-reduced-motion: reduce) { .tbdh-target { transition: none; } }
 /* The toolbar has no room below 1366 px (the page-tab strip already overlaps there when unsaved): the bar and the health card show the state. */
 @media (max-width: 1365.98px) { .tbdh-chip { display: none; } }
 @media (prefers-reduced-motion: reduce) { .tbdh-copy { transition: none; } }
@@ -104,6 +118,7 @@
     // type → { k: layout kind, c: editor container, r: save validator checks children,
     //          ck/pk: allowed child/parent kinds, m: maxChildren }; maxDepth from DocumentValidator.
     var POLICY = @json($aiDevPolicy);
+    var NETWORKS = @json($aiDevNetworks);
     var FILES = {
         packageRenderer: 'packages/saas-platform/modules/theme-runtime/src/BlockRenderer.php',
         packageRegistry: 'packages/saas-platform/modules/theme-runtime/src/BlockRegistry.php',
@@ -252,7 +267,153 @@
         return lines;
     }
 
+    /* ── Content issues: what the site's admin fixes in the Inspector, not in code ── */
+
+    // Primary copy fields: emptied after the widget shipped a default, the widget shows a hole.
+    var PRIMARY_TEXT = ['text', 'title', 'heading', 'label', 'button_text'];
+
+    var PRIMARY_LINK = ['url', 'href', 'link'];
+
+    /** cta_url → cta_text / cta_title / cta_label set: the link is meant to be used. */
+    function hasCompanionText(bag, linkKey) {
+        var base = linkKey.replace(/_(url|link|href)$/, '');
+        if (base === linkKey) return false;
+        return ['_text', '_title', '_label'].some(function (s) { var v = bag[base + s]; return typeof v === 'string' && v.trim() !== ''; });
+    }
+
+    function linkValue(v) { return (v && typeof v === 'object' && !Array.isArray(v)) ? String(v.url || '') : String(v == null ? '' : v); }
+    function linkMissing(v) { var s = linkValue(v).trim(); return s === '' || s === '#'; }
+    function fieldPath(prop, index, key) { return index === null ? prop : prop + '[' + index + '].' + key; }
+
+    /** A visible repeater item's own name: its network, else its first non-empty text sub-field. */
+    function itemName(item, fields) {
+        if (item.network && item.network !== 'auto') return NETWORKS[item.network] || String(item.network);
+        for (var k in fields) {
+            if (fields[k].type !== 'link' && typeof item[k] === 'string' && item[k].trim() !== '') return item[k].trim();
+        }
+        return '';
+    }
+
+    /**
+     * Content issues of one block from its props and schema alone: links an
+     * author left empty or "#", primary texts emptied, plus the preview's dead
+     * links (anchors with href="#") mapped back to the field that holds them.
+     * Each issue carries field = { path, prop, index, key, label } for the deep-link.
+     * deadLinks = [{ text, network }] read from the preview.
+     */
+    function contentIssues(block, schema, deadLinks) {
+        var props = (block && block.props) || {};
+        var out = [], byPath = {};
+        function add(code, message, prop, index, key, label, seen) {
+            var path = fieldPath(prop, index, key);
+            if (byPath[path]) { byPath[path].seenInPreview = byPath[path].seenInPreview || seen; return byPath[path]; }
+            var issue = { kind: 'content', code: code, message: message, seenInPreview: !!seen, field: { path: path, prop: prop, index: index, key: index === null ? null : key, label: label } };
+            byPath[path] = issue; out.push(issue);
+            return issue;
+        }
+        var repeaters = [], links = [];
+        Object.keys(schema || {}).forEach(function (prop) {
+            var def = schema[prop] || {};
+            if (def.type === 'repeater' && def.fields) {
+                var lk = Object.keys(def.fields).filter(function (k) { return def.fields[k].type === 'link'; });
+                if (lk.length) repeaters.push({ prop: prop, def: def, linkKeys: lk });
+            } else if (def.type === 'link') {
+                links.push({ prop: prop, def: def });
+            } else if ((def.type === 'string' || def.type === 'textarea') && PRIMARY_TEXT.indexOf(prop) !== -1
+                && typeof def.default === 'string' && def.default.trim() !== '' && typeof props[prop] === 'string' && props[prop].trim() === '') {
+                add('EMPTY_TEXT', 'متن «' + (def.label || prop) + '» خالی است.', prop, null, null, def.label || prop, false);
+            }
+        });
+        // Links in repeater items that are visible (named) but go nowhere: the
+        // item's primary link (url/href/link), or another link whose own
+        // companion text is set (mega_banner_url ↔ mega_banner_title); an
+        // optional link of an unused feature is not a gap.
+        repeaters.forEach(function (r) {
+            var items = Array.isArray(props[r.prop]) ? props[r.prop] : [];
+            items.forEach(function (item, i) {
+                if (!item || typeof item !== 'object') return;
+                var name = itemName(item, r.def.fields);
+                r.linkKeys.forEach(function (k) {
+                    if (PRIMARY_LINK.indexOf(k) === -1 && !hasCompanionText(item, k)) return;
+                    if (name && linkMissing(item[k])) {
+                        add('DEAD_LINK', 'لینک «' + name + '» مقصد ندارد' + (linkValue(item[k]).trim() === '' ? ' و در سایت نمایش داده نمی‌شود.' : '.'),
+                            r.prop, i, k, (r.def.fields[k].label || k) + ' — ' + name, false);
+                    }
+                });
+            });
+        });
+        // Top-level links whose companion text is set (cta_text → cta_url).
+        links.forEach(function (l) {
+            var text = props[l.prop.replace(/_(url|link|href)$/, '_text')];
+            if (text !== undefined && String(text).trim() !== '' && linkMissing(props[l.prop])) {
+                add('DEAD_LINK', 'لینک «' + String(text).trim() + '» مقصد ندارد.', l.prop, null, null, l.def.label || l.prop, false);
+            }
+        });
+        // The preview's dead anchors: mark the matching issue as seen, or map a new one.
+        (deadLinks || []).forEach(function (a) {
+            var hit = null;
+            repeaters.some(function (r) {
+                var items = Array.isArray(props[r.prop]) ? props[r.prop] : [];
+                return items.some(function (item, i) {
+                    if (!item || typeof item !== 'object') return false;
+                    return r.linkKeys.some(function (k) {
+                        if (!linkMissing(item[k])) return false;
+                        var textHit = Object.keys(r.def.fields).some(function (f) { return r.def.fields[f].type !== 'link' && typeof item[f] === 'string' && item[f].trim() !== '' && item[f].trim() === a.text; });
+                        if ((a.network && item.network === a.network) || textHit) {
+                            hit = add('DEAD_LINK', 'لینک «' + (itemName(item, r.def.fields) || a.text || a.network) + '» مقصد ندارد.', r.prop, i, k, (r.def.fields[k].label || k) + ' — ' + (itemName(item, r.def.fields) || a.text), true);
+                            return true;
+                        }
+                        return false;
+                    });
+                });
+            });
+            if (hit) return;
+            links.some(function (l) {
+                var text = props[l.prop.replace(/_(url|link|href)$/, '_text')];
+                if (linkMissing(props[l.prop]) && text !== undefined && String(text).trim() === a.text) {
+                    hit = add('DEAD_LINK', 'لینک «' + a.text + '» مقصد ندارد.', l.prop, null, null, l.def.label || l.prop, true);
+                    return true;
+                }
+                return false;
+            });
+            if (hit) return;
+            // The anchor belongs to a field that now has a link: the preview is
+            // older than the props (it re-renders on the next reload) — not a gap.
+            var known = repeaters.some(function (r) {
+                return (Array.isArray(props[r.prop]) ? props[r.prop] : []).some(function (item) {
+                    if (!item || typeof item !== 'object') return false;
+                    if (a.network && item.network === a.network) return true;
+                    return Object.keys(r.def.fields).some(function (f) { return r.def.fields[f].type !== 'link' && typeof item[f] === 'string' && item[f].trim() !== '' && item[f].trim() === a.text; });
+                });
+            }) || links.some(function (l) { var t = props[l.prop.replace(/_(url|link|href)$/, '_text')]; return t !== undefined && String(t).trim() === a.text; });
+            if (!known) out.push({ kind: 'content', code: 'DEAD_LINK', message: 'لینک «' + (a.text || NETWORKS[a.network] || a.network || '؟') + '» مقصد ندارد (فیلدش پیدا نشد).', seenInPreview: true, field: null });
+        });
+        return out;
+    }
+
+    /** The preview's anchors to "#" inside a widget (the Design HUD's DEAD_LINK), as plain data. */
+    function deadLinksIn(el) {
+        if (!el) return [];
+        return Array.prototype.slice.call(el.querySelectorAll('a[href="#"]')).filter(function (a) {
+            var r = a.getBoundingClientRect();
+            return r.width > 0 && r.height > 0;
+        }).map(function (a) {
+            var m = /\btb-social-icon--([a-z0-9_-]+)\b/.exec(a.className || '');
+            return { text: (a.textContent || a.getAttribute('aria-label') || '').trim(), network: m && m[1] !== 'text' ? m[1] : '' };
+        });
+    }
+
+    /** A server message "required prop "x" is missing" is the admin's to fill, not code. */
+    function requiredPropIssue(issue, schema) {
+        var m = /required prop "([^"]+)" is missing/.exec(issue.message || '');
+        if (!m) return null;
+        var def = (schema || {})[m[1]] || {};
+        return { kind: 'content', code: 'REQUIRED_EMPTY', message: 'فیلد الزامی «' + (def.label || m[1]) + '» خالی است.', seenInPreview: true, field: { path: m[1], prop: m[1], index: null, key: null, label: def.label || m[1] } };
+    }
+
     function buildPrompt(meta, instruction, issues, children) {
+        var content = (issues || []).filter(function (i) { return i.kind === 'content'; });
+        var core = (issues || []).filter(function (i) { return i.kind !== 'content'; });
         var lines = [
             '### دستور عیب‌یابی / توسعه ویجت کانواس (Dev HUD)',
             '',
@@ -262,10 +423,19 @@
             '  * شناسه (ID/UUID): `' + meta.id + '`',
             '  * والد (Parent): `' + meta.parent.type + ' (ID: ' + meta.parent.id + ')`',
             '  * مسیر احتمالی فایل‌ها: `' + meta.view.join(' | ') + '`',
-            '- **خطاهای ثبت‌شده در ادیتور:**',
+            '- **نواقص محتوایی قابل تنظیم توسط مدیر:**',
         ];
-        if (issues && issues.length) {
-            issues.forEach(function (i) { lines.push('  `[' + i.kind + '] ' + i.message + '`'); });
+        if (content.length) {
+            lines.push('  > این‌ها مقدار محتوایی‌اند و مدیر سایت آن‌ها را در پنل ادیتور پر می‌کند. برایشان سورس PHP/CSS را تغییر نده، مگر اینکه اسکیما یا بایندینگ همان فیلد خراب باشد.');
+            content.forEach(function (i) {
+                lines.push('  * `' + i.code + '`' + (i.field ? ' — فیلد `' + i.field.path + '`' : '') + ': ' + i.message);
+            });
+        } else {
+            lines.push('  * موردی نیست.');
+        }
+        lines.push('- **خطاهای ثبت‌شده در ادیتور:**');
+        if (core.length) {
+            core.forEach(function (i) { lines.push('  `[' + i.kind + '] ' + i.message + '`'); });
         } else {
             lines.push('  `هیچ خطایی ثبت نشده است.`');
         }
@@ -301,10 +471,32 @@
         active: false,
         instruction: '',
         domIssues: [],
+        domContent: [],
+        deadLinks: [],
         serverSlots: {},
         parentServerSlots: {},
         pos: null,
         editor: null,
+
+        /** The selected block's schema (the editor's BLOCK_SCHEMAS). */
+        get schema() {
+            var b = this.editor && this.editor.selectedBlock;
+            var all = typeof BLOCK_SCHEMAS !== 'undefined' ? BLOCK_SCHEMAS : {};
+            return (b && all[b.type] && all[b.type].schema) || {};
+        },
+        /** User Content Action: live from the props, plus the preview's dead links and the server's "required" messages. */
+        get contentIssues() {
+            var b = this.editor && this.editor.selectedBlock;
+            if (!b) return [];
+            var out = contentIssues(b, this.schema, this.deadLinks);
+            var seen = {};
+            out.forEach(function (i) { if (i.field) seen[i.field.path] = true; });
+            this.domContent.forEach(function (i) { if (!i.field || !seen[i.field.path]) out.push(i); });
+            return out;
+        },
+        /** Core Code Issue: render, schema, structure, layout. */
+        get coreIssues() { return this.issues.filter(function (i) { return i.kind !== 'content'; }); },
+        get firstFixable() { return this.contentIssues.find(function (i) { return !!i.field; }) || null; },
 
         get path() { return (this.editor && this.editor.selectedPath) || []; },
         get parentBlock() {
@@ -340,7 +532,7 @@
             var own = this.ownSlot, parent = this.parentBlock;
             if (own) own.errors.forEach(function (e) { out.push({ kind: e.kind, message: 'in parent ' + parent.type + '#' + parent.id + ' slot ' + own.index + ': ' + e.message }); });
             if (this.children) out = out.concat(this.children.issues);
-            return out;
+            return out.concat(this.contentIssues);
         },
         get policyBadge() {
             var kinds = this.issues.map(function (i) { return i.kind; });
@@ -348,14 +540,42 @@
             return kinds.indexOf('children-policy') !== -1 ? '[children-policy]' : '';
         },
         get tone() {
-            if (this.issues.some(function (i) { return i.kind !== 'warning'; })) return 'error';
+            // A content gap is amber: the admin fills it; red is reserved for code.
+            if (this.issues.some(function (i) { return i.kind !== 'warning' && i.kind !== 'content'; })) return 'error';
             return this.issues.length ? 'warn' : 'ok';
         },
         get toneLabel() {
             var kinds = this.issues.map(function (i) { return i.kind; });
             if (kinds.indexOf('schema') !== -1) return 'خطای اسکیما';
             if (kinds.indexOf('slot-error') !== -1 || kinds.indexOf('children-policy') !== -1) return 'خطای ساختار فرزندان';
+            if (this.tone === 'warn' && kinds.every(function (k) { return k === 'content'; })) return 'نقص محتوایی';
             return { error: 'خطای رندر', warn: 'هشدار', ok: 'معتبر' }[this.tone];
+        },
+
+        /**
+         * Deep-link: open the block's Inspector on the field that holds the
+         * gap and focus it (a repeater item is selected and highlighted first).
+         */
+        focusField(field) {
+            var e = this.editor, meta = this.meta;
+            if (!e || !meta || !field) return;
+            if (!e.selectedBlock || e.selectedBlock.id !== meta.id) e.selectBlock(e.findBlockPath(meta.id));
+            e.selectedTab = 'content';
+            e.selectedLogicalItem = field.index === null ? null : { group: field.prop, index: field.index };
+            var selector = field.index === null
+                ? '[data-testid="tb-prop-' + field.prop + '"]'
+                : '#' + (root.CSS && CSS.escape ? CSS.escape('tb-structured-' + field.prop + '-' + field.index + '-' + field.key) : 'tb-structured-' + field.prop + '-' + field.index + '-' + field.key);
+            var started = Date.now();
+            (function seek() {
+                var el = document.querySelector(selector);
+                if (!el && Date.now() - started < 1500) { root.requestAnimationFrame(seek); return; }
+                if (!el) { if (e.showToast) e.showToast.call(e, 'فیلد «' + field.label + '» در پنل پیدا نشد', 'error'); return; }
+                el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                el.focus({ preventScroll: true });
+                if (typeof el.select === 'function') el.select();
+                el.classList.add('tbdh-target');
+                root.setTimeout(function () { el.classList.remove('tbdh-target'); }, 2000);
+            }());
         },
 
         toggle(on) {
@@ -382,23 +602,27 @@
         refresh() {
             var meta = this.active ? this.meta : null;
             var doc = this.frameDoc();
-            if (!meta || !doc) { this.domIssues = []; this.serverSlots = {}; this.parentServerSlots = {}; this.pos = null; return; }
+            if (!meta || !doc) { this.domIssues = []; this.domContent = []; this.deadLinks = []; this.serverSlots = {}; this.parentServerSlots = {}; this.pos = null; return; }
             var split = splitSlotErrors(placeholderErrors(doc, meta.id));
             var parent = this.parentBlock;
+            var schema = this.schema;
             this.serverSlots = split.slots;
             this.parentServerSlots = parent ? splitSlotErrors(placeholderErrors(doc, parent.id)).slots : {};
-            var issues = split.rest;
+            var issues = [], content = [];
+            split.rest.forEach(function (i) { var c = requiredPropIssue(i, schema); if (c) content.push(c); else issues.push(i); });
             var found = this.elementFor(doc);
             var el = found.own ? found.el : null;
             var audit = this.frame().contentWindow.TbAudit;
             if (el && audit && typeof audit.auditNow === 'function') {
                 try {
-                    audit.auditNow(el).filter(function (f) { return f.severity !== 'info'; }).forEach(function (f) {
+                    audit.auditNow(el).filter(function (f) { return f.severity !== 'info' && f.code !== 'DEAD_LINK'; }).forEach(function (f) {
                         issues.push({ kind: f.severity === 'blocker' ? 'render' : 'warning', message: f.code + ': ' + f.message });
                     });
                 } catch (_) { /* the Design HUD is optional */ }
             }
             this.domIssues = issues;
+            this.domContent = content;
+            this.deadLinks = deadLinksIn(el); // DEAD_LINK is content: mapped to its field in contentIssues
             this.place(found.el);
         },
 
@@ -470,7 +694,7 @@
         return s;
     }
 
-    root.TbDevHud = Object.freeze({ version: 1, attach: attach, isShortcut: isShortcut, enabledByUrl: enabledByUrl, viewHint: viewHint, placeholderErrors: placeholderErrors, splitSlotErrors: splitSlotErrors, childrenPolicy: childrenPolicy, buildPrompt: buildPrompt });
+    root.TbDevHud = Object.freeze({ version: 1, attach: attach, isShortcut: isShortcut, enabledByUrl: enabledByUrl, viewHint: viewHint, placeholderErrors: placeholderErrors, splitSlotErrors: splitSlotErrors, childrenPolicy: childrenPolicy, contentIssues: contentIssues, deadLinksIn: deadLinksIn, requiredPropIssue: requiredPropIssue, buildPrompt: buildPrompt });
 }(window));
 </script>
 @endonce
@@ -488,6 +712,8 @@
     <span class="tbdh-type" dir="ltr" x-text="$store.devHud.meta?.type" data-ai-dev-type></span>
     <span class="tbdh-state" :data-tone="$store.devHud.tone" x-text="$store.devHud.toneLabel" data-ai-dev-state></span>
     <span class="tbdh-badge" dir="ltr" x-show="$store.devHud.policyBadge" x-text="$store.devHud.policyBadge" data-ai-dev-policy-badge></span>
+    <button type="button" class="tbdh-fix" x-show="$store.devHud.firstFixable" @click="$store.devHud.focusField($store.devHud.firstFixable.field)"
+        :title="$store.devHud.firstFixable ? `${$store.devHud.firstFixable.message} — ${$store.devHud.firstFixable.field.path}` : ''" data-ai-dev-fix-field>تنظیم فیلد در پنل ادیتور</button>
     <input type="text" class="tbdh-input" x-model="$store.devHud.instruction" @keydown.enter.prevent="$store.devHud.copyPrompt()"
         placeholder="دستور رفع باگ یا افزودن امکان جدید..." aria-label="دستور توسعه‌دهنده" data-ai-dev-instruction>
     <button type="button" class="tbdh-copy" @click="$store.devHud.copyPrompt()" data-ai-dev-copy>کپی پرامپت هوش مصنوعی (AI Prompt)</button>
@@ -507,11 +733,28 @@
                 <dt>وضعیت</dt><dd x-text="$store.devHud.toneLabel" data-ai-dev-health-state></dd>
                 <dt>فایل‌ها</dt><dd><template x-for="f in $store.devHud.meta.view" :key="f"><code dir="ltr" class="tbdh-file" :title="f" x-text="f.replace(/^.*\//, '')"></code></template></dd>
             </dl>
-            <ul x-show="$store.devHud.issues.length">
-                <template x-for="(i, n) in $store.devHud.issues" :key="n">
-                    <li :data-kind="i.kind" dir="ltr"><code x-text="`[${i.kind}] ${i.message}`"></code></li>
-                </template>
-            </ul>
+            {{-- User Content Action: the admin fills these in the Inspector. --}}
+            <div x-show="$store.devHud.contentIssues.length" data-ai-dev-content>
+                <h4 class="tbdh-group">نواقص محتوایی (قابل تنظیم در ادیتور)</h4>
+                <ul>
+                    <template x-for="(i, n) in $store.devHud.contentIssues" :key="n">
+                        <li data-kind="content" :data-ai-dev-content-item="i.field ? i.field.path : ''">
+                            <span x-text="i.message"></span>
+                            <code dir="ltr" class="tbdh-path" x-show="i.field" x-text="i.field ? i.field.path : ''"></code>
+                            <button type="button" class="tbdh-fix" x-show="i.field" @click="$store.devHud.focusField(i.field)" data-ai-dev-fix>تنظیم فیلد در پنل ادیتور</button>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+            {{-- Core Code Issue: render, schema, structure and layout. --}}
+            <div x-show="$store.devHud.coreIssues.length" data-ai-dev-core>
+                <h4 class="tbdh-group">ایرادات کد (Core Code Issue)</h4>
+                <ul>
+                    <template x-for="(i, n) in $store.devHud.coreIssues" :key="n">
+                        <li :data-kind="i.kind" dir="ltr"><code x-text="`[${i.kind}] ${i.message}`"></code></li>
+                    </template>
+                </ul>
+            </div>
             <button type="button" class="tbdh-copy" @click="$store.devHud.copyPrompt()" data-ai-dev-health-copy>کپی پرامپت هوش مصنوعی (AI Prompt)</button>
         </div>
     </template>
