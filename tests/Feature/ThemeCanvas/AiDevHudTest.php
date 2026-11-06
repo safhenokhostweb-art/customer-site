@@ -49,6 +49,33 @@ class AiDevHudTest extends TestCase
         $this->assertContains('renderModuleBlock', $map['module'] ?? []);
     }
 
+    public function test_the_children_policy_ships_the_servers_own_rules(): void
+    {
+        $html = $this->render('toolbar');
+        preg_match('/var POLICY = (\{.*?\});\n/s', $html, $m);
+        $policy = json_decode($m[1] ?? '{}', true);
+        $this->assertSame(\SaaSPlatform\ThemeRuntime\Layout\DocumentValidator::MAX_DEPTH, $policy['maxDepth'] ?? null);
+        $types = $policy['types'] ?? [];
+        $this->assertSame(['k' => 'section', 'c' => 1, 'r' => 1], $types['section'] ?? null, 'container, children validated on save');
+        $this->assertSame('container', $types['flex_container']['k'] ?? null, 'LayoutContract::kindForType');
+        $this->assertSame(0, $types['heading']['c'] ?? null, 'widgets are leaves');
+        $this->assertSame(['k' => 'container', 'c' => 1, 'r' => 0], $types['tabs'] ?? null, 'editor container whose children the save validator skips');
+
+        foreach (["function childrenPolicy(", "'[slot-error]'", "'[children-policy]'", 'ساختار فرزندان (children_structure)', 'data-ai-dev-children'] as $needle) {
+            $this->assertStringContainsString($needle, $html . $this->render('health'), $needle);
+        }
+    }
+
+    public function test_the_add_child_modal_is_searchable(): void
+    {
+        $editor = (string) file_get_contents(resource_path('views/admin/theme-design/canvas-editor.blade.php'));
+        $this->assertStringContainsString('<input type="search" x-ref="childSearch" x-model="childQuery"', $editor);
+        $this->assertStringContainsString('data-testid="tb-add-child-search-clear"', $editor);
+        $this->assertStringContainsString('ویجتی با این عنوان یافت نشد', $editor);
+        $this->assertStringContainsString("x-show=\"childMatches('{{ \$blockType }}')\"", $editor);
+        $this->assertStringContainsString('@keydown.escape.window="if (showAddChildModal) showAddChildModal = false"', $editor);
+    }
+
     /** @return array<string, array{mixed}> */
     public static function offValues(): array
     {

@@ -1521,18 +1521,57 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
     </div>
 
-    {{-- TB4: Add Child Block Modal --}}
-    <div x-show="showAddChildModal" x-transition.opacity class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div @click.outside="showAddChildModal = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5">
+    {{-- TB4: Add Child Block Modal — with a live search over title, type, tags and category. --}}
+    @php
+        // One normalized haystack per type; the query is normalized the same way (childSearchNorm).
+        $childSearchIndex = [];
+        foreach ($orderedCats as $catKey) {
+            foreach ($byCategory[$catKey] ?? [] as $blockType => $blockDef) {
+                $haystack = implode(' ', [$blockDef['name'] ?? '', $blockType, str_replace(['_', ':'], ' ', $blockType), $catKey, $catLabels[$catKey] ?? '', implode(' ', (array) ($blockDef['tags'] ?? []))]);
+                $childSearchIndex[$blockType] = trim(preg_replace('/\s+/u', ' ', str_replace(['ي', 'ك', "\u{200C}"], ['ی', 'ک', ' '], mb_strtolower($haystack))));
+            }
+        }
+    @endphp
+    <div x-show="showAddChildModal" x-transition.opacity class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        x-data="{
+            childQuery: '',
+            childIndex: @js($childSearchIndex),
+            childSearchNorm(s) { return String(s || '').toLowerCase().replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/‌/g, ' ').replace(/\s+/g, ' ').trim(); },
+            childMatches(type) {
+                const terms = this.childSearchNorm(this.childQuery).split(' ').filter(Boolean);
+                const hay = this.childIndex[type] || '';
+                return terms.every(t => hay.includes(t));
+            },
+            get childMatchList() { return Object.keys(this.childIndex).filter(t => this.childMatches(t)); },
+        }"
+        x-effect="if (showAddChildModal) { childQuery = ''; $nextTick(() => $refs.childSearch?.focus()); }"
+        @keydown.escape.window="if (showAddChildModal) showAddChildModal = false"
+        data-testid="tb-add-child-dialog">
+        <div @click.outside="showAddChildModal = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5" role="dialog" aria-modal="true" aria-label="افزودن بلوک فرزند">
             <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 افزودن بلوک فرزند به <span class="text-indigo-600" x-text="blockLabel(selectedBlock?.type)"></span>
             </h3>
-            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+            <div class="relative mb-2">
+                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                <input type="search" x-ref="childSearch" x-model="childQuery" dir="rtl" autocomplete="off" enterkeyhint="go"
+                    placeholder="جستجوی ویجت (عنوان، نوع یا دسته)…" aria-label="جستجوی ویجت فرزند"
+                    @keydown.enter.prevent="const first = childMatchList[0]; if (first) { addChildBlock(first); showAddChildModal = false; }"
+                    class="tb-child-search w-full h-9 pr-8 pl-8 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    data-testid="tb-add-child-search">
+                <button type="button" x-show="childQuery" x-cloak @click="childQuery = ''; $refs.childSearch.focus()"
+                    class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                    aria-label="پاک کردن جستجو" data-testid="tb-add-child-search-clear">×</button>
+            </div>
+            <style>.tb-child-search::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }</style>
+            <p class="sr-only" aria-live="polite" x-text="childQuery ? `${childMatchList.length} ویجت` : ''"></p>
+            <p x-show="childQuery && !childMatchList.length" x-cloak class="py-6 text-center text-xs text-slate-500" data-testid="tb-add-child-empty">ویجتی با این عنوان یافت نشد</p>
+            <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto" x-show="!childQuery || childMatchList.length">
                 @foreach($orderedCats as $catKey)
                     @if(!isset($byCategory[$catKey])) @continue @endif
                     @foreach($byCategory[$catKey] as $blockType => $blockDef)
                         <button
+                            x-show="childMatches('{{ $blockType }}')"
                             @click="addChildBlock('{{ $blockType }}'); showAddChildModal = false"
                             data-testid="tb-add-child-{{ $blockType }}"
                             class="flex items-center gap-2 px-2 py-2 rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 text-xs text-right transition">
