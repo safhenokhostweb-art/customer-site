@@ -1163,7 +1163,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                 </template>
                                                 <div class="flex-1 min-w-0">
                                                     <p class="text-xs font-semibold text-slate-700 truncate" x-text="motionAssetById(selectedBlock.props[propKey])?.name || selectedBlock.props[propKey]"></p>
-                                                    <p class="text-[11px] text-slate-400 truncate" x-text="motionAssetById(selectedBlock.props[propKey])?.category || 'در دسترس این سایت'"></p>
+                                                    <p class="text-[11px] truncate" :class="motionAvailability(selectedBlock.props[propKey]) === 'available' ? 'text-slate-400' : 'text-amber-600'"
+                                                       :data-testid="'tb-motion-status-' + propKey"
+                                                       x-text="motionAvailabilityNotice(selectedBlock.props[propKey]) || motionAssetById(selectedBlock.props[propKey])?.category || 'در دسترس این سایت'"></p>
                                                 </div>
                                                 <button @click="clearMotionSelect(propKey)" title="حذف انتخاب" class="text-slate-400 hover:text-red-500 text-sm px-1">×</button>
                                             </div>
@@ -1184,7 +1186,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'motion_params'">
                                     <div class="space-y-3" x-init="ensureMotionAssets()" data-testid="tb-motion-params">
                                         <template x-if="!motionParamDefs().length">
-                                            <p class="text-xs text-slate-400" x-text="selectedBlock.props.motion_asset_id ? (motionModal.loading ? 'در حال بارگذاری تنظیمات موشن…' : 'این موشن تنظیمات اختصاصی ندارد.') : 'ابتدا یک موشن انتخاب کنید.'"></p>
+                                            <p class="text-xs" data-testid="tb-motion-params-notice"
+                                               :class="['premium', 'unavailable'].includes(motionAvailability(selectedBlock.props.motion_asset_id)) ? 'text-amber-600' : 'text-slate-400'"
+                                               x-text="motionParamsNotice()"></p>
                                         </template>
                                         <template x-for="group in motionParamGroups()" :key="group.key">
                                             <fieldset class="space-y-2.5 border border-slate-200 rounded-lg p-2.5">
@@ -2078,7 +2082,7 @@ function canvasEditor() {
         // keystroke. Canvas/public rendering resolves independently and
         // authoritatively server-side (CustomerMediaResolver) regardless.
         mediaUrlCache: {},
-        motionModal: { open: false, assets: [], loading: false, selected: null, propKey: null, loaded: false },
+        motionModal: { open: false, assets: [], locked: [], loading: false, selected: null, propKey: null, loaded: false },
         // TB6: template library
         showTemplateLibrary: false,
         showSaveAsTemplate: false,
@@ -3222,8 +3226,9 @@ function canvasEditor() {
                 const r = await fetch(ROUTES.motionAssets, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } });
                 const d = await r.json();
                 this.motionModal.assets = d.assets ?? [];
+                this.motionModal.locked = d.locked ?? [];
                 this.motionModal.loaded = true;
-            } catch (_) { this.motionModal.assets = []; }
+            } catch (_) { this.motionModal.assets = []; this.motionModal.locked = []; }
             finally { this.motionModal.loading = false; }
         },
 
@@ -3256,6 +3261,34 @@ function canvasEditor() {
         // differ from the asset default; the server re-validates them all.
         ensureMotionAssets() {
             if (!this.motionModal.loaded && !this.motionModal.loading) this.fetchMotionAssets();
+        },
+
+        // Why a placed motion has no controls (and renders nothing). The
+        // platform withholds a package item the site is not licensed for and
+        // lists it under `locked` with a fixed reason (saas-platform
+        // CustomerRuntimeManifest::LOCK_REASONS). An id in neither list is
+        // simply not available to this site (archived, or not in its package).
+        motionAvailability(assetId) {
+            if (!assetId) return 'none';
+            if (!this.motionModal.loaded) return 'loading';
+            if (this.motionAssetById(assetId)) return 'available';
+            const lock = this.motionModal.locked.find(l => l.asset_id === assetId);
+            return lock?.reason === 'premium_license_required' ? 'premium' : 'unavailable';
+        },
+
+        motionAvailabilityNotice(assetId) {
+            return {
+                premium: 'این موشن نیازمند لایسنس پرمیوم است.',
+                unavailable: 'این موشن برای این سایت در دسترس نیست.',
+            }[this.motionAvailability(assetId)] || '';
+        },
+
+        motionParamsNotice() {
+            const assetId = this.selectedBlock?.props?.motion_asset_id;
+            const state = this.motionAvailability(assetId);
+            if (state === 'none') return 'ابتدا یک موشن انتخاب کنید.';
+            if (state === 'loading') return 'در حال بارگذاری تنظیمات موشن…';
+            return this.motionAvailabilityNotice(assetId) || 'این موشن تنظیمات اختصاصی ندارد.';
         },
 
         motionParamDefs() {

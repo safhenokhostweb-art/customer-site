@@ -790,7 +790,10 @@ class ThemeDesignController extends Controller
             'parameters' => $a['parameters'] ?? [],
         ])->filter(fn(array $a) => !empty($a['asset_id']))->values();
 
-        return response()->json(['assets' => $assets]);
+        // Package items the platform withheld, so the inspector can say why a
+        // placed motion shows nothing (e.g. «نیازمند لایسنس پرمیوم»). Ids and
+        // reason codes only, already validated by the reader.
+        return response()->json(['assets' => $assets, 'locked' => $manifest['locked_assets'] ?? []]);
     }
 
     /**
