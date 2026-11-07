@@ -52,7 +52,7 @@ class MotionPickerTest extends TestCase
         return User::factory()->create(['is_admin' => true]);
     }
 
-    private function fakeManifest(array $assets): void
+    private function fakeManifest(array $assets, ?array $locked = null): void
     {
         Http::fake([
             'platform.example/api/motion-runtime/manifest*' => Http::response([
@@ -61,8 +61,69 @@ class MotionPickerTest extends TestCase
                 'site_reference' => 'site-1',
                 'manifest_checksum' => str_repeat('a', 64),
                 'assets' => $assets,
+                ...($locked === null ? [] : ['locked_assets' => $locked]),
             ], 200),
         ]);
+    }
+
+    // ── 2026-11-06: why a placed motion shows nothing ───────────────────
+
+    public function test_a_premium_locked_motion_is_reported_with_its_reason(): void
+    {
+        $this->fakeManifest([], [
+            ['asset_id' => '6fea28d1-7b83-4c09-8bc2-35e7bb061ae7', 'reason' => 'premium_license_required'],
+        ]);
+
+        $response = $this->actingAs($this->admin())
+            ->getJson(route('admin.theme-design.canvas-motion-assets'));
+
+        $response->assertOk();
+        $this->assertSame([], $response->json('assets'), 'a locked motion is never offered as an asset');
+        $this->assertSame([['asset_id' => '6fea28d1-7b83-4c09-8bc2-35e7bb061ae7', 'reason' => 'premium_license_required']], $response->json('locked'));
+    }
+
+    public function test_malformed_or_unknown_locked_entries_are_dropped_without_rejecting_the_manifest(): void
+    {
+        $this->fakeManifest([[
+            'asset_id' => 'medical-hero-intro', 'published_version' => 1, 'checksum' => str_repeat('b', 64),
+            'asset_type' => 'svg', 'optimized_reference' => '/motion/medical-hero-intro/v1/a.svg',
+        ]], [
+            ['asset_id' => 'ok-id', 'reason' => 'premium_license_required'],
+            ['asset_id' => 'ok-id-2', 'reason' => 'internal detail'],
+            ['asset_id' => '../etc', 'reason' => 'premium_license_required'],
+            'not-an-array',
+        ]);
+
+        $response = $this->actingAs($this->admin())
+            ->getJson(route('admin.theme-design.canvas-motion-assets'));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('assets'));
+        $this->assertSame([['asset_id' => 'ok-id', 'reason' => 'premium_license_required']], $response->json('locked'));
+    }
+
+    public function test_a_platform_without_locked_assets_yields_an_empty_list(): void
+    {
+        $this->fakeManifest([]);
+
+        $response = $this->actingAs($this->admin())
+            ->getJson(route('admin.theme-design.canvas-motion-assets'));
+
+        $response->assertOk();
+        $this->assertSame([], $response->json('locked'));
+    }
+
+    public function test_the_editor_ships_the_premium_license_notice(): void
+    {
+        $this->fakeManifest([]);
+        Setting::set('active_canvas_theme_data', json_encode(['header_blocks' => [], 'footer_blocks' => [], 'global_styles' => [], 'pages' => [
+            'home' => ['slug' => '', 'title' => 'صفحه اصلی', 'blocks' => []],
+        ]], JSON_UNESCAPED_UNICODE), 'theme');
+
+        $this->actingAs($this->admin())->get(route('admin.theme-design.canvas-edit'))
+            ->assertOk()
+            ->assertSee('این موشن نیازمند لایسنس پرمیوم است.', false)
+            ->assertSee('tb-motion-params-notice', false);
     }
 
     // ── #2 the picker's data source is exactly the site's own manifest ────

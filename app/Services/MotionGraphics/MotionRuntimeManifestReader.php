@@ -34,7 +34,8 @@ final class MotionRuntimeManifestReader
     private const SUPPORTED_SCHEMA_VERSIONS = ['1.0'];
     private const ASSET_ID_PATTERN = '/^[a-z0-9-]+$/';
     private const CHECKSUM_PATTERN = '/^[a-f0-9]{64}$/';
-    private const KNOWN_ASSET_TYPES = ['lottie', 'svg', 'html', 'canvas', 'web-component', 'motion-json'];
+    private const LOCK_REASONS = ['premium_license_required'];
+    private const KNOWN_ASSET_TYPES =['lottie', 'svg', 'html', 'canvas', 'web-component', 'motion-json'];
 
     public function __construct(
         private readonly MotionRuntimeCache $cache,
@@ -94,6 +95,7 @@ final class MotionRuntimeManifestReader
             ],
             $manifest['assets']
         );
+        $manifest['locked_assets'] = $this->lockedAssets($manifest['locked_assets'] ?? []);
 
         return $manifest;
     }
@@ -153,6 +155,33 @@ final class MotionRuntimeManifestReader
      * mirrors the prefix-validation the original (dormant)
      * MotionRuntimeClient already did.
      */
+    /**
+     * saas-platform CustomerRuntimeManifest `locked_assets`: package items the
+     * platform withheld (e.g. premium motion without a premium license). Only
+     * a well-formed id and a known reason survive; anything else is dropped,
+     * never trusted, and never makes the manifest itself invalid (a platform
+     * that predates the key sends none). Display-only: a locked entry has no
+     * reference, so nothing here can ever render.
+     *
+     * @return list<array{asset_id: string, reason: string}>
+     */
+    private function lockedAssets(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+        $locked = [];
+        foreach (array_slice($raw, 0, 100) as $entry) {
+            $id = is_array($entry) ? ($entry['asset_id'] ?? null) : null;
+            $reason = is_array($entry) ? ($entry['reason'] ?? null) : null;
+            if (is_string($id) && preg_match(self::ASSET_ID_PATTERN, $id) && in_array($reason, self::LOCK_REASONS, true)) {
+                $locked[] = ['asset_id' => $id, 'reason' => $reason];
+            }
+        }
+
+        return $locked;
+    }
+
     private function isSafeRelativeReference(string $ref): bool
     {
         return str_starts_with($ref, '/') && ! str_starts_with($ref, '//');
