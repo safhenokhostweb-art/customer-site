@@ -118,6 +118,27 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertStringContainsString(':checked="ctlChecked(propKey)"', $editor, 'a toggle shows its schema default (sticky_shrink is on by default)');
     }
 
+    /** Step 5: accessibility props validate on this host; an empty menu renders no burger or navigation. */
+    public function test_header_accessibility_props_and_the_empty_menu_on_this_host(): void
+    {
+        $props = ['menu_aria_label' => 'منوی فروشگاه', 'focus_color' => '#f59e0b', 'sticky' => true, 'z_index' => 1200];
+        $validator = app(ElementSchemaRegistry::class);
+        $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
+        $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['z_index' => 'top']]), 'z-index is a whole number');
+
+        $render = fn (array $p) => (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h5', 'props' => $p + ['logo_text' => 'برند']]);
+        $html = $render($props);
+        $this->assertStringContainsString('<nav class="tb-nav-header-links" aria-label="منوی فروشگاه"', $html);
+        $this->assertStringContainsString('--tb-hdr-focus:#f59e0b', $html);
+        $this->assertStringContainsString('data-tb-z="1200"', $html);
+
+        $topBar = $render(['nav_links' => [['label' => null, 'url' => '/'], ['label' => '', 'url' => '/shop']], 'cta_text' => 'شروع کنید']);
+        $markup = substr($topBar, 0, (int) strpos($topBar, '<script'));
+        $this->assertStringNotContainsString('<nav', $markup);
+        $this->assertStringNotContainsString('tb-nav-header-toggle', $markup, 'no burger that opens an empty drawer');
+        $this->assertStringContainsString('tb-nav-header-cta', $markup);
+    }
+
     public function test_the_validator_types_the_new_controls_and_device_values(): void
     {
         $validator = app(ElementSchemaRegistry::class);
