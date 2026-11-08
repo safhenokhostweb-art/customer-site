@@ -1277,11 +1277,11 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 <template x-if="schemaDef.type === 'boolean'">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <div class="relative">
-                                            <input type="checkbox" x-model="selectedBlock.props[propKey]" @change="schedulePropUpdate()" class="sr-only peer" :data-testid="'tb-prop-' + propKey">
+                                            <input type="checkbox" :checked="ctlChecked(propKey)" @change="ctlSetProp(propKey, $event.target.checked)" class="sr-only peer" :data-testid="'tb-prop-' + propKey">
                                             <div class="w-9 h-5 bg-slate-200 peer-checked:bg-indigo-500 rounded-full transition"></div>
                                             <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-full rtl:peer-checked:-translate-x-full transition-transform"></div>
                                         </div>
-                                        <span class="text-sm text-slate-700" x-text="selectedBlock.props[propKey] ? 'فعال' : 'غیرفعال'"></span>
+                                        <span class="text-sm text-slate-700" x-text="ctlChecked(propKey) ? 'فعال' : 'غیرفعال'"></span>
                                     </label>
                                 </template>
 

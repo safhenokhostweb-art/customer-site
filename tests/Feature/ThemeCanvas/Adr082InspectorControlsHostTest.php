@@ -73,6 +73,51 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertStringNotContainsString("@include('theme-runtime::css.blocks')", $head);
     }
 
+    /** Step 3: the header Style tab on this host: valid props pass, and the renderer scopes them. */
+    public function test_header_style_props_validate_and_render_as_scoped_values_on_this_host(): void
+    {
+        $props = [
+            'min_height' => 84, 'min_height_mobile' => 62,
+            'padding' => ['unit' => 'px', 'linked' => false, 'block-start' => 8, 'block-end' => 8, 'inline-start' => 24, 'inline-end' => 24],
+            'menu_typography' => ['size' => 16, 'weight' => '700'], 'menu_typography_mobile' => ['size' => 14],
+            'header_shadow' => ['x' => 0, 'y' => 4, 'blur' => 12, 'spread' => -2, 'color' => 'rgba(15, 23, 42, 0.12)', 'inset' => false],
+            'menu_color_hover' => '#2563eb', 'pointer' => 'framed', 'backdrop_blur' => 10,
+        ];
+        $validator = app(ElementSchemaRegistry::class);
+        $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
+        $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['padding' => 'wide']]), 'spacing is structured');
+
+        $html = (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h1', 'props' => $props + ['logo_text' => 'برند']]);
+        $this->assertStringStartsWith('<style data-tb-hdr="tb-h1">#tb-h1{--tb-hdr-min-h:84px;', ltrim($html));
+        $this->assertStringContainsString('@media(max-width:767.98px){#tb-h1{--tb-hdr-min-h-m:62px;--tb-hdr-menu-size:14px}}', $html);
+        $this->assertMatchesRegularExpression('/<div[^>]*\sid="tb-h1"[^>]*class="tb-nav-header tb-nav-header--pointer-framed"[^>]*data-tb-hdr-set="shadow blur menu-size menu-weight menu-color-hover"/', $html);
+    }
+
+    /** Step 4: the Advanced behaviour and drawer props validate, and the renderer carries them on this host. */
+    public function test_header_behaviour_and_drawer_props_validate_and_render_on_this_host(): void
+    {
+        $props = [
+            'sticky' => true, 'sticky_devices' => 'desktop', 'sticky_offset' => 24, 'scroll_threshold' => 120,
+            'sticky_shrink' => false, 'scrolled_bg_color' => '#0f172a', 'scrolled_text_color' => '#f8fafc',
+            'scrolled_shadow' => ['x' => 0, 'y' => 6, 'blur' => 18, 'spread' => 0, 'color' => 'rgba(0, 0, 0, 0.2)', 'inset' => false],
+            'burger_breakpoint' => 'tablet', 'drawer_style' => 'side', 'drawer_side' => 'end',
+            'drawer_width' => ['size' => 80, 'unit' => '%'], 'drawer_bg' => '#111827', 'burger_color' => '#e11d48', 'burger_size' => 30,
+        ];
+        $validator = app(ElementSchemaRegistry::class);
+        $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
+        $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['drawer_width' => 80]]), 'a multi-unit range is {size, unit}');
+
+        $html = (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h4', 'props' => $props + ['logo_text' => 'برند']]);
+        $this->assertMatchesRegularExpression('/data-tb-header="[^"]*noshrink/', $html);
+        foreach (['data-tb-scroll-threshold="120"', 'data-tb-sticky-offset="24"', 'data-tb-sticky-on="desktop"', 'data-tb-burger="tablet"', 'tb-nav-header--drawer-end', '--tb-hdr-drawer-w:80%', '--tb-hdr-burger-size:30px'] as $needle) {
+            $this->assertStringContainsString($needle, $html);
+        }
+        $this->assertMatchesRegularExpression('/data-tb-hdr-set="[^"]*scrolled-bg scrolled-text scrolled-shadow/', $html);
+
+        $editor = file_get_contents(resource_path('views/admin/theme-design/canvas-editor.blade.php'));
+        $this->assertStringContainsString(':checked="ctlChecked(propKey)"', $editor, 'a toggle shows its schema default (sticky_shrink is on by default)');
+    }
+
     public function test_the_validator_types_the_new_controls_and_device_values(): void
     {
         $validator = app(ElementSchemaRegistry::class);

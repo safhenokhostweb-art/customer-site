@@ -154,8 +154,16 @@ class CanonicalListSchemaParityTest extends TestCase
                 $item[$key] = match ($this->normalized($def, $key)['control']) {
                     'media' => "/storage/media/parity-{$key}-{$i}.jpg",
                     'toggle' => true,
-                    'number', 'range' => $i,
+                    // A sample inside the field's own bounds (saas ADR-082 step 4 ranges start above 1);
+                    // a multi-unit range stores {size, unit}, as the validator types it.
+                    'number', 'range' => count($def['units'] ?? []) > 1
+                        ? ['size' => max($i, (int) ($def['min'] ?? $i)), 'unit' => (string) ($def['unit'] ?? $def['units'][0])]
+                        : max($i, (int) ($def['min'] ?? $i)),
                     'select' => (string) array_key_first($def['options']),
+                    // saas ADR-082: structured style values (the validator types them as arrays).
+                    'spacing' => ['unit' => 'px', 'linked' => true, 'block-start' => $i, 'block-end' => $i, 'inline-start' => $i, 'inline-end' => $i],
+                    'typography' => ['size' => 14 + $i, 'weight' => '600'],
+                    'shadow' => ['x' => 0, 'y' => $i, 'blur' => 4 * $i, 'spread' => 0, 'color' => 'rgba(0, 0, 0, 0.1)', 'inset' => false],
                     'repeater' => $this->sampleItems($def['fields'] ?? [], 1),
                     default => match ($key) {
                         'url', 'link', 'link_url', 'cta_url' => "/parity/{$key}/{$i}",

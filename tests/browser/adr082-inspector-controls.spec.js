@@ -118,4 +118,86 @@ test.describe('ADR-082 Inspector controls in the customer Canvas', () => {
         }
         expect(realErrorsOnly(errors), realErrorsOnly(errors).join('\n')).toHaveLength(0);
     });
+
+    test('step 3: the header Style tab reaches the live preview through the header own values', async ({ page }) => {
+        test.setTimeout(180_000);
+        const errors = collectConsoleErrors(page);
+        await loginAsAdmin(page);
+        await page.goto(`${BASE_URL}/admin/theme-design/canvas/edit`, { waitUntil: 'domcontentloaded' });
+        await page.locator('[data-testid="tb-canvas-save-button"]').waitFor({ state: 'visible', timeout: 15_000 });
+        await switchToPage(page, 'home');
+        await expect.poll(() => editor(page, '(s) => s.iframeReady'), { timeout: 20_000 }).toBe(true);
+        const stamp = await editor(page, '(s) => s.iframeTimestamp');
+        await editor(page, `(s) => s.addBlock('nav_header')`);
+        await expect.poll(() => editor(page, `(s) => !s.quickSaving && s.iframeTimestamp !== ${stamp} && s.iframeReady && s.selectedBlock?.type === "nav_header"`), { timeout: 20_000 }).toBe(true);
+        const id = await editor(page, '(s) => s.selectedBlock.id');
+        try {
+            await tab(page, 'استایل').click();
+            const style = page.getByTestId('tb-panel-fields-style');
+            await expect(style.getByTestId('tb-field-group-min_height')).toHaveText('کانتینر هدر');
+            await style.getByTestId('tbc-range-value-min_height').fill('94');
+            await style.getByTestId('tbc-range-value-min_height').press('Tab');
+            expect(await editor(page, '(s) => s.selectedBlock.props.min_height')).toBe(94);
+            const frame = page.frameLocator('#tb-live-iframe');
+            await expect.poll(() => frame.locator(`#tb-${id} .tb-nav-header-inner`).evaluate((el) => getComputedStyle(el).minHeight), { timeout: 20_000 }).toBe('94px');
+            await expect(frame.locator(`style[data-tb-hdr="tb-${id}"]`)).toHaveCount(1);
+            await style.getByTestId('tb-field-pointer').locator('select').selectOption('double');
+            await expect.poll(() => frame.locator(`#tb-${id}`).getAttribute('class'), { timeout: 20_000 }).toContain('tb-nav-header--pointer-double');
+            await expect(frame.locator(`style[data-tb-hdr="tb-${id}"]`), 'one style after another live swap').toHaveCount(1);
+        } finally {
+            await editor(page, `(s) => { s.setDevice('desktop'); s.selectBlock(s.findBlockPath('${id}')); s.removeSelected(); }`);
+            await expect.poll(() => editor(page, `(s) => !s.findBlockPath('${id}')`)).toBe(true);
+            await editor(page, '(s) => s.saveCurrentPage()');
+            await expect.poll(() => editor(page, '(s) => !s.saving && !s.quickSaving && !s.isDirty'), { timeout: 15_000 }).toBe(true);
+        }
+        expect(realErrorsOnly(errors), realErrorsOnly(errors).join('\n')).toHaveLength(0);
+    });
+
+    test('step 4: the header Advanced tab shows sticky and drawer options only while they apply', async ({ page }) => {
+        test.setTimeout(180_000);
+        const errors = collectConsoleErrors(page);
+        await loginAsAdmin(page);
+        await page.goto(`${BASE_URL}/admin/theme-design/canvas/edit`, { waitUntil: 'domcontentloaded' });
+        await page.locator('[data-testid="tb-canvas-save-button"]').waitFor({ state: 'visible', timeout: 15_000 });
+        await switchToPage(page, 'home');
+        await expect.poll(() => editor(page, '(s) => s.iframeReady'), { timeout: 20_000 }).toBe(true);
+        const stamp = await editor(page, '(s) => s.iframeTimestamp');
+        await editor(page, `(s) => s.addBlock('nav_header')`);
+        await expect.poll(() => editor(page, `(s) => !s.quickSaving && s.iframeTimestamp !== ${stamp} && s.iframeReady && s.selectedBlock?.type === "nav_header"`), { timeout: 20_000 }).toBe(true);
+        const id = await editor(page, '(s) => s.selectedBlock.id');
+        try {
+            await tab(page, 'پیشرفته').click();
+            const advanced = page.getByTestId('tb-panel-fields-advanced');
+            await expect(advanced.getByTestId('tb-field-scroll_threshold'), 'needs sticky').toHaveCount(0);
+            await advanced.getByTestId('tb-field-sticky').locator('label').last().click();
+            for (const key of ['sticky_devices', 'sticky_offset', 'scroll_threshold', 'sticky_shrink', 'sticky_shrink_height', 'scrolled_bg_color', 'scrolled_shadow']) {
+                await expect(advanced.getByTestId(`tb-field-${key}`), key).toBeVisible();
+            }
+            // A toggle shows its schema default (shrink is on until switched off).
+            const shrink = advanced.getByTestId('tb-field-sticky_shrink');
+            await expect(shrink.getByTestId('tb-prop-sticky_shrink')).toBeChecked();
+            await expect(shrink.locator('label').last().locator('span')).toHaveText('فعال');
+            await shrink.locator('label').last().click();
+            await expect(advanced.getByTestId('tb-field-sticky_shrink_height'), 'no shrink: no shrink height').toHaveCount(0);
+
+            // A new header's selects show their default, and the drawer options follow the breakpoint.
+            const burger = advanced.getByTestId('tb-field-burger_breakpoint').locator('select');
+            await expect(burger).toHaveValue('mobile');
+            await expect(advanced.getByTestId('tb-field-drawer_side')).toBeVisible();
+            await advanced.getByTestId('tb-segmented-drawer_style-full').click();
+            await expect(advanced.getByTestId('tb-field-drawer_side'), 'a full-screen menu has no side').toHaveCount(0);
+            await burger.selectOption('never');
+            await expect(advanced.getByTestId('tb-field-drawer_style'), 'never: no drawer').toHaveCount(0);
+            expect(await editor(page, '(s) => [s.selectedBlock.props.sticky, s.selectedBlock.props.sticky_shrink, s.selectedBlock.props.drawer_style, s.selectedBlock.props.burger_breakpoint]'))
+                .toEqual([true, false, 'full', 'never']);
+            const frame = page.frameLocator('#tb-live-iframe');
+            await expect.poll(() => frame.locator(`#tb-${id}`).getAttribute('data-tb-burger'), { timeout: 20_000 }).toBe('never');
+        } finally {
+            await editor(page, `(s) => { s.setDevice('desktop'); s.selectBlock(s.findBlockPath('${id}')); s.removeSelected(); }`);
+            await expect.poll(() => editor(page, `(s) => !s.findBlockPath('${id}')`)).toBe(true);
+            await editor(page, '(s) => s.saveCurrentPage()');
+            await expect.poll(() => editor(page, '(s) => !s.saving && !s.quickSaving && !s.isDirty'), { timeout: 15_000 }).toBe(true);
+        }
+        expect(realErrorsOnly(errors), realErrorsOnly(errors).join('\n')).toHaveLength(0);
+    });
 });
