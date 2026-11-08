@@ -58,11 +58,15 @@ test.describe('nav_header live update in the customer preview', () => {
         try {
             await editor(page, `(s) => { s.selectedBlock.props.cta_text = 'اولین ویرایش زنده'; s.selectedBlock.props.cta_url = '/contact'; s.schedulePropUpdate(); }`);
             await expect(header.locator('.tb-nav-header-cta')).toHaveText('اولین ویرایش زنده', { timeout: 15_000 });
-            expect(await ownStyles()).toEqual({ tagged: 1, untagged: 0, roots: 1 });
+            // saas ADR-082 step 2: a default header has no <style> of its own any
+            // more (its layout is the shared header sheet); live swaps never add one.
+            expect(await ownStyles()).toEqual({ tagged: 0, untagged: 0, roots: 1 });
 
             await editor(page, `(s) => { s.selectedBlock.props.cta_text = 'دومین ویرایش زنده'; s.schedulePropUpdate(); }`);
             await expect(header.locator('.tb-nav-header-cta')).toHaveText('دومین ویرایش زنده', { timeout: 15_000 });
-            expect(await ownStyles(), 'still exactly one style for the header').toEqual({ tagged: 1, untagged: 0, roots: 1 });
+            expect(await ownStyles(), 'still no style of its own, one root').toEqual({ tagged: 0, untagged: 0, roots: 1 });
+            const layout = await header.locator('.tb-nav-header-inner').evaluate((el) => [getComputedStyle(el).display, getComputedStyle(el).minHeight]);
+            expect(layout, 'the shared header sheet lays the swapped header out').toEqual(['flex', '68px']);
             await expect(header).toHaveClass(/tb-selected/);
             expect(await editor(page, '(s) => s.iframeTimestamp'), 'no reload: the edit was live').toBe(loaded);
             await page.screenshot({ path: 'tests/browser/.runtime/header-live-update.png' });

@@ -115,6 +115,13 @@ class ElementSchemaRegistry
                     'required' => false,
                     'type' => $this->validationType($control['type'] ?? 'string', $control),
                 ];
+                // ADR-082 (saas-platform): a responsive field's tablet and
+                // mobile values (key_tablet, key_mobile) carry the same type.
+                if (($control['responsive'] ?? false) === true) {
+                    foreach (['tablet', 'mobile'] as $device) {
+                        $props[\SaaSPlatform\ThemeRuntime\Inspector\InspectorFieldRegistry::deviceKey((string) $name, $device)] = $props[$name];
+                    }
+                }
             }
 
             $schemas[$type] = [
@@ -162,6 +169,11 @@ class ElementSchemaRegistry
             // validate as 'numeric'; whole-number defaults keep the strict
             // integer contract.
             'number' => is_float($control['default'] ?? null) ? 'numeric' : 'integer',
+            // ADR-082 (saas-platform): a single-unit range stores a number
+            // (fractional steps allowed); a multi-unit one {size, unit}.
+            'range' => count($control['units'] ?? []) > 1 ? 'array' : 'numeric',
+            // ADR-082: structured {side…}/{size, weight…}/{x, y, blur…} objects.
+            'spacing', 'typography', 'shadow' => 'array',
             'boolean' => 'boolean',
             // Phase 4B.6 — a repeater persisted as JSON must accept BOTH
             // real shapes that legitimately occur: the structured editor

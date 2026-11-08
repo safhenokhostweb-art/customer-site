@@ -542,6 +542,11 @@
     </style>
     @endif
     @stack('head')
+    {{-- ADR-082 step 2 (saas-platform): the nav_header layout this layout
+         renders. It used to arrive as the header's own inline <style>, after
+         every stylesheet; this page has no shared block sheet, so it takes the
+         header sheet alone, last in <head>, to keep that place in the cascade. --}}
+    <style>@include('theme-runtime::css.header')</style>
 </head>
 <body class="theme-{{ \App\Helpers\SiteHelper::theme() }}">
     <a href="#main" class="skip-link">پرش به محتوا</a>

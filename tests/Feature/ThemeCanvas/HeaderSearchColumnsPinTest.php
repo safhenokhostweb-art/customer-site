@@ -43,7 +43,9 @@ class HeaderSearchColumnsPinTest extends TestCase
 
         $this->assertStringContainsString('aria-label="باز کردن جستجو" aria-expanded="false" aria-controls="tb-hs-search-form">', $editor);
         $this->assertStringNotContainsString('data-tb-search-open="', $editor);
-        $this->assertStringContainsString('inset-block-start:calc(100% + .55rem);inset-inline-end:0;', $editor, 'the popover opens into the page, not past its edge');
+        // saas ADR-082 step 2: the rule lives in the shared header sheet, its offset a --tb-hdr-* property.
+        $css = (string) file_get_contents(\SaaSPlatform\ThemeRuntime\Providers\ThemeRuntimeServiceProvider::cssHeaderPath());
+        $this->assertStringContainsString('inset-block-start:calc(100% + var(--tb-hdr-popover-offset, .55rem));inset-inline-end:0;', $css, 'the popover opens into the page, not past its edge');
     }
 
     public function test_columns_keep_one_track_per_declared_column_for_a_lone_child(): void

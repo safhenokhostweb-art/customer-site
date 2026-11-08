@@ -586,11 +586,20 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </button>
                     </div>
 
+                    {{-- ADR-082 (saas-platform): one scroll area for the three tabs.
+                         The schema field loop (below the generic panes) serves every
+                         tab: it lists the active tab's own fields (`panel`) and moves
+                         above the generic sections on Style / Advanced (order-first). --}}
+                    <div class="flex-1 overflow-y-auto flex flex-col" data-testid="tb-inspector-scroll">
                     {{-- Style Tab --}}
-                    <div x-show="selectedTab === 'style'" class="flex-1 overflow-y-auto">
+                    <div x-show="selectedTab === 'style'">
 
-                        {{-- TB5: Breakpoint Toggle Bar --}}
-                        <div class="flex items-center gap-0.5 bg-slate-50 border-b border-slate-100 p-2 sticky top-0 z-10">
+                        {{-- TB5: Breakpoint Toggle Bar — for the generic wrapper
+                             sections below; a widget that hides them all (ADR-082)
+                             switches devices beside each responsive field instead. --}}
+                        <div class="flex items-center gap-0.5 bg-slate-50 border-b border-slate-100 p-2 sticky top-0 z-10"
+                            x-show="CanvasControls.hiddenStyleSections(selectedEditorCapabilities).length < Object.keys(CanvasControls.GENERIC_STYLE_SECTIONS).length"
+                            data-testid="tb-style-breakpoints">
                             <span class="text-[10px] text-slate-400 ml-1">ریسپانسیو:</span>
                             <button @click="activeBreakpoint='desktop'"
                                 :class="activeBreakpoint==='desktop' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'"
@@ -617,17 +626,26 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <span x-show="activeBreakpoint !== 'desktop'" class="mr-auto text-[9px] text-amber-600 font-medium">
                                 override روی <span x-text="activeBreakpoint === 'tablet' ? 'تبلت' : 'موبایل'"></span>
                             </span>
-                            <button x-show="activeBreakpoint !== 'desktop'"
+                            <button x-show="activeBreakpoint !== 'desktop' && CanvasControls.hiddenStyleSections(selectedEditorCapabilities).length === 0"
                                 @click="resetBlockStyle()"
                                 class="mr-1 text-[10px] text-red-500 hover:text-red-700 font-medium underline">
                                 پاک کردن
                             </button>
                         </div>
 
-                        <div class="px-3 py-3 space-y-2">
+                        {{-- ADR-082: a widget hiding the generic sections whose block
+                             still holds values saved in them before. --}}
+                        <template x-if="hasHiddenGenericStyle()">
+                            <div class="tbc-notice" data-testid="tb-hidden-generic-style">
+                                این ویجت استایل‌های خودش را دارد و بخش‌های عمومی استایل برایش پنهان است، اما این بلوک هنوز مقدارهایی از آن بخش‌ها دارد که روی ظاهرش اثر می‌گذارند.
+                                <button type="button" class="tbc-reset" @click="clearHiddenGenericStyle()" data-testid="tb-clear-hidden-generic-style">حذف این مقدارها</button>
+                            </div>
+                        </template>
+
+                        <div class="px-3 py-3 space-y-2" x-show="CanvasControls.hiddenStyleSections(selectedEditorCapabilities).length < Object.keys(CanvasControls.GENERIC_STYLE_SECTIONS).length">
 
                         {{-- Typography --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('typography')">
                             <button @click="styleSection.typography = !styleSection.typography"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>تایپوگرافی</span>
@@ -669,7 +687,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
 
                         {{-- Colors & Gradient --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('colors')">
                             <button @click="styleSection.colors = !styleSection.colors"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>رنگ‌ها و گرادیان</span>
@@ -722,7 +740,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
 
                         {{-- Spacing --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('spacing')">
                             <button @click="styleSection.spacing = !styleSection.spacing"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>فاصله‌گذاری</span>
@@ -759,7 +777,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
 
                         {{-- Border --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('border')">
                             <button @click="styleSection.border = !styleSection.border"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>حاشیه</span>
@@ -792,7 +810,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
 
                         {{-- Shadow --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('shadow')">
                             <button @click="styleSection.shadow = !styleSection.shadow"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>سایه</span>
@@ -810,7 +828,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         </div>
 
                         {{-- Opacity --}}
-                        <div class="border border-slate-100 rounded-lg overflow-hidden">
+                        <div class="border border-slate-100 rounded-lg overflow-hidden" x-show="genericStyleVisible('opacity')">
                             <button @click="styleSection.opacity = !styleSection.opacity"
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
                                 <span>شفافیت</span>
@@ -834,7 +852,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     </div>
 
                     {{-- Advanced Tab --}}
-                    <div x-show="selectedTab === 'advanced'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                    <div x-show="selectedTab === 'advanced'" class="px-4 py-4 space-y-4">
                         <div x-show="selectedEditorCapabilities.allowCustomCss">
                             <label class="block text-xs font-semibold text-slate-600 mb-1.5">کلاس CSS سفارشی</label>
                             <input type="text" :value="selectedBlock.style?.customClass ?? ''" @input.debounce.300ms="updateStyle('customClass', $event.target.value)"
@@ -876,15 +894,32 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     </div>
 
                     {{-- Content (Props) Form --}}
-                    <div x-show="selectedTab === 'content'" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                        <template x-for="(schemaDef, propKey) in selectedSchema" :key="propKey">
-                            <div>
+                    {{-- ADR-082 (saas-platform): this loop renders the active tab's
+                         own schema fields (CanvasControls.visibleFields: panel,
+                         condition, state), so on Style / Advanced it shows above the
+                         generic sections and only when the widget has fields there. --}}
+                    <div x-show="selectedTab === 'content' || panelHasFields(selectedTab)"
+                        :class="selectedTab === 'content' ? '' : 'order-first border-b border-slate-100'"
+                        class="px-4 py-4 space-y-4" :data-testid="'tb-panel-fields-' + selectedTab">
+                        <template x-for="(schemaDef, propKey) in panelFields(selectedTab)" :key="propKey">
+                            <div :data-testid="'tb-field-' + propKey">
                                 {{-- ADR-076: a field's schema `group` opens a sidebar section
                                      where it first appears (same contract as the platform Canvas). --}}
                                 <template x-if="fieldGroupStart(propKey)">
                                     <p class="mt-2 mb-3 pb-1 border-b border-slate-100 text-xs font-bold tracking-wide text-indigo-700" x-text="schemaDef.group" :data-testid="'tb-field-group-' + propKey"></p>
                                 </template>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1.5" x-text="schemaDef.label || propKey"></label>
+                                {{-- ADR-082: Normal / Hover / Active above a state_group --}}
+                                <template x-if="fieldStateStart(propKey)">
+                                    @include('theme-runtime::canvas.control-states')
+                                </template>
+                                <div class="flex items-center mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-600" :for="'ctrl-' + propKey" x-text="schemaDef.label || propKey"></label>
+                                    @include('theme-runtime::canvas.control-devices')
+                                </div>
+
+                                {{-- ADR-082: range, responsive number/select, spacing,
+                                     typography and shadow — the shared controls. --}}
+                                @include('theme-runtime::canvas.control-field')
 
                                 <template x-if="schemaDef.type === 'string' && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
                                     <input
@@ -1135,7 +1170,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'number'">
+                                <template x-if="schemaDef.type === 'number' && !ctlIsResponsive(propKey)">
                                     <input
                                         type="number"
                                         x-model.number="selectedBlock.props[propKey]"
@@ -1252,7 +1287,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
                                 {{-- ADR-076: segmented control for a select whose schema declares
                                      ui: 'segmented' — one button per schema option. --}}
-                                <template x-if="schemaDef.type === 'select' && schemaDef.ui === 'segmented'">
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui === 'segmented' && !ctlIsResponsive(propKey)">
                                     <div class="flex gap-1 p-1 rounded-lg bg-slate-100" role="radiogroup" :aria-label="schemaDef.label || propKey" :data-testid="'tb-segmented-' + propKey">
                                         <template x-for="(label, val) in schemaDef.options" :key="val">
                                             <button type="button" role="radio"
@@ -1265,7 +1300,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     </div>
                                 </template>
 
-                                <template x-if="schemaDef.type === 'select' && schemaDef.ui !== 'segmented'">
+                                <template x-if="schemaDef.type === 'select' && schemaDef.ui !== 'segmented' && !ctlIsResponsive(propKey)">
                                     <select
                                         x-model="selectedBlock.props[propKey]"
                                         @change="schedulePropUpdate()"
@@ -1396,7 +1431,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         {{-- Phase 4B.6 — generic Manual/Dynamic content-source
                              selector. Rendered for any block whose registered
                              type declares a manual_prop; no FoodMart branch. --}}
-                        <template x-if="selectedManualPropKey">
+                        <template x-if="selectedTab === 'content' && selectedManualPropKey">
                             <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2" data-testid="tb-content-source">
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">منبع محتوا (Content source)</label>
                                 <div class="flex gap-2">
@@ -1414,7 +1449,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </div>
                         </template>
 
-                        <template x-if="selectedBindingDef">
+                        <template x-if="selectedTab === 'content' && selectedBindingDef">
                             <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-3" data-testid="tb-data-binding" x-show="bindingEnabled">
                                 <label class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700">
                                     <span>Dynamic data</span>
@@ -1465,12 +1500,12 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </div>
                         </template>
 
-                        <div x-show="Object.keys(selectedSchema).length === 0 && !selectedBindingDef" class="text-center py-6">
+                        <div x-show="selectedTab === 'content' && Object.keys(selectedSchema).length === 0 && !selectedBindingDef" class="text-center py-6">
                             <p class="text-xs text-slate-400">این ویجت تنظیماتی ندارد</p>
                         </div>
 
                         {{-- TB4: Container Children Panel --}}
-                        <template x-if="isContainerType(selectedBlock?.type)">
+                        <template x-if="selectedTab === 'content' && isContainerType(selectedBlock?.type)">
                             <div class="mt-4 pt-4 border-t border-slate-200">
                                 <div class="flex items-center justify-between px-1 mb-2">
                                     <span class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
@@ -1520,6 +1555,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             </div>
                         </template>
                     </div>
+                    </div>{{-- /tb-inspector-scroll --}}
                 </div>
             </template>
         </div>
@@ -1944,6 +1980,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
      No host structural services on this surface yet ([]), kept in sync with
      the platform's own editor pages which use the same bootstrap partial. --}}
 @include('theme-runtime::canvas.color')
+@include('theme-runtime::canvas.controls')
 @include('theme-runtime::canvas.icons')
 @include('theme-runtime::canvas.tab-strip')
 @include('theme-runtime::canvas.inspect')
@@ -2018,6 +2055,9 @@ function normalizePageProps(pages) {
 
 function canvasEditor() {
     return {
+        // ADR-082 (saas-platform): tabs, conditions, per-device values and
+        // states of the Inspector (theme-runtime canvas-controls.js; ctlSetProp below).
+        ...window.CanvasControls.editorMixin(),
         // ── State ──────────────────────────────────────────────
         pages:         normalizePageProps(JSON.parse(JSON.stringify(INITIAL_PAGES))),
         currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
@@ -2132,13 +2172,19 @@ function canvasEditor() {
             return items;
         },
 
-        // ADR-076: true where a field's schema `group` differs from the previous field's.
-        fieldGroupStart(propKey) {
-            const schema = this.selectedSchema;
-            const keys = Object.keys(schema);
-            const index = keys.indexOf(propKey);
-            const group = schema[propKey]?.group;
-            return !!group && (index <= 0 || schema[keys[index - 1]]?.group !== group);
+        // ADR-076 section headers (fieldGroupStart) come from the
+        // CanvasControls mixin, computed over the active tab's visible fields.
+        // ADR-082: the mixin's prop writer, the same path as the x-model
+        // controls (props write + live preview); `undefined` drops a device
+        // value back to inheritance.
+        ctlSetProp(key, value) {
+            if (!this.selectedBlock) return;
+            if (!this.selectedBlock.props || typeof this.selectedBlock.props !== 'object' || Array.isArray(this.selectedBlock.props)) {
+                this.selectedBlock.props = {};
+            }
+            if (value === undefined) delete this.selectedBlock.props[key];
+            else this.selectedBlock.props[key] = value;
+            this.schedulePropUpdate();
         },
         get selectedEditorCapabilities() {
             return this.selectedBlock

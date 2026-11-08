@@ -29,8 +29,11 @@ class CanvasWidgetHealthPinTest extends TestCase
     {
         $html = (new PackageRenderer())->renderNavHeader(['logo_text' => 'برند', 'menu_align' => 'center', 'social_style' => 'brand'], '', 'hdr1');
         $this->assertStringNotContainsString('data-widget-type', $html, 'the host or the wrapper adds the one hook');
-        $this->assertStringContainsString('.tb-nav-header-social:not(.tb-social-icons--brand) .tb-social-icon--eitaa', $html, 'brand style keeps the brand fill');
-        $this->assertStringContainsString('.tb-nav-header--menu-center .tb-nav-header-root .tb-nav-header-inner{display:grid', $html, 'menu_align=center keeps its grid');
+        // saas ADR-082 step 2: the header layout is the shared header sheet, not an inline <style>.
+        $this->assertStringNotContainsString('<style', $html);
+        $css = (string) file_get_contents(\SaaSPlatform\ThemeRuntime\Providers\ThemeRuntimeServiceProvider::cssHeaderPath());
+        $this->assertStringContainsString('.tb-nav-header-social:not(.tb-social-icons--brand) .tb-social-icon--eitaa', $css, 'brand style keeps the brand fill');
+        $this->assertStringContainsString('.tb-nav-header--menu-center .tb-nav-header-root .tb-nav-header-inner{display:grid', $css, 'menu_align=center keeps its grid');
     }
 
     public function test_the_desktop_mega_menu_anchor_cannot_override_the_sticky_header(): void
