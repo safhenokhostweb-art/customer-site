@@ -19,9 +19,11 @@ namespace App\Services\MotionGraphics;
 final class MotionRuntimeParameters
 {
     private const TYPES = ['text', 'color', 'number', 'boolean', 'select'];
-    private const GROUPS = ['content', 'style', 'motion'];
+    // ADR-080 (saas-platform): `sections` holds the show/hide switches;
+    // up to 80 parameters, so every text of a v3 motion is editable.
+    private const GROUPS = ['content', 'style', 'sections', 'motion'];
     private const KEY = '/^[a-z][a-z0-9_]{0,39}$/';
-    private const MAX = 40;
+    private const MAX = 80;
 
     /**
      * @return list<array<string, mixed>>

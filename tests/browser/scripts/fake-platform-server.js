@@ -46,6 +46,9 @@ const motionManifest = {
             { key: 'window_title', type: 'text', group: 'content', label: 'عنوان داشبورد', default: 'داشبورد هوشمند سازمان', max: 28 },
             { key: 'primary', type: 'color', group: 'style', label: 'رنگ اصلی', default: '#2563eb' },
             { key: 'share', type: 'number', group: 'content', label: 'سهم (درصد)', min: 0, max: 100, step: 1, default: 36, format: 'percent' },
+            // ADR-080: colour scheme + a section switch (group `sections`).
+            { key: 'scheme', type: 'select', role: 'scheme', group: 'style', label: 'حالت رنگی', options: { auto: 'خودکار (مطابق دستگاه)', light: 'همیشه روشن', dark: 'همیشه تیره' }, default: 'auto' },
+            { key: 'show_kpis', type: 'boolean', role: 'show', group: 'sections', label: 'کارت‌های شاخص', default: true },
             { key: 'loop', type: 'boolean', group: 'motion', label: 'حرکت پیوسته (لوپ)', default: true },
             { key: 'speed', type: 'select', group: 'motion', label: 'سرعت انیمیشن', options: { slow: 'آرام', normal: 'عادی', fast: 'تند' }, default: 'normal' },
             { key: 'Bad Key', type: 'text', label: 'dropped by the reader', default: 'x' },
