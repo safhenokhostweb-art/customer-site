@@ -410,9 +410,9 @@ return [
             'icon' => '📦',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['padding' => 'md', 'background' => 'transparent', 'container' => true, 'radius' => ''],
+            'defaultProps' => ['padding' => 'none', 'background' => 'transparent', 'container' => true, 'radius' => ''],
             'schema' => [
-                'padding'    => ['label' => 'فاصله داخلی', 'type' => 'select', 'default' => 'md', 'options' => ['none' => 'بدون', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ', 'xl' => 'خیلی بزرگ']],
+                'padding'    => ['label' => 'فاصله داخلی', 'type' => 'select', 'default' => 'none', 'options' => ['none' => 'بدون', 'xs' => 'بسیار کوچک', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ', 'xl' => 'خیلی بزرگ']],
                 'background' => ['label' => 'پس‌زمینه', 'type' => 'select', 'default' => 'transparent', 'options' => ['transparent' => 'شفاف', 'surface' => 'سفید', 'muted' => 'خاکستری', 'primary' => 'رنگ اصلی', 'dark' => 'تیره']],
                 'container'  => ['label' => 'محدود به container', 'type' => 'boolean', 'default' => true],
                 'radius'     => ['label' => 'گوشه گرد', 'type' => 'select', 'default' => '', 'options' => ['' => 'بدون', 'sm' => 'کم', 'md' => 'متوسط', 'lg' => 'زیاد']],
@@ -425,11 +425,11 @@ return [
             'icon' => '⇄',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['gap' => 'md', 'columns' => 2, 'align' => 'start'],
+            'defaultProps' => ['gap' => 'none', 'columns' => 2, 'align' => 'start'],
             'schema' => [
                 'columns' => ['label' => 'تعداد ستون', 'type' => 'select', 'default' => '2', 'options' => ['1' => '۱ ستون', '2' => '۲ ستون', '3' => '۳ ستون', '4' => '۴ ستون']],
-                'gap'     => ['label' => 'فاصله', 'type' => 'select', 'default' => 'md', 'options' => ['none' => 'بدون', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
-                'align'   => ['label' => 'تراز عمودی', 'type' => 'select', 'default' => 'start', 'options' => ['start' => 'بالا', 'center' => 'وسط', 'end' => 'پایین', 'stretch' => 'کشیده']],
+                'gap'     => ['label' => 'فاصله', 'type' => 'select', 'default' => 'none', 'options' => ['none' => 'بدون', 'xs' => 'بسیار کوچک', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+                'align'   => ['label' => 'تراز عمودی', 'type' => 'select', 'default' => 'start', 'options' => ['start' => 'بالا', 'center' => '중앙', 'end' => 'پایین', 'stretch' => 'کشیده']],
             ],
         ],
 
@@ -451,10 +451,10 @@ return [
             'icon' => '🔲',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['columns' => 3, 'gap' => 'md'],
+            'defaultProps' => ['columns' => 3, 'gap' => 'none'],
             'schema' => [
                 'columns' => ['label' => 'ستون‌ها', 'type' => 'select', 'default' => '3', 'options' => ['2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶']],
-                'gap'     => ['label' => 'فاصله', 'type' => 'select', 'default' => 'md', 'options' => ['sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+                'gap'     => ['label' => 'فاصله', 'type' => 'select', 'default' => 'none', 'options' => ['none' => 'بدون', 'xs' => 'بسیار کوچک', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
             ],
         ],
 
@@ -464,10 +464,10 @@ return [
             'icon' => '▥',
             'category' => 'layout',
             'required_module' => null,
-            'defaultProps' => ['ratios' => '1/2,1/2', 'gap' => 'md'],
+            'defaultProps' => ['ratios' => '1/2,1/2', 'gap' => 'none'],
             'schema' => [
                 'ratios' => ['label' => 'نسبت ستون‌ها', 'type' => 'select', 'default' => '1/2,1/2', 'options' => ['1/2,1/2' => '۵۰٪ — ۵۰٪', '1/3,2/3' => '۳۳٪ — ۶۶٪', '2/3,1/3' => '۶۶٪ — ۳۳٪', '1/4,3/4' => '۲۵٪ — ۷۵٪', '1/3,1/3,1/3' => '۳۳٪ — ۳۳٪ — ۳۳٪']],
-                'gap'    => ['label' => 'فاصله', 'type' => 'select', 'default' => 'md', 'options' => ['sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
+                'gap'    => ['label' => 'فاصله', 'type' => 'select', 'default' => 'none', 'options' => ['none' => 'بدون', 'xs' => 'بسیار کوچک', 'sm' => 'کوچک', 'md' => 'متوسط', 'lg' => 'بزرگ']],
             ],
         ],
 

@@ -1290,15 +1290,82 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
 
 
-    /**
-     * Phase 2e (ADR-026, saas-platform parity): the standard W3C
-     * visually-hidden-but-screen-reader-visible label pattern, ported from
-     * saas-platform's BlockRenderer so renderNavHeader()'s search field has
-     * a real accessible name here too, not display:none (which would hide
-     * it from screen readers as well).
+/**
+     * Override renderSection to respect custom padding/margin from the inspector.
+     * If custom padding/margin is set, use 'none' as the default padding class
+     * and apply custom values as inline styles to avoid double padding.
      */
+    protected function renderSection(array $props, string $inner, string $id): string
+    {
+        $layoutStyle = $props['_style']['layout'] ?? [];
+        $hasCustomPadding = isset($layoutStyle['paddingTop']) || isset($layoutStyle['paddingRight']) ||
+                           isset($layoutStyle['paddingBottom']) || isset($layoutStyle['paddingLeft']) ||
+                           isset($layoutStyle['paddingX']) || isset($layoutStyle['paddingY']);
+        $hasCustomMargin = isset($layoutStyle['marginTop']) || isset($layoutStyle['marginBottom']) ||
+                          isset($layoutStyle['marginLeft']) || isset($layoutStyle['marginRight']);
 
+        // If custom padding/margin is set, use 'none' to avoid default padding class
+        $padding = $hasCustomPadding ? 'none' : $this->spacingClass($props['padding'] ?? 'md');
 
+        $bg = $this->escapeAttr($props['background'] ?? 'transparent');
+        $bgColor = (!str_starts_with($bg, '#') && !preg_match('/^[a-z][a-z0-9-]*$/', $bg))
+            ? $this->cssColor($props['background'] ?? null, '') : '';
+        if ($bgColor !== '') {
+            $bg = 'transparent';
+        }
+        $bgImg = $this->escapeAttr($props['background_image'] ?? '');
+        $useContainer = ($props['container'] ?? true);
+        $inlineStyles = [];
+        if ($bgImg) {
+            $inlineStyles[] = "background-image: url({$bgImg})";
+            $inlineStyles[] = "background-size: cover";
+        }
+        if ($bgColor !== '') {
+            $inlineStyles[] = 'background-color:' . $this->escapeAttr($bgColor);
+        }
+        $customBg = $props['_style']['background']['color'] ?? null;
+        if ($customBg) {
+            $inlineStyles[] = "background-color:" . $this->escapeAttr($customBg);
+        }
+        $class = "tb-section tb-padding-{$padding}";
+        if ($bg !== 'transparent' && !str_starts_with($bg, '#')) {
+            $class .= " tb-bg-{$bg}";
+        }
+        if ($bg !== 'transparent' && str_starts_with($bg, '#')) {
+            $inlineStyles[] = "background-color:{$bg}";
+        }
+        $effectsStyle = $props['_style']['effects'] ?? [];
+        if (in_array($layoutStyle['radius'] ?? null, ['sm', 'md', 'lg'], true)) {
+            $class .= " tb-radius-" . $layoutStyle['radius'];
+        }
+        if (in_array($layoutStyle['shadow'] ?? null, ['sm', 'md', 'lg'], true)) {
+            $class .= " tb-shadow-" . $layoutStyle['shadow'];
+        }
+        if (($effectsStyle['hover'] ?? null) === 'lift') {
+            $class .= " tb-hover-lift";
+        }
+
+        // Apply custom padding/margin as inline styles on the section element
+        if ($hasCustomPadding) {
+            if (($layoutStyle['paddingTop'] ?? '') !== '') $inlineStyles[] = 'padding-top:' . (int)$layoutStyle['paddingTop'] . 'px';
+            if (($layoutStyle['paddingRight'] ?? '') !== '') $inlineStyles[] = 'padding-right:' . (int)$layoutStyle['paddingRight'] . 'px';
+            if (($layoutStyle['paddingBottom'] ?? '') !== '') $inlineStyles[] = 'padding-bottom:' . (int)$layoutStyle['paddingBottom'] . 'px';
+            if (($layoutStyle['paddingLeft'] ?? '') !== '') $inlineStyles[] = 'padding-left:' . (int)$layoutStyle['paddingLeft'] . 'px';
+            if (($layoutStyle['paddingY'] ?? '') !== '') $inlineStyles[] = "padding-top:{$layoutStyle['paddingY']}px;padding-bottom:{$layoutStyle['paddingY']}px";
+            if (($layoutStyle['paddingX'] ?? '') !== '') $inlineStyles[] = "padding-left:{$layoutStyle['paddingX']}px;padding-right:{$layoutStyle['paddingX']}px";
+        }
+        if ($hasCustomMargin) {
+            if (($layoutStyle['marginTop'] ?? '') !== '') $inlineStyles[] = 'margin-top:' . (int)$layoutStyle['marginTop'] . 'px';
+            if (($layoutStyle['marginBottom'] ?? '') !== '') $inlineStyles[] = 'margin-bottom:' . (int)$layoutStyle['marginBottom'] . 'px';
+            if (($layoutStyle['marginLeft'] ?? '') !== '') $inlineStyles[] = 'margin-left:' . (int)$layoutStyle['marginLeft'] . 'px';
+            if (($layoutStyle['marginRight'] ?? '') !== '') $inlineStyles[] = 'margin-right:' . (int)$layoutStyle['marginRight'] . 'px';
+        }
+
+        $styleAttr = $inlineStyles ? ' style="' . implode(';', $inlineStyles) . '"' : '';
+        $open = $useContainer ? '<div class="tb-container">' : '';
+        $close = $useContainer ? '</div>' : '';
+        return "<section id=\"tb-{$id}\" class=\"{$class}\"{$styleAttr}><div class=\"tb-section-inner\">{$open}{$inner}{$close}</div></section>";
+    }
 
 }
 
