@@ -1,5 +1,6 @@
 ﻿@include('canvas.control-states')
 @include('canvas.control-devices')
+@include('canvas.controls-runtime')
 
 @php
     $controlsScriptPath = base_path('vendor/saas-platform/modules-theme-runtime/resources/js/canvas-controls.js');
@@ -10,3 +11,4 @@
 {!! file_get_contents($controlsScriptPath) !!}
 </script>
 @endif
+

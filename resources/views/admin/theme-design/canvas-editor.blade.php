@@ -2079,6 +2079,21 @@ function normalizePageProps(pages) {
     return pages;
 }
 
+if (typeof window.CanvasControls === 'undefined' || !window.CanvasControls.editorMixin) {
+    window.CanvasControls = {
+        GENERIC_STYLE_SECTIONS: { typography: 1, spacing: 1, background: 1, border: 1, shadow: 1, layout: 1 },
+        hiddenStyleSections: function() { return []; },
+        visibleFields: function() { return []; },
+        editorMixin: function() {
+            return {
+                ctlChecked: function() { return false; },
+                panelHasFields: function() { return false; },
+                genericStyleVisible: function() { return true; }
+            };
+        }
+    };
+}
+
 function canvasEditor() {
     return {
         // ADR-082 (saas-platform): tabs, conditions, per-device values and
@@ -3364,7 +3379,7 @@ confirmMotionSelect() {
         // Handle drag over a block in the tree
         onTreeDragOver(blockId, path, position, event) {
             if (!this.treeDragState.isDragging) return;
-            
+
             // Prevent dropping into self or descendants
             if (blockId === this.treeDragState.draggedBlockId) {
                 this.treeDragState.dropPosition = null;
@@ -3372,23 +3387,23 @@ confirmMotionSelect() {
                 this.treeDragState.dragOverPath = null;
                 return;
             }
-            
+
             if (this.isDescendantOf(this.treeDragState.draggedBlockPath, path)) {
                 this.treeDragState.dropPosition = null;
                 this.treeDragState.dragOverBlockId = null;
                 this.treeDragState.dragOverPath = null;
                 return;
             }
-            
+
             this.treeDragState.dragOverBlockId = blockId;
             this.treeDragState.dragOverPath = path;
             this.treeDragState.dropPosition = position; // 'before', 'after', 'inside'
-            
+
             // Visual feedback via iframe
-            this.sendToIframe({ 
-                action: 'setDropTarget', 
-                blockId: blockId, 
-                position: position 
+            this.sendToIframe({
+                action: 'setDropTarget',
+                blockId: blockId,
+                position: position
             });
         },
 
@@ -3404,30 +3419,30 @@ confirmMotionSelect() {
         // Handle drop on tree
         onTreeDrop(blockId, path) {
             if (!this.treeDragState.isDragging) return;
-            
+
             const { draggedBlockPath, dropPosition, dragOverPath } = this.treeDragState;
             if (!draggedBlockPath || !dragOverPath) {
                 this.endTreeDrag();
                 return;
             }
-            
+
             // Prevent circular drops
             if (this.isDescendantOf(draggedBlockPath, dragOverPath)) {
                 this.endTreeDrag();
                 return;
             }
-            
+
             this.pushHistory();
-            
+
             // Get source and target arrays
             const sourceArray = this.getSiblingArray(draggedBlockPath);
             const sourceIndex = draggedBlockPath[draggedBlockPath.length - 1];
             const [draggedBlock] = sourceArray.splice(sourceIndex, 1);
-            
+
             // Determine target array and index
             let targetArray;
             let targetIndex;
-            
+
             if (dropPosition === 'inside') {
                 // Re-parent: add as child of target
                 const targetBlock = this.getBlockByPath(dragOverPath);
@@ -3443,12 +3458,12 @@ confirmMotionSelect() {
                 targetArray = this.getSiblingArray(dragOverPath);
                 targetIndex = dropPosition === 'before' ? targetIndexInParent : targetIndexInParent + 1;
             }
-            
+
             // Adjust index if moving within same array
             if (sourceArray === targetArray && sourceIndex < targetIndex) {
                 targetIndex--;
             }
-            
+
             targetArray.splice(targetIndex, 0, draggedBlock);
             this.isDirty = true;
             this.autoSaveAndReload();
@@ -3493,7 +3508,7 @@ confirmMotionSelect() {
                 return;
             }
             this.pushHistory();
-            
+
             // Paste style and responsive
             if (this.copiedStyle.style) {
                 this.selectedBlock.style = JSON.parse(JSON.stringify(this.copiedStyle.style));
@@ -3514,7 +3529,7 @@ confirmMotionSelect() {
                     }
                 }
             }
-            
+
             this.isDirty = true;
             this.autoSaveAndReload();
             this.showToast('استایل چسبانده شد', 'success');
