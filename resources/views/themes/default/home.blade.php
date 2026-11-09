@@ -2,6 +2,34 @@
 
 @section('title', \App\Helpers\SiteHelper::siteName())
 
+@push('head')
+<style id="zero-gap-runtime-fix">
+    /* مهار پدینگ‌های پیش‌فرض سنگین برای چیدمان فشرده Zero-gap */
+    .tb-section.tb-padding-xl,
+    .tb-section.tb-padding-lg,
+    .tb-section.tb-padding-md,
+    .tb-padding-xl,
+    .tb-padding-lg,
+    .tb-padding-md {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    .tb-section.tb-padding-none,
+    .tb-padding-none,
+    [data-tb-gap="none"] .tb-section,
+    .tb-section[style*="padding: 0"],
+    .tb-section[style*="padding-top: 0"] {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    .tb-style-wrap + .tb-style-wrap {
+        margin-top: 0 !important;
+    }
+</style>
+@endpush
+
 @section('content')
 @php
     $tb = \App\Helpers\PlatformUx::themeBuilder();
