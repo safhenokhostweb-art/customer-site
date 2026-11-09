@@ -1,3 +1,30 @@
+<style>
+/* خنثی‌سازی سراسری پدینگ‌های پیش‌فرض سکشن‌ها و ایجاد چیدمان بدون فاصله (Zero-gap) */
+.tb-section.tb-padding-xl,
+.tb-section.tb-padding-lg,
+.tb-section.tb-padding-md,
+.tb-padding-xl,
+.tb-padding-lg,
+.tb-padding-md {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+.tb-section.tb-padding-none,
+.tb-padding-none,
+[data-tb-gap="none"] .tb-section,
+.tb-section[style*="padding-top: 0"],
+.tb-section[style*="padding: 0"] {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* حذف حاشیه‌های عمودی ناخواسته بین بخش‌ها */
+.tb-style-wrap + .tb-style-wrap {
+    margin-top: 0 !important;
+}
+</style>
+
 <script>
 window.CanvasControls = window.CanvasControls || {
     GENERIC_STYLE_SECTIONS: {
