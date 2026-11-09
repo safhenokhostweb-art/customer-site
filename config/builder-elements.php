@@ -354,9 +354,11 @@ return [
             'icon' => '↕️',
             'category' => 'content',
             'required_module' => null,
-            'defaultProps' => ['height' => 'md'],
+            'defaultProps' => ['height' => 'md', 'customHeight' => '', 'heightUnit' => 'px'],
             'schema' => [
-                'height' => ['label' => 'ارتفاع', 'type' => 'select', 'default' => 'md', 'options' => ['xs' => 'خیلی کوچک (8px)', 'sm' => 'کوچک (16px)', 'md' => 'متوسط (32px)', 'lg' => 'بزرگ (64px)', 'xl' => 'خیلی بزرگ (96px)', 'xxl' => 'غول‌آسا (128px)']],
+                'height' => ['label' => 'ارتفاع پیش‌فرض', 'type' => 'select', 'default' => 'md', 'options' => ['xs' => 'خیلی کوچک (8px)', 'sm' => 'کوچک (16px)', 'md' => 'متوسط (32px)', 'lg' => 'بزرگ (64px)', 'xl' => 'خیلی بزرگ (96px)', 'xxl' => 'غول‌آسا (128px)', 'custom' => 'سفارشی']],
+                'customHeight' => ['label' => 'ارتفاع سفارشی', 'type' => 'number', 'default' => '', 'min' => 0, 'max' => 2000, 'step' => 1, 'placeholder' => 'مقدار را وارد کنید'],
+                'heightUnit' => ['label' => 'واحد', 'type' => 'select', 'default' => 'px', 'options' => ['px' => 'پیکسل (px)', 'vh' => 'ارتفاع ویو (vh)']],
             ],
         ],
 

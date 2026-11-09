@@ -301,7 +301,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 @include('theme-runtime::canvas.health', ['active' => "leftPanelTab === 'health'"])
             </div>
 
-            {{-- TB4: Structure Tree Tab --}}
+{{-- TB4: Structure Tree Tab --}}
             <div x-show="leftPanelTab==='tree'" class="flex-1 overflow-y-auto">
                 <div x-show="flattenTree().length === 0" class="flex flex-col items-center justify-center py-10 text-center text-slate-400">
                     <svg class="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
@@ -311,10 +311,21 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <template x-for="node in flattenTree()" :key="node.block.id + node.depth">
                         <div
                             @click="selectBlock(node.path)"
+                            @dragstart="startTreeDrag(node.block.id, node.path)"
+                            @dragover.prevent="onTreeDragOver(node.block.id, node.path, $event.offsetY < $event.target.offsetHeight / 2 ? 'before' : 'after', $event)"
+                            @dragleave="onTreeDragLeave()"
+                            @drop="onTreeDrop(node.block.id, node.path)"
+                            @dragend="endTreeDrag()"
+                            draggable="true"
                             :data-testid="'tb-tree-node-' + node.block.id"
                             :data-block-type="node.block.type"
                             :style="'padding-right:' + (12 + node.depth * 14) + 'px'"
-                            :class="isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50'"
+                            :class="[
+                                isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'before' ? 'border-t-2 border-indigo-500' : '',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'after' ? 'border-b-2 border-indigo-500' : '',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'inside' ? 'bg-indigo-100' : '',
+                            ]"
                             class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
                             <span :class="blockCategoryColor(node.block.type)" class="w-2 h-2 rounded-full shrink-0"></span>
                             <template x-if="isContainerType(node.block.type)">
@@ -337,6 +348,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             {{-- TB5: responsive override dot --}}
                             <span x-show="node.block.responsive && Object.keys(node.block.responsive).length > 0"
                                 class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                            {{-- Drag handle --}}
+                            <svg class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                         </div>
                     </template>
                 </div>
@@ -541,7 +554,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         <p class="text-[11px] text-slate-400 mt-1 font-mono" x-text="selectedBlock.type"></p>
                     </div>
 
-                    {{-- Block Actions (Move / Duplicate / Delete) — TB4: path-aware --}}
+{{-- Block Actions (Move / Duplicate / Delete / Copy/Paste Style) — TB4: path-aware --}}
                     <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 shrink-0">
                         <button @click="moveSelectedUp()" :disabled="selectedEditorCapabilities.lockedStructure || !canMoveUp()"
                             title="بالاتر"
@@ -562,6 +575,17 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             title="حذف بلوک"
                             class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-red-200 text-xs font-medium text-red-500 hover:bg-red-50 hover:border-red-400 transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                        {{-- Copy/Paste Style --}}
+                        <button @click="copyBlockStyle()"
+                            title="کپی استایل"
+                            class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-600 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        </button>
+                        <button @click="pasteBlockStyle()" :disabled="!canPasteStyle()"
+                            title="چسباندن استایل"
+                            class="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-600 disabled:opacity-30 transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 01-2 2v12a2 2 0 012 2h10a2 2 0 012-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                         </button>
                     </div>
 
@@ -3280,7 +3304,7 @@ function canvasEditor() {
             finally { this.motionModal.loading = false; }
         },
 
-        confirmMotionSelect() {
+confirmMotionSelect() {
             if (!this.motionModal.propKey) return;
             if (this.selectedBlock) {
                 const next = this.motionModal.selected || '';
@@ -3303,95 +3327,205 @@ function canvasEditor() {
             }
         },
 
-        // ── Motion runtime parameters (ADR-079) ─────────────────────
-        // Controls come from the selected asset's manifest `parameters`
-        // (ROUTES.motionAssets). Values are stored sparsely: only keys that
-        // differ from the asset default; the server re-validates them all.
-        ensureMotionAssets() {
-            if (!this.motionModal.loaded && !this.motionModal.loading) this.fetchMotionAssets();
+        // ── Tree-based Drag & Drop with Re-parenting ──────────────────
+        // Drag state for tree-based reordering and re-parenting
+        treeDragState: {
+            isDragging: false,
+            draggedBlockId: null,
+            draggedBlockPath: null,
+            dragOverBlockId: null,
+            dragOverPath: null,
+            dropPosition: null, // 'before', 'after', 'inside'
         },
 
-        // Why a placed motion has no controls (and renders nothing). The
-        // platform withholds a package item the site is not licensed for and
-        // lists it under `locked` with a fixed reason (saas-platform
-        // CustomerRuntimeManifest::LOCK_REASONS). An id in neither list is
-        // simply not available to this site (archived, or not in its package).
-        motionAvailability(assetId) {
-            if (!assetId) return 'none';
-            if (!this.motionModal.loaded) return 'loading';
-            if (this.motionAssetById(assetId)) return 'available';
-            const lock = this.motionModal.locked.find(l => l.asset_id === assetId);
-            return lock?.reason === 'premium_license_required' ? 'premium' : 'unavailable';
-        },
-
-        motionAvailabilityNotice(assetId) {
-            return {
-                premium: 'این موشن نیازمند لایسنس پرمیوم است.',
-                unavailable: 'این موشن برای این سایت در دسترس نیست.',
-            }[this.motionAvailability(assetId)] || '';
-        },
-
-        motionParamsNotice() {
-            const assetId = this.selectedBlock?.props?.motion_asset_id;
-            const state = this.motionAvailability(assetId);
-            if (state === 'none') return 'ابتدا یک موشن انتخاب کنید.';
-            if (state === 'loading') return 'در حال بارگذاری تنظیمات موشن…';
-            return this.motionAvailabilityNotice(assetId) || 'این موشن تنظیمات اختصاصی ندارد.';
-        },
-
-        motionParamDefs() {
-            const asset = this.motionAssetById(this.selectedBlock?.props?.motion_asset_id);
-            return Array.isArray(asset?.parameters) ? asset.parameters : [];
-        },
-
-        motionParamGroups() {
-            // ADR-080 (saas-platform): `sections` = show/hide switches per part.
-            const labels = { content: 'متن‌ها و ارقام', style: 'رنگ‌ها و حالت رنگی', sections: 'بخش‌های موشن', motion: 'انیمیشن' };
-            return ['content', 'style', 'sections', 'motion']
-                .map(key => ({ key, label: labels[key], items: this.motionParamDefs().filter(p => (p.group || 'content') === key) }))
-                .filter(group => group.items.length > 0);
-        },
-
-        motionParamStore(propKey) {
-            const v = this.selectedBlock?.props?.[propKey];
-            return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-        },
-
-        motionParamValue(propKey, p) {
-            const store = this.motionParamStore(propKey);
-            return Object.prototype.hasOwnProperty.call(store, p.key) ? store[p.key] : p.default;
-        },
-
-        // Stores on every input event: schedulePropUpdate() is already
-        // debounced, and a per-field debounce would read the input after a
-        // re-render had reset it to the stored value (losing typed text when
-        // another control changed first). An emptied text field is kept as ''
-        // — the server treats it as "use the default" — so the field does not
-        // snap back to the default text while the user is retyping.
-        setMotionParam(propKey, p, raw) {
-            if (!this.selectedBlock) return;
-            const store = { ...this.motionParamStore(propKey) };
-            let value = raw;
-            if (p.type === 'number') value = Number(raw);
-            if (p.type === 'text') value = String(raw).slice(0, p.max || 80);
-            if (value === p.default || (p.type === 'number' && Number.isNaN(value))) {
-                delete store[p.key];
-            } else {
-                store[p.key] = value;
+        // Check if target is a descendant of source (circular drop prevention)
+        isDescendantOf(draggedPath, targetPath) {
+            if (!draggedPath || !targetPath) return false;
+            if (targetPath.length <= draggedPath.length) return false;
+            for (let i = 0; i < draggedPath.length; i++) {
+                if (draggedPath[i] !== targetPath[i]) return false;
             }
-            this.selectedBlock.props[propKey] = store;
-            this.schedulePropUpdate();
+            return true;
         },
 
-        hasMotionParams(propKey) {
-            return Object.keys(this.motionParamStore(propKey)).length > 0;
+        // Handle drag start on a block in the tree
+        startTreeDrag(blockId, path) {
+            this.treeDragState = {
+                isDragging: true,
+                draggedBlockId: blockId,
+                draggedBlockPath: path,
+                dragOverBlockId: null,
+                dragOverPath: null,
+                dropPosition: null,
+            };
+            this.sendToIframe({ action: 'showDropZones', visible: true });
         },
 
-        resetMotionParams(propKey) {
+        // Handle drag over a block in the tree
+        onTreeDragOver(blockId, path, position, event) {
+            if (!this.treeDragState.isDragging) return;
+            
+            // Prevent dropping into self or descendants
+            if (blockId === this.treeDragState.draggedBlockId) {
+                this.treeDragState.dropPosition = null;
+                this.treeDragState.dragOverBlockId = null;
+                this.treeDragState.dragOverPath = null;
+                return;
+            }
+            
+            if (this.isDescendantOf(this.treeDragState.draggedBlockPath, path)) {
+                this.treeDragState.dropPosition = null;
+                this.treeDragState.dragOverBlockId = null;
+                this.treeDragState.dragOverPath = null;
+                return;
+            }
+            
+            this.treeDragState.dragOverBlockId = blockId;
+            this.treeDragState.dragOverPath = path;
+            this.treeDragState.dropPosition = position; // 'before', 'after', 'inside'
+            
+            // Visual feedback via iframe
+            this.sendToIframe({ 
+                action: 'setDropTarget', 
+                blockId: blockId, 
+                position: position 
+            });
+        },
+
+        // Handle drag leave
+        onTreeDragLeave() {
+            if (!this.treeDragState.isDragging) return;
+            this.treeDragState.dragOverBlockId = null;
+            this.treeDragState.dragOverPath = null;
+            this.treeDragState.dropPosition = null;
+            this.sendToIframe({ action: 'setDropTarget', blockId: null });
+        },
+
+        // Handle drop on tree
+        onTreeDrop(blockId, path) {
+            if (!this.treeDragState.isDragging) return;
+            
+            const { draggedBlockPath, dropPosition, dragOverPath } = this.treeDragState;
+            if (!draggedBlockPath || !dragOverPath) {
+                this.endTreeDrag();
+                return;
+            }
+            
+            // Prevent circular drops
+            if (this.isDescendantOf(draggedBlockPath, dragOverPath)) {
+                this.endTreeDrag();
+                return;
+            }
+            
+            this.pushHistory();
+            
+            // Get source and target arrays
+            const sourceArray = this.getSiblingArray(draggedBlockPath);
+            const sourceIndex = draggedBlockPath[draggedBlockPath.length - 1];
+            const [draggedBlock] = sourceArray.splice(sourceIndex, 1);
+            
+            // Determine target array and index
+            let targetArray;
+            let targetIndex;
+            
+            if (dropPosition === 'inside') {
+                // Re-parent: add as child of target
+                const targetBlock = this.getBlockByPath(dragOverPath);
+                if (!targetBlock) { this.endTreeDrag(); return; }
+                if (!this.isContainerType(targetBlock.type)) { this.endTreeDrag(); return; }
+                if (!targetBlock.children) targetBlock.children = [];
+                targetArray = targetBlock.children;
+                targetIndex = targetArray.length; // append to end
+            } else {
+                // Re-order: insert before/after target in its parent array
+                const targetParentPath = dragOverPath.slice(0, -1);
+                const targetIndexInParent = dragOverPath[dragOverPath.length - 1];
+                targetArray = this.getSiblingArray(dragOverPath);
+                targetIndex = dropPosition === 'before' ? targetIndexInParent : targetIndexInParent + 1;
+            }
+            
+            // Adjust index if moving within same array
+            if (sourceArray === targetArray && sourceIndex < targetIndex) {
+                targetIndex--;
+            }
+            
+            targetArray.splice(targetIndex, 0, draggedBlock);
+            this.isDirty = true;
+            this.autoSaveAndReload();
+            this.endTreeDrag();
+        },
+
+        endTreeDrag() {
+            this.treeDragState = {
+                isDragging: false,
+                draggedBlockId: null,
+                draggedBlockPath: null,
+                dragOverBlockId: null,
+                dragOverPath: null,
+                dropPosition: null,
+            };
+            this.sendToIframe({ action: 'showDropZones', visible: false });
+            this.sendToIframe({ action: 'setDropTarget', blockId: null });
+        },
+
+        // ── Copy/Paste Style ──────────────────────────────────────────
+        copiedStyle: null,
+        copiedStyleType: null,
+
+        copyBlockStyle() {
             if (!this.selectedBlock) return;
-            this.selectedBlock.props[propKey] = {};
-            this.schedulePropUpdate();
+            // Only copy style-related properties
+            const styleKeys = ['style', 'responsive', 'props'];
+            const style = {};
+            for (const key of styleKeys) {
+                if (this.selectedBlock[key]) {
+                    style[key] = JSON.parse(JSON.stringify(this.selectedBlock[key]));
+                }
+            }
+            this.copiedStyle = style;
+            this.copiedStyleType = this.selectedBlock.type;
+            this.showToast('استایل کپی شد', 'success');
         },
+
+        pasteBlockStyle() {
+            if (!this.selectedBlock || !this.copiedStyle || this.copiedStyleType !== this.selectedBlock.type) {
+                this.showToast('استایل کپی شده برای این نوع بلوک معتبر نیست', 'error');
+                return;
+            }
+            this.pushHistory();
+            
+            // Paste style and responsive
+            if (this.copiedStyle.style) {
+                this.selectedBlock.style = JSON.parse(JSON.stringify(this.copiedStyle.style));
+            }
+            if (this.copiedStyle.responsive) {
+                this.selectedBlock.responsive = JSON.parse(JSON.stringify(this.copiedStyle.responsive));
+            }
+            // Optionally paste relevant props (colors, spacing, etc.)
+            if (this.copiedStyle.props) {
+                const stylePropKeys = ['bgColor', 'textColor', 'fontSize', 'fontWeight', 'textAlign', 'lineHeight',
+                    'paddingTop', 'paddingBottom', 'paddingRight', 'paddingLeft',
+                    'marginTop', 'marginBottom', 'marginRight', 'marginLeft',
+                    'borderWidth', 'borderStyle', 'borderColor', 'borderRadius',
+                    'boxShadow', 'opacity', 'bgGradientFrom', 'bgGradientTo', 'bgGradientDir'];
+                for (const key of stylePropKeys) {
+                    if (Object.prototype.hasOwnProperty.call(this.copiedStyle.props, key)) {
+                        this.selectedBlock.props[key] = this.copiedStyle.props[key];
+                    }
+                }
+            }
+            
+            this.isDirty = true;
+            this.autoSaveAndReload();
+            this.showToast('استایل چسبانده شد', 'success');
+        },
+
+        canPasteStyle() {
+            return this.copiedStyle && this.selectedBlock && this.copiedStyleType === this.selectedBlock.type;
+        },
+
+        // ── Drop Indicator Line (handled via iframe communication) ──────
+        // The iframe handles the visual drop indicator line; we just send position updates
 
         /**
          * MEDIA-4: the one client-side resolver for display. A string is a

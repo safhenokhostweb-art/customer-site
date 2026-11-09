@@ -75,6 +75,8 @@ return [
             'type' => 'spacer',
             'props' => [
                 'height' => ['required' => false, 'type' => 'string'],
+                'customHeight' => ['required' => false, 'type' => 'integer'],
+                'heightUnit' => ['required' => false, 'type' => 'string'],
             ],
             'styles' => ['layout', 'typography', 'background', 'effects'],
             'children' => 'none',

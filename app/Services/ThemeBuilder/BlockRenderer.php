@@ -548,8 +548,17 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     protected function renderSpacer(array $props, string $inner, string $id): string
     {
         $height = $props['height'] ?? 'md';
+        $customHeight = $props['customHeight'] ?? '';
+        $heightUnit = $props['heightUnit'] ?? 'px';
+        
         $map = ['none' => '0', 'xs' => '0.5rem', 'sm' => '1rem', 'md' => '1.5rem', 'lg' => '2.5rem', 'xl' => '4rem'];
-        $h = $map[$height] ?? '1.5rem';
+        
+        if ($height === 'custom' && $customHeight !== '') {
+            $h = $customHeight . $heightUnit;
+        } else {
+            $h = $map[$height] ?? '1.5rem';
+        }
+        
         return "<div id=\"tb-{$id}\" class=\"tb-spacer\" style=\"height:{$h}\" aria-hidden=\"true\"></div>";
     }
 
