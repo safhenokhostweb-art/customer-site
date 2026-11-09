@@ -66,20 +66,6 @@
     @endif
     {{-- Site preset / custom theme tokens — MUST come LAST to override css_block blue defaults --}}
     @include('partials.theme-engine-tokens')
-    {{-- Commercial Productization fase-5 — a real, confirmed gap found via
-         an actual Dark Mode check on Product Detail / Article Detail
-         (this layout, not layouts/canvas-theme.blade.php, is what
-         ShopController::show()/BlogController::show() actually render):
-         this file's own CSS already referenced --tb-* variables
-         (e.g. body's font-family two lines below) but never defined them
-         at all — this layout predates the Theme-Canvas --tb-* token
-         system entirely. The active Canvas theme's real dark palette is
-         read the SAME way ThemeCanvasPageController::loadThemeData() does
-         (the same cached Setting row), so the two layouts share one real
-         source of truth rather than a second, independently-drifting
-         copy. Never throws: a missing/malformed setting silently yields
-         no extra CSS, matching partials.theme-engine-tokens' own
-         defensive try/catch just above. --}}
     @php
         $tbGlobalStyles = [];
         try {
@@ -95,23 +81,7 @@
     @if(!empty($tbGlobalStyles))
         <style>{!! app(\SaaSPlatform\ThemeRuntime\ThemeTokenNormalizer::class)->renderCssBlock($tbGlobalStyles) !!}</style>
     @endif
-    {{-- Real, confirmed gap found via a full-page dark-mode screenshot pass
-         on Product Detail: this layout renders the shared nav_header block
-         (BlockRenderer::renderMegaMenuItem()) but, unlike
-         layouts/canvas-theme.blade.php, never included the shared CSS
-         contract those classes depend on (.tb-mega-menu-panel's
-         display:none/position:absolute, etc.) — so every mega menu panel
-         rendered as permanently-visible, unpositioned block content
-         instead of a hover/focus dropdown. Same include as the canvas
-         layout, same ADR-029 source of truth. --}}
     <style>@include('theme-runtime::css.contract')</style>
-    {{-- Same real dark-mode API (window.__tbTheme) and anti-flash-of-
-         wrong-theme guarantee as layouts/canvas-theme.blade.php — see
-         that file's own comment for the full rationale. The
-         nav_header block's dark-mode toggle button already renders on
-         this layout too (shared BlockRenderer), but without this script
-         it was a dead button: no API for it to call, and [data-theme]
-         was never applied to <html> at all. --}}
     <script>(function(){
         var KEY = 'tb-theme';
         function resolve(p) {
@@ -150,32 +120,12 @@
     <style>
         * { box-sizing: border-box; }
         body { font-family: var(--tb-font-body, Vazirmatn, Tahoma, sans-serif); margin: 0; background: var(--tb-background, #f9fafb); color: var(--tb-text, #1f2937); min-height: 100vh; font-size: var(--tb-base-font-size, 16px); transition: background 0.15s, color 0.15s; }
-        {{-- Commercial Productization fase-5 — the base page chrome AND
-             the Product Detail / Article Detail / cart / wishlist content
-             every legacy-layout page shares now genuinely responds to the
-             real dark palette. Every inline hardcoded color in shop/show.
-             blade.php and blog/show.blade.php has been converted to
-             var(--tb-*, original-hex) — the fallback preserves the exact
-             original light-mode value when a Theme's global_styles are
-             absent, and the real token when present (this Theme's own
-             --tb-surface/--tb-background defaults are visually
-             indistinguishable from the original #fff/#f9fafb literals, so
-             light mode is unchanged). --}}
         [data-theme="dark"] .card { background: var(--tb-surface, #374151); border-color: var(--tb-border, rgba(255,255,255,0.08)); color: var(--tb-text, #e5e7eb); }
         [data-theme="dark"] main { color: var(--tb-text, #e5e7eb); }
         [data-theme="dark"] footer .footer-links a { color: var(--tb-text-muted, #9ca3af); }
         [data-theme="dark"] .form-input,
         [data-theme="dark"] .form-textarea,
         [data-theme="dark"] .form-select {
-            {{-- !important: a real, confirmed regression found via live
-                 screenshot verification — <select> specifically kept a
-                 white background in dark mode despite this rule matching,
-                 because Tailwind's own form-control base styles (loaded
-                 from a separate, later stylesheet) were winning the
-                 cascade for that one element. Matches the same !important
-                 pattern already used below for .text-gray-500/.text-gray-700/
-                 .border-gray-100 against the same kind of utility-class
-                 cascade fight. --}}
             background: var(--tb-surface, #1f2937) !important;
             color: var(--tb-text, #e5e7eb) !important;
             border-color: var(--tb-border, #4b5563) !important;
@@ -183,11 +133,6 @@
         [data-theme="dark"] .text-gray-500 { color: var(--tb-text-muted, #9ca3af) !important; }
         [data-theme="dark"] .text-gray-700 { color: var(--tb-text, #d1d5db) !important; }
         [data-theme="dark"] .border-gray-100 { border-color: var(--tb-border, #374151) !important; }
-        {{-- Real semantic tag/badge component (product "جدید"/"حراج"/
-             "دسترسی زودهنگام" and any plain tag) — light-mode pastel look
-             is a deliberate, preserved design choice (not forced onto the
-             solid brand-color Badge tokens, which would visibly change
-             light mode); only the dark-mode counterpart is new. --}}
         .tb-tag-info { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-size:0.8rem; }
         .tb-tag-warning { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:#fef3c7; color:#92400e; font-size:0.8rem; }
         .tb-tag-neutral { display:inline-block; padding:0.25rem 0.6rem; border-radius:999px; background:var(--tb-background, #f3f4f6); color:var(--tb-text, inherit); font-size:0.8rem; }
@@ -205,9 +150,6 @@
         [data-theme="dark"] .form-label { color: var(--tb-text-muted, #d1d5db); }
         [data-theme="dark"] .form-error { color: var(--tb-error-text, #f87171); }
         [data-theme="dark"] nav[aria-label="مسیر"] a { color: var(--tb-text-muted, #9ca3af); }
-        {{-- Real semantic status flash messages (session success/error/
-             warning/info) — same light-mode-preserved / dark-mode-added
-             pattern as .tb-tag-*. --}}
         .tb-flash { margin-bottom:1.5rem; padding:1rem; border-radius:0.5rem; display:flex; align-items:center; gap:0.5rem; }
         .tb-flash-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
         .tb-flash-error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
@@ -222,7 +164,6 @@
         .site-header .nav-link.font-semibold { color: var(--platform-menu-link-active, #93c5fd); }
         #mobile-menu a { color: inherit; text-decoration: none; display: block; padding: 0.5rem 0; }
         #mobile-menu a:hover { color: var(--platform-menu-link-active, #93c5fd); }
-        /* Critical layout - works without Tailwind */
         .site-header .container-inner { max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
         .site-header .header-row { display: flex; align-items: center; justify-content: space-between; min-height: 4rem; }
         .site-header #main-nav { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
@@ -268,6 +209,7 @@
         .theme-dark .site-header { background: #111827 !important; color: #e5e7eb !important; }
         .theme-dark .card, .theme-dark main { background: #374151; border-color: #4b5563; color: #e5e7eb; }
         .theme-dark footer { background: #111827 !important; color: #9ca3af; border-color: #374151; }
+
         /* Theme Builder base styles + typography scale */
         .tb-section { padding: 2.5rem 0; }
         .tb-section-inner { width: 100%; }
@@ -288,10 +230,8 @@
         .tb-text { line-height: 1.75; color: var(--tb-text-muted, #4b5563); font-size: 1rem; }
         .tb-text.prose { max-width: 65ch; }
         .tb-text.prose p { margin: 0 0 0.75rem; }
-        /* تصاویر داخل سازنده: محدودیت اندازه برای جلوگیری از پر شدن کل صفحه */
         .tb-image { display: block; max-width: 100%; margin: 0 auto 1.5rem; }
         .tb-image .tb-img { display: block; max-width: 100%; height: auto; margin: 0 auto; max-height: 480px; object-fit: contain; }
-        /* Border radius + shadow helpers for builder */
         .tb-radius-sm { border-radius: 0.5rem; }
         .tb-radius-md { border-radius: 0.75rem; }
         .tb-radius-lg { border-radius: 1rem; }
@@ -300,7 +240,6 @@
         .tb-shadow-lg { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22); }
         .tb-hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .tb-hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(15, 23, 42, 0.22); }
-        /* Placeholder when element fails validation or render (safe rendering) */
         .tb-placeholder { min-height: 2rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; }
         .tb-placeholder-invalid { background: #fef3c7; border: 1px dashed #d97706; color: #92400e; }
         .tb-placeholder-error { background: #fee2e2; border: 1px dashed #dc2626; color: #991b1b; }
@@ -327,13 +266,11 @@
         .tb-cta-subtitle { opacity: 0.9; margin-bottom: 1rem; }
         .tb-cta .tb-btn { background: #fff !important; color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; margin-top: 0.5rem; }
         .tb-cta .tb-btn:hover { opacity: 0.95; }
-        /* کارت محصول + حالت خالی */
         .tb-product-card-img { aspect-ratio: 1; background: var(--tb-background, #f3f4f6); overflow: hidden; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: center; }
         .tb-product-card-img img { width: 100%; height: 100%; object-fit: cover; }
         .tb-product-card-noimg { font-size: 2.5rem; color: var(--tb-text-muted, #9ca3af); }
         .tb-product-grid-empty { grid-column: 1 / -1; text-align: center; padding: 2rem; background: var(--tb-background, #f9fafb); border-radius: 0.75rem; border: 1px dashed var(--tb-border, #d1d5db); }
         .tb-product-grid-empty p { margin-bottom: 1rem; color: var(--tb-text-muted, #6b7280); }
-        /* وبلاگ */
         .tb-blog-posts { margin-top: 1.5rem; }
         .tb-section-title { margin-bottom: 1.25rem; font-size: 1.5rem; }
         .tb-blog-card { display: flex; flex-direction: column; background: var(--tb-surface, #fff); border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--tb-border, #e5e7eb); text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
@@ -346,7 +283,6 @@
         .tb-blog-card-meta { font-size: 0.8rem; color: var(--tb-text-muted, #6b7280); margin: 0 0 0.5rem; }
         .tb-blog-card-excerpt { font-size: 0.9rem; color: var(--tb-text-muted, #4b5563); margin: 0; line-height: 1.6; }
         @media (max-width: 767px) { .tb-blog-grid.tb-grid-cols-3 { grid-template-columns: 1fr; } }
-        /* نظرات / testimonials */
         .tb-testimonials-grid { display: grid; gap: 1.25rem; margin-top: 1rem; }
         @media (min-width: 768px) { .tb-testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .tb-testimonials-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -354,11 +290,9 @@
         .tb-testimonial-rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.5rem; }
         .tb-testimonial-text { margin: 0 0 0.75rem; line-height: 1.7; color: var(--tb-text-muted, #4b5563); }
         .tb-testimonial-author { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--tb-text, #111827); }
-        /* FAQ */
         .tb-faq-item { border: 1px solid var(--tb-border, #e5e7eb); border-radius: 0.5rem; margin-bottom: 0.5rem; overflow: hidden; }
         .tb-faq-question { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; background: var(--tb-surface, #f9fafb); margin: 0; }
         .tb-faq-answer { padding: 1rem 1.25rem; border-top: 1px solid var(--tb-border, #e5e7eb); line-height: 1.7; color: var(--tb-text-muted, #4b5563); }
-        /* دسته‌بندی‌ها به صورت کارت/چیپ */
         .tb-grid .tb-text.prose { background: var(--tb-background, #f9fafb); border: 1px solid var(--tb-border, #e5e7eb); padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; font-weight: 500; margin: 0; }
         .tb-nav.tb-nav-header a { margin-left: 1rem; text-decoration: none; color: inherit; }
         .tb-social-icons a { margin-left: 0.75rem; text-decoration: none; }
@@ -385,7 +319,6 @@
         .tb-countdown__label { display: block; font-weight: 700; margin-bottom: 0.35rem; }
         .tb-countdown__hint { display: block; margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.88; }
         .tb-custom-html { line-height: 1.75; color: var(--tb-text-muted, #4b5563); }
-        /* پس‌زمینه سکشن‌های Theme Builder */
         .tb-bg-background { background-color: var(--tb-background, #f9fafb) !important; }
         .tb-bg-surface { background-color: var(--tb-surface, #ffffff) !important; }
         .tb-bg-primary { background-color: var(--tb-primary, var(--platform-primary, #4f46e5)) !important; color: var(--tb-on-primary, #fff) !important; }
@@ -393,11 +326,8 @@
         .tb-bg-primary a:hover { opacity: 1; }
         .tb-bg-text { background-color: var(--tb-text, #111827) !important; color: #fff !important; }
         .tb-bg-text a { color: #e5e7eb !important; }
-        /* tb-text inverts between modes, so this section's fixed white foreground
-           must invert too, or dark mode renders near-white text on a near-white bg */
         [data-theme="dark"] .tb-bg-text { color: var(--tb-background, #111827) !important; }
         [data-theme="dark"] .tb-bg-text a { color: var(--tb-background, #111827) !important; }
-        /* هدر سایت (نوار بالای صفحه) */
         .tb-site-header { border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 0 1rem; background: var(--tb-surface, #fff); }
         .tb-site-header.tb-header-sticky { position: sticky; top: 0; z-index: 100; }
         .tb-header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; max-width: 80rem; margin: 0 auto; min-height: 4rem; }
@@ -430,7 +360,6 @@
         @media (min-width: 768px) {
             .tb-mobile-menu { display: none !important; }
         }
-        /* فوتر سایت */
         .tb-site-footer { border-top: 1px solid var(--tb-border, #e5e7eb); margin-top: 3rem; box-shadow: 0 -1px 3px rgba(0,0,0,0.06); }
         .tb-site-footer .tb-section { padding-top: 2rem !important; padding-bottom: 2rem !important; }
         .tb-grid.tb-grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -438,17 +367,6 @@
         @media (max-width: 767px) {
             .tb-grid.tb-grid-cols-5, .tb-grid.tb-grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-        .tb-padding-none { padding-top: 0; padding-bottom: 0; }
-        .tb-padding-xs { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .tb-padding-sm { padding-top: 1.25rem; padding-bottom: 1.25rem; }
-        .tb-padding-md { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-        .tb-padding-lg { padding-top: 3.5rem; padding-bottom: 3.5rem; }
-        .tb-padding-xl { padding-top: 4.5rem; padding-bottom: 4.5rem; }
-        @media (min-width: 768px) {
-            .tb-padding-lg { padding-top: 4rem; padding-bottom: 4rem; }
-            .tb-padding-xl { padding-top: 5.5rem; padding-bottom: 5.5rem; }
-        }
-        /* Page builder: row & column */
         .tb-row { display: flex; flex-wrap: wrap; gap: 1rem; }
         .tb-row.tb-gap-none { gap: 0; }
         .tb-row.tb-gap-sm { gap: 0.5rem; }
@@ -465,11 +383,6 @@
         @media (max-width: 767px) {
             .tb-column.tb-col-1-2, .tb-column.tb-col-1-3, .tb-column.tb-col-2-3, .tb-column.tb-col-1-4, .tb-column.tb-col-3-4 { flex: 1 1 100%; }
         }
-        /* Phase 2e (ADR-026): styling for the canonical block family that
-           BlockRenderer's tb-* class markup relies on but this stylesheet
-           never defined — services_cards/stats_row/contact_split, and the
-           newly-added nav_header/nav_footer/hero_trust/about_section/
-           service_cards/project_cards/contact_info all share these. */
         .tb-features-section-header { text-align: center; margin-bottom: 2.5rem; }
         .tb-features-section-title { font-size: clamp(1.375rem, 2.5vw, 1.875rem); font-weight: 800; color: var(--tb-text, #111827); margin: 0 0 0.5rem; }
         .tb-features-section-sub { color: var(--tb-text-muted, #6b7280); font-size: 1rem; margin: 0; }
@@ -525,8 +438,6 @@
         .tb-breadcrumb a { color: var(--tb-primary, var(--platform-primary, #4f46e5)); text-decoration: none; }
         .tb-login-register { display: flex; align-items: center; gap: 1rem; }
         .tb-price-box-empty { padding: 1rem; text-align: center; }
-        /* Phase 2f (ADR-027): honest placeholder state for client_logos
-           when no logos are authored — no fabricated brand names. */
         .tb-client-logos-empty { padding: 2rem 0; text-align: center; }
         .tb-client-logos-title { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tb-text-muted, #9ca3af); margin: 0 0 0.75rem; }
     </style>
@@ -542,11 +453,31 @@
     </style>
     @endif
     @stack('head')
-    {{-- ADR-082 step 2 (saas-platform): the nav_header layout this layout
-         renders. It used to arrive as the header's own inline <style>, after
-         every stylesheet; this page has no shared block sheet, so it takes the
-         header sheet alone, last in <head>, to keep that place in the cascade. --}}
     <style>@include('theme-runtime::css.header')</style>
+
+    {{-- Override قطعی و نهایی برای سرکوب پدینگ‌های سنگین و فعال‌سازی سراسری Zero-gap --}}
+    <style id="zero-gap-cascade-killer">
+        .tb-section.tb-padding-xl,
+        .tb-section.tb-padding-lg,
+        .tb-section.tb-padding-md,
+        .tb-padding-xl,
+        .tb-padding-lg,
+        .tb-padding-md {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .tb-section.tb-padding-none,
+        .tb-padding-none,
+        [data-tb-gap="none"] .tb-section {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .tb-style-wrap + .tb-style-wrap {
+            margin-top: 0 !important;
+        }
+    </style>
 </head>
 <body class="theme-{{ \App\Helpers\SiteHelper::theme() }}">
     <a href="#main" class="skip-link">پرش به محتوا</a>
@@ -604,18 +535,6 @@
                 </div>
             </div>
             @php
-                // Real, proven gap (khab-shimana-tablet dark-mode
-                // certification, 2026-09-21): .tb-header-nav-wrap above is
-                // display:none below 768px (by design — see
-                // BlockRenderer::renderNavHeader()'s own comment on why the
-                // NAV LINKS get a real mobile replacement here), but nothing
-                // ever gave the SAME treatment to nav_header's actions row
-                // (search/cart/account/dark-toggle) — a real interactive
-                // Playwright test (click .tb-theme-toggle) confirmed it
-                // exists in the DOM but is genuinely unreachable at mobile
-                // width. Only the dark-mode toggle is replicated here (cart/
-                // account already have real bare-route equivalents just
-                // below — "سبد خرید"/"حساب من" — dark mode has none).
                 $tbHeaderWantsDarkToggle = collect($headerBlocks ?? [])
                     ->contains(fn ($b) => is_array($b) && ($b['type'] ?? null) === 'nav_header' && !empty($b['props']['show_dark_toggle']));
             @endphp
@@ -716,7 +635,6 @@
                         @else
                             <a href="{{ route('login') }}" class="nav-link">ورود</a>
                         @endauth
-                        {{-- Language Switcher --}}
                         <x-language-switcher />
                     @endif
                 </nav>
