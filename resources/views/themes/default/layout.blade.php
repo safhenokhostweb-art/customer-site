@@ -457,6 +457,18 @@
 
     {{-- Override قطعی و نهایی برای سرکوب پدینگ‌های سنگین و فعال‌سازی سراسری Zero-gap --}}
     <style id="zero-gap-cascade-killer">
+        .tb-section,
+        .tb-pricing-cards,
+        .tb-features-section-header,
+        .tb-pricing-header {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+        }
+        .tb-features-section-title {
+            margin-top: 0 !important;
+            padding-top: 0.5rem !important;
+        }
         .tb-section.tb-padding-xl,
         .tb-section.tb-padding-lg,
         .tb-section.tb-padding-md,
@@ -466,14 +478,12 @@
             padding-top: 0 !important;
             padding-bottom: 0 !important;
         }
-
         .tb-section.tb-padding-none,
         .tb-padding-none,
         [data-tb-gap="none"] .tb-section {
             padding-top: 0 !important;
             padding-bottom: 0 !important;
         }
-
         .tb-style-wrap + .tb-style-wrap {
             margin-top: 0 !important;
         }
