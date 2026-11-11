@@ -84,6 +84,10 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         return $this;
     }
 
+    #[HostOwnedOverride(
+        reason: 'This host defaults to editor mode (canonical defaults to null), so mode assignment stays host-owned to preserve editor-first rendering.',
+        category: HostOwnedOverride::REASON_HOST_CONTEXT,
+    )]
     public function setMode(?string $mode): self
     {
         if ($mode !== null && ! in_array($mode, ['editor', 'public'], true)) {
@@ -571,6 +575,10 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
 
 
+    #[HostOwnedOverride(
+        reason: 'The host inspector stores named sizes plus customHeight/heightUnit; canonical only understands a numeric height prop.',
+        category: HostOwnedOverride::REASON_UNMERGED_CAPABILITY,
+    )]
     protected function renderSpacer(array $props, string $inner, string $id): string
     {
         $height = $props['height'] ?? 'md';
@@ -1321,6 +1329,10 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
      * If custom padding/margin is set, use 'none' as the default padding class
      * and apply custom values as inline styles to avoid double padding.
      */
+    #[HostOwnedOverride(
+        reason: 'Honors custom padding/margin from the host inspector as inline styles so default spacing classes do not double-apply.',
+        category: HostOwnedOverride::REASON_UNMERGED_CAPABILITY,
+    )]
     protected function renderSection(array $props, string $inner, string $id): string
     {
         $layoutStyle = $props['_style']['layout'] ?? [];

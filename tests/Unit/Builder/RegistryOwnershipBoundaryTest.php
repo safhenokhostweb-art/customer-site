@@ -23,8 +23,8 @@ use Tests\TestCase;
  */
 class RegistryOwnershipBoundaryTest extends TestCase
 {
-    private const CANONICAL_DELEGATING = ['heading', 'text', 'image', 'button', 'divider', 'section', 'grid', 'columns', 'hero', 'container'];
-    private const HOST_ONLY = ['spacer', 'row', 'column'];
+    private const CANONICAL_DELEGATING = ['heading', 'text', 'image', 'button', 'divider', 'spacer', 'section', 'grid', 'columns', 'hero', 'container'];
+    private const HOST_ONLY = ['row', 'column'];
 
     protected function tearDown(): void
     {
@@ -32,7 +32,7 @@ class RegistryOwnershipBoundaryTest extends TestCase
         parent::tearDown();
     }
 
-    // A/B. all 13 elements classified correctly (10 canonical, 3 host-only)
+    // A/B. all 13 elements classified correctly (11 canonical, 2 host-only)
     public function test_ab_all_10_canonical_delegating_elements_classify_as_canonical_adapter(): void
     {
         foreach (self::CANONICAL_DELEGATING as $type) {
@@ -44,7 +44,7 @@ class RegistryOwnershipBoundaryTest extends TestCase
         }
     }
 
-    // C. spacer/row/column classified host-only
+    // C. row/column classified host-only
     public function test_c_spacer_row_column_classify_as_host_only(): void
     {
         foreach (self::HOST_ONLY as $type) {

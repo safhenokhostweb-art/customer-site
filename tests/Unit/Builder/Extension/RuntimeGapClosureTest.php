@@ -14,6 +14,7 @@ use App\Services\ThemeBuilder\BlockRenderer;
 use App\Services\ThemeBuilder\ElementSchemaRegistry;
 use App\Services\ThemeCanvas\Extension\ExtensionBlockTypeRegistry;
 use App\Services\ThemeCanvas\Extension\ExtensionProductIdentity;
+use App\Services\ThemeCanvas\ThemeRuntimeDocument;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -401,8 +402,8 @@ class RuntimeGapClosureTest extends TestCase
         ]);
         $page->update(['is_published' => true]);
 
-        $html = view('themes.default.page', ['page' => $page])
-            ->render();
+        $document = app(ThemeRuntimeDocument::class)->buildForPage($page);
+        $html = view('themes.default.page', ['page' => $page] + $document)->render();
 
         $this->assertStringContainsString('/vendor/acme/demo-card.css', $html);
         $this->assertStringContainsString('Visible', $html);
@@ -415,7 +416,8 @@ class RuntimeGapClosureTest extends TestCase
         ]);
         $page->update(['is_published' => true]);
 
-        $html = view('themes.default.page', ['page' => $page])->render();
+        $document = app(ThemeRuntimeDocument::class)->buildForPage($page);
+        $html = view('themes.default.page', ['page' => $page] + $document)->render();
 
         $this->assertStringContainsString('Plain', $html);
         $this->assertStringNotContainsString('/vendor/acme/', $html);
