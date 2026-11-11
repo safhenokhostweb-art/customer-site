@@ -303,7 +303,7 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
 
         $inner = '';
         if (self::isContainerType($type) && !empty($children)) {
-            $inner = $this->renderBlocks($children);
+            $inner = $this->renderContainerChildren($children);
         }
         // BLD-01 (Full Product Commercial Audit, TASK 1/3): `accordion` is
         // rendered correctly right here — but the generic dispatch a few
@@ -368,6 +368,32 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         }
 
         return $this->renderFallback($type, $props, $inner, $id);
+    }
+
+    /**
+     * Children of a structural container are that container's direct grid/
+     * flex cells. The shared renderBlocks() prepends a page-level zero-gap
+     * <style> to every list it renders, so rendering children through it
+     * left that <style> between a row and its first cell — `.tb-columns`'s
+     * rules and every `> child` selector then target a <style> node
+     * instead of the cell (ColumnsVerticalBalancePinTest pins this).
+     * Nested lists render the same blocks without that global style: it
+     * is a page-level rule, emitted once by the top-level renderBlocks()
+     * call, and its selectors are global anyway. Non-array entries keep
+     * the shared renderer's visible-skip behavior.
+     */
+    protected function renderContainerChildren(array $blocks): string
+    {
+        $html = [];
+        foreach ($blocks as $child) {
+            if (!is_array($child)) {
+                $html[] = '<!-- theme block skipped: expected an object, got ' . gettype($child) . ' -->';
+                continue;
+            }
+            $html[] = $this->renderBlock($child);
+        }
+
+        return implode("\n", $html);
     }
 
     /**

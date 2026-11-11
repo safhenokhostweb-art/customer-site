@@ -34,6 +34,12 @@ use Tests\TestCase;
  * (2) every currently-known collision's Element class source literally
  * calls dispatchStructural() — a future edit that quietly reverts one back
  * to an independent implementation fails loudly.
+ *
+ * A justified-independent type is the narrow second resolution the first
+ * rule allows: an Element that must keep its own renderer because the
+ * canonical one cannot express its authoring model. Each entry carries a
+ * non-empty reason and must genuinely stay independent (tested in both
+ * directions) — it is a documented decision, not a hole in the guard.
  */
 class ElementSdkCanonicalBoundaryTest extends TestCase
 {
@@ -56,6 +62,21 @@ class ElementSdkCanonicalBoundaryTest extends TestCase
         'hero' => \App\Builder\Elements\HeroElement::class,
     ];
 
+    /**
+     * Collisions that intentionally stay host-owned, each with the reason
+     * delegation is not possible.
+     */
+    private const JUSTIFIED_INDEPENDENT = [
+        // Canonical renderSpacer() reads a numeric pixel height and clamps
+        // it to 0–600px. The host spacer's authoring model is named sizes
+        // (none/xs/sm/md/lg/xl), a custom px height up to 2000 and a vh
+        // unit — none of which the canonical method can express. Delegating
+        // would silently drop vh and clamp large custom heights, so the
+        // host keeps its own renderer until the canonical spacer gains that
+        // model.
+        'spacer' => 'Named sizes, custom px up to 2000 and vh units — the canonical 0–600px numeric model cannot express them.',
+    ];
+
     public function test_element_sdk_canonical_collisions_are_exactly_the_known_set(): void
     {
         $canonical = new \ReflectionClass(CanonicalBlockRenderer::class);
@@ -75,7 +96,7 @@ class ElementSdkCanonicalBoundaryTest extends TestCase
         $collisions = array_values(array_intersect($registeredInSdk, array_keys($canonicalTypes)));
         sort($collisions);
 
-        $expected = array_keys(self::KNOWN_COLLISIONS);
+        $expected = array_merge(array_keys(self::KNOWN_COLLISIONS), array_keys(self::JUSTIFIED_INDEPENDENT));
         sort($expected);
 
         $newCollisions = array_diff($collisions, $expected);
@@ -84,8 +105,26 @@ class ElementSdkCanonicalBoundaryTest extends TestCase
             'A NEW type is registered in the Element SDK that also has a canonical shared renderer, '
             . 'beyond the known/resolved set: ' . implode(', ', $newCollisions)
             . '. Give its render() a dispatchStructural() delegation call (see the other 10 Element '
-            . 'classes for the pattern) before registering it, or justify why it must stay independent.'
+            . 'classes for the pattern) before registering it, or add it to JUSTIFIED_INDEPENDENT with '
+            . 'a concrete reason the canonical renderer cannot serve.'
         );
+    }
+
+    public function test_each_justified_independent_collision_is_registered_and_stays_independent(): void
+    {
+        foreach (self::JUSTIFIED_INDEPENDENT as $type => $reason) {
+            $this->assertTrue(ElementRegistry::has($type), "Justified type \"{$type}\" is not registered in the Element SDK.");
+            $this->assertNotSame('', trim($reason), "Justified type \"{$type}\" has no documented reason.");
+
+            $ref = new \ReflectionMethod(ElementRegistry::get($type), 'render');
+            $lines = file($ref->getFileName());
+            $src = implode('', array_slice($lines, $ref->getStartLine() - 1, $ref->getEndLine() - $ref->getStartLine() + 1));
+            $this->assertStringNotContainsString(
+                'dispatchStructural(',
+                $src,
+                "Justified type \"{$type}\" now delegates; move it to KNOWN_COLLISIONS instead of keeping the justification."
+            );
+        }
     }
 
     public function test_every_known_collision_delegates_structural_rendering_to_canonical(): void
