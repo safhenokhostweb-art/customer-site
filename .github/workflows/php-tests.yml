@@ -142,6 +142,11 @@ jobs:
           DB_DATABASE: customer_site_test
           DB_USERNAME: root
           DB_PASSWORD: root
+          # App boot must not require a live Reverb/Pusher connection.
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
         run: |
           cp .env.testing.example .env.testing
           php artisan key:generate --env=testing
@@ -155,6 +160,10 @@ jobs:
           DB_DATABASE: customer_site_test
           DB_USERNAME: root
           DB_PASSWORD: root
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
         run: php artisan migrate --env=testing --force
 
       - name: Run feature tests
