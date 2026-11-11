@@ -61,13 +61,14 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
         <div class="h-6 w-px bg-slate-200 shrink-0"></div>
 
-        {{-- Sidebar visibility toggles. Ctrl+B / Ctrl+\ toggles focus mode (both). --}}
+        {{-- Sidebar visibility toggles. Ctrl+B: block library, Ctrl+Alt+B:
+             properties panel, Ctrl+\ or F: full-width focus mode (both). --}}
         <div class="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5 shrink-0">
             <button type="button" @click="toggleSidebar('right')"
                 data-testid="tb-toggle-right-sidebar"
                 :aria-pressed="showRightSidebar"
                 :class="showRightSidebar ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-700'"
-                title="کتابخانه بلوک‌ها (Ctrl+B یا Ctrl+\)"
+                title="کتابخانه بلوک‌ها (Ctrl+B)"
                 class="p-1.5 rounded-md transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="1.8"/>
@@ -79,12 +80,22 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 data-testid="tb-toggle-left-sidebar"
                 :aria-pressed="showLeftSidebar"
                 :class="showLeftSidebar ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-700'"
-                title="پنل تنظیمات (Ctrl+B یا Ctrl+\)"
+                title="پنل تنظیمات (Ctrl+Alt+B)"
                 class="p-1.5 rounded-md transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="1.8"/>
                     <path d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4z" fill="currentColor" opacity=".25" stroke="none"/>
                     <path d="M9 4v16" stroke-width="1.8"/>
+                </svg>
+            </button>
+            <button type="button" @click="toggleFocusMode()"
+                data-testid="tb-toggle-focus-mode"
+                :aria-pressed="!showRightSidebar && !showLeftSidebar"
+                :class="!showRightSidebar && !showLeftSidebar ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-700'"
+                title="پیش‌نمایش تمام‌عرض (F یا Ctrl+\)"
+                class="p-1.5 rounded-md transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 9V5a1 1 0 011-1h4M20 9V5a1 1 0 00-1-1h-4M4 15v4a1 1 0 001 1h4M20 15v4a1 1 0 01-1 1h-4"/>
                 </svg>
             </button>
         </div>
@@ -306,10 +317,35 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
     {{-- ══════════════════════════════════════════════════════════
          3-PANEL MAIN LAYOUT
     ══════════════════════════════════════════════════════════ --}}
-    <div class="flex flex-1 overflow-hidden">
+    <div class="relative flex flex-1 overflow-hidden">
+
+        {{-- Floating edge handles. They live outside the panels so a
+             collapsed sidebar always keeps a visible re-open affordance. --}}
+        <button type="button" @click="toggleSidebar('right')"
+            data-testid="tb-collapse-right-sidebar"
+            :aria-expanded="showRightSidebar"
+            :aria-label="showRightSidebar ? 'جمع کردن کتابخانه بلوک‌ها' : 'باز کردن کتابخانه بلوک‌ها'"
+            :title="(showRightSidebar ? 'جمع کردن' : 'باز کردن') + ' کتابخانه بلوک‌ها (Ctrl+B)'"
+            class="absolute top-1/2 right-0 -translate-y-1/2 z-40 flex h-12 w-5 items-center justify-center rounded-s-lg border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:bg-indigo-50 hover:text-indigo-600">
+            <svg class="h-3 w-3 transition-transform duration-200" :class="showRightSidebar ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+        <button type="button" @click="toggleSidebar('left')"
+            data-testid="tb-collapse-left-sidebar"
+            :aria-expanded="showLeftSidebar"
+            :aria-label="showLeftSidebar ? 'جمع کردن پنل تنظیمات' : 'باز کردن پنل تنظیمات'"
+            :title="(showLeftSidebar ? 'جمع کردن' : 'باز کردن') + ' پنل تنظیمات (Ctrl+Alt+B)'"
+            class="absolute top-1/2 left-0 -translate-y-1/2 z-40 flex h-12 w-5 items-center justify-center rounded-e-lg border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:bg-indigo-50 hover:text-indigo-600">
+            <svg class="h-3 w-3 transition-transform duration-200" :class="showLeftSidebar ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
 
         {{-- ── PANEL A: Block Library (RTL = right side) ─────────── --}}
-        <div x-show="showRightSidebar" :style="'width:' + rightSidebarWidth + 'px'"
+        <div :style="sidebarPanelStyle('right')"
+             :aria-hidden="!showRightSidebar"
+             data-testid="tb-right-sidebar-panel"
              class="bg-white border-l border-slate-200 flex flex-col overflow-hidden shrink-0 z-20">
 
             {{-- TB4: Tab toggle: بلوک‌ها / ساختار --}}
@@ -469,8 +505,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
 
         {{-- Resizer: left edge of the right sidebar (toward the canvas). --}}
-        <div x-show="showRightSidebar"
-             @pointerdown.prevent="startSidebarDrag('right', $event)"
+        <div @pointerdown.prevent="startSidebarDrag('right', $event)"
+             :style="sidebarResizerStyle('right')"
              data-testid="tb-resize-right-sidebar"
              title="برای تغییر عرض بکشید"
              class="group relative w-1.5 shrink-0 cursor-col-resize touch-none bg-transparent hover:bg-indigo-400/40 transition-colors z-30">
@@ -478,7 +514,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
 
         {{-- ── PANEL B: Live Canvas (center) ──────────────────────── --}}
-        <div class="flex-1 w-full flex flex-col overflow-hidden bg-slate-200">
+        <div data-testid="tb-canvas-panel" class="flex-1 w-full min-w-0 flex flex-col overflow-hidden bg-slate-200">
 
             {{-- Canvas Toolbar --}}
             <div class="h-10 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0 z-10">
@@ -562,8 +598,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
 
         {{-- Resizer: right edge of the left sidebar (toward the canvas). --}}
-        <div x-show="showLeftSidebar"
-             @pointerdown.prevent="startSidebarDrag('left', $event)"
+        <div @pointerdown.prevent="startSidebarDrag('left', $event)"
+             :style="sidebarResizerStyle('left')"
              data-testid="tb-resize-left-sidebar"
              title="برای تغییر عرض بکشید"
              class="group relative w-1.5 shrink-0 cursor-col-resize touch-none bg-transparent hover:bg-indigo-400/40 transition-colors z-30">
@@ -571,7 +607,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         </div>
 
         {{-- ── PANEL C: Props Panel (LTR = left side) ─────────────── --}}
-        <div x-show="showLeftSidebar" :style="'width:' + leftSidebarWidth + 'px'"
+        <div :style="sidebarPanelStyle('left')"
+             :aria-hidden="!showLeftSidebar"
+             data-testid="tb-left-sidebar-panel"
              class="bg-white border-r border-slate-200 flex flex-col overflow-hidden shrink-0 z-20">
 
             <div x-show="!selectedPath" class="flex flex-col items-center justify-center h-full text-center px-6">
@@ -4202,6 +4240,11 @@ confirmMotionSelect() {
                 const left  = parseInt(localStorage.getItem('tb-canvas-left-sidebar-width'), 10);
                 if (Number.isFinite(right)) this.rightSidebarWidth = this.sidebarWidthBounds(right);
                 if (Number.isFinite(left))  this.leftSidebarWidth  = this.sidebarWidthBounds(left);
+
+                const rightOpen = localStorage.getItem('tb-canvas-right-sidebar-open');
+                const leftOpen  = localStorage.getItem('tb-canvas-left-sidebar-open');
+                if (rightOpen !== null) this.showRightSidebar = rightOpen === '1';
+                if (leftOpen !== null)  this.showLeftSidebar  = leftOpen === '1';
             } catch (_) { /* storage unavailable (private mode) — keep defaults */ }
         },
 
@@ -4212,9 +4255,41 @@ confirmMotionSelect() {
             } catch (_) { /* storage unavailable — widths still apply for this session */ }
         },
 
+        persistSidebarLayout() {
+            try {
+                localStorage.setItem('tb-canvas-right-sidebar-open', this.showRightSidebar ? '1' : '0');
+                localStorage.setItem('tb-canvas-left-sidebar-open', this.showLeftSidebar ? '1' : '0');
+            } catch (_) { /* storage unavailable — layout still applies for this session */ }
+        },
+
+        // Width (not display) drives the collapse so the browser can animate
+        // it. Hidden panels keep their last resized width, so re-opening
+        // restores exactly the size the operator dragged to.
+        sidebarPanelStyle(side) {
+            const open  = side === 'right' ? this.showRightSidebar : this.showLeftSidebar;
+            const width = side === 'right' ? this.rightSidebarWidth : this.leftSidebarWidth;
+            const edge  = side === 'right' ? 'border-left-width' : 'border-right-width';
+            return 'width:' + (open ? width : 0) + 'px;'
+                + edge + ':' + (open ? 1 : 0) + 'px;'
+                + 'opacity:' + (open ? 1 : 0) + ';'
+                + 'visibility:' + (open ? 'visible' : 'hidden') + ';'
+                // A live splitter must track the pointer 1:1; the easing is
+                // only for the collapse/expand transition.
+                + (this.sidebarDrag ? 'transition:none;' : 'transition:all .25s ease;');
+        },
+
+        sidebarResizerStyle(side) {
+            const open = side === 'right' ? this.showRightSidebar : this.showLeftSidebar;
+            return 'width:' + (open ? 6 : 0) + 'px;'
+                + 'opacity:' + (open ? 1 : 0) + ';'
+                + 'pointer-events:' + (open ? 'auto' : 'none') + ';'
+                + 'transition:all .25s ease;';
+        },
+
         toggleSidebar(side) {
             if (side === 'right') this.showRightSidebar = !this.showRightSidebar;
             else this.showLeftSidebar = !this.showLeftSidebar;
+            this.persistSidebarLayout();
         },
 
         // Focus mode: both sidebars go away (or both come back if either was
@@ -4223,6 +4298,7 @@ confirmMotionSelect() {
             const visible = this.showRightSidebar || this.showLeftSidebar;
             this.showRightSidebar = !visible;
             this.showLeftSidebar  = !visible;
+            this.persistSidebarLayout();
         },
 
         startSidebarDrag(side, event) {
@@ -4304,20 +4380,33 @@ confirmMotionSelect() {
                 }
             });
 
-            // Sidebar layout: restore persisted widths, then bind the
-            // Ctrl+B / Ctrl+\ focus-mode toggle. init() runs twice (x-init +
-            // Alpine), so the shortcut must be registered exactly once.
+            // Sidebar layout: restore persisted widths + open/closed state,
+            // then bind the shortcuts. init() runs twice (x-init + Alpine),
+            // so the listener must be registered exactly once.
             this.loadSidebarLayout();
             if (!this.sidebarShortcutBound) {
                 this.sidebarShortcutBound = true;
                 window.addEventListener('keydown', (e) => {
-                    if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
-                    if (e.key !== '\\' && e.code !== 'Backslash' && (e.key || '').toLowerCase() !== 'b') return;
                     const el = document.activeElement;
                     const tag = el?.tagName;
                     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el?.isContentEditable) return;
-                    e.preventDefault();
-                    this.toggleFocusMode();
+
+                    const mod = e.ctrlKey || e.metaKey;
+                    const key = (e.key || '').toLowerCase();
+
+                    // Ctrl+\ or plain F: full-width preview (both sidebars).
+                    if ((mod && !e.altKey && !e.shiftKey && (key === '\\' || e.code === 'Backslash'))
+                        || (!mod && !e.altKey && !e.shiftKey && key === 'f')) {
+                        e.preventDefault();
+                        this.toggleFocusMode();
+                        return;
+                    }
+
+                    // Ctrl+B: block library, Ctrl+Alt+B: properties panel.
+                    if (mod && !e.shiftKey && key === 'b') {
+                        e.preventDefault();
+                        e.altKey ? this.toggleSidebar('left') : this.toggleSidebar('right');
+                    }
                 });
             }
 
