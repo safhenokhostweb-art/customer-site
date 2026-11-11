@@ -162,10 +162,18 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Copy environment
+        # key:generate boots the framework; scope a driver-free environment so
+        # it never depends on a MySQL service that this workflow does not run.
         run: |
           if [ -f .env.example ]; then cp .env.example .env; fi
-          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
           php artisan key:generate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
 
       - name: Validate Component Authority
         run: |
@@ -242,10 +250,18 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Copy environment
+        # key:generate boots the framework; scope a driver-free environment so
+        # it never depends on a MySQL service that this workflow does not run.
         run: |
           if [ -f .env.example ]; then cp .env.example .env; fi
-          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
           php artisan key:generate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
 
       - name: Validate Responsive Governance
         run: |
@@ -322,10 +338,18 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Copy environment
+        # key:generate boots the framework; scope a driver-free environment so
+        # it never depends on a MySQL service that this workflow does not run.
         run: |
           if [ -f .env.example ]; then cp .env.example .env; fi
-          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
           php artisan key:generate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
 
       - name: Validate Enterprise Governance
         run: |
@@ -402,10 +426,18 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Copy environment
+        # key:generate boots the framework; scope a driver-free environment so
+        # it never depends on a MySQL service that this workflow does not run.
         run: |
           if [ -f .env.example ]; then cp .env.example .env; fi
-          if [ -f .env.testing.example ]; then cp .env.testing.example .env; fi
           php artisan key:generate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          BROADCAST_DRIVER: log
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
 
       - name: Validate Frontend Parity
         run: |

@@ -59,7 +59,9 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Validate composer.json
-        run: composer validate --strict
+        # --strict would fail on the intentional @dev constraints of the
+        # sibling path repositories that CI checks out from saas-platform.
+        run: composer validate --no-check-publish
 
       - name: PHP syntax lint (app + config + routes + tests)
         run: php scripts/ci-lint.php
