@@ -48,6 +48,11 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        # package:discover boots the app before any .env/testing DB exists;
+        # an in-memory SQLite keeps that bootstrap independent of a DB file.
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Validate composer.json
         run: composer validate --strict
@@ -113,6 +118,9 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Prepare test environment
         run: |

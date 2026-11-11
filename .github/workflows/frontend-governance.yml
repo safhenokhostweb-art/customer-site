@@ -151,6 +151,11 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        # package:discover boots the app before the copied .env exists; an
+        # in-memory SQLite keeps that bootstrap independent of a DB file.
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Copy environment
         run: |
@@ -222,6 +227,11 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        # package:discover boots the app before the copied .env exists; an
+        # in-memory SQLite keeps that bootstrap independent of a DB file.
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Copy environment
         run: |
@@ -293,6 +303,11 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        # package:discover boots the app before the copied .env exists; an
+        # in-memory SQLite keeps that bootstrap independent of a DB file.
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Copy environment
         run: |
@@ -364,6 +379,11 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        # package:discover boots the app before the copied .env exists; an
+        # in-memory SQLite keeps that bootstrap independent of a DB file.
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
       - name: Copy environment
         run: |
