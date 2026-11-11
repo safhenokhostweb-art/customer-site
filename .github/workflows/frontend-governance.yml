@@ -1,6 +1,7 @@
 name: Frontend Governance Enforcement — Customer Site
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, master, develop]
     paths:
@@ -114,10 +115,26 @@ jobs:
     name: Component Authority
     runs-on: ubuntu-latest
     needs: [static-blade-analysis]
+    defaults:
+      run:
+        working-directory: customer-site
     steps:
+      # composer.json's path repositories point at ../saas-platform, so both
+      # repos must sit as siblings INSIDE $GITHUB_WORKSPACE (checkout refuses
+      # a parent-directory path): customer-site/ and saas-platform/.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: customer-site
+
+      - name: Checkout saas-platform (Composer path repository source)
+        uses: actions/checkout@v4
+        with:
+          repository: safhenokhostweb-art/saas-platform
+          ref: main
+          path: saas-platform
+          ssh-key: ${{ secrets.SAAS_PLATFORM_DEPLOY_KEY }}
+          persist-credentials: false
 
       - name: Set up PHP 8.3
         uses: shivammathur/setup-php@v2
@@ -126,10 +143,10 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite
 
       - name: Cache Composer packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          path: customer-site/vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
@@ -156,7 +173,7 @@ jobs:
 
       - name: Upload component authority report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cs-component-authority-report
           path: /tmp/component-authority.json
@@ -169,10 +186,26 @@ jobs:
     name: Responsive Governance
     runs-on: ubuntu-latest
     needs: [static-blade-analysis]
+    defaults:
+      run:
+        working-directory: customer-site
     steps:
+      # composer.json's path repositories point at ../saas-platform, so both
+      # repos must sit as siblings INSIDE $GITHUB_WORKSPACE (checkout refuses
+      # a parent-directory path): customer-site/ and saas-platform/.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: customer-site
+
+      - name: Checkout saas-platform (Composer path repository source)
+        uses: actions/checkout@v4
+        with:
+          repository: safhenokhostweb-art/saas-platform
+          ref: main
+          path: saas-platform
+          ssh-key: ${{ secrets.SAAS_PLATFORM_DEPLOY_KEY }}
+          persist-credentials: false
 
       - name: Set up PHP 8.3
         uses: shivammathur/setup-php@v2
@@ -181,10 +214,10 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite
 
       - name: Cache Composer packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          path: customer-site/vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
@@ -211,7 +244,7 @@ jobs:
 
       - name: Upload responsive report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cs-responsive-governance-report
           path: /tmp/responsive-governance.json
@@ -224,10 +257,26 @@ jobs:
     name: Enterprise Frontend Governance (≥95)
     runs-on: ubuntu-latest
     needs: [component-authority]
+    defaults:
+      run:
+        working-directory: customer-site
     steps:
+      # composer.json's path repositories point at ../saas-platform, so both
+      # repos must sit as siblings INSIDE $GITHUB_WORKSPACE (checkout refuses
+      # a parent-directory path): customer-site/ and saas-platform/.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: customer-site
+
+      - name: Checkout saas-platform (Composer path repository source)
+        uses: actions/checkout@v4
+        with:
+          repository: safhenokhostweb-art/saas-platform
+          ref: main
+          path: saas-platform
+          ssh-key: ${{ secrets.SAAS_PLATFORM_DEPLOY_KEY }}
+          persist-credentials: false
 
       - name: Set up PHP 8.3
         uses: shivammathur/setup-php@v2
@@ -236,10 +285,10 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite
 
       - name: Cache Composer packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          path: customer-site/vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
@@ -266,7 +315,7 @@ jobs:
 
       - name: Upload enterprise governance report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cs-enterprise-governance-report
           path: /tmp/enterprise-governance.json
@@ -279,10 +328,26 @@ jobs:
     name: Frontend Parity (Zero Drift)
     runs-on: ubuntu-latest
     needs: [enterprise-governance]
+    defaults:
+      run:
+        working-directory: customer-site
     steps:
+      # composer.json's path repositories point at ../saas-platform, so both
+      # repos must sit as siblings INSIDE $GITHUB_WORKSPACE (checkout refuses
+      # a parent-directory path): customer-site/ and saas-platform/.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: customer-site
+
+      - name: Checkout saas-platform (Composer path repository source)
+        uses: actions/checkout@v4
+        with:
+          repository: safhenokhostweb-art/saas-platform
+          ref: main
+          path: saas-platform
+          ssh-key: ${{ secrets.SAAS_PLATFORM_DEPLOY_KEY }}
+          persist-credentials: false
 
       - name: Set up PHP 8.3
         uses: shivammathur/setup-php@v2
@@ -291,10 +356,10 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite
 
       - name: Cache Composer packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          path: customer-site/vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
@@ -343,7 +408,7 @@ jobs:
 
       - name: Upload parity report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cs-frontend-parity-report
           path: |
