@@ -28,7 +28,7 @@ $blockSchemas = collect($registry)->mapWithKeys(function ($d, $t) {
 });
 $orderedCats  = ['layout','content','dynamic','ecommerce','marketing','utility','module'];
 $catColors    = ['layout'=>'text-blue-600 bg-blue-50','content'=>'text-green-700 bg-green-50','dynamic'=>'text-purple-600 bg-purple-50','ecommerce'=>'text-emerald-700 bg-emerald-50','marketing'=>'text-orange-600 bg-orange-50','utility'=>'text-slate-600 bg-slate-100','module'=>'text-indigo-700 bg-indigo-50'];
-$blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
+$blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','column'=>'▤','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
 @endphp
 
 <div
@@ -1739,7 +1739,8 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 @switch($blockType)
                                     @case('hero') 🌟 @break @case('section') 📦 @break
                                     @case('flex_container') 📐 @break @case('grid') 🔲 @break
-                                    @case('columns') ⬜ @break @case('heading') 🔠 @break
+                                    @case('columns') ⬜ @break @case('column') ▤ @break
+                                    @case('heading') 🔠 @break
                                     @case('text') 📄 @break @case('image') 🖼️ @break
                                     @case('button') 🔘 @break @case('cta') 📢 @break
                                     @default 🧩
@@ -2343,10 +2344,18 @@ function canvasEditor() {
         // before the debounced block re-render.
         columnWidthCount(block = this.selectedBlock) {
             if (!block) return 0;
-            const children = Array.isArray(block.children) ? block.children.length : 0;
-            if (children > 0) return children;
-            const ratios = String(block.props?.ratios ?? '').trim();
-            return ratios ? Math.max(1, ratios.split(',').length) : 2;
+            const children = Array.isArray(block.children) ? block.children : [];
+            if (children.length === 0) {
+                const ratios = String(block.props?.ratios ?? '').trim();
+                return ratios ? Math.max(1, ratios.split(',').length) : 2;
+            }
+            // Only DIRECT children of the row are columns. A widget dropped
+            // inside a `column` is that column's child, never a new track.
+            // Rows authored before multi-child columns are still flat (their
+            // direct children are the cells), so they keep one track each.
+            const wrapped = children.filter(child => child?.type === 'column').length;
+            if (wrapped > 0 && wrapped === children.length) return wrapped;
+            return children.length;
         },
         columnRatioWidths(block = this.selectedBlock) {
             const count = this.columnWidthCount(block);
@@ -2985,8 +2994,13 @@ function canvasEditor() {
                 const container = this.getBlockByPath(parentPath);
                 if (!container) return;
                 if (!container.children) container.children = [];
-                container.children.push(block);
-                this.selectedPath = [...parentPath, container.children.length - 1];
+                const inserted = this.wrapForColumnRow(container, block);
+                container.children.push(inserted);
+                const childIndex = container.children.length - 1;
+                // A wrapped widget is selected itself, not its new column.
+                this.selectedPath = inserted === block
+                    ? [...parentPath, childIndex]
+                    : [...parentPath, childIndex, 0];
             } else {
                 const arr = [...this.blocks];
                 const idx = (atIndex >= 0 && atIndex <= arr.length) ? atIndex : arr.length;
@@ -3001,6 +3015,21 @@ function canvasEditor() {
         addChildBlock(type) {
             if (!this.selectedPath || !this.isContainerType(this.selectedBlock?.type)) return;
             this.addBlock(type, -1, this.selectedPath);
+        },
+
+        // A `columns` row's direct children ARE its tracks, so every new
+        // insertion becomes a `column` wrapper: the track/width-slider count
+        // then only changes when a column is actually added or removed, and
+        // several widgets can stack inside that column. Rows authored before
+        // wrapper support stay flat (their direct children are the cells) so
+        // they keep rendering and counting exactly as stored.
+        wrapForColumnRow(container, block) {
+            if (container?.type !== 'columns' || block?.type === 'column') return block;
+            const siblings = Array.isArray(container.children) ? container.children : [];
+            if (siblings.length > 0 && !siblings.every(child => child?.type === 'column')) return block;
+            const column = this.makeBlock('column');
+            column.children = [block];
+            return column;
         },
 
         // Block Library (Phase 11 follow-up): canonical insertion for catalog
@@ -3578,7 +3607,7 @@ function canvasEditor() {
             if (type.startsWith('module:pricing') || type.startsWith('module:plan')) return 'bg-pink-500';
             if (type.startsWith('module:'))       return 'bg-indigo-500';
             if (type === 'hero' || type === 'cta') return 'bg-purple-500';
-            if (['section','grid','columns','slider','accordion'].includes(type)) return 'bg-blue-400';
+            if (['section','grid','columns','column','slider','accordion'].includes(type)) return 'bg-blue-400';
             if (['heading','text','image','gallery','video','button','divider','counter'].includes(type)) return 'bg-green-500';
             if (['countdown','promo_banner'].includes(type)) return 'bg-orange-400';
             return 'bg-slate-400';

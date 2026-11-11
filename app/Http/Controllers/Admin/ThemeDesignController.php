@@ -382,6 +382,27 @@ class ThemeDesignController extends Controller
         $catLabels  = BlockRegistry::categoryLabels();
         $catIcons   = BlockRegistry::categoryIcons();
         $registry   = BlockRegistry::all();
+        // Host-only authoring type for nested columns: a real multi-child
+        // container (HasContainerCapability) that the shared canonical
+        // registry does not publish, so a customer can put several widgets —
+        // or another `columns` row — inside one cell. Kept out of
+        // BlockRegistry::all() so the canonical-parity contract still holds.
+        $registry['column'] = [
+            'name' => 'ستون',
+            'icon' => 'column',
+            'category' => BlockRegistry::CATEGORY_LAYOUT,
+            'required_module' => null,
+            'defaultProps' => ['width' => '1/1'],
+            'schema' => [
+                'width' => [
+                    'label' => 'عرض ستون',
+                    'type' => 'select',
+                    'default' => '1/1',
+                    'options' => ['1/1' => 'تمام عرض', '1/2' => '۵۰٪', '1/3' => '۳۳٪', '2/3' => '۶۶٪', '1/4' => '۲۵٪', '3/4' => '۷۵٪'],
+                ],
+            ],
+        ];
+        $byCategory[BlockRegistry::CATEGORY_LAYOUT]['column'] = $registry['column'];
         $modulePresentations = $this->presentationCapabilities->availableFor($themeData);
 
         $gs = $themeData['global_styles'] ?? [];
