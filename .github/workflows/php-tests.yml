@@ -133,6 +133,15 @@ jobs:
           QUEUE_CONNECTION: sync
 
       - name: Prepare test environment
+        # .env.testing.example ships an empty DB_PASSWORD; the service
+        # container's root user requires the password from the job services.
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: customer_site_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
         run: |
           cp .env.testing.example .env.testing
           php artisan key:generate --env=testing
