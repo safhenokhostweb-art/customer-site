@@ -50,7 +50,9 @@ class PageEditorCanonicalEntryTest extends TestCase
      */
     private function decodedInitialBlocks(TestResponse $response): array
     {
-        $matched = preg_match('/const INITIAL_BLOCKS\s*=\s*(.*?);\n/s', $response->getContent(), $m);
+        // Tolerate CRLF line endings: the JSON ends with `;\r\n`, and a
+        // `;\n`-only pattern would run past it to a later semicolon.
+        $matched = preg_match('/const INITIAL_BLOCKS\s*=\s*(.*?);\r?\n/s', $response->getContent(), $m);
         $this->assertSame(1, $matched, 'INITIAL_BLOCKS assignment not found in builder view output');
 
         return json_decode($m[1], true) ?? [];

@@ -3715,6 +3715,96 @@ confirmMotionSelect() {
             }
         },
 
+        // ── Motion runtime parameters (ADR-079) ─────────────────────
+        // Controls come from the selected asset's manifest `parameters`
+        // (ROUTES.motionAssets). Values are stored sparsely: only keys that
+        // differ from the asset default; the server re-validates them all.
+        ensureMotionAssets() {
+            if (!this.motionModal.loaded && !this.motionModal.loading) this.fetchMotionAssets();
+        },
+
+        // Why a placed motion has no controls (and renders nothing). The
+        // platform withholds a package item the site is not licensed for and
+        // lists it under `locked` with a fixed reason (saas-platform
+        // CustomerRuntimeManifest::LOCK_REASONS). An id in neither list is
+        // simply not available to this site (archived, or not in its package).
+        motionAvailability(assetId) {
+            if (!assetId) return 'none';
+            if (!this.motionModal.loaded) return 'loading';
+            if (this.motionAssetById(assetId)) return 'available';
+            const lock = this.motionModal.locked.find(l => l.asset_id === assetId);
+            return lock?.reason === 'premium_license_required' ? 'premium' : 'unavailable';
+        },
+
+        motionAvailabilityNotice(assetId) {
+            return {
+                premium: 'این موشن نیازمند لایسنس پرمیوم است.',
+                unavailable: 'این موشن برای این سایت در دسترس نیست.',
+            }[this.motionAvailability(assetId)] || '';
+        },
+
+        motionParamsNotice() {
+            const assetId = this.selectedBlock?.props?.motion_asset_id;
+            const state = this.motionAvailability(assetId);
+            if (state === 'none') return 'ابتدا یک موشن انتخاب کنید.';
+            if (state === 'loading') return 'در حال بارگذاری تنظیمات موشن…';
+            return this.motionAvailabilityNotice(assetId) || 'این موشن تنظیمات اختصاصی ندارد.';
+        },
+
+        motionParamDefs() {
+            const asset = this.motionAssetById(this.selectedBlock?.props?.motion_asset_id);
+            return Array.isArray(asset?.parameters) ? asset.parameters : [];
+        },
+
+        motionParamGroups() {
+            // ADR-080 (saas-platform): `sections` = show/hide switches per part.
+            const labels = { content: 'متن‌ها و ارقام', style: 'رنگ‌ها و حالت رنگی', sections: 'بخش‌های موشن', motion: 'انیمیشن' };
+            return ['content', 'style', 'sections', 'motion']
+                .map(key => ({ key, label: labels[key], items: this.motionParamDefs().filter(p => (p.group || 'content') === key) }))
+                .filter(group => group.items.length > 0);
+        },
+
+        motionParamStore(propKey) {
+            const v = this.selectedBlock?.props?.[propKey];
+            return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+        },
+
+        motionParamValue(propKey, p) {
+            const store = this.motionParamStore(propKey);
+            return Object.prototype.hasOwnProperty.call(store, p.key) ? store[p.key] : p.default;
+        },
+
+        // Stores on every input event: schedulePropUpdate() is already
+        // debounced, and a per-field debounce would read the input after a
+        // re-render had reset it to the stored value (losing typed text when
+        // another control changed first). An emptied text field is kept as ''
+        // — the server treats it as "use the default" — so the field does not
+        // snap back to the default text while the user is retyping.
+        setMotionParam(propKey, p, raw) {
+            if (!this.selectedBlock) return;
+            const store = { ...this.motionParamStore(propKey) };
+            let value = raw;
+            if (p.type === 'number') value = Number(raw);
+            if (p.type === 'text') value = String(raw).slice(0, p.max || 80);
+            if (value === p.default || (p.type === 'number' && Number.isNaN(value))) {
+                delete store[p.key];
+            } else {
+                store[p.key] = value;
+            }
+            this.selectedBlock.props[propKey] = store;
+            this.schedulePropUpdate();
+        },
+
+        hasMotionParams(propKey) {
+            return Object.keys(this.motionParamStore(propKey)).length > 0;
+        },
+
+        resetMotionParams(propKey) {
+            if (!this.selectedBlock) return;
+            this.selectedBlock.props[propKey] = {};
+            this.schedulePropUpdate();
+        },
+
         // ── Tree-based Drag & Drop with Re-parenting ──────────────────
         // Drag state for tree-based reordering and re-parenting
         treeDragState: {

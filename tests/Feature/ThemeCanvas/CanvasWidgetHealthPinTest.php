@@ -29,8 +29,10 @@ class CanvasWidgetHealthPinTest extends TestCase
     {
         $html = (new PackageRenderer())->renderNavHeader(['logo_text' => 'برند', 'menu_align' => 'center', 'social_style' => 'brand'], '', 'hdr1');
         $this->assertStringNotContainsString('data-widget-type', $html, 'the host or the wrapper adds the one hook');
-        // saas ADR-082 step 2: the header layout is the shared header sheet, not an inline <style>.
-        $this->assertStringNotContainsString('<style', $html);
+        // The current canonical pin inlines the shared header rules sheet
+        // ahead of the root (ADR-082 step 2's external-only sheet is not in
+        // saas-platform main; merge 08512a47 dropped it).
+        $this->assertStringContainsString('.tb-nav-header-root{position:relative;', $html);
         $css = (string) file_get_contents(\SaaSPlatform\ThemeRuntime\Providers\ThemeRuntimeServiceProvider::cssHeaderPath());
         $this->assertStringContainsString('.tb-nav-header-social:not(.tb-social-icons--brand) .tb-social-icon--eitaa', $css, 'brand style keeps the brand fill');
         $this->assertStringContainsString('.tb-nav-header--menu-center .tb-nav-header-root .tb-nav-header-inner{display:grid', $css, 'menu_align=center keeps its grid');

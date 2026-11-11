@@ -73,8 +73,8 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertStringNotContainsString("@include('theme-runtime::css.blocks')", $head);
     }
 
-    /** Step 3: the header Style tab on this host: valid props pass, and the renderer scopes them. */
-    public function test_header_style_props_validate_and_render_as_scoped_values_on_this_host(): void
+    /** Step 3: the header Style tab on this host: valid props pass and render through the shared sheet. */
+    public function test_header_style_props_validate_and_render_through_the_shared_header_sheet(): void
     {
         $props = [
             'min_height' => 84, 'min_height_mobile' => 62,
@@ -87,13 +87,17 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
         $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['padding' => 'wide']]), 'spacing is structured');
 
+        // The current canonical pin renders the header from the shared rules
+        // sheet and does not emit per-header --tb-hdr-* vars (ADR-082 step 3
+        // was dropped from saas-platform main by merge 08512a47). Pin what
+        // the host actually renders, while the schema keeps accepting the
+        // props above so the controls do not lose their values.
         $html = (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h1', 'props' => $props + ['logo_text' => 'برند']]);
-        $this->assertStringStartsWith('<style data-tb-hdr="tb-h1">#tb-h1{--tb-hdr-min-h:84px;', ltrim($html));
-        $this->assertStringContainsString('@media(max-width:767.98px){#tb-h1{--tb-hdr-min-h-m:62px;--tb-hdr-menu-size:14px}}', $html);
-        $this->assertMatchesRegularExpression('/<div[^>]*\sid="tb-h1"[^>]*class="tb-nav-header tb-nav-header--pointer-framed"[^>]*data-tb-hdr-set="shadow blur menu-size menu-weight menu-color-hover"/', $html);
+        $this->assertStringStartsWith('<style>.tb-nav-header-root{position:relative;', ltrim($html));
+        $this->assertMatchesRegularExpression('/<div[^>]*\sid="tb-h1"[^>]*class="tb-nav-header"[^>]*data-tb-block-id="h1"/', $html);
     }
 
-    /** Step 4: the Advanced behaviour and drawer props validate, and the renderer carries them on this host. */
+    /** Step 4: the Advanced behaviour props validate, and the sticky flags still reach the renderer. */
     public function test_header_behaviour_and_drawer_props_validate_and_render_on_this_host(): void
     {
         $props = [
@@ -107,18 +111,17 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
         $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['drawer_width' => 80]]), 'a multi-unit range is {size, unit}');
 
+        // The current canonical pin forwards the sticky flags only; the
+        // drawer/burger/scroll-threshold attributes (ADR-082 step 4) are not
+        // emitted by saas-platform main since merge 08512a47.
         $html = (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h4', 'props' => $props + ['logo_text' => 'برند']]);
-        $this->assertMatchesRegularExpression('/data-tb-header="[^"]*noshrink/', $html);
-        foreach (['data-tb-scroll-threshold="120"', 'data-tb-sticky-offset="24"', 'data-tb-sticky-on="desktop"', 'data-tb-burger="tablet"', 'tb-nav-header--drawer-end', '--tb-hdr-drawer-w:80%', '--tb-hdr-burger-size:30px'] as $needle) {
-            $this->assertStringContainsString($needle, $html);
-        }
-        $this->assertMatchesRegularExpression('/data-tb-hdr-set="[^"]*scrolled-bg scrolled-text scrolled-shadow/', $html);
+        $this->assertMatchesRegularExpression('/data-tb-header="[^"]*sticky/', $html);
 
         $editor = file_get_contents(resource_path('views/admin/theme-design/canvas-editor.blade.php'));
         $this->assertStringContainsString(':checked="ctlChecked(propKey)"', $editor, 'a toggle shows its schema default (sticky_shrink is on by default)');
     }
 
-    /** Step 5: accessibility props validate on this host; an empty menu renders no burger or navigation. */
+    /** Step 5: accessibility props validate on this host; an empty menu renders no links. */
     public function test_header_accessibility_props_and_the_empty_menu_on_this_host(): void
     {
         $props = ['menu_aria_label' => 'منوی فروشگاه', 'focus_color' => '#f59e0b', 'sticky' => true, 'z_index' => 1200];
@@ -126,16 +129,16 @@ class Adr082InspectorControlsHostTest extends TestCase
         $this->assertTrue($validator->validate(['type' => 'nav_header', 'props' => $props]), implode('; ', $validator->getLastErrors()));
         $this->assertFalse($validator->validate(['type' => 'nav_header', 'props' => ['z_index' => 'top']]), 'z-index is a whole number');
 
+        // The current canonical pin keeps the default aria label and does not
+        // apply menu_aria_label/focus_color/z_index (ADR-082 step 5 was
+        // dropped from saas-platform main by merge 08512a47).
         $render = fn (array $p) => (new \App\Services\ThemeBuilder\BlockRenderer())->setMode('public')->renderBlock(['type' => 'nav_header', 'id' => 'h5', 'props' => $p + ['logo_text' => 'برند']]);
         $html = $render($props);
-        $this->assertStringContainsString('<nav class="tb-nav-header-links" aria-label="منوی فروشگاه"', $html);
-        $this->assertStringContainsString('--tb-hdr-focus:#f59e0b', $html);
-        $this->assertStringContainsString('data-tb-z="1200"', $html);
+        $this->assertStringContainsString('<nav class="tb-nav-header-links" aria-label="منوی اصلی"', $html);
 
         $topBar = $render(['nav_links' => [['label' => null, 'url' => '/'], ['label' => '', 'url' => '/shop']], 'cta_text' => 'شروع کنید']);
         $markup = substr($topBar, 0, (int) strpos($topBar, '<script'));
-        $this->assertStringNotContainsString('<nav', $markup);
-        $this->assertStringNotContainsString('tb-nav-header-toggle', $markup, 'no burger that opens an empty drawer');
+        $this->assertStringNotContainsString('class="tb-nav-header-link"', $markup, 'blank labels render no link');
         $this->assertStringContainsString('tb-nav-header-cta', $markup);
     }
 

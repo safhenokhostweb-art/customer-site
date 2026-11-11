@@ -54,7 +54,10 @@ class DefaultHomepageTest extends TestCase
         );
         self::assertSame(1, substr_count($html, 'data-layout-slot="header"'));
         self::assertSame(1, substr_count($html, 'data-layout-slot="footer"'));
-        self::assertStringNotContainsString('data-tb-block-id=', $html);
+        // ADR-076 made data-tb-block-id a public-runtime hook, so it is
+        // expected here; only the canvas-editor affordances must be absent.
+        self::assertStringNotContainsString('tb-drag-handle', $html);
+        self::assertStringNotContainsString('tb-block-badge', $html);
         self::assertStringContainsString('role="banner"', $html);
         self::assertStringContainsString('role="contentinfo"', $html);
     }

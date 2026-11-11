@@ -141,6 +141,14 @@ class CanonicalStructuralParityTest extends TestCase
                 }
                 $id = 'parity-' . md5($slug . $type);
 
+                // Both renderers carry per-document script gates as
+                // process-wide statics (carousel controller, countdown
+                // adapter, reference-block script), keyed by mode. Another
+                // test that rendered a carousel earlier in the suite can
+                // starve only one side, which is document state, not a
+                // structural divergence. Start each side from the same
+                // clean gate so what this test compares is the block.
+                $this->resetPerDocumentEmissionGates();
                 try {
                     $canonicalHtml = $this->canonical->dispatchStructural($type, $props, '', $id);
                 } catch (\Throwable $e) {
@@ -150,6 +158,7 @@ class CanonicalStructuralParityTest extends TestCase
                     continue; // no canonical method for this type — customer-only, not a divergence
                 }
 
+                $this->resetPerDocumentEmissionGates();
                 try {
                     $hostBlock = ['type' => $type, 'id' => $id, 'props' => $props];
                     $hostHtml = $this->invokeHostRenderBlockUnsafe($hostBlock);
@@ -159,8 +168,15 @@ class CanonicalStructuralParityTest extends TestCase
                 }
 
                 $comparedCount++;
-                if ($hostHtml !== $canonicalHtml) {
-                    $divergences[] = "{$slug}/{$type}: structural output differs between canonical and customer-site host renderer";
+                // Canonical emits some per-document assets (e.g. nav_footer's
+                // <style data-tb-block-asset>) behind a process-wide static
+                // guard, so whichever renderer runs first carries the asset
+                // tag and the second returns ''. Compare structure only.
+                $hostComparable = $this->withoutOneTimeAssets($hostHtml);
+                $canonicalComparable = $this->withoutOneTimeAssets($canonicalHtml);
+                if ($hostComparable !== $canonicalComparable) {
+                    $divergences[] = "{$slug}/{$type}: structural output differs between canonical and customer-site host renderer"
+                        . $this->firstDifference($hostComparable, $canonicalComparable);
                 }
             }
         }
@@ -169,6 +185,47 @@ class CanonicalStructuralParityTest extends TestCase
         $this->assertEmpty(
             $divergences,
             "Unexplained canonical structural divergence found (target is zero):\n" . implode("\n", $divergences)
+        );
+    }
+
+    private function withoutOneTimeAssets(string $html): string
+    {
+        return preg_replace(
+            ['/<style\s+data-tb-block-asset="[^"]*">.*?<\/style>/s', '/<script\s+data-tb-block-asset="[^"]*">.*?<\/script>/s'],
+            '',
+            $html,
+        );
+    }
+
+    /**
+     * The canonical renderer emits a few client scripts once per document
+     * through process-wide statics keyed by mode. Both sides must start
+     * from the same gate state for a single-block comparison.
+     */
+    private function resetPerDocumentEmissionGates(): void
+    {
+        CanonicalBlockRenderer::resetReferenceBlockScriptEmission();
+        CanonicalBlockRenderer::resetCountdownAdapterEmission();
+        CanonicalBlockRenderer::resetCarouselScriptEmission();
+    }
+
+    /** Context around the first differing byte, so a suite-order failure is diagnosable. */
+    private function firstDifference(string $host, string $canonical): string
+    {
+        $length = min(strlen($host), strlen($canonical));
+        $offset = 0;
+        while ($offset < $length && $host[$offset] === $canonical[$offset]) {
+            $offset++;
+        }
+        $window = 160;
+
+        return sprintf(
+            "\n  first difference at byte %d (host %d bytes, canonical %d bytes)\n  host:      %s\n  canonical: %s",
+            $offset,
+            strlen($host),
+            strlen($canonical),
+            substr($host, max(0, $offset - 40), $window),
+            substr($canonical, max(0, $offset - 40), $window),
         );
     }
 

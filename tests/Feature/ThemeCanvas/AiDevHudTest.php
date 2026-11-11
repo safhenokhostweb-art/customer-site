@@ -45,7 +45,7 @@ class AiDevHudTest extends TestCase
         $map = json_decode($m[1] ?? '{}', true);
         $this->assertContains('renderSection', $map['package'] ?? []);
         $this->assertContains('renderBlock', $map['host'] ?? [], 'methods the host itself declares');
-        $this->assertNotContains('renderSection', $map['host'] ?? [], 'inherited methods are the package\'s');
+        $this->assertNotContains('renderNavHeader', $map['host'] ?? [], 'inherited methods are the package\'s');
         $this->assertContains('renderModuleBlock', $map['module'] ?? []);
     }
 

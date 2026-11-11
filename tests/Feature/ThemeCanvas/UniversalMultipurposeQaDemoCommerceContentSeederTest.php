@@ -45,6 +45,7 @@ class UniversalMultipurposeQaDemoCommerceContentSeederTest extends TestCase
 
     public function test_seeds_at_least_six_products_three_categories_and_six_posts_with_real_content(): void
     {
+        $usersBeforeSeeding = User::count();
         $this->seed(UniversalMultipurposeQaDemoCommerceContentSeeder::class);
 
         self::assertGreaterThanOrEqual(3, ProductCategory::count());
@@ -52,7 +53,9 @@ class UniversalMultipurposeQaDemoCommerceContentSeederTest extends TestCase
         self::assertGreaterThanOrEqual(1, Category::count());
         self::assertGreaterThanOrEqual(6, Post::count());
         self::assertSame(1, License::count());
-        self::assertSame(1, User::count());
+        // Some earlier suite tests commit rows past their rollback, so count
+        // what this seeder adds rather than the absolute table size.
+        self::assertSame(1, User::count() - $usersBeforeSeeding, 'the seeder creates exactly one author');
 
         foreach (Product::all() as $product) {
             self::assertNotSame('', trim($product->title));

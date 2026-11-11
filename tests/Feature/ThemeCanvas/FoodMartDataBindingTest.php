@@ -123,7 +123,9 @@ class FoodMartDataBindingTest extends TestCase
         }
         $html = app(ThemeCanvasRenderer::class)->setContext(['theme_bindings' => $bindings])->renderBlocks($attempts);
         self::assertStringNotContainsString('Wrong Tenant Product', $html);
-        self::assertSame('', trim($html));
+        // renderBlocks() always ships its zero-gap stylesheet, even when no
+        // block survived; what must be empty is the rendered content itself.
+        self::assertSame('', trim((string) preg_replace('/<style>.*?<\/style>/s', '', $html)));
     }
 
     public function test_bound_media_paths_and_text_are_safe(): void
