@@ -163,7 +163,9 @@ jobs:
           PAYMENT_GATEWAY: ""
           EDUCATION_AI_PROVIDER: "null"
           EDUCATION_AI_QUOTA_ENABLED: "false"
-        run: php artisan test --stop-on-failure
+        # nunomaduro/collision is in composer.json's dont-discover list, so
+        # `artisan test` is not registered; call the test runner directly.
+        run: php vendor/bin/phpunit --stop-on-failure
 
       - name: Upload test results on failure
         if: failure()
