@@ -39,5 +39,19 @@
              pin them here so tests do not depend on a local .env. -->
         <env name="CRM_ROUTES_WEB" value="false"/>
         <env name="SEO_ADVANCED_ROUTES_WEB" value="false"/>
+        <!-- Same reason: a real customer install sets these in .env. Without
+             them customer media throws (no platform site) and the add-on
+             modules/layouts fall back to package defaults the install never
+             uses. -->
+        <env name="PLATFORM_SITE_ID" value="2"/>
+        <!-- Marketplace flows short-circuit to a redirect when the platform
+             is unconfigured. Tests that need it mock the HTTP layer; pinning
+             a URL/token only makes isConfigured() true. -->
+        <env name="PLATFORM_URL" value="http://platform.test"/>
+        <env name="PLATFORM_API_TOKEN" value="test-platform-token"/>
+        <env name="MODULE_ADVERTISEMENTS_ENABLED" value="true"/>
+        <env name="MODULE_FORMS_ENABLED" value="true"/>
+        <env name="CRM_LAYOUT_SITE" value="admin.layout"/>
+        <env name="SEO_ADVANCED_LAYOUT_SITE" value="admin.layout"/>
     </php>
 </phpunit>
