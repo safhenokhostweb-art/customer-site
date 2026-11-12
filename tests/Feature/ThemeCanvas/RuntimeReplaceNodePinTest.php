@@ -28,18 +28,18 @@ class RuntimeReplaceNodePinTest extends TestCase
     }
 
     /**
-     * The current canonical pin inlines the shared header sheet ahead of the
-     * root (ADR-082's external-only sheet is not in this pin), so the runtime
-     * must find the hook past that leading <style> — exactly the case the
-     * style-aware swap above exists for.
+     * saas ADR-082 step 2: a default header no longer opens with a <style>
+     * (its layout is the shared header sheet). A header with its own values
+     * (HeaderStyleVars, step 3) opens with `<style data-tb-hdr>` again, so
+     * the runtime's style-aware swap above stays the contract.
      */
-    public function test_this_host_puts_the_hook_on_the_header_root_after_the_shared_sheet(): void
+    public function test_this_host_puts_the_hook_on_the_header_root_with_or_without_a_leading_style(): void
     {
         $html = (new BlockRenderer())->setMode('editor')->setContext(['editor_mode' => true])
             ->renderBlock(['type' => 'nav_header', 'id' => 'h1', 'props' => ['logo_text' => 'برند']]);
 
-        $this->assertSame(1, substr_count($html, '<style'), 'the shared header sheet is the only style');
-        $this->assertMatchesRegularExpression('/^(<style>.*?<\/style>)?<div[^>]*\sid="tb-h1"[^>]*\sdata-tb-block-id="h1"/s', ltrim($html), 'the root after the sheet carries the hook');
+        $this->assertMatchesRegularExpression('/^<div[^>]*\sid="tb-h1"[^>]*\sdata-tb-block-id="h1"/', ltrim($html), 'a default header opens with its root, which carries the hook');
+        $this->assertStringNotContainsString('<style', $html);
 
         $scoped = \SaaSPlatform\ThemeRuntime\Widget\HeaderStyleVars::style('tb-h1', ['min-h' => 80]);
         $this->assertStringStartsWith('<style data-tb-hdr="tb-h1">#tb-h1{--tb-hdr-min-h:80px}</style>', $scoped, 'the leading style a customised header will carry');

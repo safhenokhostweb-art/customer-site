@@ -39,13 +39,17 @@ final class EntityLinkCatalog
         'course' => 'دوره‌ها',
     ];
 
-    /** Fixed destinations: id => [label, route name, module or null]. */
+    /** Fixed destinations: id => [label, route name, module or null, route parameters]. */
     private const ROUTES = [
         'home' => ['صفحه اصلی', 'home', null],
         'shop' => ['فروشگاه', 'shop.index', 'shop'],
         'blog' => ['وبلاگ', 'blog.index', 'blog'],
         'courses' => ['دوره‌ها', 'courses.index', 'courses'],
         'contact' => ['تماس با ما', 'contact.show', null],
+        // ADR-083: the library's "@link:about" goes through the dynamic page
+        // route, so it opens whichever page the site gives the slug `about`
+        // (a Canvas theme page or a CMS page), with no fixed route of its own.
+        'about' => ['درباره ما', 'page.show', null, ['slug' => 'about']],
     ];
 
     /** entity => [route that renders it, module that gates it]. */
@@ -145,7 +149,7 @@ final class EntityLinkCatalog
     {
         if ($type === 'route') {
             [, $route, $module] = self::ROUTES[$id] ?? [null, null, null];
-            return $route !== null && self::available($route, $module) ? route($route) : '';
+            return $route !== null && self::available($route, $module) ? route($route, self::ROUTES[$id][3] ?? []) : '';
         }
         if (!self::entityAvailable($type) || (!is_int($id) && !ctype_digit((string) $id))) {
             return '';

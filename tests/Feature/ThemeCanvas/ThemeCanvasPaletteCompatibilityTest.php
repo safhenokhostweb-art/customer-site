@@ -75,8 +75,10 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // 63 -> 123 non-module (+60 each). Module inventory is unchanged
         // at 35; every added type is covered by the schema/renderer
         // compatibility loops below rather than bypassing them.
-        self::assertCount(158, $registry);
-        self::assertCount(123, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
+        // ADR-083 (PLATFORM-THEME-SPEC-v1): +7 neutral commercial widgets
+        // from the package, 158 -> 165 and 123 -> 130; modules unchanged.
+        self::assertCount(165, $registry);
+        self::assertCount(130, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
         self::assertCount(35, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
         self::assertArrayNotHasKey('module:portfolio_grid', $registry);

@@ -53,6 +53,14 @@ class EntityLinkCatalogTest extends TestCase
         $this->assertSame(route('shop.index'), $this->catalog()->resolve($this->ref('route', 'shop')));
     }
 
+    public function test_the_about_destination_is_the_dynamic_page_with_the_about_slug(): void
+    {
+        // ADR-083: no fixed /about route; the slug resolver serves whatever page the site calls `about`.
+        $this->assertSame(route('page.show', ['slug' => 'about']), $this->catalog()->resolve($this->ref('route', 'about')));
+        $this->assertStringEndsWith('/page/about', $this->catalog()->resolve($this->ref('route', 'about')));
+        $this->assertContains('about', array_column(array_filter($this->catalog()->search('درباره'), fn ($r) => $r['entity'] === 'route'), 'id'));
+    }
+
     public function test_a_slug_rename_is_followed_and_unpublished_content_resolves_to_no_link(): void
     {
         $page = Page::create(['title' => 'راهنما', 'slug' => 'guide-v1', 'body' => '<p>x</p>', 'is_published' => true]);
