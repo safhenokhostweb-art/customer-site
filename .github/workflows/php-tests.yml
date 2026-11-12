@@ -43,11 +43,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: customer-composer-${{ hashFiles('customer-site/composer.lock') }}
+          # The saas-platform packages are path repositories mirrored into
+          # vendor/; their lock reference does not change with their content,
+          # so their files are part of the key.
+          key: customer-composer-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: customer-composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors
+          # (install keeps them: same lock reference). Re-mirror from the
+          # saas-platform checkout so tests run the package code of this run.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         # package:discover boots the app before any .env/testing DB exists;
         # an in-memory SQLite keeps that bootstrap independent of a DB file.
         env:
@@ -119,11 +127,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: customer-composer-${{ hashFiles('customer-site/composer.lock') }}
+          # The saas-platform packages are path repositories mirrored into
+          # vendor/; their lock reference does not change with their content,
+          # so their files are part of the key.
+          key: customer-composer-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: customer-composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors
+          # (install keeps them: same lock reference). Re-mirror from the
+          # saas-platform checkout so tests run the package code of this run.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'

@@ -159,11 +159,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
+          # saas-platform path packages are mirrored into vendor/ with a fixed
+          # lock reference, so their files are part of the key.
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors;
+          # re-mirror the saas-platform packages from this run's checkout.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         # package:discover boots the app before the copied .env exists; an
         # in-memory SQLite keeps that bootstrap independent of a DB file.
         env:
@@ -260,11 +266,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
+          # saas-platform path packages are mirrored into vendor/ with a fixed
+          # lock reference, so their files are part of the key.
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors;
+          # re-mirror the saas-platform packages from this run's checkout.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         # package:discover boots the app before the copied .env exists; an
         # in-memory SQLite keeps that bootstrap independent of a DB file.
         env:
@@ -359,11 +371,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
+          # saas-platform path packages are mirrored into vendor/ with a fixed
+          # lock reference, so their files are part of the key.
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors;
+          # re-mirror the saas-platform packages from this run's checkout.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         # package:discover boots the app before the copied .env exists; an
         # in-memory SQLite keeps that bootstrap independent of a DB file.
         env:
@@ -456,11 +474,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: customer-site/vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}
+          # saas-platform path packages are mirrored into vendor/ with a fixed
+          # lock reference, so their files are part of the key.
+          key: ${{ runner.os }}-php-${{ hashFiles('customer-site/composer.lock') }}-${{ hashFiles('saas-platform/packages/**') }}
           restore-keys: ${{ runner.os }}-php-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          # A cache restored through restore-keys can still hold stale mirrors;
+          # re-mirror the saas-platform packages from this run's checkout.
+          composer reinstall "saas-platform/*" --no-interaction --optimize-autoloader
         # package:discover boots the app before the copied .env exists; an
         # in-memory SQLite keeps that bootstrap independent of a DB file.
         env:
