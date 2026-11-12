@@ -29,7 +29,9 @@ use Tests\TestCase;
  */
 class CanonicalStructuralParityTest extends TestCase
 {
-    private const SNAPSHOT_DIR = 'storage/app';
+    // Committed fixtures, not storage/app: these are the authored theme inputs
+    // the parity contract renders, so every checkout (and CI) must have them.
+    private const SNAPSHOT_DIR = 'tests/Fixtures/theme-snapshots';
 
     private HostBlockRenderer $host;
     private CanonicalBlockRenderer $canonical;
