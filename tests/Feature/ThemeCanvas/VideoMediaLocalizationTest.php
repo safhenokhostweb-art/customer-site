@@ -7,7 +7,7 @@ use App\Models\License;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Tests\Fixtures\RealWebmFixture;
+use Tests\Support\RealWebmFixture;
 use Tests\TestCase;
 
 /**

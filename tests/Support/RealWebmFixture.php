@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Fixtures;
+namespace Tests\Support;
 
 /**
  * Commercial Productization fase-4 — a real, valid, decodable WebM
