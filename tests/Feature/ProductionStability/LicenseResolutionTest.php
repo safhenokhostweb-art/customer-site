@@ -39,6 +39,10 @@ class LicenseResolutionTest extends TestCase
         // scenario's production domain so request()->getHost() defaults to
         // customer-site.test exactly like real local usage.
         config(['app.url' => 'http://customer-site.test']);
+        // config() alone does not move an already-captured request, and a
+        // runner without .env captures "localhost". Bind the scenario's
+        // request so host-aware resolution is the same everywhere.
+        $this->app->instance('request', Request::create('http://customer-site.test'));
     }
 
     protected function tearDown(): void
