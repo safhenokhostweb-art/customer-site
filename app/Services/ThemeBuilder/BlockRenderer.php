@@ -691,6 +691,20 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
         return $this->cartTriggerHtml('tb-cart-link', $this->iconHtml('shopping-cart') . ' سبد خرید', " id=\"tb-{$id}\"");
     }
 
+    #[HostOwnedOverride(
+        reason: 'Ensures the cart trigger in customer-site always resolves to this host\'s shop.cart route (/shop/cart) instead of a 404 /cart fallback.',
+        category: HostOwnedOverride::REASON_TENANT_DATA,
+    )]
+    protected function cartTriggerHtml(string $class, string $inner, string $extraAttrs = ''): string
+    {
+        $cart = $this->cartEndpoints();
+        if ($cart === null) {
+            $fallback = \Illuminate\Support\Facades\Route::has('shop.cart') ? route('shop.cart', [], false) : '/shop/cart';
+            return "<a href=\"{$fallback}\" class=\"{$class}\"{$extraAttrs} aria-label=\"سبد خرید\">{$inner}</a>";
+        }
+        return parent::cartTriggerHtml($class, $inner, $extraAttrs);
+    }
+
 
 
 

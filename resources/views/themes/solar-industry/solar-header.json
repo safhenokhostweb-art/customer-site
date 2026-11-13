@@ -1,0 +1,474 @@
+{
+    "order": 100,
+    "name": "هدر صنعتی انرژی با مگامنوی کارتی",
+    "description": "هدر چسبان با محوشدگی پس از ۶۰ پیکسل اسکرول، نشان برند دوبخشی با شعار، منوی آیکون‌دار با افکت کپسول، مگامنوی کارتی سه‌ستونه با آیکون‌های قاب‌دار، نشان «جدید\/پرفروش» و کارت‌های پیشنهادی، جستجو، سبد خرید، حساب کاربری، دکمه‌های ورود و ثبت‌نام و کشوی موبایل؛ رنگ‌ها فقط از توکن‌های قالب.",
+    "type": "header",
+    "category": "corporate",
+    "spec": "PLATFORM-THEME-SPEC-v1",
+    "tags": [
+        "هدر",
+        "مگامنو",
+        "انرژی خورشیدی",
+        "صنعتی",
+        "تیره",
+        "صنعت برق"
+    ],
+    "blocks": [
+        {
+            "type": "nav_header",
+            "layout_slot": "header",
+            "props": {
+                "logo_text": "برند",
+                "logo_text_accent": "شما",
+                "logo_tagline": "مهندسی و خدمات انرژی",
+                "logo_icon": "sun",
+                "logo_url": "@link:home",
+                "logo_alt": "برند شما — مهندسی و خدمات انرژی",
+                "menu_align": "end",
+                "nav_source": "custom",
+                "nav_links": [
+                    {
+                        "label": "محصولات",
+                        "url": "\/page\/products",
+                        "icon": "grid-3x3",
+                        "mega_columns": [
+                            {
+                                "title": "پنل‌های خورشیدی",
+                                "items": [
+                                    {
+                                        "label": "پنل مونوکریستال",
+                                        "url": "\/page\/products",
+                                        "icon": "grid-3x3",
+                                        "badge": "جدید",
+                                        "badge_variant": "primary"
+                                    },
+                                    {
+                                        "label": "پنل پلی‌کریستال",
+                                        "url": "\/page\/products",
+                                        "icon": "layout-grid"
+                                    },
+                                    {
+                                        "label": "پنل دابل‌گلس ۷۲۰ وات",
+                                        "url": "\/page\/products",
+                                        "icon": "layers"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "اینورتر و ذخیره‌سازی",
+                                "items": [
+                                    {
+                                        "label": "اینورتر خورشیدی",
+                                        "url": "\/page\/products",
+                                        "icon": "zap"
+                                    },
+                                    {
+                                        "label": "باتری لیتیومی ۴۸V",
+                                        "url": "\/page\/products",
+                                        "icon": "battery-full",
+                                        "badge": "پرفروش",
+                                        "badge_variant": "primary"
+                                    },
+                                    {
+                                        "label": "سیستم مدیریت انرژی (EMS)",
+                                        "url": "\/page\/products",
+                                        "icon": "cpu"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "تجهیزات جانبی",
+                                "items": [
+                                    {
+                                        "label": "سازه و پایه‌های نصب",
+                                        "url": "\/page\/products",
+                                        "icon": "wrench"
+                                    },
+                                    {
+                                        "label": "کابل و کانکتور MC4",
+                                        "url": "\/page\/products",
+                                        "icon": "plug"
+                                    }
+                                ]
+                            }
+                        ],
+                        "mega_promo_cards": [
+                            {
+                                "eyebrow": "مشاهده کاتالوگ‌ها",
+                                "title": "مرکز دانلود اسناد فنی",
+                                "url": "\/page\/download-center",
+                                "icon": "arrow-left"
+                            },
+                            {
+                                "eyebrow": "فروشگاه تجهیزات",
+                                "title": "مشاهده تمامی تجهیزات",
+                                "url": "\/page\/products",
+                                "icon": "arrow-left"
+                            }
+                        ],
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "accordion"
+                    },
+                    {
+                        "label": "راهکارها",
+                        "url": "\/page\/services-overview",
+                        "icon": "lightbulb",
+                        "mega_columns": [
+                            {
+                                "title": "بر اساس کاربری",
+                                "items": [
+                                    {
+                                        "label": "راهکار مسکونی",
+                                        "url": "\/page\/residential",
+                                        "icon": "house"
+                                    },
+                                    {
+                                        "label": "راهکار تجاری",
+                                        "url": "\/page\/commercial",
+                                        "icon": "building-2"
+                                    },
+                                    {
+                                        "label": "راهکار صنعتی",
+                                        "url": "\/page\/industrial",
+                                        "icon": "factory"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "بر اساس نیاز و شبکه",
+                                "items": [
+                                    {
+                                        "label": "سیستم On-Grid (فروش برق)",
+                                        "url": "\/page\/ongrid",
+                                        "icon": "network"
+                                    },
+                                    {
+                                        "label": "سیستم Off-Grid (مستقل)",
+                                        "url": "\/page\/offgrid",
+                                        "icon": "battery-medium"
+                                    },
+                                    {
+                                        "label": "سیستم Hybrid (ترکیبی)",
+                                        "url": "\/page\/hybrid",
+                                        "icon": "battery-charging",
+                                        "badge": "پیشنهادی",
+                                        "badge_variant": "primary"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "راهکارهای تخصصی",
+                                "items": [
+                                    {
+                                        "label": "پمپاژ خورشیدی کشاورزی",
+                                        "url": "\/page\/solar-pumping",
+                                        "icon": "droplets"
+                                    },
+                                    {
+                                        "label": "برق اضطراری خورشیدی (UPS)",
+                                        "url": "\/page\/emergency-power",
+                                        "icon": "plug-zap"
+                                    },
+                                    {
+                                        "label": "ماشین‌حساب آنلاین خورشیدی",
+                                        "url": "\/page\/solar-calculator",
+                                        "icon": "calculator"
+                                    }
+                                ]
+                            }
+                        ],
+                        "mega_promo_cards": [
+                            {
+                                "eyebrow": "راهنمای انتخاب",
+                                "title": "کدام سیستم مناسب شماست؟",
+                                "url": "\/page\/best-system",
+                                "icon": "arrow-left"
+                            },
+                            {
+                                "eyebrow": "برآورد هوشمند",
+                                "title": "ماشین‌حساب آنلاین هزینه",
+                                "url": "\/page\/solar-calculator",
+                                "icon": "arrow-left"
+                            }
+                        ],
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "accordion"
+                    },
+                    {
+                        "label": "خدمات",
+                        "url": "\/page\/services-overview",
+                        "icon": "wrench",
+                        "mega_columns": [
+                            {
+                                "title": "خدمات مهندسی",
+                                "items": [
+                                    {
+                                        "label": "طراحی سیستم (PVSyst)",
+                                        "url": "\/page\/design",
+                                        "icon": "drafting-compass"
+                                    },
+                                    {
+                                        "label": "اجرا و نصب نیروگاه",
+                                        "url": "\/page\/installation",
+                                        "icon": "hammer"
+                                    },
+                                    {
+                                        "label": "نگهداری و شستشو (O&M)",
+                                        "url": "\/page\/maintenance",
+                                        "icon": "activity"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "مشاوره و پشتیبانی",
+                                "items": [
+                                    {
+                                        "label": "مشاوره تخصصی و امکان‌سنجی",
+                                        "url": "\/page\/consulting",
+                                        "icon": "message-square"
+                                    },
+                                    {
+                                        "label": "درخواست وقت مشاوره حضوری",
+                                        "url": "\/page\/expert-consultation",
+                                        "icon": "calendar"
+                                    },
+                                    {
+                                        "label": "پشتیبانی فنی و گارانتی",
+                                        "url": "\/page\/contact",
+                                        "icon": "shield-check"
+                                    }
+                                ]
+                            }
+                        ],
+                        "mega_promo_cards": [
+                            {
+                                "eyebrow": "امکان‌سنجی",
+                                "title": "مشاوره اولیه رایگان",
+                                "url": "\/page\/consulting",
+                                "icon": "arrow-left"
+                            },
+                            {
+                                "eyebrow": "رزرو جلسه",
+                                "title": "درخواست وقت مشاوره",
+                                "url": "\/page\/expert-consultation",
+                                "icon": "arrow-left"
+                            }
+                        ],
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "accordion"
+                    },
+                    {
+                        "label": "پروژه‌ها",
+                        "url": "\/page\/projects",
+                        "icon": "folder-git-2",
+                        "mega_columns": [
+                            {
+                                "title": "نیروگاه‌های شاخص",
+                                "items": [
+                                    {
+                                        "label": "نیروگاه ۲۰ کیلووات هیبریدی",
+                                        "url": "\/page\/projects",
+                                        "icon": "zap",
+                                        "badge": "ویژه",
+                                        "badge_variant": "primary"
+                                    },
+                                    {
+                                        "label": "نیروگاه ۱۵ کیلووات تجاری",
+                                        "url": "\/page\/projects",
+                                        "icon": "building"
+                                    },
+                                    {
+                                        "label": "نیروگاه ۱۲ کیلووات مسکونی",
+                                        "url": "\/page\/projects",
+                                        "icon": "home"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "دسته‌بندی‌ها",
+                                "items": [
+                                    {
+                                        "label": "پروژه‌های متصل به شبکه (On-Grid)",
+                                        "url": "\/page\/projects",
+                                        "icon": "network"
+                                    },
+                                    {
+                                        "label": "پروژه‌های مستقل (Off-Grid)",
+                                        "url": "\/page\/projects",
+                                        "icon": "battery"
+                                    },
+                                    {
+                                        "label": "پروژه‌های پمپاژ کشاورزی",
+                                        "url": "\/page\/projects",
+                                        "icon": "droplet"
+                                    }
+                                ]
+                            }
+                        ],
+                        "mega_promo_cards": [
+                            {
+                                "eyebrow": "آرشیو تصاویر",
+                                "title": "مشاهده تمامی پروژه‌ها",
+                                "url": "\/page\/projects",
+                                "icon": "arrow-left"
+                            }
+                        ],
+                        "mega_show_desktop": true,
+                        "mega_mobile_behavior": "accordion"
+                    },
+                    {
+                        "label": "آکادمی",
+                        "url": "\/page\/courses",
+                        "icon": "graduation-cap"
+                    },
+                    {
+                        "label": "درباره ما",
+                        "url": "\/page\/about",
+                        "icon": "building"
+                    },
+                    {
+                        "label": "تماس با ما",
+                        "url": "\/page\/contact",
+                        "icon": "phone"
+                    }
+                ],
+                "show_search": true,
+                "search_mode": "icon",
+                "search_placeholder": "جستجو در سایت…",
+                "search_scope": "all",
+                "show_cart": true,
+                "show_account": true,
+                "show_dark_toggle": false,
+                "cta2_text": "ورود",
+                "cta2_url": "@link:login",
+                "cta2_icon": "log-in",
+                "cta2_style": "outline",
+                "cta_text": "ثبت‌نام",
+                "cta_url": "@link:register",
+                "cta_icon": "user-plus",
+                "cta_style": "primary",
+                "header_order": [
+                    "logo",
+                    "menu",
+                    "search",
+                    "cart",
+                    "account",
+                    "cta",
+                    "social",
+                    "phone",
+                    "dark_toggle",
+                    "burger"
+                ],
+                "sticky": true,
+                "sticky_hide_on_scroll": false,
+                "sticky_devices": "all",
+                "scroll_threshold": 60,
+                "sticky_shrink": true,
+                "sticky_shrink_height": 65,
+                "scrolled_bg_color": "color-mix(in srgb, var(--tb-background) 97%, transparent)",
+                "scrolled_text_color": "var(--tb-text)",
+                "scrolled_shadow": {
+                    "x": 0,
+                    "y": 10,
+                    "blur": 32,
+                    "spread": 0,
+                    "color": "color-mix(in srgb, var(--tb-background) 45%, transparent)"
+                },
+                "transparent_over_hero": false,
+                "burger_breakpoint": "tablet",
+                "drawer_style": "side",
+                "drawer_side": "start",
+                "drawer_show_logo": true,
+                "drawer_show_search": true,
+                "drawer_show_ctas": true,
+                "compact_below": "1280",
+                "menu_aria_label": "منوی اصلی",
+                "focus_color": "var(--tb-primary)",
+                "bg_color": "color-mix(in srgb, var(--tb-background) 92%, transparent)",
+                "text_color": "var(--tb-text)",
+                "min_height": 77,
+                "min_height_mobile": 60,
+                "padding": {
+                    "block-start": 0,
+                    "block-end": 0,
+                    "inline-start": 24,
+                    "inline-end": 24,
+                    "unit": "px"
+                },
+                "padding_mobile": {
+                    "block-start": 0,
+                    "block-end": 0,
+                    "inline-start": 16,
+                    "inline-end": 16,
+                    "unit": "px"
+                },
+                "items_gap": 14,
+                "content_width": "boxed",
+                "content_max_width": 1380,
+                "border_bottom_width": 1,
+                "border_bottom_color": "var(--tb-border)",
+                "backdrop_blur": 14,
+                "menu_typography": {
+                    "size": 13.5,
+                    "weight": 500
+                },
+                "menu_gap": 2,
+                "menu_item_padding_x": 8,
+                "menu_item_padding_y": 9,
+                "menu_color": "var(--tb-text)",
+                "menu_color_hover": "var(--tb-text)",
+                "menu_color_active": "var(--tb-primary)",
+                "menu_bg_hover": "color-mix(in srgb, var(--tb-primary) 12%, transparent)",
+                "pointer": "pill",
+                "menu_item_radius": 8,
+                "menu_border_hover": "color-mix(in srgb, var(--tb-primary) 20%, transparent)",
+                "menu_icon_size": 15,
+                "menu_icon_color": "color-mix(in srgb, var(--tb-text) 82%, transparent)",
+                "mega_layout": "card",
+                "mega_max_width": 920,
+                "mega_radius": 16,
+                "mega_offset": 4,
+                "mega_padding": 28,
+                "mega_bg": "var(--tb-surface)",
+                "mega_border_color": "var(--tb-border)",
+                "mega_shadow": {
+                    "x": 0,
+                    "y": 24,
+                    "blur": 64,
+                    "spread": 0,
+                    "color": "color-mix(in srgb, var(--tb-background) 72%, transparent)"
+                },
+                "mega_col_title_color": "var(--tb-primary)",
+                "mega_col_title_divider": true,
+                "mega_link_color": "var(--tb-text)",
+                "mega_link_bg_hover": "color-mix(in srgb, var(--tb-text) 5%, transparent)",
+                "mega_icon_style": "boxed",
+                "mega_icon_box_size": 42,
+                "mega_icon_box_radius": 10,
+                "mega_icon_box_bg": "color-mix(in srgb, var(--tb-text) 4%, transparent)",
+                "mega_icon_box_border": "var(--tb-border)",
+                "mega_icon_color": "var(--tb-primary)",
+                "logo_icon_size": 34,
+                "logo_icon_color": "var(--tb-primary)",
+                "logo_accent_color": "var(--tb-primary)",
+                "logo_tagline_color": "var(--tb-text-muted)",
+                "action_icon_bg": "var(--tb-surface)",
+                "action_icon_bg_hover": "color-mix(in srgb, var(--tb-primary) 12%, transparent)",
+                "action_icon_border": "var(--tb-border)",
+                "action_icon_color": "var(--tb-primary)",
+                "action_icon_radius": 10,
+                "cta_radius": 10,
+                "cta_font_size": 13.5,
+                "drawer_bg": "var(--tb-surface)",
+                "drawer_text": "var(--tb-text)",
+                "drawer_divider_color": "var(--tb-border)",
+                "drawer_width": {
+                    "size": 340,
+                    "unit": "px"
+                },
+                "drawer_overlay_color": "color-mix(in srgb, var(--tb-background) 68%, transparent)",
+                "burger_color": "var(--tb-text)"
+            }
+        }
+    ]
+}

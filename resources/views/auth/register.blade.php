@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="auth-login-card">
-    <h1>ساخت حساب کاربری</h1>
-    <p class="auth-login-lead">اطلاعات زیر را پر کنید تا وارد پنل کاربری شوید.</p>
+    <h1>ثبت‌نام در پنل</h1>
+    <p class="auth-login-lead">حساب کاربری جدید خود را ایجاد کنید.</p>
 
     @if ($errors->any())
         <div class="alert alert-danger text-sm">
@@ -13,59 +13,37 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-4">
+    <form method="POST" action="{{ route('register', [], false) }}" class="space-y-4">
         @csrf
 
         <div>
-            <label class="form-label" for="reg-name">نام و نام‌خانوادگی <span style="color:#ef4444">*</span></label>
-            <input id="reg-name" type="text" name="name" value="{{ old('name') }}"
-                   placeholder="مثال: علی رضایی"
-                   class="form-control" required autocomplete="name">
+            <label class="form-label" for="register-name">نام و نام خانوادگی</label>
+            <input id="register-name" type="text" name="name" value="{{ old('name') }}" placeholder="مثال: علی محمدی" class="form-control" required dir="rtl" autocomplete="name">
         </div>
 
         <div>
-            <label class="form-label" for="reg-mobile">شماره موبایل <span style="color:#ef4444">*</span></label>
-            <input id="reg-mobile" type="text" name="mobile" value="{{ old('mobile') }}"
-                   placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹"
-                   class="form-control" required dir="rtl" autocomplete="tel"
-                   inputmode="numeric">
-        </div>
-
-
-        <div>
-            <label class="form-label" for="reg-password">رمز عبور <span style="color:#ef4444">*</span></label>
-            <input id="reg-password" type="password" name="password"
-                   placeholder="حداقل ۶ کاراکتر"
-                   class="form-control" required dir="rtl" autocomplete="new-password">
+            <label class="form-label" for="register-mobile">شماره موبایل</label>
+            <input id="register-mobile" type="text" name="mobile" value="{{ old('mobile') }}" placeholder="مثال: ۰۹۱۲۳۴۵۶۷۸۹" class="form-control" required dir="rtl" autocomplete="tel">
         </div>
 
         <div>
-            <label class="form-label" for="reg-password-confirm">تکرار رمز عبور <span style="color:#ef4444">*</span></label>
-            <input id="reg-password-confirm" type="password" name="password_confirmation"
-                   placeholder="رمز عبور را تکرار کنید"
-                   class="form-control" required dir="rtl" autocomplete="new-password">
+            <label class="form-label" for="register-password">رمز عبور</label>
+            <input id="register-password" type="password" name="password" placeholder="حداقل ۸ کاراکتر" class="form-control" required dir="rtl" autocomplete="new-password">
         </div>
 
-        {{-- فیلد مخفی کد دعوت --}}
-        <input type="hidden" name="ref_code" value="{{ old('ref_code', $refCode ?? '') }}">
-
-        @if(!empty($refCode ?? ''))
-        <div style="display:flex;align-items:center;gap:.5rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.625rem;padding:.625rem 1rem;font-size:.8rem;color:#166534">
-            <x-core-ui::icon name="check-circle" style="width:16px;height:16px" />
-            کد دعوت فعال است — پس از اشتراک اول، هر دو طرف پاداش می‌گیرید!
+        <div>
+            <label class="form-label" for="register-password-confirm">تکرار رمز عبور</label>
+            <input id="register-password-confirm" type="password" name="password_confirmation" placeholder="تکرار رمز عبور" class="form-control" required dir="rtl" autocomplete="new-password">
         </div>
-        @endif
 
-        <button type="submit" class="btn btn-primary w-full" style="margin-top:1.25rem">
-            ساخت حساب و ورود
-        </button>
+        @include('partials.auth-captcha')
+
+        <button type="submit" class="btn btn-primary w-full">ثبت‌نام و ایجاد حساب</button>
     </form>
 </div>
 
 <div class="auth-login-footer-text">
-    قبلاً ثبت‌نام کرده‌اید؟
-    <a href="{{ route('login') }}">ورود به حساب</a>
+    قبلاً حساب کاربری داشته‌اید؟
+    <a href="{{ route('login') }}">ورود به پنل</a>
 </div>
 @endsection
-
-
