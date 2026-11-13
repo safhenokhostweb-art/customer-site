@@ -50,6 +50,7 @@ final class EntityLinkCatalog
         // route, so it opens whichever page the site gives the slug `about`
         // (a Canvas theme page or a CMS page), with no fixed route of its own.
         'about' => ['درباره ما', 'page.show', null, ['slug' => 'about']],
+        'projects' => ['پروژه‌ها', 'page.show', null, ['slug' => 'projects']],
     ];
 
     /** entity => [route that renders it, module that gates it]. */
