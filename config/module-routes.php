@@ -34,6 +34,12 @@ return [
         'admin.currency-reform.*',
     ],
 
+    'solar_calculator' => [
+        'solar-calculator.*',
+        'admin.solar-calculator.*',
+        'admin.exchange-rates.*',
+    ],
+
     'advertisements' => [
         'admin.advertisements.*',
     ],

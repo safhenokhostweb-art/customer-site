@@ -110,6 +110,14 @@ return [
             'default' => false,
             'enabled' => env('MODULE_CURRENCY_REFORM_ENABLED', false),
         ],
+        // Site-specific module: entitlement comes from the license; the env
+        // flag only matters on the owner site (SiteHelper::moduleEnabled).
+        'solar_calculator' => [
+            'name' => 'ماشین‌حساب خورشیدی',
+            'env' => 'MODULE_SOLAR_CALCULATOR_ENABLED',
+            'default' => false,
+            'enabled' => env('MODULE_SOLAR_CALCULATOR_ENABLED', false),
+        ],
         'menu' => [
             'name' => 'منو و ناوبری',
             'env' => 'MODULE_MENU_ENABLED',

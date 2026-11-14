@@ -68,6 +68,8 @@ class AdminMenu
         'crm'             => 'مخاطبین و CRM',
         'inventory'       => 'انبار و موجودی',
         'seo_advanced'    => 'سئو پیشرفته',
+        // Site-specific module (license key solar_calculator).
+        'solar_calculator' => 'ماشین‌حساب خورشیدی',
     ];
 
     /** عناوین ماژول‌های پلتفرم که در منو به‌صورت پویا می‌آیند (slug => عنوان فارسی) */
@@ -180,6 +182,7 @@ class AdminMenu
         'builder_health' => 'admin.builder-health.index',
         'settings' => 'admin.settings.index',
         'currency_reform' => 'admin.currency-reform.index',
+        'solar_calculator' => 'admin.solar-calculator.leads.index',
         'license' => 'admin.license.index',
         'modules' => 'admin.modules.index',
         'modules_changelog' => 'admin.modules.changelog',
@@ -292,6 +295,7 @@ class AdminMenu
         'builder_health' => 'admin.builder-health.*',
         'settings' => 'admin.settings.*',
         'currency_reform' => 'admin.currency-reform.*',
+        'solar_calculator' => 'admin.solar-calculator.*',
         'license' => 'admin.license.*',
         'modules' => 'admin.modules.*',
         'modules_changelog' => 'admin.modules.changelog',
@@ -415,7 +419,7 @@ class AdminMenu
             'مارکتینگ' => ['sms', 'sms_campaigns', 'whatsapp', 'notifications', 'forms', 'forms_submissions', 'referral', 'advertisements', 'access_lists'],
 
             // 8 ─ کسب‌وکار: آمار (اول)، CRM، نظرات، سئو، شبکه‌های اجتماعی، کارت ویزیت
-            'کسب‌وکار' => ['analytics_local', 'crm', 'reviews', 'seo_advanced', 'social_links', 'business_card'],
+            'کسب‌وکار' => ['analytics_local', 'crm', 'solar_calculator', 'reviews', 'seo_advanced', 'social_links', 'business_card'],
 
             // 10 ─ تنظیمات و امنیت: تنظیمات (اول)، کپچا، حذف صفر
             'تنظیمات' => ['settings', 'captcha', 'currency_reform'],
@@ -646,6 +650,9 @@ class AdminMenu
         }
         if ($key === 'currency_reform') {
             return SiteHelper::moduleEnabled('currency_reform');
+        }
+        if ($key === 'solar_calculator') {
+            return SiteHelper::moduleEnabled('solar_calculator');
         }
         if ($key === 'advertisements') {
             return SiteHelper::moduleEnabled('advertisements');

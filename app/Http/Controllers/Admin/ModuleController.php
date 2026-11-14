@@ -340,6 +340,7 @@ class ModuleController extends Controller
             'menu' => 'منو و ناوبری',
             'advanced_search' => 'جستجوی پیشرفته',
             'currency_reform' => 'حذف ۴ صفر پول ملی',
+            'solar_calculator' => 'ماشین‌حساب خورشیدی',
             'coupon' => 'کوپن تخفیف',
             'reviews' => 'نظرات',
             'referral' => 'معرفی دوستان',
