@@ -403,6 +403,13 @@ class ThemeDesignController extends Controller
             ],
         ];
         $byCategory[BlockRegistry::CATEGORY_LAYOUT]['column'] = $registry['column'];
+        // Host-only module widget, offered only on a site licensed for it
+        // (same reason as `column`: not part of the canonical registry).
+        if (\App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::available()) {
+            $solarType = \App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::TYPE;
+            $registry[$solarType] = \App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::definition();
+            $byCategory[BlockRegistry::CATEGORY_MODULE][$solarType] = $registry[$solarType];
+        }
         $modulePresentations = $this->presentationCapabilities->availableFor($themeData);
 
         $gs = $themeData['global_styles'] ?? [];

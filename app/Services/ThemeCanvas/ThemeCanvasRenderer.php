@@ -192,6 +192,12 @@ class ThemeCanvasRenderer extends BlockRenderer
             $type === 'module:site_search'
                 => $this->renderModuleSiteSearch($props, $id),
 
+            // Host-only, license-gated (SolarCalculatorWidget renders ''
+            // on a site without `solar_calculator`).
+            $type === \App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::TYPE
+                => app(\App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::class)
+                    ->render($props, $id, $this->mode === 'editor' && ($this->context['editor_mode'] ?? false)),
+
             default => $this->renderModuleGenericPlaceholder($type, $props, $id),
         };
     }
