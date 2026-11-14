@@ -152,6 +152,66 @@ class MotionPickerTest extends TestCase
         $this->assertStringContainsString('medical-hero-intro/v1/a.svg', $assets[0]['thumbnail']);
     }
 
+    // ── saas-platform ADR-086: category, version, instant availability ───
+
+    public function test_the_picker_carries_category_label_and_version_of_each_motion(): void
+    {
+        $this->fakeManifest([[
+            'asset_id' => 'f0c6a1b2-1111-4c09-8bc2-35e7bb061ae7', 'published_version' => 1, 'version_label' => '1.0.0',
+            'build_id' => 'abcdef012345', 'checksum' => str_repeat('b', 64), 'asset_type' => 'svg',
+            'optimized_reference' => '/motion/private/solar-motion-graphic/v1/7/1764000000/'.str_repeat('c', 64).'/animation.svg',
+            'name' => 'موشن نیروگاه خورشیدی', 'category' => 'solar-motion', 'category_label' => 'موشن صنعت برق و انرژی',
+        ]]);
+
+        $asset = $this->actingAs($this->admin())->getJson(route('admin.theme-design.canvas-motion-assets'))
+            ->assertOk()->json('assets.0');
+
+        $this->assertSame('solar-motion', $asset['category']);
+        $this->assertSame('موشن صنعت برق و انرژی', $asset['category_label']);
+        $this->assertSame(1, $asset['version']);
+        $this->assertSame('1.0.0', $asset['version_label']);
+        $this->assertStringContainsString('/motion/private/solar-motion-graphic/v1/7/', $asset['thumbnail']);
+    }
+
+    public function test_each_picker_request_reflects_the_platform_at_once_not_the_cache(): void
+    {
+        $asset = fn (string $id): array => [
+            'asset_id' => $id, 'published_version' => 1, 'checksum' => str_repeat('b', 64),
+            'asset_type' => 'svg', 'optimized_reference' => '/motion/'.$id.'/v1/animation.svg',
+        ];
+        $manifest = fn (array $assets): array => [
+            'available' => true, 'schema_version' => '1.0', 'site_reference' => 'site-1',
+            'manifest_checksum' => str_repeat('a', 64), 'assets' => $assets,
+        ];
+        Http::fake(['platform.example/api/motion-runtime/manifest*' => Http::sequence()
+            ->push($manifest([$asset('hero-motion')]))
+            ->push($manifest([$asset('hero-motion'), $asset('solar-motion-graphic')]))   // granted
+            ->push($manifest([$asset('solar-motion-graphic')]))]);                        // hero switched off
+
+        $admin = $this->admin();
+        $ids = fn () => array_column($this->actingAs($admin)->getJson(route('admin.theme-design.canvas-motion-assets'))->assertOk()->json('assets'), 'asset_id');
+
+        $this->assertSame(['hero-motion'], $ids());
+        $this->assertSame(['hero-motion', 'solar-motion-graphic'], $ids());
+        $this->assertSame(['solar-motion-graphic'], $ids());
+        // The public runtime's cached copy followed the last answer.
+        $this->assertSame(['solar-motion-graphic'], array_column(Cache::get('motion.runtime.manifest')['assets'], 'asset_id'));
+    }
+
+    public function test_the_editor_groups_the_picker_by_category_and_refetches_on_open(): void
+    {
+        $this->fakeManifest([]);
+        Setting::set('active_canvas_theme_data', json_encode(['header_blocks' => [], 'footer_blocks' => [], 'global_styles' => [], 'pages' => [
+            'home' => ['slug' => '', 'title' => 'صفحه اصلی', 'blocks' => []],
+        ]], JSON_UNESCAPED_UNICODE), 'theme');
+
+        $this->actingAs($this->admin())->get(route('admin.theme-design.canvas-edit'))
+            ->assertOk()
+            ->assertSee('motionAssetGroups()', false)
+            ->assertSee("'tb-motion-group-' + group.key", false)
+            ->assertSee("'tb-motion-version-' + asset.asset_id", false);
+    }
+
     // ── #4 unpublished assets never appear ──────────────────────────────
 
     public function test_motion_assets_endpoint_is_empty_when_manifest_has_no_assets(): void

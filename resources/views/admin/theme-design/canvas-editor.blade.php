@@ -1312,7 +1312,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                                     <p class="text-xs font-semibold text-slate-700 truncate" x-text="motionAssetById(selectedBlock.props[propKey])?.name || selectedBlock.props[propKey]"></p>
                                                     <p class="text-[11px] truncate" :class="motionAvailability(selectedBlock.props[propKey]) === 'available' ? 'text-slate-400' : 'text-amber-600'"
                                                        :data-testid="'tb-motion-status-' + propKey"
-                                                       x-text="motionAvailabilityNotice(selectedBlock.props[propKey]) || motionAssetById(selectedBlock.props[propKey])?.category || 'در دسترس این سایت'"></p>
+                                                       x-text="motionAvailabilityNotice(selectedBlock.props[propKey]) || motionSummaryText(motionAssetById(selectedBlock.props[propKey])) || 'در دسترس این سایت'"></p>
                                                 </div>
                                                 <button @click="clearMotionSelect(propKey)" title="حذف انتخاب" class="text-slate-400 hover:text-red-500 text-sm px-1">×</button>
                                             </div>
@@ -2074,22 +2074,34 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 <div x-show="!motionModal.loading && motionModal.assets.length === 0" class="text-center py-10 text-slate-400 text-sm">
                     هنوز هیچ موشنی برای این سایت فعال نشده است.
                 </div>
-                <div x-show="!motionModal.loading" class="grid grid-cols-2 gap-3">
-                    <template x-for="asset in motionModal.assets" :key="asset.asset_id">
-                        <div class="relative group rounded-xl overflow-hidden border-2 cursor-pointer transition p-3 flex items-center gap-3"
-                             :class="motionModal.selected === asset.asset_id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'"
-                             @click="motionModal.selected = (motionModal.selected === asset.asset_id ? null : asset.asset_id)" :data-testid="'tb-motion-asset-' + asset.asset_id">
-                            <template x-if="asset.thumbnail">
-                                <img :src="asset.thumbnail" class="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200 shrink-0">
-                            </template>
-                            <template x-if="!asset.thumbnail">
-                                <span class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-400 text-lg shrink-0">🎬</span>
-                            </template>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-slate-800 truncate" x-text="asset.name || asset.asset_id"></p>
-                                <p class="text-xs text-slate-400 truncate" x-text="(asset.category ? asset.category + ' · ' : '') + (asset.type || '')"></p>
+                {{-- saas-platform ADR-086: grouped under each motion's category,
+                     with the release the site receives. --}}
+                <div x-show="!motionModal.loading" class="space-y-4">
+                    <template x-for="group in motionAssetGroups()" :key="group.key">
+                        <section :data-testid="'tb-motion-group-' + group.key">
+                            <h4 class="text-xs font-bold text-slate-500 mb-2" x-text="group.label"></h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <template x-for="asset in group.assets" :key="asset.asset_id">
+                                    <div class="relative group rounded-xl overflow-hidden border-2 cursor-pointer transition p-3 flex items-center gap-3"
+                                         :class="motionModal.selected === asset.asset_id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'"
+                                         @click="motionModal.selected = (motionModal.selected === asset.asset_id ? null : asset.asset_id)" :data-testid="'tb-motion-asset-' + asset.asset_id">
+                                        <template x-if="asset.thumbnail">
+                                            <img :src="asset.thumbnail" alt="" class="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200 shrink-0">
+                                        </template>
+                                        <template x-if="!asset.thumbnail">
+                                            <span class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-400 text-lg shrink-0">🎬</span>
+                                        </template>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-slate-800 truncate" x-text="asset.name || asset.asset_id"></p>
+                                            <p class="text-xs text-slate-400 truncate">
+                                                <span x-text="motionVersionText(asset)" dir="ltr" :data-testid="'tb-motion-version-' + asset.asset_id"></span>
+                                                <span x-show="asset.type" x-text="' · ' + (asset.type || '')"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
-                        </div>
+                        </section>
                     </template>
                 </div>
             </div>
@@ -3677,18 +3689,49 @@ function canvasEditor() {
             this.motionModal.propKey  = propKey;
             this.motionModal.selected = this.selectedBlock?.props?.[propKey] || null;
             this.motionModal.open     = true;
-            if (!this.motionModal.loaded) this.fetchMotionAssets();
+            // saas-platform ADR-086: every open asks the platform again, so a
+            // motion an admin switched off disappears and a newly granted one
+            // appears without reloading the editor. The current list stays on
+            // screen while the refresh runs.
+            this.fetchMotionAssets();
+        },
+
+        // Picker groups, in the order the platform sent the assets; one group
+        // per category, labelled with its display name.
+        motionAssetGroups() {
+            const groups = [];
+            const byKey = {};
+            for (const asset of this.motionModal.assets) {
+                const key = asset.category || 'other';
+                if (!byKey[key]) {
+                    byKey[key] = { key, label: asset.category_label || asset.category || 'سایر موشن‌ها', assets: [] };
+                    groups.push(byKey[key]);
+                }
+                byKey[key].assets.push(asset);
+            }
+            return groups;
+        },
+
+        motionVersionText(asset) {
+            if (!asset) return '';
+            if (asset.version_label) return asset.version_label;
+            return asset.version ? 'v' + asset.version : '';
+        },
+
+        motionSummaryText(asset) {
+            if (!asset) return '';
+            return [asset.category_label || asset.category, this.motionVersionText(asset)].filter(Boolean).join(' · ');
         },
 
         async fetchMotionAssets() {
-            this.motionModal.loading = true;
+            this.motionModal.loading = !this.motionModal.loaded;
             try {
                 const r = await fetch(ROUTES.motionAssets, { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN } });
                 const d = await r.json();
                 this.motionModal.assets = d.assets ?? [];
                 this.motionModal.locked = d.locked ?? [];
                 this.motionModal.loaded = true;
-            } catch (_) { this.motionModal.assets = []; this.motionModal.locked = []; }
+            } catch (_) { if (!this.motionModal.loaded) { this.motionModal.assets = []; this.motionModal.locked = []; } }
             finally { this.motionModal.loading = false; }
         },
 

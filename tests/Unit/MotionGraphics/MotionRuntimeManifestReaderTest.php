@@ -190,4 +190,75 @@ class MotionRuntimeManifestReaderTest extends TestCase
 
         $this->assertNotSame($first['manifest_checksum'], $second['manifest_checksum']);
     }
+
+    // ── saas-platform ADR-086: release identifiers + instant refresh ─────
+
+    public function test_version_label_build_id_and_category_label_pass_only_when_well_formed(): void
+    {
+        $payload = $this->validManifestPayload();
+        $payload['assets'][0] += ['version_label' => '1.0.0', 'build_id' => 'abcdef012345', 'category_label' => 'موشن صنعت برق و انرژی'];
+        $payload['assets'][] = [...$payload['assets'][0], 'asset_id' => 'motion-2',
+            'version_label' => '<script>', 'build_id' => 'XYZ', 'category_label' => '<b>x</b>'];
+        Http::fake(['*' => Http::response($payload)]);
+
+        $manifest = $this->reader()->readFresh();
+
+        $this->assertNotNull($manifest, 'a malformed display field never rejects the manifest');
+        $this->assertSame('1.0.0', $manifest['assets'][0]['version_label']);
+        $this->assertSame('abcdef012345', $manifest['assets'][0]['build_id']);
+        $this->assertSame('موشن صنعت برق و انرژی', $manifest['assets'][0]['category_label']);
+        $this->assertNull($manifest['assets'][1]['version_label']);
+        $this->assertNull($manifest['assets'][1]['build_id']);
+        $this->assertNull($manifest['assets'][1]['category_label']);
+    }
+
+    public function test_a_platform_that_predates_the_fields_yields_nulls(): void
+    {
+        Http::fake(['*' => Http::response($this->validManifestPayload())]);
+
+        $asset = $this->reader()->readFresh()['assets'][0];
+
+        $this->assertNull($asset['version_label']);
+        $this->assertNull($asset['build_id']);
+        $this->assertNull($asset['category_label']);
+    }
+
+    public function test_refresh_replaces_the_cached_manifest_with_the_platform_answer(): void
+    {
+        $two = $this->validManifestPayload();
+        $two['assets'][] = [...$two['assets'][0], 'asset_id' => 'motion-2'];
+        Http::fakeSequence()
+            ->push($two)
+            ->push($this->validManifestPayload());
+
+        $this->assertCount(2, $this->reader()->read()['assets']);
+
+        // An admin switched motion-2 off: the refresh sees it at once and the
+        // cached copy (what the public runtime reads) follows.
+        $this->assertCount(1, $this->reader()->refresh()['assets']);
+        $this->assertCount(1, $this->reader()->read()['assets']);
+    }
+
+    public function test_refresh_clears_the_cache_when_the_platform_says_unavailable(): void
+    {
+        Http::fakeSequence()
+            ->push($this->validManifestPayload())
+            ->push(['available' => false, 'reason' => 'no_active_package']);
+
+        $this->assertNotNull($this->reader()->read());
+        $this->assertNull($this->reader()->refresh());
+        $this->assertNull(Cache::get('motion.runtime.manifest'));
+    }
+
+    public function test_refresh_keeps_the_last_good_manifest_when_the_platform_is_unreachable_or_invalid(): void
+    {
+        Http::fakeSequence()
+            ->push($this->validManifestPayload())
+            ->push('upstream error', 502)
+            ->push(['available' => true, 'schema_version' => '9.9']);
+
+        $this->assertNotNull($this->reader()->read());
+        $this->assertCount(1, $this->reader()->refresh()['assets'], 'a 5xx keeps the cached copy');
+        $this->assertCount(1, $this->reader()->refresh()['assets'], 'an invalid answer keeps the cached copy');
+    }
 }

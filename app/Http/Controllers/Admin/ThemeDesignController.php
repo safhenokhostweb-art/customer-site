@@ -806,11 +806,18 @@ class ThemeDesignController extends Controller
      */
     public function canvasMotionAssets(MotionRuntimeManifestReader $reader): JsonResponse
     {
-        $manifest = $reader->read();
+        // saas-platform ADR-086: the platform's current answer, not the
+        // cached one, so an admin's switch or grant shows up on the next
+        // picker open (refresh() keeps the cached copy if the platform is
+        // unreachable).
+        $manifest = $reader->refresh();
         $assets = collect($manifest['assets'] ?? [])->map(fn(array $a): array => [
             'asset_id' => $a['asset_id'] ?? null,
             'name'     => $a['name'] ?? null,
             'category' => $a['category'] ?? null,
+            'category_label' => $a['category_label'] ?? null,
+            'version'  => $a['published_version'] ?? null,
+            'version_label' => $a['version_label'] ?? null,
             'type'     => $a['asset_type'] ?? null,
             'thumbnail' => $a['full_reference'] ?? null,
             // ADR-079: the inspector builds this asset's controls from these

@@ -35,6 +35,9 @@ final class MotionRuntimeManifestReader
     private const ASSET_ID_PATTERN = '/^[a-z0-9-]+$/';
     private const CHECKSUM_PATTERN = '/^[a-f0-9]{64}$/';
     private const LOCK_REASONS = ['premium_license_required'];
+    /** saas-platform ADR-086: `v2`, `1.2.0`, `1.2.0-rc.1`, `2.1.0+build.7`. */
+    private const VERSION_LABEL_PATTERN = '/^v?[0-9]{1,4}(\.[0-9]{1,4}){0,2}([-+][0-9A-Za-z.]{1,16})?$/';
+    private const BUILD_ID_PATTERN = '/^[a-f0-9]{12}$/';
     private const KNOWN_ASSET_TYPES =['lottie', 'svg', 'html', 'canvas', 'web-component', 'motion-json'];
 
     public function __construct(
@@ -55,12 +58,46 @@ final class MotionRuntimeManifestReader
         return $this->fetchAndValidate();
     }
 
+    /**
+     * saas-platform ADR-086: the platform's current answer, written back to
+     * the cache so the public runtime follows at once. Used by the canvas
+     * editor's motion picker, so a motion an admin switched off, a grant
+     * that was revoked or a private motion that was just granted shows (or
+     * disappears) the moment the picker opens, not one cache TTL later.
+     *
+     * Only an actual platform answer replaces the cache. When the platform
+     * cannot be reached, or answers with something invalid, the last good
+     * cached copy is kept and returned, so a network blip never empties the
+     * picker or the live site.
+     */
+    public function refresh(): ?array
+    {
+        [$answered, $manifest] = $this->fetch();
+        if (! $answered) {
+            return $this->read();
+        }
+
+        $manifest === null ? $this->cache->forget() : $this->cache->put($manifest);
+
+        return $manifest;
+    }
+
     private function fetchAndValidate(): ?array
+    {
+        return $this->fetch()[1];
+    }
+
+    /**
+     * @return array{0: bool, 1: array<string, mixed>|null} whether the
+     *   platform gave a definitive answer, and the validated manifest (null
+     *   when the site has none)
+     */
+    private function fetch(): array
     {
         $license = License::current();
         $platform = rtrim((string) config('site.platform_url'), '/');
         if (! $license?->license_key || $platform === '') {
-            return null;
+            return [true, null];
         }
 
         try {
@@ -68,21 +105,24 @@ final class MotionRuntimeManifestReader
                 ->get($platform.'/api/motion-runtime/manifest', ['domain' => $license->domain ?: request()->getHost()]);
         } catch (\Throwable $e) {
             Log::warning('motion_runtime.fetch_failed', ['message' => $e->getMessage()]);
-            return null;
+            return [false, null];
         }
 
         if (! $response->successful()) {
-            return null;
+            return [false, null];
         }
 
         $manifest = $response->json();
-        if (! is_array($manifest) || ($manifest['available'] ?? false) !== true) {
-            return null;
+        if (! is_array($manifest)) {
+            return [false, null];
+        }
+        if (($manifest['available'] ?? false) !== true) {
+            return [true, null];
         }
 
         if (! $this->isStructurallyValid($manifest)) {
             Log::warning('motion_runtime.invalid_manifest', ['site_reference' => $manifest['site_reference'] ?? null]);
-            return null;
+            return [false, null];
         }
 
         $manifest['assets'] = array_map(
@@ -92,12 +132,35 @@ final class MotionRuntimeManifestReader
                 // ADR-079: only well-formed runtime-parameter definitions
                 // survive; a malformed one is dropped, never trusted.
                 'parameters' => MotionRuntimeParameters::normalizeDefinitions($asset['parameters'] ?? []),
+                // saas-platform ADR-086: release identifiers and the category
+                // display name. Display-only; a malformed value is dropped,
+                // never trusted, and never rejects the manifest (a platform
+                // that predates them sends none).
+                'version_label' => $this->matching($asset['version_label'] ?? null, self::VERSION_LABEL_PATTERN, 32),
+                'build_id' => $this->matching($asset['build_id'] ?? null, self::BUILD_ID_PATTERN, 12),
+                'category_label' => $this->plainLabel($asset['category_label'] ?? null),
             ],
             $manifest['assets']
         );
         $manifest['locked_assets'] = $this->lockedAssets($manifest['locked_assets'] ?? []);
 
-        return $manifest;
+        return [true, $manifest];
+    }
+
+    private function matching(mixed $value, string $pattern, int $maxLength): ?string
+    {
+        return is_string($value) && strlen($value) <= $maxLength && preg_match($pattern, $value) === 1 ? $value : null;
+    }
+
+    /** A short single-line label with no markup characters, or null. */
+    private function plainLabel(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+
+        return $value !== '' && mb_strlen($value) <= 80 && preg_match('/[<>\x00-\x1F\x7F]/u', $value) !== 1 ? $value : null;
     }
 
     private function isStructurallyValid(array $manifest): bool

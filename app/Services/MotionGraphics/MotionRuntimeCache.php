@@ -28,6 +28,12 @@ final class MotionRuntimeCache
         return Cache::remember(self::KEY, (int) config('site.platform_config_cache_ttl', 300), $callback);
     }
 
+    /** saas-platform ADR-086: store a freshly fetched manifest (MotionRuntimeManifestReader::refresh). */
+    public function put(array $manifest): void
+    {
+        Cache::put(self::KEY, $manifest, (int) config('site.platform_config_cache_ttl', 300));
+    }
+
     public function forget(): void
     {
         Cache::forget(self::KEY);
