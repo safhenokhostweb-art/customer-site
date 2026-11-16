@@ -215,8 +215,11 @@
             text-align: center;
         }
         .auth-solar-sun-icon {
-            width: 72px;
-            height: 72px;
+            width: 80px;
+            height: 80px;
+            padding: 12px;
+            box-sizing: border-box;
+            overflow: visible;
             margin: 0 auto 1.5rem;
             background: rgba(255, 121, 0, 0.15);
             border: 1px solid rgba(255, 121, 0, 0.3);
@@ -226,6 +229,9 @@
             justify-content: center;
             color: var(--auth-solar-primary);
             box-shadow: 0 0 30px rgba(255, 121, 0, 0.2);
+        }
+        .auth-solar-sun-icon svg {
+            overflow: visible;
         }
         .auth-login-hero h2 {
             margin: 0 0 0.75rem;
@@ -252,37 +258,46 @@
         }
         .auth-solar-glow-1 { top: -100px; left: -100px; }
         .auth-solar-glow-2 { bottom: -100px; right: -100px; }
+        .tb-logo-anim--rotate_pop { display: inline-block; transform-origin: center center; animation: tb-anim-rotate-pop 5s cubic-bezier(.34,1.56,.64,1) infinite; will-change: transform; }
+        @keyframes tb-anim-rotate-pop { 0% { transform: rotate(0deg) scale(1); } 45% { transform: rotate(360deg) scale(1); } 55% { transform: rotate(360deg) scale(1.28); } 70% { transform: rotate(360deg) scale(.92); } 85% { transform: rotate(360deg) scale(1.06); } 95%, 100% { transform: rotate(360deg) scale(1); } }
     </style>
+    <style>@include('theme-runtime::css.contract')</style>
+    <style>@include('theme-runtime::css.blocks')</style>
     @stack('head')
 </head>
 <body class="auth-login-body">
-    <div class="auth-login-grid">
-        <div class="auth-login-panel">
-            <div class="auth-login-card-wrap">
-                <div class="auth-login-brand">
-                    <span>برند <strong>شما</strong> — صنعت انرژی برق</span>
+    @if(!empty($renderedAuthHtml))
+        {!! $renderedAuthHtml !!}
+    @else
+        <div class="auth-login-grid">
+            <div class="auth-login-panel">
+                <div class="auth-login-card-wrap">
+                    <div class="auth-login-brand">
+                        <x-site-brand />
+                    </div>
+                    @if(session('success'))
+                        <div class="alert alert-success" role="status">{{ session('success') }}</div>
+                    @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+                    @endif
+                    @yield('content')
                 </div>
-                @if(session('success'))
-                    <div class="alert alert-success" role="status">{{ session('success') }}</div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
-                @endif
-                @yield('content')
+            </div>
+            <div class="auth-login-hero" aria-hidden="true">
+                <span class="auth-solar-glow auth-solar-glow-1"></span>
+                <span class="auth-solar-glow auth-solar-glow-2"></span>
+                <div class="auth-login-hero-inner">
+                    <div class="auth-solar-sun-icon">
+                        {{-- White-label (every tenant's sign-in): a neutral catalog icon and copy, no industry. --}}
+                        {!! \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('shield-check') !!}
+                    </div>
+                    <h2>ورود امن به <span>حساب کاربری</span></h2>
+                    <p>دسترسی امن به پنل کاربری، سفارش‌ها، دوره‌ها و پشتیبانی آنلاین، همه در یک حساب.</p>
+                </div>
             </div>
         </div>
-        <div class="auth-login-hero" aria-hidden="true">
-            <span class="auth-solar-glow auth-solar-glow-1"></span>
-            <span class="auth-solar-glow auth-solar-glow-2"></span>
-            <div class="auth-login-hero-inner">
-                <div class="auth-solar-sun-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                </div>
-                <h2>پلتفرم یکپارچه <span>صنعت برق</span></h2>
-                <p>دسترسی امن به پنل کاربری، سفارش تجهیزات خورشیدی، دوره‌های آکادمی تخصصی و پشتیبانی آنلاین پروژه‌های نیروگاهی.</p>
-            </div>
-        </div>
-    </div>
+    @endif
     @stack('scripts')
 </body>
 </html>

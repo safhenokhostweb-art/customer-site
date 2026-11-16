@@ -27,6 +27,7 @@
             case 'getDropIndex': return Number.isFinite(Number(data.clientY)) && Number.isFinite(Number(data.clientX));
             case 'iframeHeight': return Number.isFinite(Number(data.height));
             case 'inlinePropChange': return typeof data.propKey === 'string' && typeof data.final === 'boolean';
+            case 'updateHeaderLogoAnim': return typeof data.logoAnimation === 'string';
             case 'dragStart':
             case 'dragCancel': return typeof data.nodeId === 'string';
             case 'dragOver':

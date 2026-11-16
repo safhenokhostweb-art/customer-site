@@ -11,13 +11,23 @@
     // the canonical media authority, covering both a UUID (uploaded after
     // this convergence) and a legacy raw storage path (uploaded before).
     $siteBrandLogoUrl = app(\App\Services\CustomerMediaService::class)->resolveSiteAssetUrl(\App\Models\Setting::get('site_logo', ''));
+    // Opt-in: no site animates its logo unless it asks (block prop or setting).
+    $siteLogoAnim = isset($anim) ? $anim : \App\Models\Setting::get('site_logo_animation', 'none');
+    $animClass = ($siteLogoAnim && $siteLogoAnim !== 'none') ? ' tb-logo-anim--' . $siteLogoAnim : '';
+    $animDurVal = isset($animDur) ? (is_numeric($animDur) ? $animDur . 's' : $animDur) : null;
+    $durStyle = $animDurVal ? ';--tb-hdr-logo-anim-dur:' . $animDurVal : '';
 @endphp
 @if($siteBrandLogoUrl)
-    <a href="{{ route('home') }}" class="{{ $class ?? '' }}" style="{{ $style ?? '' }}display:inline-flex;align-items:center;">
+    <a href="{{ route('home') }}" class="{{ $class ?? '' }}" style="{{ $style ?? '' }}display:inline-flex;align-items:center;gap:0.6rem;">
         <img src="{{ $siteBrandLogoUrl }}"
              alt="{{ \App\Helpers\SiteHelper::siteName() }}"
-             style="max-height:2.75rem;width:auto;display:block;">
+             class="tb-nav-header-logo-img{{ $animClass }}"
+             style="max-height:2.75rem;width:auto;display:block;{{ $durStyle }}">
     </a>
 @else
-    <a href="{{ route('home') }}" class="{{ $class ?? '' }}" style="{{ $style ?? '' }}">{{ \App\Helpers\SiteHelper::siteName() }}</a>
+    {{-- White-label: a site without a logo shows its own name only (no
+         industry glyph, no brand colour imposed on every tenant). --}}
+    <a href="{{ route('home') }}" class="{{ $class ?? '' }}" style="{{ $style ?? '' }}display:inline-flex;align-items:center;gap:0.6rem;text-decoration:none;color:inherit;font-weight:700;">
+        <span>{{ \App\Helpers\SiteHelper::siteName() }}</span>
+    </a>
 @endif

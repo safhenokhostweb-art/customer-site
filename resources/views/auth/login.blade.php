@@ -7,7 +7,7 @@
     <h1>ورود به پنل</h1>
     <p class="auth-login-lead">موبایل و رمز عبور خود را وارد کنید.</p>
 
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="alert alert-danger text-sm">
             {{ $errors->first() }}
             @if($errors->has('captcha') && !empty($captcha['enabled']) && ($captcha['type'] ?? '') === 'hcaptcha')

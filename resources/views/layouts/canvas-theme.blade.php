@@ -613,6 +613,25 @@
         @endif
         @endif
     @endauth
+    {{-- Global Scroll-to-Top Widget (when enabled via global styles or site settings) --}}
+    @php
+        $__hasSttBlock = str_contains($headerHtml ?? '', 'data-tb-scroll-to-top-wrap')
+            || str_contains($footerHtml ?? '', 'data-tb-scroll-to-top-wrap')
+            || str_contains($contentHtml ?? '', 'data-tb-scroll-to-top-wrap');
+        $__globalStt = $globalStyles['scroll_to_top'] ?? \App\Models\Setting::get('scroll_to_top', []);
+        if (is_string($__globalStt)) {
+            $__globalStt = json_decode($__globalStt, true) ?: [];
+        }
+        $__globalSttEnabled = !empty($__globalStt['enabled']) || \App\Models\Setting::get('scroll_to_top_enabled', false);
+    @endphp
+    @if(!$__hasSttBlock && $__globalSttEnabled)
+        {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->renderBlock([
+            'type' => 'scroll_to_top',
+            'id' => 'global-scroll-to-top',
+            'props' => is_array($__globalStt) ? $__globalStt : [],
+        ]) !!}
+    @endif
+
 <x-core-ui::payment-connection-warning />
 </body>
 </html>

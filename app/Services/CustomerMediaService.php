@@ -46,7 +46,25 @@ class CustomerMediaService
         $disk = $this->storage->diskNameFor('uploads');
         $key = $this->remoteImportStorageKey($siteId, $uuid, $extension, $metadata);
 
-        if (! Storage::disk($disk)->putFileAs(dirname($key), $file, basename($key), ['visibility' => 'public'])) {
+        $tempPath = $file->getRealPath() ?: $file->getPathname();
+        if (empty($tempPath) || ! file_exists($tempPath) || ! is_readable($tempPath)) {
+            throw new \RuntimeException('مسیر موقت فایل آپلود شده در دسترس نیست.');
+        }
+
+        $stream = @fopen($tempPath, 'rb');
+        if ($stream === false) {
+            throw new \RuntimeException('امکان خواندن جریان فایل موقت آپلود شده وجود ندارد.');
+        }
+
+        try {
+            $written = Storage::disk($disk)->put($key, $stream, ['visibility' => 'public']);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        if (! $written) {
             throw new \RuntimeException('Customer media storage write failed.');
         }
 
@@ -454,7 +472,25 @@ class CustomerMediaService
         // holding that URL would keep serving the OLD binary indefinitely.
         $newKey = sprintf('customer-media/%d/%s/%s-%s.%s', $media->site_id, now()->format('Y/m'), $media->uuid, Str::random(8), $extension);
 
-        if (! Storage::disk($oldDisk)->putFileAs(dirname($newKey), $file, basename($newKey), ['visibility' => 'public'])) {
+        $tempPath = $file->getRealPath() ?: $file->getPathname();
+        if (empty($tempPath) || ! file_exists($tempPath) || ! is_readable($tempPath)) {
+            throw new \RuntimeException('مسیر موقت فایل آپلود شده در دسترس نیست.');
+        }
+
+        $stream = @fopen($tempPath, 'rb');
+        if ($stream === false) {
+            throw new \RuntimeException('امکان خواندن جریان فایل موقت آپلود شده وجود ندارد.');
+        }
+
+        try {
+            $written = Storage::disk($oldDisk)->put($newKey, $stream, ['visibility' => 'public']);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        if (! $written) {
             throw new \RuntimeException('Customer media storage write failed.');
         }
 
@@ -644,19 +680,28 @@ class CustomerMediaService
 
     private function validate(UploadedFile $file): array
     {
+        if (! $file->isValid()) {
+            throw ValidationException::withMessages(['file' => 'فایل ارسالی نامعتبر است یا در هنگام آپلود دچار خطا شده است (' . $file->getErrorMessage() . ').']);
+        }
+
+        $tempPath = $file->getRealPath() ?: $file->getPathname();
+        if (empty($tempPath) || ! file_exists($tempPath) || ! is_readable($tempPath)) {
+            throw ValidationException::withMessages(['file' => 'مسیر موقت فایل آپلود شده در دسترس نیست.']);
+        }
+
         $mime = strtolower((string) $file->getMimeType());
         $extension = strtolower((string) $file->getClientOriginalExtension());
         foreach (self::POLICY as $category => $policy) {
             if (in_array($mime, $policy['mimes'], true) && in_array($extension, $policy['extensions'], true)) {
                 if ($file->getSize() > $policy['max']) {
-                    throw ValidationException::withMessages(['file' => 'File exceeds the allowed size.']);
+                    throw ValidationException::withMessages(['file' => 'حجم فایل بیش از حد مجاز (حداکثر ' . round($policy['max'] / 1048576) . ' مگابایت) است.']);
                 }
                 return [$category, $extension, $mime];
             }
         }
         // SVG is intentionally excluded in V1: no sanitizer is currently a
         // canonical authority for arbitrary customer SVG uploads.
-        throw ValidationException::withMessages(['file' => 'Unsupported or unsafe media type.']);
+        throw ValidationException::withMessages(['file' => 'فرمت فایل پشتیبانی نمی‌شود یا نامعتبر است (فرمت‌های مجاز تصویر: JPG, PNG, WEBP, GIF).']);
     }
 
     private function assertOwned(CustomerMedia $media): void
@@ -666,7 +711,8 @@ class CustomerMediaService
 
     private function imageDimensions(UploadedFile $file): array
     {
-        $size = @getimagesize($file->getRealPath());
+        $path = $file->getRealPath() ?: $file->getPathname();
+        $size = (! empty($path) && file_exists($path) && is_readable($path)) ? @getimagesize($path) : false;
         return is_array($size) ? [(int) $size[0], (int) $size[1]] : [];
     }
 

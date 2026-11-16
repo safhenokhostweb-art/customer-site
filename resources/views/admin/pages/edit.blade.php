@@ -7,7 +7,7 @@
     <div class="admin-page-head">
         <h1 class="admin-page-title">تنظیمات صفحه: {{ $page->title }}</h1>
         <div class="admin-page-tools">
-            <a href="{{ route('builder.page.edit', $page) }}" class="btn btn-primary btn-sm">ویرایش محتوای صفحه در قالب‌ساز</a>
+            <a href="{{ route('admin.theme-design.canvas-edit', ['page' => $page->slug]) }}" class="btn btn-primary btn-sm">ویرایش محتوای صفحه در قالب‌ساز</a>
         </div>
     </div>
     @include('admin.partials.ai-seo-widget', [
@@ -45,13 +45,13 @@
                              just here in the UI. --}}
                         <div class="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-sm">
                             محتوای این صفحه از طریق
-                            <a href="{{ route('builder.page.edit', $page) }}" class="font-semibold underline">قالب‌ساز بصری</a>
+                            <a href="{{ route('admin.theme-design.canvas-edit', ['page' => $page->slug]) }}" class="font-semibold underline">قالب‌ساز بصری Canvas</a>
                             مدیریت می‌شود. این فیلد قدیمی دیگر روی نمایش عمومی صفحه اثری ندارد.
                         </div>
                     @else
                         <textarea id="page-body-editor" name="body" class="w-full min-h-[220px]">{{ old('body', $page->body) }}</textarea>
                         <p class="admin-field-hint">برای طراحی بصری با عناصر (تصویر، ستون، اسلایدر و ...) می‌توانید هر زمان به
-                            <a href="{{ route('builder.page.edit', $page) }}">قالب‌ساز</a> بروید؛ محتوای فعلی به‌صورت یک بلوک واقعی وارد می‌شود.</p>
+                            <a href="{{ route('admin.theme-design.canvas-edit', ['page' => $page->slug]) }}">قالب‌ساز Canvas</a> بروید؛ محتوای فعلی به‌صورت یک بلوک واقعی وارد می‌شود.</p>
                     @endif
                 </div>
                 <div class="form-group">

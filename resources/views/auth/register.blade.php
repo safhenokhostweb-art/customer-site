@@ -7,7 +7,7 @@
     <h1>ثبت‌نام در پنل</h1>
     <p class="auth-login-lead">حساب کاربری جدید خود را ایجاد کنید.</p>
 
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="alert alert-danger text-sm">
             {{ $errors->first() }}
         </div>

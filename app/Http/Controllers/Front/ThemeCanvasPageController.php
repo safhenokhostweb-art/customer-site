@@ -64,9 +64,40 @@ class ThemeCanvasPageController extends Controller
         }
 
         [$pageKey, $page] = $this->findPage($themeData['pages'] ?? [], $slug);
+        // The DB page whose content is rendered below, if any: its own
+        // header/footer overrides and disable flags must still apply, as they
+        // did when such a page was delegated to PageController.
+        $layoutPage = null;
+
+        if (! $page || empty($page['blocks'])) {
+            $dbPage = \App\Models\Page::where('slug', $slug)->published()->first();
+            if ($dbPage) {
+                $blocks = $dbPage->builder_content_v2['blocks']
+                    ?? $dbPage->builder_content_v2['sections']
+                    ?? $dbPage->builder_content['blocks']
+                    ?? $dbPage->builder_content['sections']
+                    ?? [];
+                if (empty($blocks) && trim((string) $dbPage->body) !== '') {
+                    $blocks = [[
+                        'id' => 'db_page_' . $dbPage->id,
+                        'type' => 'text',
+                        'props' => ['content' => $dbPage->body],
+                    ]];
+                }
+                if (!empty($blocks)) {
+                    $page = [
+                        'title' => $dbPage->title,
+                        'slug' => $dbPage->slug,
+                        'blocks' => $blocks,
+                    ];
+                    $pageKey = $slug;
+                    $layoutPage = $dbPage;
+                }
+            }
+        }
 
         if (! $page) {
-            // Canvas theme installed but this slug is a DB page — delegate
+            // Canvas theme installed but this slug is a DB page without builder — delegate
             return app(PageController::class)->show($slug);
         }
 
@@ -75,6 +106,7 @@ class ThemeCanvasPageController extends Controller
             page: $page,
             pageKey: $pageKey,
             fallbackTitle: ucfirst($slug),
+            layoutPage: $layoutPage,
         );
     }
 
@@ -94,7 +126,7 @@ class ThemeCanvasPageController extends Controller
      * Eloquent model, so this array is the only per-page SEO input that
      * exists for it.
      */
-    private function renderPage(array $themeData, array $page, string $pageKey, string $fallbackTitle = ''): View
+    private function renderPage(array $themeData, array $page, string $pageKey, string $fallbackTitle = '', ?\App\Models\Page $layoutPage = null): View
     {
         $blocks = $page['blocks'] ?? [];
         $blocks = is_array($blocks) ? $blocks : [];
@@ -108,6 +140,7 @@ class ThemeCanvasPageController extends Controller
             $blocks,
             $title,
             $pageKey,
+            layoutPage: $layoutPage,
             );
 
         $seoMeta = $this->seo->canvasPage($page, $blocks, $fallbackTitle);

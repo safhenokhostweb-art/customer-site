@@ -400,7 +400,7 @@ class ElementSchemaRegistry
      */
     private static function isIntegerString($value): bool
     {
-        return is_string($value) && preg_match('/^-?\d+$/', $value) === 1;
+        return is_string($value) && preg_match('/^-?\d+s?$/', $value) === 1;
     }
 
     /**

@@ -192,14 +192,15 @@
                                 </div>
                                 <svg :class="expandedCats['{{ $catKey }}']?'rotate-180':''" class="w-3 h-3 text-slate-500 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
-                            <div x-show="expandedCats['{{ $catKey }}']">
+                            <div x-show="expandedCats['{{ $catKey }}'] || !!librarySearch">
                                 <div class="px-2 pb-2 grid grid-cols-2 gap-1.5">
                                     @foreach($catDefs as $blockType => $blockDef)
                                         <button @click="addBlock('{{ $blockType }}')"
                                             data-testid="tb-add-block-{{ $blockType }}"
-                                            x-show="isBlockVisible('{{ $blockType }}','{{ addslashes($blockDef['name']) }}')"
+                                            x-show="isBlockVisible('{{ $blockType }}','{{ addslashes($blockDef['name']) }}','{{ addslashes($blockDef['description'] ?? '') }}')"
                                             class="flex flex-col items-start gap-1 p-2 rounded-lg text-right cursor-pointer group transition"
                                             style="border:1px solid #334155;background:#0f172a"
+                                            title="{{ $blockDef['description'] ?? $blockDef['name'] }}"
                                             @mouseenter="$el.style.borderColor='#6366f1';$el.style.background='#1e1b4b'"
                                             @mouseleave="$el.style.borderColor='#334155';$el.style.background='#0f172a'">
                                             <div class="text-base leading-none">{{ $blockDef['icon'] }}</div>
@@ -928,10 +929,10 @@ function elBuilder() {
                 t.includes(s) || (lbl+'').toLowerCase().includes(s)
             );
         },
-        isBlockVisible(type, name) {
+        isBlockVisible(type, name, desc = '') {
             if (!this.librarySearch) return true;
             const s = this.librarySearch.toLowerCase();
-            return type.toLowerCase().includes(s) || name.toLowerCase().includes(s);
+            return type.toLowerCase().includes(s) || name.toLowerCase().includes(s) || (desc && desc.toLowerCase().includes(s));
         },
 
         // ── Blocks CRUD ───────────────────────────────────────────────────────
@@ -1119,7 +1120,12 @@ function elBuilder() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.tailwindcss.com"><\/script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>@include('partials.vazirmatn-font-faces-inline')</style>
+<style>
+@include('theme-runtime::css.contract')
+@include('theme-runtime::css.blocks')
+</style>
 <style>
   body{font-family:'Vazirmatn',Tahoma,sans-serif;margin:0;padding:0;direction:rtl;background:#fff;min-height:100vh}
   img{max-width:100%;height:auto}

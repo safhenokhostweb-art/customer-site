@@ -30,6 +30,12 @@ class TemplateLibraryInsertTest extends TestCase
     {
         parent::setUp();
         $this->seedValidLicense(['shop', 'blog', 'courses']);
+        // ADR-087: a licensed solar-industry site, so "every template"
+        // includes the restricted solar kit. Gating itself is covered by
+        // PlatformAssetAccessTest.
+        \App\Models\Setting::set(\App\Services\AssetProvisioning\AssetEntitlementClient::LAST_GOOD_SETTING, json_encode(
+            \SaaSPlatform\ThemeRuntime\Access\SiteAssetEntitlements::make('solar_energy', ['solar_industry_kit'])->toPayload()
+        ), 'platform');
         $this->admin = User::factory()->create(['is_admin' => true]);
         app(ThemeInstanceRevisionService::class)->record([
             'header_blocks' => [], 'footer_blocks' => [], 'header_variants' => [], 'footer_variants' => [],
