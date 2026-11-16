@@ -13,6 +13,7 @@
                                   "database/**",
                                   "scripts/**",
                                   "config/builder-element-schemas.php",
+                                  "config/builder-elements.php",
                                   ".gitignore",
                                   "composer.json",
                                   "composer.lock",
