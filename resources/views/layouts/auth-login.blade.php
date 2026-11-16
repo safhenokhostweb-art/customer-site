@@ -289,18 +289,11 @@
                 <span class="auth-solar-glow auth-solar-glow-2"></span>
                 <div class="auth-login-hero-inner">
                     <div class="auth-solar-sun-icon">
-<<<<<<< HEAD
                         {{-- White-label (every tenant's sign-in): a neutral catalog icon and copy, no industry. --}}
                         {!! \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('shield-check') !!}
                     </div>
                     <h2>ورود امن به <span>حساب کاربری</span></h2>
                     <p>دسترسی امن به پنل کاربری، سفارش‌ها، دوره‌ها و پشتیبانی آنلاین، همه در یک حساب.</p>
-=======
-                        <i class="fas fa-sun tb-logo-anim--rotate_pop"><svg width="40" height="40" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1 10.9-2.7 14.8L429.2 248l78.8 82.8c3.7 3.9 4.8 9.8 2.7 14.8s-6.6 8.6-11.9 9.6L391 375l-19.8 107.9c-1 5.3-4.6 9.8-9.6 11.9s-10.9 1-14.8-2.7L264 413.2l-82.8 78.8c-3.9 3.7-9.8 4.8-14.8 2.7s-8.6-6.6-9.6-11.9L137 375l-107.9-19.8c-5.3-1-9.8-4.6-11.9-9.6s-1-10.9 2.7-14.8L98.8 248 20 165.2c-3.7-3.9-4.8-9.8-2.7-14.8s6.6-8.6 11.9-9.6L137 121l19.8-107.9c1-5.3 4.6-9.8 9.6-11.9s10.9-1 14.8 2.7L264 82.8l82.8-78.8c3.9-3.7 9.8-4.8 14.8-2.7zM256 160c-53 0-96 43-96 96s43 96 96 96 96-43 96-96-43-96-96-96z"/></svg></i>
-                    </div>
-                    <h2>پلتفرم یکپارچه <span>صنعت برق</span></h2>
-                    <p>دسترسی امن به پنل کاربری، سفارش تجهیزات خورشیدی، دوره‌های آکادمی تخصصی و پشتیبانی آنلاین پروژه‌های نیروگاهی.</p>
->>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                 </div>
             </div>
         </div>

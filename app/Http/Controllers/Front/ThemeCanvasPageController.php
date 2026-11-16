@@ -96,32 +96,6 @@ class ThemeCanvasPageController extends Controller
             }
         }
 
-        if (! $page || empty($page['blocks'])) {
-            $dbPage = \App\Models\Page::where('slug', $slug)->published()->first();
-            if ($dbPage) {
-                $blocks = $dbPage->builder_content_v2['blocks']
-                    ?? $dbPage->builder_content_v2['sections']
-                    ?? $dbPage->builder_content['blocks']
-                    ?? $dbPage->builder_content['sections']
-                    ?? [];
-                if (empty($blocks) && trim((string) $dbPage->body) !== '') {
-                    $blocks = [[
-                        'id' => 'db_page_' . $dbPage->id,
-                        'type' => 'text',
-                        'props' => ['content' => $dbPage->body],
-                    ]];
-                }
-                if (!empty($blocks)) {
-                    $page = [
-                        'title' => $dbPage->title,
-                        'slug' => $dbPage->slug,
-                        'blocks' => $blocks,
-                    ];
-                    $pageKey = $slug;
-                }
-            }
-        }
-
         if (! $page) {
             // Canvas theme installed but this slug is a DB page without builder — delegate
             return app(PageController::class)->show($slug);
