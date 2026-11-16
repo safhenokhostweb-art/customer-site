@@ -476,6 +476,23 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                         <div x-show="expandedCats['{{ $catKey }}']" x-collapse>
                             <div class="px-2 pb-2 grid grid-cols-2 gap-1.5">
                                 @foreach($catBlocks as $blockType => $blockDef)
+                                    @php $blockAccess = ($assetAccess ?? [])[$blockType] ?? null; @endphp
+                                    @if(!empty($blockAccess['locked']))
+                                        {{-- ADR-087: a locked widget is advertised (upgrade path), never draggable. --}}
+                                        <div role="button" tabindex="0" aria-disabled="true"
+                                             data-testid="tb-palette-locked-{{ $blockType }}"
+                                             x-show="isBlockVisible('{{ $blockType }}', '{{ addslashes($blockDef['name']) }}')"
+                                             @click="showToast(@js($blockAccess['message'] ?? $blockAccess['badge']), 'error')"
+                                             @keydown.enter.prevent="showToast(@js($blockAccess['message'] ?? $blockAccess['badge']), 'error')"
+                                             class="flex flex-col items-start gap-1 p-2.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-right"
+                                             style="cursor:not-allowed"
+                                             title="{{ $blockAccess['message'] ?? $blockDef['name'] }}">
+                                            <div class="text-lg leading-none" style="filter:grayscale(1);opacity:.6">{{ $blockEmoji[$blockType] ?? '🧩' }}</div>
+                                            <span class="text-[11px] font-medium text-slate-500 leading-tight line-clamp-2">{{ $blockDef['name'] }}</span>
+                                            @include('theme-runtime::canvas.asset-access-badge', ['access' => $blockAccess])
+                                        </div>
+                                        @continue
+                                    @endif
                                     <button
                                         draggable="true"
                                         @click="addBlock('{{ $blockType }}')"
@@ -491,6 +508,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         @if(!empty($blockDef['requires']))
                                             <span class="text-[9px] px-1.5 py-0.5 rounded {{ $badgeClass }} font-medium leading-none mt-0.5">{{ $blockDef['requires'] }}</span>
                                         @endif
+                                        @include('theme-runtime::canvas.asset-access-badge', ['access' => $blockAccess])
                                     </button>
                                 @endforeach
                             </div>
@@ -1725,6 +1743,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
         $childSearchIndex = [];
         foreach ($orderedCats as $catKey) {
             foreach ($byCategory[$catKey] ?? [] as $blockType => $blockDef) {
+                if (!empty((($assetAccess ?? [])[$blockType] ?? [])['locked'])) continue; // ADR-087
                 $haystack = implode(' ', [$blockDef['name'] ?? '', $blockType, str_replace(['_', ':'], ' ', $blockType), $catKey, $catLabels[$catKey] ?? '', implode(' ', (array) ($blockDef['tags'] ?? []))]);
                 $childSearchIndex[$blockType] = trim(preg_replace('/\s+/u', ' ', str_replace(['ي', 'ك', "\u{200C}"], ['ی', 'ک', ' '], mb_strtolower($haystack))));
             }
@@ -1768,6 +1787,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                 @foreach($orderedCats as $catKey)
                     @if(!isset($byCategory[$catKey])) @continue @endif
                     @foreach($byCategory[$catKey] as $blockType => $blockDef)
+                        @if(!empty((($assetAccess ?? [])[$blockType] ?? [])['locked'])) @continue @endif
                         <button
                             x-show="childMatches('{{ $blockType }}')"
                             @click="addChildBlock('{{ $blockType }}'); showAddChildModal = false"
@@ -1847,7 +1867,9 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                     <template x-for="tpl in templateLibrary.templates" :key="tpl.id">
                         <button type="button" class="text-start border border-slate-200 rounded-xl overflow-hidden hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition cursor-pointer group flex flex-col disabled:opacity-60 disabled:cursor-wait"
                             :data-testid="'tpl-card-' + tpl.id" :disabled="templateLibrary.inserting"
-                            @click="insertTemplate(tpl.id)">
+                            :aria-disabled="tpl.access && tpl.access.locked ? 'true' : 'false'"
+                            :title="tpl.access && tpl.access.locked ? tpl.access.message : tpl.name"
+                            @click="tpl.access && tpl.access.locked ? showToast(tpl.access.message || tpl.access.badge, 'error') : insertTemplate(tpl.id)">
                             <div class="aspect-video w-full bg-gradient-to-br from-slate-100 to-purple-50 flex items-center justify-center relative overflow-hidden">
                                 <template x-if="tpl.thumbnail_url">
                                     <img :src="tpl.thumbnail_url" :alt="tpl.name" loading="lazy" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
@@ -1857,6 +1879,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                 </template>
                                 <span class="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/90 text-purple-700" x-text="tpl.type_label"></span>
                                 <span x-show="tpl.source === 'library'" class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-600 text-white">آماده</span>
+                                @include('theme-runtime::canvas.asset-access-template-card')
                                 <div class="absolute inset-0 bg-purple-600/0 group-hover:bg-purple-600/10 transition flex items-center justify-center">
                                     <span class="opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition" x-text="templateLibrary.inserting ? 'در حال درج…' : 'درج'"></span>
                                 </div>
@@ -3413,12 +3436,19 @@ function canvasEditor() {
             if (this.quickSaving) return;
             this.quickSaving = true;
             try {
-                await fetch(ROUTES.saveBlocks, {
+                const r = await fetch(ROUTES.saveBlocks, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
                     body: JSON.stringify({ page_key: this.currentPage, blocks: this.blocks })
                 });
-                this.isDirty = false;
+                // A refused save (locked structure, ADR-087 locked widget)
+                // stays dirty and says why, instead of silently dropping.
+                if (r.ok) {
+                    this.isDirty = false;
+                } else {
+                    const d = await r.json().catch(() => ({}));
+                    this.showToast(d.error ?? 'ذخیرهٔ خودکار انجام نشد.', 'error');
+                }
             } catch (_) {}
             finally { this.quickSaving = false; }
         },

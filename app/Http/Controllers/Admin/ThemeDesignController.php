@@ -14,7 +14,9 @@ use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemeCanvas\ThemeRuntimeDocument;
 use App\Services\ThemeCanvas\ThemePresentationCapabilityRegistry;
 use App\Services\ThemeEngine\TenantThemeResolver;
+use App\Services\AssetProvisioning\AssetEntitlementClient;
 use App\Services\BuilderLayoutService;
+use SaaSPlatform\ThemeRuntime\Access\AssetAccessGate;
 use App\Services\MotionGraphics\MotionRuntimeManifestReader;
 use App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry;
 use Illuminate\Http\JsonResponse;
@@ -410,6 +412,11 @@ class ThemeDesignController extends Controller
             $registry[$solarType] = \App\Modules\SolarCalculator\Canvas\SolarCalculatorWidget::definition();
             $byCategory[BlockRegistry::CATEGORY_MODULE][$solarType] = $registry[$solarType];
         }
+        // ADR-087: the palette offers only what the platform provisions for
+        // this site (hidden widgets dropped, locked ones badged). Opening the
+        // editor re-syncs, so a grant or revoke shows on the next visit.
+        // $registry stays whole: existing blocks must still open in the inspector.
+        [$byCategory, $assetAccess] = AssetAccessGate::filterPalette($byCategory, $this->assetEntitlements()->refresh());
         $modulePresentations = $this->presentationCapabilities->availableFor($themeData);
 
         $gs = $themeData['global_styles'] ?? [];
@@ -430,7 +437,8 @@ class ThemeDesignController extends Controller
             'globalStyles',
             'hasDraft',
             'previewToken',
-            'modulePresentations'
+            'modulePresentations',
+            'assetAccess'
         ));
     }
 
@@ -487,6 +495,9 @@ class ThemeDesignController extends Controller
                     'structure_errors' => $structure['errors'],
                 ], 422);
             }
+            if ($refusal = $this->lockedWidgetRefusal($current, $reconciled)) {
+                return $refusal;
+            }
 
             $variantKey = $region === 'header'
                 ? $this->layoutService->resolveActiveHeaderVariantKey($themeData)
@@ -532,6 +543,9 @@ class ThemeDesignController extends Controller
                 'error' => 'ساختار محافظت‌شده قابل حذف، جابه‌جایی یا تکثیر نیست.',
                 'structure_errors' => $structure['errors'],
             ], 422);
+        }
+        if ($refusal = $this->lockedWidgetRefusal($current, $reconciled)) {
+            return $refusal;
         }
         $themeData['pages'][$key]['blocks'] = $reconciled;
 
@@ -1350,7 +1364,9 @@ class ThemeDesignController extends Controller
             term: $request->query('search') ?: null,
         );
 
-        return response()->json(['templates' => $templates]);
+        // ADR-087: library cards the platform has not provisioned for this
+        // site are dropped (another vertical's kit) or badged as locked.
+        return response()->json(['templates' => AssetAccessGate::annotateTemplateCards($templates, $this->assetEntitlements()->current())]);
     }
 
     public function canvasSaveAsTemplate(Request $request): JsonResponse
@@ -1378,6 +1394,17 @@ class ThemeDesignController extends Controller
             ])['template_id'];
         }
 
+        // ADR-087: a restricted library template is refused server-side,
+        // whatever the editor shows.
+        $access = AssetAccessGate::decideTemplate($id, $this->assetEntitlements()->current());
+        if ($access !== null && !$access->allowed()) {
+            return response()->json([
+                'success' => false,
+                'message' => $access->message() ?? 'این قالب برای این سایت فعال نیست.',
+                'access' => $access->toArray(),
+            ], 403);
+        }
+
         try {
             $inserted = $this->templateSvc->insertBlocks($id);
         } catch (\DomainException $e) {
@@ -1391,6 +1418,30 @@ class ThemeDesignController extends Controller
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private function assetEntitlements(): AssetEntitlementClient
+    {
+        return app(AssetEntitlementClient::class);
+    }
+
+    /**
+     * ADR-087: a save may keep a restricted widget already on the page (a
+     * lapsed licence never blocks editing the rest), but may not introduce
+     * one the platform has not provisioned for this site.
+     */
+    private function lockedWidgetRefusal(array $current, array $incoming): ?JsonResponse
+    {
+        $locked = AssetAccessGate::newlyLockedWidgetTypes($current, $incoming, $this->assetEntitlements()->current());
+        if ($locked === []) {
+            return null;
+        }
+
+        return response()->json([
+            'success' => false,
+            'error' => 'این ویجت برای سایت شما فعال نیست: ' . implode('، ', $locked),
+            'locked_types' => $locked,
+        ], 403);
+    }
 
     private function normalizePagesKeyed(array $pages): array
     {

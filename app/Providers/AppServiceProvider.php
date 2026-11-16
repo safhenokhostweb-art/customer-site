@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         // BindingResolutionException with no binding at all.
         $this->app->singleton(SiteContextContract::class, \App\Services\SiteContext::class);
 
+        // ADR-087: one platform answer per request (scoped, so an Octane
+        // worker never carries it into the next request).
+        $this->app->scoped(\App\Services\AssetProvisioning\AssetEntitlementClient::class);
+
         $this->app->bind(
             \SaaSPlatform\Modules\Forms\Contracts\FormServiceInterface::class,
             \SaaSPlatform\Modules\Forms\Services\FormService::class
