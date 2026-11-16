@@ -74,7 +74,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
 
         $navHeader = $registry['nav_header']['schema']['nav_links'];
         self::assertSame('repeater', $navHeader['type']);
-        self::assertSame(['label', 'url', 'mega_columns', 'mega_banner_image', 'mega_banner_url', 'mega_banner_text', 'mega_banner_cta', 'mega_show_desktop', 'mega_mobile_behavior'], array_keys($navHeader['fields'])); // Phase 1 (ADR-067): mega_banner_cta
+        self::assertSame(['label', 'url', 'icon', 'mega_columns', 'mega_banner_image', 'mega_banner_url', 'mega_banner_text', 'mega_banner_cta', 'mega_promo_cards', 'mega_show_desktop', 'mega_mobile_behavior'], array_keys($navHeader['fields'])); // Phase 1 (ADR-067): mega_banner_cta; ADR-084: icon, mega_promo_cards
         // Commercial Productization fase-2: Mega Menu's columns are a real,
         // independent nested repeater (columns[].items[]) — not inferred by
         // matching duplicate column-title text.
@@ -82,7 +82,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
         self::assertSame('repeater', $megaColumns['type']);
         self::assertSame(['title', 'items'], array_keys($megaColumns['fields']));
         self::assertSame('repeater', $megaColumns['fields']['items']['type']);
-        self::assertSame(['label', 'url', 'icon', 'image'], array_keys($megaColumns['fields']['items']['fields']));
+        self::assertSame(['label', 'url', 'icon', 'image', 'badge', 'badge_variant'], array_keys($megaColumns['fields']['items']['fields'])); // ADR-084: item badges
 
         $navFooter = $registry['nav_footer']['schema'];
         self::assertSame('repeater', $navFooter['columns']['type']);
@@ -92,7 +92,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
         self::assertSame('repeater', $navFooter['links']['type']);
         self::assertSame(['label', 'url'], array_keys($navFooter['links']['fields']));
         self::assertSame('repeater', $navFooter['social_links']['type']);
-        self::assertSame(['url', 'label', 'network'], array_keys($navFooter['social_links']['fields'])); // Phase 1 (ADR-067): network → icon
+        self::assertSame(['url', 'label', 'network', 'custom_color'], array_keys($navFooter['social_links']['fields'])); // Phase 1 (ADR-067): network → icon custom_color: brand-mark colour override
 
         $about = $registry['about_section']['schema'];
         self::assertSame('repeater', $about['features']['type']);
@@ -106,7 +106,7 @@ class StructuredRepeaterAuthoringTest extends TestCase
 
         $project = $registry['project_cards']['schema']['cards'];
         self::assertSame('repeater', $project['type']);
-        self::assertSame(['category', 'title', 'description', 'url'], array_keys($project['fields']));
+        self::assertSame(['category', 'badge', 'title', 'description', 'image', 'image_alt', 'url'], array_keys($project['fields'])); // solar projects page: badge + card image
 
         $contact = $registry['contact_info']['schema']['items'];
         self::assertSame('repeater', $contact['type']);

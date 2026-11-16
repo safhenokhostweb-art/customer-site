@@ -77,8 +77,12 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // compatibility loops below rather than bypassing them.
         // ADR-083 (PLATFORM-THEME-SPEC-v1): +7 neutral commercial widgets
         // from the package, 158 -> 165 and 123 -> 130; modules unchanged.
-        self::assertCount(165, $registry);
-        self::assertCount(130, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
+        // Solar-industry kit + header work (saas ADR-087 release): +3 package
+        // types, scroll_to_top and auth_canvas (canonical) and the
+        // theme-scoped solar-energy-cycle host type: 165 -> 168 and
+        // 130 -> 133; modules unchanged.
+        self::assertCount(168, $registry);
+        self::assertCount(133, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
         self::assertCount(35, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
         self::assertArrayNotHasKey('module:portfolio_grid', $registry);

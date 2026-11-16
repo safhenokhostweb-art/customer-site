@@ -108,7 +108,8 @@ class BuilderInternalLinkingTest extends TestCase
         $html = $this->get('/')->assertOk()->getContent();
 
         $href = 'href="' . e(route('page.show', 'contact-us')) . '"';
-        $this->assertSame(4, substr_count($html, $href), 'logo, header CTA, promo and about button all link to the picked page');
+        // 5: the header CTA also renders its drawer-only copy in the mobile menu.
+        $this->assertSame(5, substr_count($html, $href), 'logo, header CTA (bar and drawer), promo and about button all link to the picked page');
         $this->assertStringNotContainsString('render_error', $html);
     }
 

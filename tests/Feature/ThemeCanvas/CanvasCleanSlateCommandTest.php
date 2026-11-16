@@ -90,7 +90,8 @@ class CanvasCleanSlateCommandTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.theme-design.canvas-edit'))
             ->assertOk()
-            ->assertViewHas('pages', fn (array $pages) => array_keys($pages) === ['home', '__header__', '__footer__']
+            // The editor also lists the two system sign-in/sign-up pages (auth_canvas).
+            ->assertViewHas('pages', fn (array $pages) => array_keys($pages) === ['home', '__header__', '__footer__', 'login', 'register']
                 && $pages['home']['blocks'] === []
                 && $pages['__header__']['blocks'] === []
                 && $pages['__footer__']['blocks'] === []);

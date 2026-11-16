@@ -51,6 +51,18 @@ final class EntityLinkCatalog
         // (a Canvas theme page or a CMS page), with no fixed route of its own.
         'about' => ['درباره ما', 'page.show', null, ['slug' => 'about']],
         'projects' => ['پروژه‌ها', 'page.show', null, ['slug' => 'projects']],
+        // ADR-084: the header's sign-in, sign-up and account buttons (a guest
+        // opening the account is sent to sign-in by the `auth` middleware).
+        'login' => ['ورود', 'login', null],
+        'register' => ['ثبت‌نام', 'register', null],
+        'account' => ['حساب کاربری', 'account.dashboard', null],
+        // Solar-industry kit pages (ADR-087 solar-industry family): dynamic
+        // pages by slug, the same destinations as TemplateLibrary::ROUTES.
+        'download_center' => ['مرکز دانلود', 'page.show', null, ['slug' => 'download-center']],
+        'hybrid' => ['سیستم خورشیدی هیبرید', 'page.show', null, ['slug' => 'hybrid']],
+        'offgrid' => ['سیستم خورشیدی منفصل از شبکه', 'page.show', null, ['slug' => 'offgrid']],
+        'ongrid' => ['سیستم خورشیدی متصل به شبکه', 'page.show', null, ['slug' => 'ongrid']],
+        'solar_calculator' => ['محاسبه‌گر خورشیدی', 'page.show', null, ['slug' => 'solar-calculator']],
     ];
 
     /** entity => [route that renders it, module that gates it]. */

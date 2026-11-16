@@ -64,6 +64,10 @@ class ThemeCanvasPageController extends Controller
         }
 
         [$pageKey, $page] = $this->findPage($themeData['pages'] ?? [], $slug);
+        // The DB page whose content is rendered below, if any: its own
+        // header/footer overrides and disable flags must still apply, as they
+        // did when such a page was delegated to PageController.
+        $layoutPage = null;
 
         if (! $page || empty($page['blocks'])) {
             $dbPage = \App\Models\Page::where('slug', $slug)->published()->first();
@@ -87,6 +91,7 @@ class ThemeCanvasPageController extends Controller
                         'blocks' => $blocks,
                     ];
                     $pageKey = $slug;
+                    $layoutPage = $dbPage;
                 }
             }
         }
@@ -101,6 +106,7 @@ class ThemeCanvasPageController extends Controller
             page: $page,
             pageKey: $pageKey,
             fallbackTitle: ucfirst($slug),
+            layoutPage: $layoutPage,
         );
     }
 
@@ -120,7 +126,7 @@ class ThemeCanvasPageController extends Controller
      * Eloquent model, so this array is the only per-page SEO input that
      * exists for it.
      */
-    private function renderPage(array $themeData, array $page, string $pageKey, string $fallbackTitle = ''): View
+    private function renderPage(array $themeData, array $page, string $pageKey, string $fallbackTitle = '', ?\App\Models\Page $layoutPage = null): View
     {
         $blocks = $page['blocks'] ?? [];
         $blocks = is_array($blocks) ? $blocks : [];
@@ -134,6 +140,7 @@ class ThemeCanvasPageController extends Controller
             $blocks,
             $title,
             $pageKey,
+            layoutPage: $layoutPage,
             );
 
         $seoMeta = $this->seo->canvasPage($page, $blocks, $fallbackTitle);
