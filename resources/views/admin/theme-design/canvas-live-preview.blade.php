@@ -244,22 +244,33 @@ body.tb-drag-active .tb-drop-zone {
         }
     }, true);
 
-    /* Block click → select */
-    document.addEventListener('click', function (e) {
-        var blockEl = e.target.closest('[data-tb-block-id]');
+    /* Block click & double-click → select */
+    function handleBlockSelect(e) {
+        var blockEl = e.target.closest('[data-tb-block-id], [data-canvas-block-id], .tb-nav-header, [data-layout-slot="header"], [data-layout-slot="footer"]');
         if (blockEl) {
             var logicalItem = e.target.closest('[data-tb-logical-group][data-tb-logical-index]');
             var interactive = e.target.closest('a, button, input, select, textarea, form, [role="button"]');
             if (interactive && interactive.closest('a[href]')) e.preventDefault();
-            if (!interactive) e.stopPropagation();
-            selectBlock(blockEl.getAttribute('data-tb-block-id'));
-            notifyParent({
-                action: 'blockSelected',
-                blockId: state.selectedBlockId,
-                logicalGroup: logicalItem ? logicalItem.getAttribute('data-tb-logical-group') : null,
-                logicalIndex: logicalItem ? Number(logicalItem.getAttribute('data-tb-logical-index')) : null
-            });
+            e.stopPropagation();
+            var blockId = blockEl.getAttribute('data-tb-block-id')
+                || blockEl.getAttribute('data-canvas-block-id')
+                || (blockEl.closest('[data-tb-block-id]') ? blockEl.closest('[data-tb-block-id]').getAttribute('data-tb-block-id') : null)
+                || (blockEl.querySelector('[data-tb-block-id]') ? blockEl.querySelector('[data-tb-block-id]').getAttribute('data-tb-block-id') : null);
+            if (blockId) {
+                selectBlock(blockId);
+                notifyParent({
+                    action: 'blockSelected',
+                    blockId: state.selectedBlockId || blockId,
+                    logicalGroup: logicalItem ? logicalItem.getAttribute('data-tb-logical-group') : null,
+                    logicalIndex: logicalItem ? Number(logicalItem.getAttribute('data-tb-logical-index')) : null
+                });
+            }
         }
+    }
+    document.addEventListener('click', handleBlockSelect, true);
+    document.addEventListener('dblclick', function (e) {
+        e.preventDefault();
+        handleBlockSelect(e);
     }, true);
 
     function selectBlock(blockId) {
@@ -577,6 +588,27 @@ body.tb-drag-active .tb-drop-zone {
                 updateBlockHtml(d.blockId, d.html || '');
                 sendHeight();
                 break;
+            case 'updateHeaderLogoAnim': {
+                var anim = d.logoAnimation || 'none';
+                var dur = d.logoAnimDur ? (typeof d.logoAnimDur === 'number' ? d.logoAnimDur + 's' : d.logoAnimDur) : '5s';
+                var headerRoots = document.querySelectorAll('.tb-nav-header-root, .tb-nav-header');
+                headerRoots.forEach(function(root) {
+                    root.style.setProperty('--tb-hdr-logo-anim-dur', dur);
+                });
+                // Remove animation classes strictly from outer wrappers and brand text
+                document.querySelectorAll('.tb-nav-header-logo, .tb-nav-header-logo-slot, .tb-nav-header-logo-text, .tb-nav-header-logo-lockup, .tb-nav-header-logo-title, .tb-nav-header-logo-tagline, .tb-nav-header-root').forEach(function(el) {
+                    el.className = el.className.replace(/\btb-logo-anim--[a-zA-Z0-9_-]+\b/g, '').trim();
+                });
+                // Apply STRICTLY and EXCLUSIVELY to the icon/image element itself
+                document.querySelectorAll('.tb-nav-header-logo-icon, .tb-nav-header-logo-img, .site-brand-icon, .tb-brand-icon, .tb-nav-header-logo svg, .tb-nav-header-logo img, .tb-nav-header-logo > i').forEach(function(el) {
+                    el.className = el.className.replace(/\btb-logo-anim--[a-zA-Z0-9_-]+\b/g, '').trim();
+                    if (anim !== 'none' && anim !== '') {
+                        el.classList.add('tb-logo-anim--' + anim);
+                        el.style.setProperty('--tb-hdr-logo-anim-dur', dur);
+                    }
+                });
+                break;
+            }
             case 'showDropZones':
                 document.body.classList.toggle('tb-drag-active', !!d.visible);
                 if (!d.visible) { setDropTarget(null); setContainerTarget(null); }

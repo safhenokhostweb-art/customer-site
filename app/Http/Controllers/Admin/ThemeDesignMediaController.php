@@ -72,14 +72,27 @@ class ThemeDesignMediaController extends Controller
 
     public function upload(Request $request): JsonResponse
     {
-        $request->validate(['file' => ['required', 'file']]);
+        $request->validate(['file' => ['required', 'file', 'max:10240']]);
+
+        $file = $request->file('file');
+        if (! $file || ! $file->isValid()) {
+            return response()->json(['error' => 'فایل آپلود شده نامعتبر است یا با خطا مواجه شد.'], 422);
+        }
+
+        $tempPath = $file->getRealPath() ?: $file->getPathname();
+        if (empty($tempPath) || ! file_exists($tempPath) || ! is_readable($tempPath)) {
+            return response()->json(['error' => 'مسیر موقت فایل آپلود شده در دسترس نیست.'], 422);
+        }
 
         try {
-            $media = $this->media->upload($request->file('file'), [
+            $media = $this->media->upload($file, [
                 'title' => $request->input('title'),
             ]);
         } catch (ValidationException $exception) {
             return response()->json(['error' => collect($exception->errors())->flatten()->first() ?? 'خطا در بارگذاری فایل'], 422);
+        } catch (\Throwable $exception) {
+            \Illuminate\Support\Facades\Log::error('Media upload exception', ['message' => $exception->getMessage()]);
+            return response()->json(['error' => 'خطا در ذخیره‌سازی فایل: ' . $exception->getMessage()], 500);
         }
 
         return response()->json([

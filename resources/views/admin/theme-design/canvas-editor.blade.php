@@ -28,7 +28,7 @@ $blockSchemas = collect($registry)->mapWithKeys(function ($d, $t) {
 });
 $orderedCats  = ['layout','content','dynamic','ecommerce','marketing','utility','module'];
 $catColors    = ['layout'=>'text-blue-600 bg-blue-50','content'=>'text-green-700 bg-green-50','dynamic'=>'text-purple-600 bg-purple-50','ecommerce'=>'text-emerald-700 bg-emerald-50','marketing'=>'text-orange-600 bg-orange-50','utility'=>'text-slate-600 bg-slate-100','module'=>'text-indigo-700 bg-indigo-50'];
-$blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','column'=>'▤','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
+$blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜','column'=>'▤','accordion'=>'🪗','slider'=>'🎠','heading'=>'🔠','text'=>'📄','image'=>'🖼️','gallery'=>'🗂️','video'=>'🎬','button'=>'🔘','divider'=>'➖','counter'=>'🔢','blog_posts'=>'📰','testimonials'=>'⭐','product_grid'=>'🛍️','product_slider'=>'🎠','cta'=>'📢','countdown'=>'⏱️','promo_banner'=>'📯','search_bar'=>'🔍','nav_menu'=>'🗺️','social_icons'=>'📡','login_register'=>'👤','module:blog_posts'=>'📰','module:shop_product_grid'=>'🛍️','module:courses_grid'=>'🎓','module:pricing_table'=>'💰','module:contact_quick'=>'📞','module:faq_dynamic'=>'❓','module:support_button'=>'💬','module:gallery_widget'=>'🖼️','module:reviews_grid'=>'⭐','module:referral_widget'=>'🎁','module:social_links_bar'=>'📡','module:notifications_bar'=>'🔔','module:whatsapp_widget'=>'📲','module:form_embed'=>'📋','module:plan_cta'=>'👑','module:course_enroll_cta'=>'🎓','module:my_learning_link'=>'📚'];
 @endphp
 
 <div
@@ -105,6 +105,141 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
              (theme-runtime::canvas.tab-strip: chevrons, wheel, active tab kept
              in view), so adding pages never needs a browser zoom-out. --}}
         <div class="tbts-group" data-testid="tb-page-tabs-group">
+            {{-- Searchable Page Dropdown Menu --}}
+            <div class="relative shrink-0" x-data="{ pageSearchOpen: false, pageSearchFilter: '' }" @click.outside="pageSearchOpen = false">
+                <button
+                    type="button"
+                    @click="pageSearchOpen = !pageSearchOpen; if (pageSearchOpen) $nextTick(() => $refs.pageSearchInput?.focus())"
+                    class="flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium shadow-sm transition"
+                    title="جستجو و تغییر سریع صفحه، هدر، فوتر، پست یا محصول"
+                    data-testid="tb-page-search-dropdown-btn"
+                >
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span class="max-w-[130px] truncate" x-text="pageDisplayName(currentPage, pages[currentPage]?.title)"></span>
+                    <svg class="w-3 h-3 text-slate-400 transition-transform" :class="pageSearchOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div
+                    x-show="pageSearchOpen"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="transform opacity-0 scale-95"
+                    x-transition:enter-end="transform opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="transform opacity-100 scale-100"
+                    x-transition:leave-end="transform opacity-0 scale-95"
+                    class="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 overflow-hidden text-right"
+                    data-testid="tb-page-search-dropdown-menu"
+                >
+                    <div class="px-2.5 pb-2 border-b border-slate-100">
+                        <div class="relative">
+                            <input
+                                x-ref="pageSearchInput"
+                                type="text"
+                                x-model="pageSearchFilter"
+                                placeholder="جستجوی برگه، پست، محصول..."
+                                class="w-full text-xs pr-7 pl-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="max-h-64 overflow-y-auto py-1 divide-y divide-slate-50 text-xs">
+                        {{-- Headers / Footers Section --}}
+                        <div class="py-1">
+                            <div class="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">ساختار قالب</div>
+                            <template x-for="(pg, k) in pages" :key="k">
+                                <div x-show="k.startsWith('__') && (!pageSearchFilter || pageDisplayName(k, pg.title).toLowerCase().includes(pageSearchFilter.toLowerCase()))">
+                                    <button
+                                        type="button"
+                                        @click="if (k === '__header__') { selectHeaderNode(); } else if (k === '__footer__') { selectFooterNode(); } else { switchPage(k); } pageSearchOpen = false;"
+                                        :class="currentPage === k ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-50'"
+                                        class="w-full text-right px-3 py-1.5 flex items-center justify-between gap-2 transition"
+                                    >
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span x-text="k === '__header__' ? '🔝' : (k === '__footer__' ? '🔚' : '📄')"></span>
+                                            <span class="truncate" x-text="pageDisplayName(k, pg.title)"></span>
+                                        </div>
+                                        <span class="text-[9px] px-1.5 py-0.5 rounded font-mono" :class="k === '__header__' ? 'bg-teal-100 text-teal-700' : 'bg-purple-100 text-purple-700'" x-text="k === '__header__' ? 'Header' : 'Footer'"></span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Regular Pages Section --}}
+                        <div class="py-1">
+                            <div class="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">صفحات سایت</div>
+                            <template x-for="(pg, k) in pages" :key="k">
+                                <div x-show="!k.startsWith('__') && !k.startsWith('post_') && !k.startsWith('product_') && (!pageSearchFilter || pageDisplayName(k, pg.title).toLowerCase().includes(pageSearchFilter.toLowerCase()) || k.toLowerCase().includes(pageSearchFilter.toLowerCase()))">
+                                    <button
+                                        type="button"
+                                        @click="switchPage(k); pageSearchOpen = false;"
+                                        :class="currentPage === k ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-50'"
+                                        class="w-full text-right px-3 py-1.5 flex items-center justify-between gap-2 transition"
+                                    >
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span x-text="pg.is_home || k === 'home' ? '🏠' : '📄'"></span>
+                                            <span class="truncate" x-text="pageDisplayName(k, pg.title)"></span>
+                                        </div>
+                                        <span class="text-[9px] text-slate-400 font-mono" x-text="k"></span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Posts Section --}}
+                        <div class="py-1">
+                            <div class="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">مطالب وبلاگ</div>
+                            <template x-for="(pg, k) in pages" :key="k">
+                                <div x-show="k.startsWith('post_') && (!pageSearchFilter || pageDisplayName(k, pg.title).toLowerCase().includes(pageSearchFilter.toLowerCase()))">
+                                    <button
+                                        type="button"
+                                        @click="switchPage(k); pageSearchOpen = false;"
+                                        :class="currentPage === k ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-50'"
+                                        class="w-full text-right px-3 py-1.5 flex items-center justify-between gap-2 transition"
+                                    >
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span>📰</span>
+                                            <span class="truncate" x-text="pageDisplayName(k, pg.title)"></span>
+                                        </div>
+                                        <span class="text-[9px] text-slate-400 font-mono" x-text="k"></span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Products Section --}}
+                        <div class="py-1">
+                            <div class="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">محصولات فروشگاه</div>
+                            <template x-for="(pg, k) in pages" :key="k">
+                                <div x-show="k.startsWith('product_') && (!pageSearchFilter || pageDisplayName(k, pg.title).toLowerCase().includes(pageSearchFilter.toLowerCase()))">
+                                    <button
+                                        type="button"
+                                        @click="switchPage(k); pageSearchOpen = false;"
+                                        :class="currentPage === k ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-50'"
+                                        class="w-full text-right px-3 py-1.5 flex items-center justify-between gap-2 transition"
+                                    >
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span>🛍️</span>
+                                            <span class="truncate" x-text="pageDisplayName(k, pg.title)"></span>
+                                        </div>
+                                        <span class="text-[9px] text-slate-400 font-mono" x-text="k"></span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-5 w-px bg-slate-200 shrink-0"></div>
+
             <div class="tbts" data-tb-tabstrip data-testid="tb-page-tabs">
                 @include('theme-runtime::canvas.tab-strip-nav', ['dir' => 'start'])
                 <div class="tbts-viewport" data-tbts-viewport role="group" aria-label="صفحات قالب">
@@ -369,11 +504,30 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
 
 {{-- TB4: Structure Tree Tab --}}
             <div x-show="leftPanelTab==='tree'" class="flex-1 overflow-y-auto">
-                <div x-show="flattenTree().length === 0" class="flex flex-col items-center justify-center py-10 text-center text-slate-400">
-                    <svg class="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                    <p class="text-xs">هنوز بلوکی اضافه نشده</p>
-                </div>
                 <div class="py-2">
+                    {{-- Persistent Header Structural Node --}}
+                    <div
+                        @click="selectHeaderNode()"
+                        data-testid="tb-tree-node-header"
+                        :class="currentPage === '__header__' ? 'bg-teal-50 border-r-2 border-teal-500 text-teal-800 font-semibold' : 'hover:bg-slate-50 text-slate-700'"
+                        class="flex items-center gap-2 px-3 py-2 cursor-pointer transition text-xs border-b border-slate-100"
+                    >
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0"></span>
+                        <span class="text-sm">🔝</span>
+                        <span class="flex-1 truncate font-medium" x-text="pageDisplayName('__header__', pages['__header__']?.title)"></span>
+                        <span class="text-[9px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded font-mono shrink-0">Header</span>
+                    </div>
+
+                    {{-- Section Divider for Page Content --}}
+                    <div class="px-3 py-1.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                        <span x-text="'محتوای صفحه (' + pageDisplayName(currentPage, pages[currentPage]?.title) + ')'"></span>
+                        <span class="font-mono text-[10px]" x-text="flattenTree().length + ' بلوک'"></span>
+                    </div>
+
+                    <div x-show="flattenTree().length === 0" class="flex flex-col items-center justify-center py-6 text-center text-slate-400">
+                        <svg class="w-8 h-8 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        <p class="text-xs">هنوز بلوکی در محتوای این صفحه نیست</p>
+                    </div>
                     <template x-for="node in flattenTree()" :key="node.block.id + node.depth">
                         <div
                             @click="selectBlock(node.path)"
@@ -418,6 +572,19 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <svg class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                         </div>
                     </template>
+
+                    {{-- Persistent Footer Structural Node --}}
+                    <div
+                        @click="selectFooterNode()"
+                        data-testid="tb-tree-node-footer"
+                        :class="currentPage === '__footer__' ? 'bg-purple-50 border-r-2 border-purple-500 text-purple-800 font-semibold' : 'hover:bg-slate-50 text-slate-700'"
+                        class="flex items-center gap-2 px-3 py-2 cursor-pointer transition text-xs border-t border-slate-100 mt-2"
+                    >
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
+                        <span class="text-sm">🔚</span>
+                        <span class="flex-1 truncate font-medium" x-text="pageDisplayName('__footer__', pages['__footer__']?.title)"></span>
+                        <span class="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-mono shrink-0">Footer</span>
+                    </div>
                 </div>
             </div>
 
@@ -473,7 +640,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                             <svg :class="expandedCats['{{ $catKey }}'] ? 'rotate-180' : ''" class="w-3.5 h-3.5 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
 
-                        <div x-show="expandedCats['{{ $catKey }}']" x-collapse>
+                        <div x-show="expandedCats['{{ $catKey }}'] || !!librarySearch" x-collapse>
                             <div class="px-2 pb-2 grid grid-cols-2 gap-1.5">
                                 @foreach($catBlocks as $blockType => $blockDef)
                                     @php $blockAccess = ($assetAccess ?? [])[$blockType] ?? null; @endphp
@@ -498,13 +665,16 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                         @click="addBlock('{{ $blockType }}')"
                                         @dragstart="startDragBlock($event, '{{ $blockType }}')"
                                         @dragend="endDragBlock()"
-                                        x-show="isBlockVisible('{{ $blockType }}', '{{ addslashes($blockDef['name']) }}')"
+                                        x-show="isBlockVisible('{{ $blockType }}', '{{ addslashes($blockDef['name']) }}', '{{ addslashes($blockDef['description'] ?? '') }}')"
                                         data-testid="tb-palette-add-{{ $blockType }}"
                                         class="flex flex-col items-start gap-1 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm transition text-right cursor-grab active:cursor-grabbing group"
-                                        title="{{ $blockDef['name'] }}"
+                                        title="{{ $blockDef['description'] ?? $blockDef['name'] }}"
                                     >
                                         <div class="text-lg leading-none">{{ $blockEmoji[$blockType] ?? '🧩' }}</div>
                                         <span class="text-[11px] font-medium text-slate-700 group-hover:text-indigo-700 leading-tight line-clamp-2">{{ $blockDef['name'] }}</span>
+                                        @if(!empty($blockDef['description']))
+                                            <span class="text-[9px] text-slate-400 leading-tight line-clamp-1">{{ $blockDef['description'] }}</span>
+                                        @endif
                                         @if(!empty($blockDef['requires']))
                                             <span class="text-[9px] px-1.5 py-0.5 rounded {{ $badgeClass }} font-medium leading-none mt-0.5">{{ $blockDef['requires'] }}</span>
                                         @endif
@@ -1801,6 +1971,7 @@ $blockEmoji   = ['hero'=>'🌟','section'=>'📦','grid'=>'🔲','columns'=>'⬜
                                     @case('heading') 🔠 @break
                                     @case('text') 📄 @break @case('image') 🖼️ @break
                                     @case('button') 🔘 @break @case('cta') 📢 @break
+                                    @case('scroll_to_top') 🔝 @break
                                     @default 🧩
                                 @endswitch
                             </span>
@@ -2695,10 +2866,10 @@ function canvasEditor() {
             const s = this.librarySearch.toLowerCase();
             return Object.keys(BLOCK_LABELS).some(t => t.includes(s) || (BLOCK_LABELS[t]??'').toLowerCase().includes(s));
         },
-        isBlockVisible(type, name) {
+        isBlockVisible(type, name, desc = '') {
             if (!this.librarySearch) return true;
             const s = this.librarySearch.toLowerCase();
-            return type.toLowerCase().includes(s) || name.toLowerCase().includes(s);
+            return type.toLowerCase().includes(s) || name.toLowerCase().includes(s) || (desc && desc.toLowerCase().includes(s));
         },
 
         // ── TB4: Block Tree Helpers ───────────────────────────
@@ -3180,6 +3351,7 @@ function canvasEditor() {
             const path = Array.isArray(pathOrIndex) ? pathOrIndex : (pathOrIndex >= 0 ? [pathOrIndex] : null);
             this.selectedPath = path;
             this.selectedTab = 'content';
+            if (path && path.length > 0) this.showLeftSidebar = true;
             if (this.selectedBlock) this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
         },
 
@@ -3372,15 +3544,114 @@ function canvasEditor() {
         },
 
         // ── Page Management ────────────────────────────────────
+        pageDisplayName(key, title) {
+            const rawKey = String(key || '').trim();
+            const MAP = {
+                '__header__': 'هدر سایت',
+                '__footer__': 'فوتر سایت',
+                'header': 'هدر سایت',
+                'footer': 'فوتر سایت',
+                'home': 'صفحه اصلی',
+                'login': 'ورود به حساب',
+                'register': 'ثبت‌نام',
+            };
+            if (MAP[rawKey]) return MAP[rawKey];
+            if (title && String(title).trim() !== '' && !String(title).startsWith('__')) return String(title).trim();
+            if (rawKey.startsWith('post_')) return 'مطلب: ' + rawKey.replace('post_', '');
+            if (rawKey.startsWith('product_')) return 'محصول: ' + rawKey.replace('product_', '');
+            if (rawKey.startsWith('page_')) return 'برگه: ' + rawKey.replace('page_', '');
+            return rawKey || 'صفحه بدون نام';
+        },
+
         switchPage(key) {
             if (this.isDirty) this.saveCurrentPage();
             this.currentPage  = key;
+            try {
+                const u = new URL(window.location.href);
+                u.searchParams.set('page', key);
+                window.history.replaceState({}, '', u.toString());
+            } catch (_) {}
             this.selectedPath = null;
             this.selectedTab  = 'content';
             // Reset history for new page
             this.history      = [JSON.parse(JSON.stringify(this.pages[key]?.blocks ?? []))];
             this.historyIndex = 0;
             this.reloadIframe();
+            if (key === '__header__' || key === '__footer__') {
+                this.showLeftSidebar = true;
+                if (!this.pages[key]) {
+                    this.pages[key] = { title: key === '__header__' ? 'هدر سایت' : 'فوتر سایت', slug: key, blocks: [] };
+                }
+                if (!Array.isArray(this.pages[key].blocks) || this.pages[key].blocks.length === 0) {
+                    this.pages[key].blocks = [this.normalizeBlock({
+                        id: (key === '__header__' ? 'hdr_' : 'ftr_') + Math.random().toString(36).substr(2, 9),
+                        type: key === '__header__' ? 'nav_header' : 'site_footer',
+                        props: key === '__header__' ? { brand_text: 'برند شما', logo_text: 'برند شما' } : { copyright: 'تمامی حقوق محفوظ است.' }
+                    })];
+                }
+                this.selectedPath = [0];
+                this.$nextTick(() => {
+                    this.selectedPath = [0];
+                    this.selectedTab = 'content';
+                    if (this.selectedBlock) {
+                        this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                    }
+                });
+            }
+        },
+
+        selectHeaderNode() {
+            this.showLeftSidebar = true;
+            if (this.currentPage !== '__header__') {
+                this.switchPage('__header__');
+            } else {
+                if (!this.pages['__header__']) {
+                    this.pages['__header__'] = { title: 'هدر سایت', slug: '__header__', blocks: [] };
+                }
+                if (!Array.isArray(this.pages['__header__'].blocks) || this.pages['__header__'].blocks.length === 0) {
+                    this.pages['__header__'].blocks = [this.normalizeBlock({
+                        id: 'hdr_' + Math.random().toString(36).substr(2, 9),
+                        type: 'nav_header',
+                        props: { brand_text: 'برند شما', logo_text: 'برند شما' }
+                    })];
+                }
+                this.selectedPath = [0];
+                this.selectedTab = 'content';
+                this.$nextTick(() => {
+                    this.selectedPath = [0];
+                    this.selectedTab = 'content';
+                    if (this.selectedBlock) {
+                        this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                    }
+                });
+            }
+        },
+
+        selectFooterNode() {
+            this.showLeftSidebar = true;
+            if (this.currentPage !== '__footer__') {
+                this.switchPage('__footer__');
+            } else {
+                if (!this.pages['__footer__']) {
+                    this.pages['__footer__'] = { title: 'فوتر سایت', slug: '__footer__', blocks: [] };
+                }
+                if (!Array.isArray(this.pages['__footer__'].blocks) || this.pages['__footer__'].blocks.length === 0) {
+                    this.pages['__footer__'].blocks = [this.normalizeBlock({
+                        id: 'ftr_' + Math.random().toString(36).substr(2, 9),
+                        type: 'site_footer',
+                        props: { copyright: 'تمامی حقوق محفوظ است.' }
+                    })];
+                }
+                this.selectedPath = [0];
+                this.selectedTab = 'content';
+                this.$nextTick(() => {
+                    this.selectedPath = [0];
+                    this.selectedTab = 'content';
+                    if (this.selectedBlock) {
+                        this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                    }
+                });
+            }
         },
 
         deletePage(key) {
@@ -3547,6 +3818,7 @@ function canvasEditor() {
                 case 'blockSelected': {
                     const path = this.findBlockPath(d.blockId);
                     if (path) {
+                        this.showLeftSidebar = true;
                         this.selectedPath = path;
                         this.selectedTab = 'content';
                         this.selectedLogicalItem = d.logicalGroup !== null && Number.isInteger(d.logicalIndex)

@@ -20,8 +20,31 @@ class RegisterController extends Controller
             return redirect()->route('login')->with('error', 'ثبت‌نام در این سایت غیرفعال است.');
         }
 
+        $themeRaw = Setting::get('active_canvas_theme_data');
+        $renderedAuthHtml = null;
+        if (!empty($themeRaw)) {
+            $themeData = json_decode($themeRaw, true);
+            $registerBlocks = $themeData['pages']['register']['blocks'] ?? null;
+            if (!empty($registerBlocks)) {
+                try {
+                    $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
+                    $renderer->setThemeData($themeData);
+                    $renderer->setContext([
+                        'errors'     => session('errors'),
+                        'site_name'  => \App\Helpers\SiteHelper::siteName(),
+                        'csrf_token' => csrf_token(),
+                    ]);
+                    $renderedAuthHtml = $renderer->renderBlocks($registerBlocks);
+                } catch (\Throwable $e) {
+                    Log::warning('Canvas register block render fallback: ' . $e->getMessage());
+                    $renderedAuthHtml = null;
+                }
+            }
+        }
+
         return view('auth.register', [
-            'refCode' => $request->query('ref', ''),
+            'refCode'          => $request->query('ref', ''),
+            'renderedAuthHtml' => $renderedAuthHtml,
         ]);
     }
 

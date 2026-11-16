@@ -34,6 +34,10 @@ class PageBuilderController extends Controller
      */
     public function edit(Page $page, BuilderLayoutService $layoutService)
     {
+        if (! request()->boolean('legacy')) {
+            return redirect()->route('admin.theme-design.canvas-edit', ['page' => $page->slug]);
+        }
+
         [$blockLabels, $blockSchemas, $byCategory] = $this->buildRegistryData();
 
         $raw = $page->builder_content_v2 ?? $page->builder_content ?? [];

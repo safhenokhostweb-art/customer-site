@@ -19,6 +19,10 @@ class ContentBuilderController extends Controller
 
     public function editPost(Post $post)
     {
+        if (request()->query('legacy') !== '1') {
+            return redirect()->route('admin.theme-design.canvas-edit', ['page' => 'post_' . $post->id]);
+        }
+
         [$blockLabels, $blockSchemas, $byCategory] = $this->registryData();
         $initialBlocks = $this->normalizeBlocks($post->builder_content);
 
@@ -53,7 +57,7 @@ class ContentBuilderController extends Controller
     public function savePost(Request $request, Post $post): JsonResponse
     {
         $data = $request->validate(['blocks' => 'required|array']);
-        $post->update(['builder_content' => ['blocks' => $data['blocks']]]);
+        $post->update(['builder_content' => ['blocks' => $data['blocks'], 'sections' => $data['blocks']]]);
         return response()->json(['success' => true]);
     }
 
@@ -61,6 +65,10 @@ class ContentBuilderController extends Controller
 
     public function editProduct(Product $product)
     {
+        if (request()->query('legacy') !== '1') {
+            return redirect()->route('admin.theme-design.canvas-edit', ['page' => 'product_' . $product->id]);
+        }
+
         [$blockLabels, $blockSchemas, $byCategory] = $this->registryData();
         $initialBlocks = $this->normalizeBlocks($product->builder_content);
 
@@ -95,7 +103,7 @@ class ContentBuilderController extends Controller
     public function saveProduct(Request $request, Product $product): JsonResponse
     {
         $data = $request->validate(['blocks' => 'required|array']);
-        $product->update(['builder_content' => ['blocks' => $data['blocks']]]);
+        $product->update(['builder_content' => ['blocks' => $data['blocks'], 'sections' => $data['blocks']]]);
         return response()->json(['success' => true]);
     }
 
@@ -108,12 +116,6 @@ class ContentBuilderController extends Controller
             $blocks = [];
         }
         $renderer = app(BlockRenderer::class);
-        // TASK 3/3 Phase 6.5B — was hardcoded to '' (empty), so a nav_menu/
-        // nav_header(menu-sourced) block always previewed with no nav
-        // content at all, even when a real primary Menu exists. Now uses
-        // the same canonical MenuService::renderMenuHtml() the real public
-        // render uses (admin: true — a preview should reflect the current
-        // draft Menu, not require it to already be published).
         $menuSvc = app(\App\Services\MenuService::class);
         $renderer->setContext([
             'menu_html' => $menuSvc->renderMenuHtml('primary', admin: true),
@@ -134,6 +136,9 @@ class ContentBuilderController extends Controller
         // Support {blocks:[...]} format
         if (isset($content['blocks']) && is_array($content['blocks'])) {
             return $content['blocks'];
+        }
+        if (isset($content['sections']) && is_array($content['sections'])) {
+            return $content['sections'];
         }
         return [];
     }
@@ -165,6 +170,32 @@ class ContentBuilderController extends Controller
             $byCategory[$cat][$type] = $def;
         }
         $byCategory = array_filter($byCategory);
+
+        try {
+            $themeSlug = \App\Models\Setting::get('active_canvas_theme_slug') ?: \App\Helpers\SiteHelper::theme();
+            $canvasBlocks = \App\Services\ThemeCanvas\BlockRegistry::forTheme($themeSlug);
+            foreach ($canvasBlocks as $type => $def) {
+                if (isset($blockLabels[$type])) {
+                    continue;
+                }
+                $module = $def['required_module'] ?? null;
+                if ($module !== null && !in_array($module, $enabled, true)) {
+                    continue;
+                }
+                $blockLabels[$type] = $def['name'] ?? ucfirst($type);
+                $blockSchemas[$type] = [
+                    'schema'       => $def['schema'] ?? [],
+                    'defaultProps' => $def['defaultProps'] ?? [],
+                ];
+                $cat = $def['category'] ?? 'content';
+                if (!isset($byCategory[$cat])) {
+                    $byCategory[$cat] = [];
+                }
+                $byCategory[$cat][$type] = $def;
+            }
+            $byCategory = array_filter($byCategory);
+        } catch (\Throwable $e) {}
+
         return [$blockLabels, $blockSchemas, $byCategory];
     }
 

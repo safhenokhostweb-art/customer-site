@@ -130,7 +130,16 @@
             </ul>
         </nav>
     @endif
-    <div style="line-height: 1.75; color: var(--tb-text, inherit);" class="post-body">{!! $postBodyHtml !!}</div>
+    @php
+        $postBlocks = $post->builder_content['blocks'] ?? $post->builder_content['sections'] ?? [];
+    @endphp
+    @if(!empty($postBlocks))
+        <div class="post-builder-content" style="margin-bottom: 2rem;">
+            {!! app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->renderPageBlocks($postBlocks) !!}
+        </div>
+    @else
+        <div style="line-height: 1.75; color: var(--tb-text, inherit);" class="post-body">{!! $postBodyHtml !!}</div>
+    @endif
     <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-top:1.5rem;">
         <span style="font-size:0.85rem; color:var(--tb-text-muted, #6b7280); font-weight:600;">اشتراک‌گذاری:</span>
         <a href="https://t.me/share/url?url={{ $shareUrlEncoded }}&text={{ $shareTitle }}" target="_blank" rel="noopener noreferrer" class="tb-tag-neutral" style="padding:0.4rem 0.85rem; text-decoration:none;">تلگرام</a>

@@ -57,81 +57,126 @@
 
     {{-- ─── Theme Header Card ─────────────────────────────────────────────── --}}
     <div x-data="{ historyOpen: false }">
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
       {{-- Color Bar --}}
       <div class="h-2" style="background: linear-gradient(90deg, {{ $primary }} 0%, {{ $secondary }} 100%);"></div>
 
-      <div class="p-6 flex flex-wrap items-start justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-               style="background: {{ $primary }}1a;">
+      {{-- Top Header: Brand Identity & Primary Actions --}}
+      <div class="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-b border-gray-100">
+        {{-- Theme Identity --}}
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-gray-100"
+               style="background: {{ $primary }}14;">
             <x-core-ui::icon name="layout" class="w-7 h-7" style="color: {{ $primary }};" />
           </div>
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <h1 class="text-xl font-bold text-gray-900">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2.5 flex-wrap mb-1">
+              <h1 class="text-xl font-bold text-gray-900 truncate">
                 {{ $themeName ?: 'قالب Canvas' }}
               </h1>
-              <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">فعال</span>
+              <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                قالب فعال
+              </span>
             </div>
             @if($themeSlug)
-              <p class="text-sm text-gray-400 font-mono">{{ $themeSlug }}</p>
+              <div class="flex items-center gap-1.5 text-xs text-gray-500 font-mono">
+                <span class="text-gray-400 font-sans">شناسه سیستم:</span>
+                <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md border border-gray-200/60 font-semibold">{{ $themeSlug }}</span>
+              </div>
             @endif
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-          <a href="{{ route('admin.theme-design.canvas-edit') }}"
-             class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm">
-            <x-core-ui::icon name="pencil" class="w-4 h-4" />
-            ویرایش ویجت‌ها (Canvas)
-          </a>
+        {{-- Primary Action Buttons --}}
+        <div class="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
           <a href="{{ url('/') }}" target="_blank"
-             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
-            <x-core-ui::icon name="eye" class="w-4 h-4" />
-            پیش‌نمایش سایت
+             class="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm transition hover:border-gray-300">
+            <x-core-ui::icon name="eye" class="w-4 h-4 text-gray-500" />
+            <span>پیش‌نمایش سایت</span>
           </a>
-          <a href="{{ route('admin.theme-design.canvas-export') }}"
-             class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
-            <x-core-ui::icon name="download" class="w-4 h-4" />
-            صادر کردن JSON
+          <a href="{{ route('admin.theme-design.canvas-edit') }}"
+             class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition hover:shadow-indigo-200 hover:shadow-md ring-1 ring-indigo-500">
+            <x-core-ui::icon name="pencil" class="w-4 h-4" />
+            <span>ویرایش ویجت‌ها (Canvas)</span>
           </a>
-          <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
-             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-600 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
-            <x-core-ui::icon name="shield-check" class="w-4 h-4" />
-            لایسنس‌های من
-          </a>
+        </div>
+      </div>
+
+      {{-- Middle Metrics Grid --}}
+      <div class="p-6 bg-gradient-to-b from-gray-50/70 to-white border-b border-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {{-- Stat: Pages --}}
+          <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex items-center justify-between transition hover:border-indigo-200">
+            <div>
+              <p class="text-xs font-medium text-gray-500">صفحات طراحی شده</p>
+              <p class="text-2xl font-bold text-gray-900 mt-1 font-mono">{{ $pageCount }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <x-core-ui::icon name="document" class="w-5 h-5" />
+            </div>
+          </div>
+
+          {{-- Stat: Header Blocks --}}
+          <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex items-center justify-between transition hover:border-indigo-200">
+            <div>
+              <p class="text-xs font-medium text-gray-500">بلاک‌های هدر فعال</p>
+              <p class="text-2xl font-bold text-gray-900 mt-1 font-mono">{{ $hCount }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <x-core-ui::icon name="chevron-up" class="w-5 h-5" />
+            </div>
+          </div>
+
+          {{-- Stat: Footer Blocks --}}
+          <div class="bg-white rounded-xl border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex items-center justify-between transition hover:border-indigo-200">
+            <div>
+              <p class="text-xs font-medium text-gray-500">بلاک‌های فوتر فعال</p>
+              <p class="text-2xl font-bold text-gray-900 mt-1 font-mono">{{ $fCount }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <x-core-ui::icon name="chevron-down" class="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{-- Bottom Toolbar: Secondary Tools & Destructive Action --}}
+      <div class="px-6 py-3.5 bg-gray-50/90 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
           <button type="button" @click="historyOpen = !historyOpen"
-                  class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-xl border border-gray-200 transition">
-            <x-core-ui::icon name="arrow-uturn-left" class="w-4 h-4" />
-            تاریخچه و بازیابی نسخه‌ها
+                  :class="historyOpen ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'"
+                  class="inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border shadow-xs transition">
+            <x-core-ui::icon name="arrow-uturn-left" class="w-3.5 h-3.5 text-indigo-500" />
+            <span>تاریخچه و بازیابی نسخه‌ها</span>
+            <span class="text-[10px] font-normal text-gray-400" x-show="!historyOpen">(مشاهده)</span>
+            <span class="text-[10px] font-normal text-indigo-500" x-show="historyOpen">(بستن)</span>
           </button>
+
+          <a href="{{ route('admin.theme-design.canvas-export') }}"
+             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-gray-200 shadow-xs transition hover:text-emerald-700">
+            <x-core-ui::icon name="download" class="w-3.5 h-3.5 text-emerald-600" />
+            <span>صادر کردن JSON</span>
+          </a>
+
+          <a href="{{ route('admin.theme-marketplace.my-licenses') }}"
+             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-gray-200 shadow-xs transition hover:text-indigo-700">
+            <x-core-ui::icon name="shield-check" class="w-3.5 h-3.5 text-indigo-600" />
+            <span>لایسنس‌های من</span>
+          </a>
+        </div>
+
+        <div>
           <form method="POST"
                 action="{{ route('admin.theme-design.canvas-deactivate') }}"
                 onsubmit="return confirm('قالب Canvas غیرفعال شود و سایت به حالت پیش‌فرض برگردد؟')">
             @csrf
             <button type="submit"
-                    class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium px-4 py-2 rounded-xl border border-red-200 transition">
-              <x-core-ui::icon name="x-circle" class="w-4 h-4" />
-              غیرفعال‌سازی
+                    class="inline-flex items-center gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-medium px-3 py-1.5 rounded-lg transition border border-transparent hover:border-red-200">
+              <x-core-ui::icon name="x-circle" class="w-3.5 h-3.5" />
+              <span>غیرفعال‌سازی قالب</span>
             </button>
           </form>
-        </div>
-      </div>
-
-      {{-- Stats Row --}}
-      <div class="border-t border-gray-100 px-6 py-4 grid grid-cols-3 gap-4 bg-gray-50 text-center text-sm">
-        <div>
-          <p class="text-2xl font-bold text-indigo-600">{{ $pageCount }}</p>
-          <p class="text-gray-500 text-xs mt-0.5">صفحه</p>
-        </div>
-        <div>
-          <p class="text-2xl font-bold text-indigo-600">{{ $hCount }}</p>
-          <p class="text-gray-500 text-xs mt-0.5">بلاک هدر</p>
-        </div>
-        <div>
-          <p class="text-2xl font-bold text-indigo-600">{{ $fCount }}</p>
-          <p class="text-gray-500 text-xs mt-0.5">بلاک فوتر</p>
         </div>
       </div>
     </div>

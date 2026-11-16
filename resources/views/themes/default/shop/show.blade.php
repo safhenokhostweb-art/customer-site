@@ -205,7 +205,14 @@
             <button type="button" class="product-tab-btn px-4 py-3" data-tab="faq" style="border:none;background:var(--tb-surface, #fff);color:var(--tb-text, inherit);cursor:pointer;">سوالات</button>
         </div>
         <div id="tab-desc" class="product-tab-panel p-4" style="display:block;">
-            @if($product->description)
+            @php
+                $productBlocks = $product->builder_content['blocks'] ?? $product->builder_content['sections'] ?? [];
+            @endphp
+            @if(!empty($productBlocks))
+                <div class="product-builder-content" style="margin-bottom: 1.5rem;">
+                    {!! app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class)->renderPageBlocks($productBlocks) !!}
+                </div>
+            @elseif($product->description)
                 <div class="product-description-html" style="line-height: 1.8; color: var(--tb-text-muted, #4b5563);">{!! $product->description !!}</div>
             @else
                 <p class="text-gray-500">توضیحی ثبت نشده.</p>

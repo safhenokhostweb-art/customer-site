@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -167,9 +167,9 @@
         .site-header .container-inner { max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
         .site-header .header-row { display: flex; align-items: center; justify-content: space-between; min-height: 4rem; }
         .site-header #main-nav { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-        .site-header #mobile-menu { display: none; border-top: 1px solid rgba(255,255,255,0.2); padding: 1rem; }
+        .site-header #mobile-menu { display: block; max-height: 0; opacity: 0; overflow: hidden; border-top: 0; padding: 0 1rem; transition: max-height .38s cubic-bezier(.16,1,.3,1), opacity .3s ease, padding .35s ease; }
         .site-header #mobile-menu > div { display: flex; flex-direction: column; gap: 0.5rem; }
-        .site-header #mobile-menu.is-open { display: block; }
+        .site-header #mobile-menu.is-open { max-height: 80vh; opacity: 1; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.2); overflow-y: auto; }
         .site-header .menu-btn { display: none; padding: 0.5rem; border-radius: 0.5rem; background: transparent; border: none; cursor: pointer; color: inherit; }
         @media (max-width: 767px) {
             .site-header #main-nav { display: none; }
@@ -344,8 +344,8 @@
         .tb-site-header .tb-cart-link { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--tb-primary, var(--platform-primary, #4f46e5)); color: #fff !important; text-decoration: none; font-weight: 600; }
         .tb-site-header .tb-cart-link:hover { opacity: 0.95; }
         .tb-menu-btn { display: none; padding: 0.5rem; border: none; background: transparent; cursor: pointer; color: inherit; border-radius: 0.5rem; }
-        .tb-mobile-menu { display: none; border-top: 1px solid rgba(0,0,0,0.08); padding: 1rem; background: var(--tb-surface, #fff); }
-        .tb-mobile-menu.is-open { display: block; }
+        .tb-mobile-menu { display: block; max-height: 0; opacity: 0; overflow: hidden; border-top: 0; padding: 0 1rem; background: var(--tb-surface, #fff); transition: max-height .38s cubic-bezier(.16,1,.3,1), opacity .3s ease, padding .35s ease; }
+        .tb-mobile-menu.is-open { max-height: 80vh; opacity: 1; padding: 1rem; border-top: 1px solid rgba(0,0,0,0.08); overflow-y: auto; }
         .tb-mobile-menu-inner { display: flex; flex-direction: column; gap: 0.5rem; }
         body.tb-mobile-menu-open { overflow: hidden; }
         .tb-mobile-menu-inner a { padding: 0.5rem 0; color: var(--tb-text, #1f2937); text-decoration: none; font-weight: 500; }
@@ -492,86 +492,95 @@
         $footerMenuHtml = $footerMenu
             ? view('partials.site-menu', ['menu' => $footerMenu, 'variant' => 'footer', 'items' => $menuService->buildMenuTree($footerMenu)])->render()
             : view('partials.platform-menu', ['location' => 'footer', 'variant' => 'footer'])->render();
+
+        $renderedHeaderHtml = !empty($headerBlocks)
+            ? app(\App\Services\ThemeBuilder\BlockRenderer::class)
+                ->setContext([
+                    'menu_html' => $headerMenuHtml,
+                    'site_name' => \App\Helpers\SiteHelper::siteName(),
+                ])
+                ->renderBlocks($headerBlocks)
+            : '';
+        $hasNavHeaderBlock = str_contains($renderedHeaderHtml, 'tb-nav-header');
     @endphp
     @if($showHeader && !empty($headerBlocks))
-        <header class="tb-site-header {{ $stickyHeader ? 'tb-header-sticky' : '' }}" role="banner" id="site-header">
-            <div class="tb-header-inner">
-                <div class="tb-header-brand">
-                    <x-site-brand />
+        @if($hasNavHeaderBlock)
+            {!! $renderedHeaderHtml !!}
+        @else
+            <header class="tb-site-header {{ $stickyHeader ? 'tb-header-sticky' : '' }}" role="banner" id="site-header">
+                <div class="tb-header-inner">
+                    <div class="tb-header-brand">
+                        <x-site-brand />
+                    </div>
+                    <button type="button" id="tb-mobile-menu-btn" class="tb-menu-btn" aria-label="منو" aria-expanded="false">
+                        <x-core-ui::icon name="menu" style="width:24px;height:24px" />
+                    </button>
+                    <div class="tb-header-nav-wrap">
+                        {!! $renderedHeaderHtml !!}
+                    </div>
                 </div>
-                <button type="button" id="tb-mobile-menu-btn" class="tb-menu-btn" aria-label="منو" aria-expanded="false">
-                    <x-core-ui::icon name="menu" style="width:24px;height:24px" />
-                </button>
-                <div class="tb-header-nav-wrap">
-                    {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)
-                        ->setContext([
-                            'menu_html' => $headerMenuHtml,
-                            'site_name' => \App\Helpers\SiteHelper::siteName(),
-                        ])
-                        ->renderBlocks($headerBlocks) !!}
-                </div>
-            </div>
-            @php
-                $tbHeaderWantsDarkToggle = collect($headerBlocks ?? [])
-                    ->contains(fn ($b) => is_array($b) && ($b['type'] ?? null) === 'nav_header' && !empty($b['props']['show_dark_toggle']));
-            @endphp
-            <div id="tb-mobile-menu" class="tb-mobile-menu tb-mobile-menu-panel" aria-hidden="true" role="dialog" aria-label="منوی موبایل">
-                <div class="tb-mobile-menu-inner">
-                    @if(!empty($mobileNavItems))
-                        @include('partials.site-menu-mobile', ['items' => $mobileNavItems])
-                    @else
-                        <a href="{{ route('home') }}">خانه</a>
-                        @foreach($pages ?? \App\Models\Page::published()->menu()->get() as $p)
-                            <a href="{{ route('page.show', $p->slug) }}">{{ $p->title }}</a>
-                        @endforeach
-                        @if(\App\Helpers\SiteHelper::blogEnabled())
-                            <a href="{{ route('blog.index') }}">وبلاگ</a>
-                        @endif
-                        @if(\App\Helpers\SiteHelper::shopEnabled())
-                            <a href="{{ route('shop.index') }}">فروشگاه</a>
-                            <a href="{{ route('shop.cart') }}">سبد خرید</a>
-                        @endif
-                        <a href="{{ route('contact.show') }}">تماس</a>
-                        @auth
-                            <a href="{{ route('account.dashboard') }}">حساب من</a>
-                            @if(auth()->user()->isTenantAdmin())
-                                <a href="{{ route('admin.dashboard') }}">پنل</a>
-                            @endif
+                @php
+                    $tbHeaderWantsDarkToggle = collect($headerBlocks ?? [])
+                        ->contains(fn ($b) => is_array($b) && ($b['type'] ?? null) === 'nav_header' && !empty($b['props']['show_dark_toggle']));
+                @endphp
+                <div id="tb-mobile-menu" class="tb-mobile-menu tb-mobile-menu-panel" aria-hidden="true" role="dialog" aria-label="منوی موبایل">
+                    <div class="tb-mobile-menu-inner">
+                        @if(!empty($mobileNavItems))
+                            @include('partials.site-menu-mobile', ['items' => $mobileNavItems])
                         @else
-                            <a href="{{ route('login') }}">ورود</a>
-                        @endauth
-                    @endif
-                    @if($tbHeaderWantsDarkToggle)
-                        <button type="button" id="tb-mobile-theme-toggle" class="tb-theme-toggle" aria-label="تغییر حالت رنگی" style="margin-top:.5rem;">
-                            <span class="tb-theme-toggle-icon" aria-hidden="true">🌓</span>
-                        </button>
-                        <script>(function(){
-                            var btn = document.getElementById('tb-mobile-theme-toggle');
-                            if (!btn || btn.dataset.tbInit) return;
-                            btn.dataset.tbInit = '1';
-                            var ICONS = {light:'☀️', dark:'🌙', system:'💻'};
-                            var LABELS = {
-                                light: 'حالت رنگی: روشن — برای تغییر به تاریک کلیک کنید',
-                                dark: 'حالت رنگی: تاریک — برای تغییر به خودکار (سیستم) کلیک کنید',
-                                system: 'حالت رنگی: هماهنگ با سیستم — برای تغییر به روشن کلیک کنید'
-                            };
-                            function render() {
-                                var p = (window.__tbTheme && window.__tbTheme.get) ? window.__tbTheme.get() : 'system';
-                                var icon = btn.querySelector('.tb-theme-toggle-icon');
-                                if (icon) icon.textContent = ICONS[p] || ICONS.system;
-                                btn.setAttribute('aria-label', LABELS[p] || LABELS.system);
-                            }
-                            btn.addEventListener('click', function () {
-                                if (window.__tbTheme && window.__tbTheme.cycle) window.__tbTheme.cycle();
+                            <a href="{{ route('home') }}">خانه</a>
+                            @foreach($pages ?? \App\Models\Page::published()->menu()->get() as $p)
+                                <a href="{{ route('page.show', $p->slug) }}">{{ $p->title }}</a>
+                            @endforeach
+                            @if(\App\Helpers\SiteHelper::blogEnabled())
+                                <a href="{{ route('blog.index') }}">وبلاگ</a>
+                            @endif
+                            @if(\App\Helpers\SiteHelper::shopEnabled())
+                                <a href="{{ route('shop.index') }}">فروشگاه</a>
+                                <a href="{{ route('shop.cart') }}">سبد خرید</a>
+                            @endif
+                            <a href="{{ route('contact.show') }}">تماس</a>
+                            @auth
+                                <a href="{{ route('account.dashboard') }}">حساب من</a>
+                                @if(auth()->user()->isTenantAdmin())
+                                    <a href="{{ route('admin.dashboard') }}">پنل</a>
+                                @endif
+                            @else
+                                <a href="{{ route('login') }}">ورود</a>
+                            @endauth
+                        @endif
+                        @if($tbHeaderWantsDarkToggle)
+                            <button type="button" id="tb-mobile-theme-toggle" class="tb-theme-toggle" aria-label="تغییر حالت رنگی" style="margin-top:.5rem;">
+                                <span class="tb-theme-toggle-icon" aria-hidden="true">🌓</span>
+                            </button>
+                            <script>(function(){
+                                var btn = document.getElementById('tb-mobile-theme-toggle');
+                                if (!btn || btn.dataset.tbInit) return;
+                                btn.dataset.tbInit = '1';
+                                var ICONS = {light:'☀️', dark:'🌙', system:'💻'};
+                                var LABELS = {
+                                    light: 'حالت رنگی: روشن — برای تغییر به تاریک کلیک کنید',
+                                    dark: 'حالت رنگی: تاریک — برای تغییر به خودکار (سیستم) کلیک کنید',
+                                    system: 'حالت رنگی: هماهنگ با سیستم — برای تغییر به روشن کلیک کنید'
+                                };
+                                function render() {
+                                    var p = (window.__tbTheme && window.__tbTheme.get) ? window.__tbTheme.get() : 'system';
+                                    var icon = btn.querySelector('.tb-theme-toggle-icon');
+                                    if (icon) icon.textContent = ICONS[p] || ICONS.system;
+                                    btn.setAttribute('aria-label', LABELS[p] || LABELS.system);
+                                }
+                                btn.addEventListener('click', function () {
+                                    if (window.__tbTheme && window.__tbTheme.cycle) window.__tbTheme.cycle();
+                                    render();
+                                });
+                                document.addEventListener('tb-theme-change', render);
                                 render();
-                            });
-                            document.addEventListener('tb-theme-change', render);
-                            render();
-                        })();</script>
-                    @endif
+                            })();</script>
+                        @endif
+                    </div>
                 </div>
-            </div>
-        </header>
+            </header>
+        @endif
     @elseif($showHeader)
     <header class="site-header" style="background: var(--platform-menu-bg, #1e293b); color: var(--platform-menu-text, #e2e8f0);">
         <div class="container-inner">
@@ -802,6 +811,22 @@
             });
         });
     </script>
+    {{-- Global Scroll-to-Top Widget --}}
+    @php
+        $__globalStt = \App\Models\Setting::get('scroll_to_top', []);
+        if (is_string($__globalStt)) {
+            $__globalStt = json_decode($__globalStt, true) ?: [];
+        }
+        $__globalSttEnabled = !empty($__globalStt['enabled']) || \App\Models\Setting::get('scroll_to_top_enabled', false);
+    @endphp
+    @if($__globalSttEnabled)
+        {!! app(\App\Services\ThemeBuilder\BlockRenderer::class)->renderBlock([
+            'type' => 'scroll_to_top',
+            'id' => 'global-scroll-to-top',
+            'props' => is_array($__globalStt) ? $__globalStt : [],
+        ]) !!}
+    @endif
+
     <x-core-ui::payment-connection-warning />
     @includeWhen(($themeRuntimeMode ?? null) === \App\Services\ThemeCanvas\ThemeRuntimeDocument::MODE_PUBLIC, 'partials.theme-public-runtime')
     @stack('scripts')

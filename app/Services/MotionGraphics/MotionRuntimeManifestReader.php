@@ -63,8 +63,10 @@ final class MotionRuntimeManifestReader
             return null;
         }
 
+        $timeout = (int) config('site.platform_http_timeout', 15);
+
         try {
-            $response = Http::withToken($license->license_key)->acceptJson()->timeout(8)
+            $response = Http::withToken($license->license_key)->acceptJson()->timeout($timeout)
                 ->get($platform.'/api/motion-runtime/manifest', ['domain' => $license->domain ?: request()->getHost()]);
         } catch (\Throwable $e) {
             Log::warning('motion_runtime.fetch_failed', ['message' => $e->getMessage()]);

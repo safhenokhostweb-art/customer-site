@@ -32,7 +32,30 @@ class LoginController extends Controller
             }
         }
 
-        return view('auth.login', compact('captcha'));
+        $themeRaw = \App\Models\Setting::get('active_canvas_theme_data');
+        $renderedAuthHtml = null;
+        if (!empty($themeRaw)) {
+            $themeData = json_decode($themeRaw, true);
+            $loginBlocks = $themeData['pages']['login']['blocks'] ?? null;
+            if (!empty($loginBlocks)) {
+                try {
+                    $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
+                    $renderer->setThemeData($themeData);
+                    $renderer->setContext([
+                        'captcha'    => $captcha,
+                        'errors'     => session('errors'),
+                        'site_name'  => \App\Helpers\SiteHelper::siteName(),
+                        'csrf_token' => csrf_token(),
+                    ]);
+                    $renderedAuthHtml = $renderer->renderBlocks($loginBlocks);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Canvas login block render fallback: ' . $e->getMessage());
+                    $renderedAuthHtml = null;
+                }
+            }
+        }
+
+        return view('auth.login', compact('captcha', 'renderedAuthHtml'));
     }
 
     public function login(Request $request)
@@ -68,12 +91,15 @@ class LoginController extends Controller
             }
         }
 
+        $inputMobile = $request->input('mobile') ?: $request->input('identity');
+        $request->merge(['mobile' => $inputMobile]);
+
         $request->validate([
             'mobile' => ['required', new IranianMobile],
             'password' => 'required',
         ]);
 
-        $mobile = self::normalizeMobile($request->input('mobile'));
+        $mobile = self::normalizeMobile($inputMobile);
 
         $user = User::where('mobile', $mobile)->first();
 

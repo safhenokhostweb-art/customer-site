@@ -42,6 +42,9 @@ final class BlockRegistry
         // fields no renderer read — and were harmonized there instead, so
         // the canonical definition is the one authority on both hosts.
         // HOST_PATCHES is the entire remaining host delta.
+        if (class_exists(\SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::class)) {
+            \SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::register();
+        }
         self::$blocks = \SaaSPlatform\ThemeRuntime\BlockRegistry::all();
         foreach (self::HOST_PATCHES as $type => $fields) {
             foreach ($fields as $field => $definition) {
@@ -172,19 +175,39 @@ final class BlockRegistry
         return $def['defaultProps'] ?? [];
     }
 
-    public static function byCategory(): array
+    /**
+     * Filters blocks by theme scope.
+     * Blocks declaring a 'theme_scope' are only returned when $themeSlug matches.
+     * Blocks with no theme_scope are available to all themes.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function forTheme(?string $themeSlug = null): array
+    {
+        $all = self::all();
+        return array_filter($all, function (array $def) use ($themeSlug) {
+            $scope = $def['theme_scope'] ?? null;
+            if ($scope === null || $scope === '') {
+                return true;
+            }
+            return $themeSlug !== null && $scope === $themeSlug;
+        });
+    }
+
+    public static function byCategory(?string $themeSlug = null): array
     {
         $byCat = [];
-        foreach (self::all() as $type => $def) {
+        $blocks = self::forTheme($themeSlug);
+        foreach ($blocks as $type => $def) {
             $cat = $def['category'] ?? 'content';
             $byCat[$cat][$type] = $def;
         }
         return $byCat;
     }
 
-    public static function categoryLabels(): array
+    public static function categoryLabels(?string $themeSlug = null): array
     {
-        return [
+        $labels = [
             self::CATEGORY_LAYOUT    => 'چیدمان',
             self::CATEGORY_CONTENT   => 'محتوای ثابت',
             self::CATEGORY_DYNAMIC   => 'محتوای پویا',
@@ -193,11 +216,17 @@ final class BlockRegistry
             self::CATEGORY_UTILITY   => 'ابزار',
             self::CATEGORY_MODULE    => 'ماژول‌ها',
         ];
+
+        if ($themeSlug === \SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::THEME_SCOPE) {
+            $labels[\SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::CATEGORY_SOLAR] = 'ویجت‌های اختصاصی صنعت برق و خورشیدی';
+        }
+
+        return $labels;
     }
 
-    public static function categoryIcons(): array
+    public static function categoryIcons(?string $themeSlug = null): array
     {
-        return [
+        $icons = [
             self::CATEGORY_LAYOUT    => '📐',
             self::CATEGORY_CONTENT   => '📝',
             self::CATEGORY_DYNAMIC   => '🔄',
@@ -206,5 +235,11 @@ final class BlockRegistry
             self::CATEGORY_UTILITY   => '🔧',
             self::CATEGORY_MODULE    => '🧩',
         ];
+
+        if ($themeSlug === \SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::THEME_SCOPE) {
+            $icons[\SaaSPlatform\ThemeRuntime\SolarIndustryBlockTypes::CATEGORY_SOLAR] = '☀️';
+        }
+
+        return $icons;
     }
 }

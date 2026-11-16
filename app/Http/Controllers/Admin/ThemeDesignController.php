@@ -306,8 +306,9 @@ class ThemeDesignController extends Controller
 
     // ── Canvas Editor (drag-and-drop) ────────────────────────────────────────
 
-    public function canvasEdit()
+    public function canvasEdit(Request $request = null)
     {
+        $request = $request ?: request();
         $activeRaw = Setting::get('active_canvas_theme_data');
         if (empty($activeRaw)) {
             return redirect()->route('admin.theme-design.canvas')
@@ -338,23 +339,187 @@ class ThemeDesignController extends Controller
         }
 
         // Normalize pages to keyed array
-        $raw_pages = $themeData['pages'] ?? [];
+        $raw_pages = isset($themeData['pages']) && is_array($themeData['pages']) ? $themeData['pages'] : [];
         $pages = [];
         if (!empty($raw_pages)) {
             foreach ($raw_pages as $k => $page) {
-                $slug = $page['slug'] ?? (is_string($k) ? $k : 'home');
+                if (!is_array($page)) {
+                    continue;
+                }
+                $slug = isset($page['slug']) && is_string($page['slug']) && $page['slug'] !== ''
+                    ? $page['slug']
+                    : (is_string($k) && $k !== '' ? $k : 'home');
                 if (empty($slug)) $slug = 'home';
                 $pages[$slug] = [
                     'title'   => $page['title'] ?? ($slug === 'home' ? 'صفحه اصلی' : ucfirst($slug)),
                     'slug'    => $slug,
                     'is_home' => !empty($page['is_home']) || $slug === '' || $slug === 'home',
-                    'blocks'  => $page['blocks'] ?? [],
+                    'blocks'  => isset($page['blocks']) && is_array($page['blocks']) ? $page['blocks'] : [],
                 ];
             }
         }
-        if (empty($pages)) {
+        if (!isset($pages['home'])) {
             $pages['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
         }
+
+        // Merge requested page directly if not present or empty
+        $requestedPage = trim((string) ($request->query('page') ?? ''));
+        if ($requestedPage !== '') {
+            if (str_starts_with($requestedPage, 'post_')) {
+                $postId = (int) substr($requestedPage, 5);
+                $p = $postId > 0 ? \App\Models\Post::find($postId) : null;
+                $blocks = $p?->builder_content['blocks']
+                    ?? $p?->builder_content['sections']
+                    ?? [];
+                if (empty($blocks) && $p && trim((string) $p->body) !== '') {
+                    $blocks = [[
+                        'id' => 'db_post_' . $p->id,
+                        'type' => 'text',
+                        'props' => ['content' => $p->body],
+                    ]];
+                }
+                $pages[$requestedPage] = [
+                    'title'   => 'وبلاگ: ' . ($p?->title ?: ('پست #' . ($postId ?: 'جدید'))),
+                    'slug'    => $requestedPage,
+                    'is_home' => false,
+                    'blocks'  => $blocks,
+                ];
+            } elseif (str_starts_with($requestedPage, 'product_')) {
+                $prdId = (int) substr($requestedPage, 8);
+                $prd = $prdId > 0 ? \App\Models\Product::find($prdId) : null;
+                $blocks = $prd?->builder_content['blocks']
+                    ?? $prd?->builder_content['sections']
+                    ?? [];
+                if (empty($blocks) && $prd && trim((string) $prd->description) !== '') {
+                    $blocks = [[
+                        'id' => 'db_prd_' . $prd->id,
+                        'type' => 'text',
+                        'props' => ['content' => $prd->description],
+                    ]];
+                }
+                $pages[$requestedPage] = [
+                    'title'   => 'محصول: ' . ($prd?->name ?? $prd?->title ?? ('محصول #' . ($prdId ?: 'جدید'))),
+                    'slug'    => $requestedPage,
+                    'is_home' => false,
+                    'blocks'  => $blocks,
+                ];
+            } elseif ($dbPage = \App\Models\Page::where('slug', $requestedPage)->first()) {
+                $blocks = $dbPage->builder_content_v2['blocks']
+                    ?? $dbPage->builder_content_v2['sections']
+                    ?? $dbPage->builder_content['blocks']
+                    ?? $dbPage->builder_content['sections']
+                    ?? [];
+                if (empty($blocks) && trim((string) $dbPage->body) !== '') {
+                    $blocks = [[
+                        'id' => 'db_page_' . $dbPage->id,
+                        'type' => 'text',
+                        'props' => ['content' => $dbPage->body],
+                    ]];
+                }
+                $pages[$requestedPage] = [
+                    'title'   => $dbPage->title ?: ucfirst($requestedPage),
+                    'slug'    => $requestedPage,
+                    'is_home' => false,
+                    'blocks'  => $blocks,
+                ];
+            } else {
+                if (!isset($pages[$requestedPage])) {
+                    $pages[$requestedPage] = [
+                        'title'   => ucfirst($requestedPage),
+                        'slug'    => $requestedPage,
+                        'is_home' => false,
+                        'blocks'  => [],
+                    ];
+                }
+            }
+        }
+
+        // Merge database pages (App\Models\Page) into $pages for unified canvas editing
+        try {
+            $dbPages = \App\Models\Page::orderBy('id')->get();
+            foreach ($dbPages as $dbPage) {
+                $slug = $dbPage->slug;
+                if (empty($slug)) continue;
+                if (!isset($pages[$slug]) || empty($pages[$slug]['blocks'])) {
+                    $blocks = $dbPage->builder_content_v2['blocks']
+                        ?? $dbPage->builder_content_v2['sections']
+                        ?? $dbPage->builder_content['sections']
+                        ?? $dbPage->builder_content['blocks']
+                        ?? [];
+                    if (empty($blocks) && trim((string) $dbPage->body) !== '') {
+                        $blocks = [[
+                            'id' => 'db_page_' . $dbPage->id,
+                            'type' => 'text',
+                            'props' => ['content' => $dbPage->body],
+                        ]];
+                    }
+                    $pages[$slug] = [
+                        'title'   => $dbPage->title ?: ucfirst($slug),
+                        'slug'    => $slug,
+                        'is_home' => false,
+                        'blocks'  => $blocks,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed loading db pages in canvasEdit: ' . $e->getMessage());
+        }
+
+        // Merge database Posts into $pages
+        try {
+            if (class_exists(\App\Models\Post::class)) {
+                $dbPosts = \App\Models\Post::orderByDesc('id')->limit(50)->get();
+                foreach ($dbPosts as $p) {
+                    $postKey = 'post_' . $p->id;
+                    if (!isset($pages[$postKey]) || empty($pages[$postKey]['blocks'])) {
+                        $blocks = $p->builder_content['blocks']
+                            ?? $p->builder_content['sections']
+                            ?? [];
+                        if (empty($blocks) && trim((string) $p->body) !== '') {
+                            $blocks = [[
+                                'id' => 'db_post_' . $p->id,
+                                'type' => 'text',
+                                'props' => ['content' => $p->body],
+                            ]];
+                        }
+                        $pages[$postKey] = [
+                            'title'   => 'وبلاگ: ' . ($p->title ?: 'پست #' . $p->id),
+                            'slug'    => $postKey,
+                            'is_home' => false,
+                            'blocks'  => $blocks,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // Merge database Products into $pages
+        try {
+            if (class_exists(\App\Models\Product::class)) {
+                $dbProducts = \App\Models\Product::orderByDesc('id')->limit(50)->get();
+                foreach ($dbProducts as $prd) {
+                    $prdKey = 'product_' . $prd->id;
+                    if (!isset($pages[$prdKey]) || empty($pages[$prdKey]['blocks'])) {
+                        $blocks = $prd->builder_content['blocks']
+                            ?? $prd->builder_content['sections']
+                            ?? [];
+                        if (empty($blocks) && trim((string) $prd->description) !== '') {
+                            $blocks = [[
+                                'id' => 'db_prd_' . $prd->id,
+                                'type' => 'text',
+                                'props' => ['content' => $prd->description],
+                            ]];
+                        }
+                        $pages[$prdKey] = [
+                            'title'   => 'محصول: ' . ($prd->name ?: 'محصول #' . $prd->id),
+                            'slug'    => $prdKey,
+                            'is_home' => false,
+                            'blocks'  => $blocks,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
 
         // ─── Virtual pages for header/footer block editing ───────────────────
         // TASK 3/3 Phase 6.5C (BLD-29) — must read from the SAME variant
@@ -362,28 +527,135 @@ class ThemeDesignController extends Controller
         // actually render live, never the separate flat header_blocks/
         // footer_blocks field once variants exist (see that method's own
         // docblock for why those are two disconnected arrays).
+        $hdrBlocks = $this->activeVariantBlocks($themeData, 'header');
+        if (empty($hdrBlocks) && !empty($themeData['header_blocks']) && is_array($themeData['header_blocks'])) {
+            $hdrBlocks = $themeData['header_blocks'];
+        }
+        if (empty($hdrBlocks)) {
+            $hdrBlocks = [
+                [
+                    'id'    => 'nav-header-default',
+                    'type'  => 'nav_header',
+                    'props' => [
+                        'brand_text' => \App\Helpers\SiteHelper::siteName(),
+                        'logo_text'  => \App\Helpers\SiteHelper::siteName(),
+                        'header_layout' => 'standard',
+                        'show_search_btn' => true,
+                        'show_theme_toggle' => true,
+                        'show_cart_btn' => true,
+                    ],
+                ],
+            ];
+        }
+
+        $ftrBlocks = $this->activeVariantBlocks($themeData, 'footer');
+        if (empty($ftrBlocks) && !empty($themeData['footer_blocks']) && is_array($themeData['footer_blocks'])) {
+            $ftrBlocks = $themeData['footer_blocks'];
+        }
+        if (empty($ftrBlocks)) {
+            $ftrBlocks = [
+                [
+                    'id'    => 'site-footer-default',
+                    'type'  => 'site_footer',
+                    'props' => [
+                        'copyright' => 'تمامی حقوق محفوظ است.',
+                    ],
+                ],
+            ];
+        }
+
         $virtualPages = [
             '__header__' => [
                 'title'      => 'هدر سایت',
                 'slug'       => '__header__',
                 'is_home'    => false,
                 'is_special' => true,
-                'blocks'     => $this->activeVariantBlocks($themeData, 'header'),
+                'blocks'     => $hdrBlocks,
             ],
             '__footer__' => [
                 'title'      => 'فوتر سایت',
                 'slug'       => '__footer__',
                 'is_home'    => false,
                 'is_special' => true,
-                'blocks'     => $this->activeVariantBlocks($themeData, 'footer'),
+                'blocks'     => $ftrBlocks,
+            ],
+            'login' => [
+                'title'      => 'صفحه ورود (Login)',
+                'slug'       => 'login',
+                'is_home'    => false,
+                'is_special' => true,
+                'blocks'     => (isset($themeData['pages']['login']['blocks']) && is_array($themeData['pages']['login']['blocks']))
+                    ? $themeData['pages']['login']['blocks']
+                    : (isset($pages['login']['blocks']) && is_array($pages['login']['blocks']) ? $pages['login']['blocks'] : [
+                        [
+                            'id' => 'auth-login-canvas',
+                            'type' => 'auth_canvas',
+                            'props' => [
+                                'auth_mode' => 'login_only',
+                                'layout_type' => 'split',
+                                'brand_name' => \App\Helpers\SiteHelper::siteName(),
+                                'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+                                'login_title' => 'ورود به حساب کاربری',
+                                'login_subtitle' => 'برای دسترسی به پنل کاربری، شماره موبایل و رمز عبور خود را وارد کنید.',
+                                'login_btn_text' => 'ورود به حساب',
+                                'show_remember_me' => true,
+                                'show_forgot_password' => true,
+                                'show_hero' => true,
+                                'hero_title' => 'پلتفرم جامع صنعت انرژی خورشیدی',
+                                'hero_subtitle' => 'دسترسی امن به سفارش تجهیزات، دوره‌های آکادمی و پشتیبانی آنلاین پروژه‌های نیروگاهی.',
+                                'hero_icon' => 'fas fa-sun',
+                                'page_bg_color' => '#0B0B0B',
+                                'hero_bg_color' => '#12121F',
+                                'hero_accent_color' => '#FF7900',
+                                'btn_bg_color' => '#FF7900',
+                            ],
+                        ],
+                    ]),
+            ],
+            'register' => [
+                'title'      => 'صفحه ثبت‌نام (Register)',
+                'slug'       => 'register',
+                'is_home'    => false,
+                'is_special' => true,
+                'blocks'     => (isset($themeData['pages']['register']['blocks']) && is_array($themeData['pages']['register']['blocks']))
+                    ? $themeData['pages']['register']['blocks']
+                    : (isset($pages['register']['blocks']) && is_array($pages['register']['blocks']) ? $pages['register']['blocks'] : [
+                        [
+                            'id' => 'auth-register-canvas',
+                            'type' => 'auth_canvas',
+                            'props' => [
+                                'auth_mode' => 'register_only',
+                                'layout_type' => 'split',
+                                'brand_name' => \App\Helpers\SiteHelper::siteName(),
+                                'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+                                'register_title' => 'ایجاد حساب کاربری جدید',
+                                'register_subtitle' => 'عضویت سریع و امن در کمتر از یک دقیقه.',
+                                'register_btn_text' => 'ثبت‌نام و ایجاد حساب',
+                                'show_terms' => true,
+                                'show_hero' => true,
+                                'hero_title' => 'عضویت در سامانه تخصصی انرژی',
+                                'hero_subtitle' => 'سفارش آنلاین تجهیزات نیروگاهی خورشیدی و دوره‌های تخصصی مهندسی برق.',
+                                'hero_icon' => 'fas fa-sun',
+                                'page_bg_color' => '#0B0B0B',
+                                'hero_bg_color' => '#12121F',
+                                'hero_accent_color' => '#FF7900',
+                                'btn_bg_color' => '#FF7900',
+                            ],
+                        ],
+                    ]),
             ],
         ];
         $pages = $pages + $virtualPages;
+        $themeData['pages'] = $pages;
 
-        $byCategory = BlockRegistry::byCategory();
-        $catLabels  = BlockRegistry::categoryLabels();
-        $catIcons   = BlockRegistry::categoryIcons();
-        $registry   = BlockRegistry::all();
+        $themeSlug  = $themeData['slug']
+            ?? ($themeData['settings']['meta']['id']
+            ?? ($themeData['id']
+            ?? (Setting::get('active_canvas_theme_slug') ?: \App\Helpers\SiteHelper::theme())));
+        $byCategory = BlockRegistry::byCategory($themeSlug);
+        $catLabels  = BlockRegistry::categoryLabels($themeSlug);
+        $catIcons   = BlockRegistry::categoryIcons($themeSlug);
+        $registry   = BlockRegistry::forTheme($themeSlug);
         // Host-only authoring type for nested columns: a real multi-child
         // container (HasContainerCapability) that the shared canonical
         // registry does not publish, so a customer can put several widgets —
@@ -522,7 +794,38 @@ class ThemeDesignController extends Controller
         $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
 
         if (!isset($themeData['pages'][$key])) {
-            return response()->json(['success' => false, 'error' => 'صفحه «' . $key . '» یافت نشد.'], 404);
+            if (in_array($key, ['login', 'register'], true)) {
+                $themeData['pages'][$key] = [
+                    'title'      => $key === 'login' ? 'صفحه ورود (Login)' : 'صفحه ثبت‌نام (Register)',
+                    'slug'       => $key,
+                    'is_home'    => false,
+                    'is_special' => true,
+                    'blocks'     => [],
+                ];
+            } elseif ($dbPage = \App\Models\Page::where('slug', $key)->first()) {
+                $themeData['pages'][$key] = [
+                    'title'      => $dbPage->title ?: ucfirst($key),
+                    'slug'       => $dbPage->slug,
+                    'is_home'    => false,
+                    'blocks'     => [],
+                ];
+            } elseif (str_starts_with($key, 'post_')) {
+                $themeData['pages'][$key] = [
+                    'title'      => 'پست وبلاگ',
+                    'slug'       => $key,
+                    'is_home'    => false,
+                    'blocks'     => [],
+                ];
+            } elseif (str_starts_with($key, 'product_')) {
+                $themeData['pages'][$key] = [
+                    'title'      => 'محصول',
+                    'slug'       => $key,
+                    'is_home'    => false,
+                    'blocks'     => [],
+                ];
+            } else {
+                return response()->json(['success' => false, 'error' => 'صفحه «' . $key . '» یافت نشد.'], 404);
+            }
         }
 
         // Phase 3F-C — same reconciliation gate for regular pages.
@@ -550,6 +853,35 @@ class ThemeDesignController extends Controller
         $themeData['pages'][$key]['blocks'] = $reconciled;
 
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+
+        // If this page corresponds to a Page model, also persist to Page model
+        try {
+            if ($dbPage = \App\Models\Page::where('slug', $key)->first()) {
+                $dbPage->builder_type = \App\Models\Page::BUILDER_TYPE_BUILDER;
+                $dbPage->builder_content_v2 = ['blocks' => $reconciled, 'sections' => $reconciled];
+                $dbPage->builder_content = ['blocks' => $reconciled, 'sections' => $reconciled];
+                $dbPage->save();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed syncing DB page on canvas save: ' . $e->getMessage());
+        }
+
+        // If this page corresponds to a Post or Product, also persist
+        try {
+            if (str_starts_with($key, 'post_')) {
+                $postId = (int) substr($key, 5);
+                if ($p = \App\Models\Post::find($postId)) {
+                    $p->update(['builder_content' => ['blocks' => $reconciled, 'sections' => $reconciled]]);
+                }
+            } elseif (str_starts_with($key, 'product_')) {
+                $prdId = (int) substr($key, 8);
+                if ($prd = \App\Models\Product::find($prdId)) {
+                    $prd->update(['builder_content' => ['blocks' => $reconciled, 'sections' => $reconciled]]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed syncing Post/Product on canvas save: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'block_count' => count($themeData['pages'][$key]['blocks'])]);
     }
@@ -594,6 +926,18 @@ class ThemeDesignController extends Controller
 
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
+        try {
+            \App\Models\Page::firstOrCreate(
+                ['slug' => $slug],
+                [
+                    'title' => $title,
+                    'builder_type' => \App\Models\Page::BUILDER_TYPE_BUILDER,
+                    'is_published' => true,
+                    'builder_content_v2' => ['blocks' => [], 'sections' => []],
+                ]
+            );
+        } catch (\Throwable $e) {}
+
         return response()->json([
             'success' => true,
             'key'     => $slug,
@@ -621,6 +965,12 @@ class ThemeDesignController extends Controller
         unset($themeData['pages'][$key]);
 
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
+
+        try {
+            if ($delPage = \App\Models\Page::where('slug', $key)->first()) {
+                $delPage->delete();
+            }
+        } catch (\Throwable $e) {}
 
         return response()->json(['success' => true]);
     }
@@ -1015,10 +1365,90 @@ class ThemeDesignController extends Controller
             $editorRegion = 'footer';
             $pageTitle = 'Footer';
         } else {
-            $pages  = $themeData['pages'] ?? [];
+            $pages  = $this->normalizePagesKeyed($themeData['pages'] ?? []);
             $page   = $pages[$pageKey] ?? null;
-            $blocks = $page['blocks'] ?? [];
-            $pageTitle = $page['title'] ?? $pageKey;
+            if ($page === null && in_array($pageKey, ['login', 'register'], true)) {
+                $blocks = [
+                    [
+                        'id' => 'auth-' . $pageKey . '-canvas',
+                        'type' => 'auth_canvas',
+                        'props' => [
+                            'auth_mode' => $pageKey === 'login' ? 'login_only' : 'register_only',
+                            'layout_type' => 'split',
+                            'brand_name' => \App\Helpers\SiteHelper::siteName(),
+                            'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+                            'login_title' => 'ورود به حساب کاربری',
+                            'login_subtitle' => 'برای دسترسی به پنل کاربری، شماره موبایل و رمز عبور خود را وارد کنید.',
+                            'login_btn_text' => 'ورود به حساب',
+                            'register_title' => 'ایجاد حساب کاربری جدید',
+                            'register_subtitle' => 'عضویت سریع و امن در کمتر از یک دقیقه.',
+                            'register_btn_text' => 'ثبت‌نام و ایجاد حساب',
+                            'show_hero' => true,
+                            'hero_title' => $pageKey === 'login' ? 'پلتفرم جامع صنعت انرژی خورشیدی' : 'عضویت در سامانه تخصصی انرژی',
+                            'hero_subtitle' => 'دسترسی امن به سفارش تجهیزات، دوره‌های آکادمی و پشتیبانی آنلاین پروژه‌های نیروگاهی.',
+                            'hero_icon' => 'fas fa-sun',
+                            'page_bg_color' => '#0B0B0B',
+                            'hero_bg_color' => '#12121F',
+                            'hero_accent_color' => '#FF7900',
+                            'btn_bg_color' => '#FF7900',
+                        ],
+                    ],
+                ];
+                $pageTitle = $pageKey === 'login' ? 'صفحه ورود' : 'صفحه ثبت‌نام';
+            } elseif (str_starts_with($pageKey, 'post_')) {
+                $postId = (int) substr($pageKey, 5);
+                $p = \App\Models\Post::find($postId);
+                $blocks = !empty($page['blocks']) ? $page['blocks'] : (
+                    $p?->builder_content['blocks']
+                    ?? $p?->builder_content['sections']
+                    ?? []
+                );
+                if (empty($blocks) && $p && trim((string) $p->body) !== '') {
+                    $blocks = [[
+                        'id' => 'db_post_' . $p->id,
+                        'type' => 'text',
+                        'props' => ['content' => $p->body],
+                    ]];
+                }
+                $pageTitle = $p ? ('وبلاگ: ' . ($p->title ?: 'پست #' . $p->id)) : (isset($page['title']) ? $page['title'] : $pageKey);
+            } elseif (str_starts_with($pageKey, 'product_')) {
+                $prdId = (int) substr($pageKey, 8);
+                $prd = $prdId > 0 ? \App\Models\Product::find($prdId) : null;
+                $blocks = !empty($page['blocks']) ? $page['blocks'] : (
+                    $prd?->builder_content['blocks']
+                    ?? $prd?->builder_content['sections']
+                    ?? []
+                );
+                if (empty($blocks) && $prd && trim((string) $prd->description) !== '') {
+                    $blocks = [[
+                        'id' => 'db_prd_' . $prd->id,
+                        'type' => 'text',
+                        'props' => ['content' => $prd->description],
+                    ]];
+                }
+                $pageTitle = $prd ? ('محصول: ' . ($prd->name ?? $prd->title ?? 'محصول #' . $prdId)) : (isset($page['title']) ? $page['title'] : $pageKey);
+            } else {
+                $blocks = isset($page['blocks']) && is_array($page['blocks']) ? $page['blocks'] : [];
+                $dbPage = null;
+                if (empty($blocks)) {
+                    $dbPage = \App\Models\Page::where('slug', $pageKey)->first();
+                    if ($dbPage) {
+                        $blocks = $dbPage->builder_content_v2['blocks']
+                            ?? $dbPage->builder_content_v2['sections']
+                            ?? $dbPage->builder_content['blocks']
+                            ?? $dbPage->builder_content['sections']
+                            ?? [];
+                        if (empty($blocks) && trim((string) $dbPage->body) !== '') {
+                            $blocks = [[
+                                'id' => 'db_page_' . $dbPage->id,
+                                'type' => 'text',
+                                'props' => ['content' => $dbPage->body],
+                            ]];
+                        }
+                    }
+                }
+                $pageTitle = isset($page['title']) ? $page['title'] : ($dbPage?->title ?? (isset($pages['home']['title']) ? $pages['home']['title'] : 'صفحه اصلی'));
+            }
         }
 
         $viewData = $this->runtimeDocument->build(
@@ -1086,7 +1516,18 @@ class ThemeDesignController extends Controller
         $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
         $bindings = app(\App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry::class)
             ->resolveBlockLists([$blockData]);
-        $renderer->setContext(['editor_mode' => true, 'theme_bindings' => $bindings]);
+        $context = [
+            'editor_mode' => true,
+            'theme_bindings' => $bindings,
+        ];
+        if (view()->exists('components.site-brand')) {
+            $context['site_logo_html'] = view('components.site-brand', [
+                'class' => 'tb-nav-header-logo',
+                'anim' => $blockData['props']['logo_animation'] ?? null,
+                'animDur' => isset($blockData['props']['logo_animation_duration']) ? $blockData['props']['logo_animation_duration'] . 's' : null,
+            ])->render();
+        }
+        $renderer->setContext($context);
 
         return response()->json(['html' => $renderer->renderBlock($blockData)]);
     }
@@ -1111,20 +1552,37 @@ class ThemeDesignController extends Controller
         }
 
         $pageKey = (string) $request->query('page', 'home');
-        $pages = is_array($themeData['pages'] ?? null) ? $themeData['pages'] : [];
-        $page = $pages[$pageKey] ?? null;
-        if (!is_array($page)) {
-            foreach ($pages as $candidate) {
-                if (is_array($candidate) && (!empty($candidate['is_home']) || ($candidate['slug'] ?? '') === 'home')) {
-                    $page = $candidate;
-                    $pageKey = (string) ($candidate['slug'] ?? 'home');
-                    break;
+        $editorRegion = null;
+        if ($pageKey === '__header__') {
+            $page = [
+                'title' => 'هدر سایت',
+                'slug' => '__header__',
+                'blocks' => $this->activeVariantBlocks($themeData, 'header'),
+            ];
+            $editorRegion = 'header';
+        } elseif ($pageKey === '__footer__') {
+            $page = [
+                'title' => 'فوتر سایت',
+                'slug' => '__footer__',
+                'blocks' => $this->activeVariantBlocks($themeData, 'footer'),
+            ];
+            $editorRegion = 'footer';
+        } else {
+            $pages = is_array($themeData['pages'] ?? null) ? $themeData['pages'] : [];
+            $page = $pages[$pageKey] ?? null;
+            if (!is_array($page)) {
+                foreach ($pages as $candidate) {
+                    if (is_array($candidate) && (!empty($candidate['is_home']) || ($candidate['slug'] ?? '') === 'home')) {
+                        $page = $candidate;
+                        $pageKey = (string) ($candidate['slug'] ?? 'home');
+                        break;
+                    }
                 }
             }
-        }
-        if (!is_array($page)) {
-            $firstPage = reset($pages);
-            $page = is_array($firstPage) ? $firstPage : ['title' => 'Preview', 'blocks' => []];
+            if (!is_array($page)) {
+                $firstPage = reset($pages);
+                $page = is_array($firstPage) ? $firstPage : ['title' => 'Preview', 'blocks' => []];
+            }
         }
 
         $viewData = $this->runtimeDocument
@@ -1134,6 +1592,7 @@ class ThemeDesignController extends Controller
                 is_array($page['blocks'] ?? null) ? $page['blocks'] : [],
                 (string) ($page['title'] ?? 'Preview'),
                 $pageKey,
+                editorRegion: $editorRegion,
             );
         $viewData['showBuilderEditBar'] = false;
 
@@ -1447,11 +1906,28 @@ class ThemeDesignController extends Controller
     {
         $keyed = [];
         foreach ($pages as $k => $page) {
-            $slug = $page['slug'] ?? (is_string($k) ? $k : null);
-            if (empty($slug)) $slug = 'home';
-            $keyed[$slug] = array_merge($page, ['slug' => $slug]);
+            if (!is_array($page)) {
+                continue;
+            }
+            $slug = isset($page['slug']) && is_string($page['slug']) && $page['slug'] !== ''
+                ? $page['slug']
+                : (is_string($k) && $k !== '' ? $k : null);
+
+            if (empty($slug)) {
+                $slug = 'home';
+            }
+            $page['slug'] = $slug;
+            $page['title'] = $page['title'] ?? ($slug === 'home' ? 'صفحه اصلی' : ucfirst($slug));
+            $page['is_home'] = !empty($page['is_home']) || $slug === 'home';
+            $page['blocks'] = isset($page['blocks']) && is_array($page['blocks']) ? $page['blocks'] : [];
+            $keyed[$slug] = $page;
         }
-        return $keyed ?: ['home' => ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []]];
+
+        if (!isset($keyed['home'])) {
+            $keyed['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
+        }
+
+        return $keyed;
     }
 
     private function presetList(): array

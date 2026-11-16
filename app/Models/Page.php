@@ -47,26 +47,30 @@ class Page extends Model
     {
         $v2 = $this->builder_content_v2;
         if (is_array($v2)) {
-            if (!empty($v2['sections'] ?? [])) {
-                return $v2;
-            }
-            // Canvas-provisioned pages store blocks under 'blocks' key — normalize to 'sections'
             if (!empty($v2['blocks'] ?? [])) {
-                return ['sections' => $v2['blocks']];
+                return ['sections' => $v2['blocks'], 'blocks' => $v2['blocks']];
+            }
+            if (!empty($v2['sections'] ?? [])) {
+                return ['sections' => $v2['sections'], 'blocks' => $v2['sections']];
             }
         }
         $v1 = $this->builder_content;
-        if (is_array($v1) && !empty($v1['sections'] ?? [])) {
-            return $v1;
+        if (is_array($v1)) {
+            if (!empty($v1['blocks'] ?? [])) {
+                return ['sections' => $v1['blocks'], 'blocks' => $v1['blocks']];
+            }
+            if (!empty($v1['sections'] ?? [])) {
+                return ['sections' => $v1['sections'], 'blocks' => $v1['sections']];
+            }
         }
-        return ['sections' => []];
+        return ['sections' => [], 'blocks' => []];
     }
 
     public function usesBuilder(): bool
     {
         $content = $this->getBuilderContentForRender();
         return $this->builder_type === self::BUILDER_TYPE_BUILDER
-            && !empty($content['sections'] ?? []);
+            && (!empty($content['sections'] ?? []) || !empty($content['blocks'] ?? []));
     }
 
     public function scopePublished($query)
