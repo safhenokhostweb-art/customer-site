@@ -203,7 +203,7 @@
          behavior. Skip-link and <main> below are untouched either way —
          "theme owns chrome" means the header/footer PRESENTATION only,
          never the surrounding accessibility structure. --}}
-    @if(($chromeOwner ?? 'platform') === 'theme')
+    @if(($chromeOwner ?? 'platform') === 'theme' || str_contains($headerHtml, 'tb-nav-header'))
         {!! $headerHtml !!}
     @elseif(!empty(trim($headerHtml)))
         <header class="canvas-site-header tb-site-header" role="banner" id="site-header">

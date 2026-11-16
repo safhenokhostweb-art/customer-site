@@ -306,7 +306,11 @@ class ThemeDesignController extends Controller
 
     // ── Canvas Editor (drag-and-drop) ────────────────────────────────────────
 
+<<<<<<< HEAD
     public function canvasEdit(?Request $request = null)
+=======
+    public function canvasEdit(Request $request = null)
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
     {
         $request = $request ?: request();
         $activeRaw = Setting::get('active_canvas_theme_data');
@@ -531,13 +535,47 @@ class ThemeDesignController extends Controller
         if (empty($hdrBlocks) && !empty($themeData['header_blocks']) && is_array($themeData['header_blocks'])) {
             $hdrBlocks = $themeData['header_blocks'];
         }
+<<<<<<< HEAD
         // Clean slate (owner decision): an empty header stays empty; no
         // editor-only default is seeded.
+=======
+        if (empty($hdrBlocks)) {
+            $hdrBlocks = [
+                [
+                    'id'    => 'nav-header-default',
+                    'type'  => 'nav_header',
+                    'props' => [
+                        'brand_text' => \App\Helpers\SiteHelper::siteName(),
+                        'logo_text'  => \App\Helpers\SiteHelper::siteName(),
+                        'header_layout' => 'standard',
+                        'show_search_btn' => true,
+                        'show_theme_toggle' => true,
+                        'show_cart_btn' => true,
+                    ],
+                ],
+            ];
+        }
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
 
         $ftrBlocks = $this->activeVariantBlocks($themeData, 'footer');
         if (empty($ftrBlocks) && !empty($themeData['footer_blocks']) && is_array($themeData['footer_blocks'])) {
             $ftrBlocks = $themeData['footer_blocks'];
         }
+<<<<<<< HEAD
+=======
+        if (empty($ftrBlocks)) {
+            $ftrBlocks = [
+                [
+                    'id'    => 'site-footer-default',
+                    'type'  => 'site_footer',
+                    'props' => [
+                        'copyright' => 'تمامی حقوق محفوظ است.',
+                    ],
+                ],
+            ];
+        }
+
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
         $virtualPages = [
             '__header__' => [
                 'title'      => 'هدر سایت',
@@ -568,16 +606,26 @@ class ThemeDesignController extends Controller
                                 'auth_mode' => 'login_only',
                                 'layout_type' => 'split',
                                 'brand_name' => \App\Helpers\SiteHelper::siteName(),
+<<<<<<< HEAD
                                 'brand_tagline' => '',
+=======
+                                'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                                 'login_title' => 'ورود به حساب کاربری',
                                 'login_subtitle' => 'برای دسترسی به پنل کاربری، شماره موبایل و رمز عبور خود را وارد کنید.',
                                 'login_btn_text' => 'ورود به حساب',
                                 'show_remember_me' => true,
                                 'show_forgot_password' => true,
                                 'show_hero' => true,
+<<<<<<< HEAD
                                 'hero_title' => 'به حساب کاربری خود خوش آمدید',
                                 'hero_subtitle' => 'دسترسی امن به سفارش‌ها، دوره‌ها و پشتیبانی، همه در یک حساب.',
                                 'hero_icon' => 'user',
+=======
+                                'hero_title' => 'پلتفرم جامع صنعت انرژی خورشیدی',
+                                'hero_subtitle' => 'دسترسی امن به سفارش تجهیزات، دوره‌های آکادمی و پشتیبانی آنلاین پروژه‌های نیروگاهی.',
+                                'hero_icon' => 'fas fa-sun',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                                 'page_bg_color' => '#0B0B0B',
                                 'hero_bg_color' => '#12121F',
                                 'hero_accent_color' => '#FF7900',
@@ -601,15 +649,25 @@ class ThemeDesignController extends Controller
                                 'auth_mode' => 'register_only',
                                 'layout_type' => 'split',
                                 'brand_name' => \App\Helpers\SiteHelper::siteName(),
+<<<<<<< HEAD
                                 'brand_tagline' => '',
+=======
+                                'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                                 'register_title' => 'ایجاد حساب کاربری جدید',
                                 'register_subtitle' => 'عضویت سریع و امن در کمتر از یک دقیقه.',
                                 'register_btn_text' => 'ثبت‌نام و ایجاد حساب',
                                 'show_terms' => true,
                                 'show_hero' => true,
+<<<<<<< HEAD
                                 'hero_title' => 'به جمع کاربران ما بپیوندید',
                                 'hero_subtitle' => 'ثبت سفارش، پیگیری خرید و دسترسی به دوره‌ها با یک حساب.',
                                 'hero_icon' => 'user',
+=======
+                                'hero_title' => 'عضویت در سامانه تخصصی انرژی',
+                                'hero_subtitle' => 'سفارش آنلاین تجهیزات نیروگاهی خورشیدی و دوره‌های تخصصی مهندسی برق.',
+                                'hero_icon' => 'fas fa-sun',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                                 'page_bg_color' => '#0B0B0B',
                                 'hero_bg_color' => '#12121F',
                                 'hero_accent_color' => '#FF7900',
@@ -1350,7 +1408,11 @@ class ThemeDesignController extends Controller
                             'auth_mode' => $pageKey === 'login' ? 'login_only' : 'register_only',
                             'layout_type' => 'split',
                             'brand_name' => \App\Helpers\SiteHelper::siteName(),
+<<<<<<< HEAD
                             'brand_tagline' => '',
+=======
+                            'brand_tagline' => 'صنعت انرژی و برق خورشیدی',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                             'login_title' => 'ورود به حساب کاربری',
                             'login_subtitle' => 'برای دسترسی به پنل کاربری، شماره موبایل و رمز عبور خود را وارد کنید.',
                             'login_btn_text' => 'ورود به حساب',
@@ -1358,9 +1420,15 @@ class ThemeDesignController extends Controller
                             'register_subtitle' => 'عضویت سریع و امن در کمتر از یک دقیقه.',
                             'register_btn_text' => 'ثبت‌نام و ایجاد حساب',
                             'show_hero' => true,
+<<<<<<< HEAD
                             'hero_title' => $pageKey === 'login' ? 'به حساب کاربری خود خوش آمدید' : 'به جمع کاربران ما بپیوندید',
                             'hero_subtitle' => 'دسترسی امن به سفارش‌ها، دوره‌ها و پشتیبانی، همه در یک حساب.',
                             'hero_icon' => 'user',
+=======
+                            'hero_title' => $pageKey === 'login' ? 'پلتفرم جامع صنعت انرژی خورشیدی' : 'عضویت در سامانه تخصصی انرژی',
+                            'hero_subtitle' => 'دسترسی امن به سفارش تجهیزات، دوره‌های آکادمی و پشتیبانی آنلاین پروژه‌های نیروگاهی.',
+                            'hero_icon' => 'fas fa-sun',
+>>>>>>> 71c527c (feat(customer-site): finalize uncommitted local changes and sync theme builder assets)
                             'page_bg_color' => '#0B0B0B',
                             'hero_bg_color' => '#12121F',
                             'hero_accent_color' => '#FF7900',
