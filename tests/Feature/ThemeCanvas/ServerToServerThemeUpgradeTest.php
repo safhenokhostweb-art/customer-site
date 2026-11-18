@@ -174,4 +174,83 @@ class ServerToServerThemeUpgradeTest extends TestCase
         $this->assertNotNull($depositedTemplate, 'New block from customer-edited page must be deposited into Canvas block library!');
         $this->assertSame('solar-industry', $depositedTemplate->tags[0]);
     }
+
+    public function test_rollback_endpoint_rejects_invalid_provision_secret(): void
+    {
+        $response = $this->postJson('/builder/api/theme/rollback', [
+            'theme_id' => 'solar-industry',
+        ], [
+            'X-Provision-Secret' => 'wrong-secret',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_rollback_endpoint_restores_previous_revision_successfully(): void
+    {
+        $service = app(ThemeInstanceRevisionService::class);
+
+        // 1. Revision 1 (Install)
+        $rev1 = $service->record([
+            'name'  => 'Solar Industry',
+            'slug'  => 'solar-industry',
+            'pages' => [
+                'home' => [
+                    'title'  => 'صفحه اصلی نسخه ۱',
+                    'blocks' => [
+                        ['id' => 'hero-1', 'type' => 'hero', 'props' => ['heading' => 'نسخه یک']],
+                    ],
+                ],
+            ],
+        ], ThemeInstanceRevision::TYPE_INSTALL, [
+            'theme_identifier'     => 'solar-industry',
+            'theme_name'           => 'Solar Industry',
+            'source_theme_version' => '1.0.0',
+        ]);
+
+        // 2. Revision 2 (Customer edit)
+        $rev2 = $service->record([
+            'name'  => 'Solar Industry',
+            'slug'  => 'solar-industry',
+            'pages' => [
+                'home' => [
+                    'title'  => 'صفحه اصلی ویرایش مشتری',
+                    'blocks' => [
+                        ['id' => 'hero-1', 'type' => 'hero', 'props' => ['heading' => 'تیتر اختصاصی مشتری']],
+                    ],
+                ],
+            ],
+        ], ThemeInstanceRevision::TYPE_CUSTOMER_EDIT, [
+            'theme_identifier' => 'solar-industry',
+            'theme_name'       => 'Solar Industry',
+        ]);
+
+        $this->assertSame(2, $rev2->revision_number);
+        $this->assertSame(
+            'تیتر اختصاصی مشتری',
+            json_decode(Setting::get('active_canvas_theme_data'), true)['pages']['home']['blocks'][0]['props']['heading']
+        );
+
+        // 3. Perform Rollback targeting rev 1
+        $response = $this->postJson('/builder/api/theme/rollback', [
+            'theme_id'        => 'solar-industry',
+            'revision_number' => 1,
+        ], [
+            'X-Provision-Secret' => 'test-secret-12345',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success'                       => true,
+            'restored_from_revision_id'     => $rev1->id,
+            'restored_from_revision_number' => 1,
+        ]);
+
+        $responseData = $response->json();
+        $this->assertSame(3, $responseData['revision_number']);
+
+        // Verify active theme data now matches revision 1
+        $currentLiveTheme = json_decode(Setting::get('active_canvas_theme_data'), true);
+        $this->assertSame('نسخه یک', $currentLiveTheme['pages']['home']['blocks'][0]['props']['heading']);
+    }
 }

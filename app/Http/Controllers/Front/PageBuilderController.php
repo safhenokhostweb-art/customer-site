@@ -19,6 +19,7 @@ use App\Models\Setting;
 use App\Models\SiteThemeTemplate;
 use App\Models\ThemeInstanceRevision;
 use App\Services\ThemeCanvas\ThemeUpgradeReconciler;
+use App\Services\ThemeEngine\TenantThemeResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -620,6 +621,98 @@ class PageBuilderController extends Controller
                 'preserved_count' => count($reconciliation->preservedCustomizations),
                 'additions_count' => count($reconciliation->remoteAdditions),
             ],
+        ]);
+    }
+
+    /**
+     * Server-to-server theme rollback authority.
+     * Restores an exact previous ThemeInstanceRevision snapshot atomically
+     * while preserving immutable revision history.
+     */
+    public function rollbackTheme(Request $request): JsonResponse
+    {
+        $revisionService = app(ThemeInstanceRevisionService::class);
+        $currentIdentifier = $revisionService->currentIdentifier();
+        $targetIdentifier = $request->input('theme_id') ?: $currentIdentifier;
+
+        $targetRevision = null;
+
+        // 1. Check if an explicit revision_id was provided
+        if ($request->filled('revision_id')) {
+            $targetRevision = ThemeInstanceRevision::find($request->input('revision_id'));
+        }
+
+        // 2. If revision_number was provided
+        if (!$targetRevision && $request->filled('revision_number')) {
+            $reqRevisionNum = (int) $request->input('revision_number');
+            $activeRevisionId = (int) Setting::get('active_theme_revision_id');
+            $activeRevision = ThemeInstanceRevision::find($activeRevisionId);
+
+            // If the requested revision number matches the active revision (e.g. the upgrade that was performed),
+            // roll back to the revision immediately preceding it.
+            if ($activeRevision && (int) $activeRevision->revision_number === $reqRevisionNum) {
+                $targetRevision = ThemeInstanceRevision::where('theme_identifier', $targetIdentifier)
+                    ->where('revision_number', '<', $reqRevisionNum)
+                    ->orderByDesc('revision_number')
+                    ->first();
+            } else {
+                $targetRevision = ThemeInstanceRevision::where('theme_identifier', $targetIdentifier)
+                    ->where('revision_number', $reqRevisionNum)
+                    ->first();
+            }
+        }
+
+        // 3. Fallback: rollback to the previous revision before the active one
+        if (!$targetRevision) {
+            $activeRevisionId = (int) Setting::get('active_theme_revision_id');
+            $activeRevision = ThemeInstanceRevision::find($activeRevisionId);
+            $activeRevisionNumber = $activeRevision ? $activeRevision->revision_number : PHP_INT_MAX;
+
+            $targetRevision = ThemeInstanceRevision::where('theme_identifier', $targetIdentifier)
+                ->where('revision_number', '<', $activeRevisionNumber)
+                ->orderByDesc('revision_number')
+                ->first();
+        }
+
+        if (!$targetRevision) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'revision_not_found',
+                'message' => 'نسخه قبلی برای بازگشت به نسخه قبل یافت نشد.',
+            ], 404);
+        }
+
+        try {
+            $restored = $revisionService->rollbackTo($targetRevision->id);
+        } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'revision_not_found',
+                'message' => $e->getMessage(),
+            ], 404);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'rollback_failed',
+                'message' => 'خطا در عملیات بازگشت به نسخه قبل: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        // Clear cache and transient state
+        Setting::where('key', 'canvas_draft_data')->delete();
+        Cache::forget('settings');
+        Cache::forget('canvas_theme_data');
+        if (app()->bound(TenantThemeResolver::class)) {
+            app(TenantThemeResolver::class)->clearCache();
+        }
+
+        return response()->json([
+            'success'                       => true,
+            'message'                       => 'بازگشت به نسخه قبل با موفقیت انجام شد.',
+            'revision_id'                   => $restored->id,
+            'revision_number'               => $restored->revision_number,
+            'restored_from_revision_id'     => $targetRevision->id,
+            'restored_from_revision_number' => $targetRevision->revision_number,
         ]);
     }
 

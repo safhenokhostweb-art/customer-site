@@ -247,6 +247,7 @@ Route::middleware('install.check')->group(function () {
         Route::post('/api/theme/unprotect', [PageBuilderController::class, 'unprotectThemePages'])->name('api.theme.unprotect');
         Route::post('/api/theme/install', [PageBuilderController::class, 'installTheme'])->name('api.theme.install');
         Route::post('/api/theme/upgrade', [PageBuilderController::class, 'upgradeTheme'])->name('api.theme.upgrade');
+        Route::post('/api/theme/rollback', [PageBuilderController::class, 'rollbackTheme'])->name('api.theme.rollback');
     });
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
