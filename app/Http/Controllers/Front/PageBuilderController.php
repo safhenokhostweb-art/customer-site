@@ -15,10 +15,14 @@ use App\Services\ThemeCanvas\ThemeInstanceRevisionService;
 use App\Services\ThemeCanvas\ThemeMediaLocalizationException;
 use App\Services\ThemePageProvisionService;
 use App\Support\BuilderPageKits;
+use App\Models\Setting;
+use App\Models\SiteThemeTemplate;
 use App\Models\ThemeInstanceRevision;
+use App\Services\ThemeCanvas\ThemeUpgradeReconciler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -447,6 +451,175 @@ class PageBuilderController extends Controller
             'revision_id'        => $revision->id,
             'revision_number'    => $revision->revision_number,
             'pages_installed'    => count($data['pages']),
+        ]);
+    }
+
+    /**
+     * Non-destructive Server-to-Server 3-Way Reconciled Theme Upgrade endpoint.
+     * Enforces the critical rule:
+     * Pages edited by the customer (customer_edit or local changes) NEVER receive
+     * injected blocks in their body. Instead, newly introduced remote blocks/sections
+     * are deposited into SiteThemeTemplate (the site's Canvas block library) for
+     * optional user placement, while runtime assets, widget definitions, and
+     * non-edited pages are safely reconciled.
+     */
+    public function upgradeTheme(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'theme_id'              => 'required|string|max:100',
+            'theme_name'            => 'required|string|max:255',
+            'source_theme_id'       => 'nullable|string|max:100',
+            'source_theme_version'  => 'nullable|string|max:50',
+            'source_release_id'     => 'nullable|integer',
+            'remote_snapshot'       => 'required|array',
+        ]);
+
+        $remoteSnapshot = $data['remote_snapshot'];
+        $identifier = $data['theme_id'];
+
+        // 1. Resolve LOCAL (active customized state)
+        $activeRevisionId = (int) Setting::get('active_theme_revision_id');
+        $localRevision = ThemeInstanceRevision::find($activeRevisionId);
+        if (!$localRevision) {
+            $localRevision = ThemeInstanceRevision::where('theme_identifier', $identifier)->latest('id')->first();
+        }
+
+        $localData = $localRevision ? $localRevision->theme_data : (json_decode(Setting::get('active_canvas_theme_data'), true) ?? []);
+
+        // 2. Resolve BASE (pristine release previously installed)
+        $baseRevision = ThemeInstanceRevision::where('theme_identifier', $identifier)
+            ->whereIn('type', [
+                ThemeInstanceRevision::TYPE_INSTALL,
+                ThemeInstanceRevision::TYPE_UPDATE,
+                ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED,
+            ])
+            ->orderByDesc('revision_number')
+            ->first();
+
+        $baseData = $baseRevision ? $baseRevision->theme_data : $localData;
+
+        // 3. Perform 3-Way Reconciliation via ThemeUpgradeReconciler
+        try {
+            $reconciliation = (new ThemeUpgradeReconciler())->reconcile(
+                $baseData,
+                $localData,
+                $remoteSnapshot
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'reconciliation_exception',
+                'message' => 'خطا در الگوریتم تطبیق نسخه قالب: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        $reconciledData = $reconciliation->reconciledTheme;
+
+        // 4. CRITICAL RULE #2: Enforce NO automatic block injection into Customer-Edited Pages
+        $basePages = $baseData['pages'] ?? [];
+        $localPages = $localData['pages'] ?? [];
+        $remotePages = $remoteSnapshot['pages'] ?? [];
+
+        $savedTemplatesCount = 0;
+
+        foreach ($localPages as $slug => $localPage) {
+            $basePage = $basePages[$slug] ?? null;
+            $remotePage = $remotePages[$slug] ?? null;
+
+            // A page is customer-edited if it didn't exist in BASE, or if LOCAL blocks/props differ from BASE
+            $isCustomerEdited = ($basePage === null) || (json_encode($localPage) !== json_encode($basePage));
+
+            if ($isCustomerEdited && $remotePage !== null) {
+                // Keep customer's exact blocks on this page: NEVER inject new remote blocks into page body!
+                $reconciledData['pages'][$slug]['blocks'] = $localPage['blocks'] ?? [];
+
+                // Extract new remote blocks/sections from the new release and deposit them into SiteThemeTemplate
+                $localBlockIds = array_column($localPage['blocks'] ?? [], 'id');
+                foreach ($remotePage['blocks'] ?? [] as $rBlock) {
+                    $rId = $rBlock['id'] ?? '';
+                    if (!in_array($rId, $localBlockIds, true)) {
+                        $sectionTitle = $rBlock['props']['title'] ?? $rBlock['props']['heading'] ?? ($rBlock['type'] ?? 'بخش');
+                        $templateName = "[قالب {$data['theme_name']} v{$data['source_theme_version']}] " . $sectionTitle;
+
+                        SiteThemeTemplate::firstOrCreate(
+                            [
+                                'name'    => $templateName,
+                                'version' => (string) ($data['source_theme_version'] ?? '1.0.0'),
+                            ],
+                            [
+                                'type'          => 'section',
+                                'category'      => 'features',
+                                'description'   => "سکشن جدید نسخه {$data['source_theme_version']} قالب {$data['theme_name']}",
+                                'tags'          => [$identifier, 'upgrade', 'section'],
+                                'author'        => $data['theme_name'],
+                                'license_type'  => 'free',
+                                'blocks'        => [$rBlock],
+                                'is_active'     => true,
+                            ]
+                        );
+                        $savedTemplatesCount++;
+                    }
+                }
+            }
+        }
+
+        // 5. Atomic write through ThemeInstanceRevisionService
+        try {
+            $revision = app(ThemeInstanceRevisionService::class)->record(
+                $reconciledData,
+                ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED,
+                [
+                    'theme_identifier'      => $identifier,
+                    'theme_name'            => $data['theme_name'],
+                    'active_theme_id'       => $data['source_theme_id'] ?? $identifier,
+                    'source_theme_id'       => $data['source_theme_id'] ?? $identifier,
+                    'source_theme_version'  => $data['source_theme_version'] ?? null,
+                    'source_release_id'     => $data['source_release_id'] ?? null,
+                    'metadata'              => [
+                        'theme_name'            => $data['theme_name'],
+                        'upgrade_mode'          => 'fleet_upgrade_non_destructive',
+                        'templates_deposited'   => $savedTemplatesCount,
+                        'conflicts_count'       => count($reconciliation->conflicts),
+                        'preserved_count'       => count($reconciliation->preservedCustomizations),
+                    ],
+                ]
+            );
+        } catch (ConflictHttpException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'page_namespace_collision',
+                'message' => $e->getMessage(),
+            ], 409);
+        } catch (ThemeMediaLocalizationException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'media_localization_failed',
+                'message' => $e->getMessage(),
+            ], 502);
+        } catch (ThemeAssetLocalizationException $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'theme_asset_localization_failed',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        // 6. Clear draft & theme cache
+        Setting::where('key', 'canvas_draft_data')->delete();
+        Cache::forget('settings');
+        Cache::forget('canvas_theme_data');
+
+        return response()->json([
+            'success'                => true,
+            'revision_id'            => $revision->id,
+            'revision_number'        => $revision->revision_number,
+            'pages_reconciled'       => count($reconciledData['pages'] ?? []),
+            'templates_deposited'    => $savedTemplatesCount,
+            'reconciliation_metrics' => [
+                'conflicts_count' => count($reconciliation->conflicts),
+                'preserved_count' => count($reconciliation->preservedCustomizations),
+                'additions_count' => count($reconciliation->remoteAdditions),
+            ],
         ]);
     }
 
