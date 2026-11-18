@@ -1,0 +1,77 @@
+{
+    "status": "READY",
+    "project_key": "customer-site",
+    "task_id": "WU-THEME-RECONCILER-NON-DESTRUCTIVE-UPGRADE",
+    "summary": "feat(theme-canvas): server-to-server theme upgrade endpoint, non-destructive 3-way reconciliation and block library deposition",
+    "base_sha": "3100294ffb4427a08e8ece96204729753ce56c2e",
+    "branch": "main",
+    "changed_files": [
+        "app/Http/Controllers/Front/PageBuilderController.php",
+        "routes/web.php",
+        "tests/Feature/ThemeCanvas/ServerToServerThemeUpgradeTest.php"
+    ],
+    "migration_files": [],
+    "reviewed_migrations": [],
+    "dependency_commits": {
+        "saas-platform": "76cbf6cf758c049243888031cfbcc0e1870017a6"
+    },
+    "test_results": [
+        {
+            "name": "syntax:app/Http/Controllers/Front/PageBuilderController.php",
+            "type": "syntax",
+            "command": "php -l app/Http/Controllers/Front/PageBuilderController.php",
+            "exit_code": 0,
+            "duration_ms": 215
+        },
+        {
+            "name": "syntax:routes/web.php",
+            "type": "syntax",
+            "command": "php -l routes/web.php",
+            "exit_code": 0,
+            "duration_ms": 183
+        },
+        {
+            "name": "syntax:tests/Feature/ThemeCanvas/ServerToServerThemeUpgradeTest.php",
+            "type": "syntax",
+            "command": "php -l tests/Feature/ThemeCanvas/ServerToServerThemeUpgradeTest.php",
+            "exit_code": 0,
+            "duration_ms": 166
+        },
+        {
+            "name": "known-issue-guard-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/known-issues.php && php tests/ReleaseGate/known-issue-groups.php",
+            "exit_code": 0,
+            "duration_ms": 6695
+        },
+        {
+            "name": "theme-canvas-regression",
+            "type": "test",
+            "command": "php scripts/verify-release-known-issues.php --run-tests",
+            "exit_code": 0,
+            "duration_ms": 430606
+        },
+        {
+            "name": "artifact-gate-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/run.php",
+            "exit_code": 0,
+            "duration_ms": 4433
+        }
+    ],
+    "build_result": {
+        "required": true,
+        "status": "pending",
+        "contract": "server-managed-exact-commit"
+    },
+    "health_contract": {
+        "required": true,
+        "endpoint_source": "deployment-system project http_health_check"
+    },
+    "risk_flags": [],
+    "excluded_untracked_files": [],
+    "release_ready": true,
+    "commit_sha": "50d2c603ea7c8bd02a113be08e5eed52d270ecb5",
+    "created_timestamp": "2026-11-18T18:07:04+00:00",
+    "metadata_version": 1
+}
