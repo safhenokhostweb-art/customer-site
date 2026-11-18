@@ -221,12 +221,43 @@
         .auth-login-hero-blob:nth-child(1) { width: 320px; height: 320px; top: -80px; left: -60px; }
         .auth-login-hero-blob:nth-child(2) { width: 220px; height: 220px; bottom: -40px; right: -40px; }
     </style>
+    @if(!empty($renderedAuthHtml))
+        @php
+            $__canvasThemeRaw = \App\Models\Setting::get('active_canvas_theme_data');
+            $__canvasThemeData = !empty($__canvasThemeRaw) && is_string($__canvasThemeRaw) ? json_decode($__canvasThemeRaw, true) : [];
+            $__canvasGs = is_array($__canvasThemeData) ? ($__canvasThemeData['global_styles'] ?? []) : [];
+        @endphp
+        @if(view()->exists('partials.theme-canvas-style-contract'))
+            <style id="theme-canvas-auth-style-contract">
+                @include('partials.theme-canvas-style-contract', ['gs' => $__canvasGs])
+            </style>
+        @else
+            @if(view()->exists('theme-runtime::css.contract'))
+                <style id="theme-runtime-contract-css">
+                    @include('theme-runtime::css.contract')
+                </style>
+            @endif
+            @if(view()->exists('theme-runtime::css.blocks'))
+                <style id="theme-runtime-blocks-css">
+                    @include('theme-runtime::css.blocks')
+                </style>
+            @endif
+        @endif
+        <style id="auth-canvas-body-reset">
+            .auth-login-body.has-rendered-auth-html {
+                background: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                min-height: 100vh;
+            }
+        </style>
+    @endif
     @if(\App\Helpers\SiteHelper::isSolarTheme() && view()->exists('themes.solar-industry.auth-styles'))
         @include('themes.solar-industry.auth-styles')
     @endif
     @stack('head')
 </head>
-<body class="auth-login-body">
+<body class="auth-login-body {{ !empty($renderedAuthHtml) ? 'has-rendered-auth-html' : '' }}">
     @if(!empty($renderedAuthHtml))
         {!! $renderedAuthHtml !!}
     @else
@@ -267,6 +298,16 @@
                 @endif
             </div>
         </div>
+    @endif
+    @if(!empty($renderedAuthHtml))
+        <script id="auth-canvas-tab-switcher-helper">
+            document.addEventListener("DOMContentLoaded", function() {
+                if (window.location.pathname.includes('/register') || window.location.hash === '#register') {
+                    var regTab = document.querySelector('.tb-auth-tab[data-tb-auth-target="register"]');
+                    if (regTab) { regTab.click(); }
+                }
+            });
+        </script>
     @endif
     @stack('scripts')
 </body>

@@ -13,6 +13,12 @@ class SolarThemeProtectiveIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        @touch(storage_path('installed.lock'));
+    }
+
     public function test_auth_login_blade_does_not_contain_hardcoded_solar_colors(): void
     {
         $bladePath = resource_path('views/layouts/auth-login.blade.php');
@@ -27,6 +33,7 @@ class SolarThemeProtectiveIntegrationTest extends TestCase
 
     public function test_login_and_register_pages_render_solar_styles_when_solar_theme_active(): void
     {
+        \Illuminate\Support\Facades\Auth::logout();
         \App\Models\Setting::set('active_canvas_theme_slug', 'solar-industry');
 
         $loginResponse = $this->get(route('login'));
@@ -45,6 +52,7 @@ class SolarThemeProtectiveIntegrationTest extends TestCase
 
     public function test_login_and_register_pages_do_not_leak_solar_styles_on_neutral_theme(): void
     {
+        \Illuminate\Support\Facades\Auth::logout();
         \App\Models\Setting::set('active_canvas_theme_slug', 'default');
         \App\Models\Setting::set('active_canvas_theme_name', 'قالب پیش‌فرض');
         \App\Models\Setting::set('active_canvas_theme_id', '1');
@@ -62,6 +70,40 @@ class SolarThemeProtectiveIntegrationTest extends TestCase
         $registerContent = $registerResponse->getContent();
         $this->assertStringNotContainsString('auth-solar-industrial-css', $registerContent);
         $this->assertStringNotContainsString('--auth-solar-primary: #FF7900', $registerContent);
+    }
+
+    public function test_canvas_auth_blocks_include_theme_canvas_style_contract_when_rendered(): void
+    {
+        \Illuminate\Support\Facades\Auth::logout();
+        $themeData = [
+            'name' => 'Custom Canvas',
+            'global_styles' => ['primary_color' => '#3b82f6'],
+            'pages' => [
+                'login' => [
+                    'blocks' => [
+                        [
+                            'id' => 'auth-1',
+                            'type' => 'auth_canvas',
+                            'props' => [
+                                'auth_mode' => 'dual',
+                                'brand_name' => 'تست برند',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        \App\Models\Setting::set('active_canvas_theme_data', json_encode($themeData));
+
+        $response = $this->get(route('login'));
+        $response->assertOk();
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('theme-canvas-auth-style-contract', $content);
+        $this->assertStringContainsString('tb-auth-canvas', $content);
+        $this->assertStringContainsString('has-rendered-auth-html', $content);
+        $this->assertStringContainsString('.tb-auth-canvas', $content);
     }
 
     public function test_solar_industry_home_page_json_contains_slider_block(): void

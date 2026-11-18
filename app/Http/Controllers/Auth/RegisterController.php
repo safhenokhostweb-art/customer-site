@@ -24,7 +24,7 @@ class RegisterController extends Controller
         $renderedAuthHtml = null;
         if (!empty($themeRaw)) {
             $themeData = json_decode($themeRaw, true);
-            $registerBlocks = $themeData['pages']['register']['blocks'] ?? null;
+            $registerBlocks = $themeData['pages']['register']['blocks'] ?? ($themeData['pages']['login']['blocks'] ?? null);
             if (!empty($registerBlocks)) {
                 try {
                     $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);

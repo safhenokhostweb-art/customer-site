@@ -36,7 +36,7 @@ class LoginController extends Controller
         $renderedAuthHtml = null;
         if (!empty($themeRaw)) {
             $themeData = json_decode($themeRaw, true);
-            $loginBlocks = $themeData['pages']['login']['blocks'] ?? null;
+            $loginBlocks = $themeData['pages']['login']['blocks'] ?? ($themeData['pages']['register']['blocks'] ?? null);
             if (!empty($loginBlocks)) {
                 try {
                     $renderer = app(\App\Services\ThemeCanvas\ThemeCanvasRenderer::class);
