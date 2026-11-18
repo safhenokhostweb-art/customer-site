@@ -28,6 +28,38 @@ class SiteHelper
     }
 
     /**
+     * Determines whether the active theme for the tenant is the solar-industry theme.
+     */
+    public static function isSolarTheme(): bool
+    {
+        $slug = (string) (Setting::get('active_canvas_theme_slug')
+            ?: Setting::get('active_canvas_theme_id')
+            ?: self::theme());
+
+        if (in_array($slug, ['solar-industry', 'solar_industry', 'solar-energy', 'solar_energy', '8'], true)) {
+            return true;
+        }
+
+        $name = (string) Setting::get('active_canvas_theme_name', '');
+        if ($name !== '' && (str_contains(strtolower($name), 'solar') || str_contains($name, 'خورشیدی'))) {
+            return true;
+        }
+
+        $raw = Setting::get('active_canvas_theme_data');
+        if (!empty($raw) && is_string($raw)) {
+            $data = json_decode($raw, true);
+            if (is_array($data)) {
+                $dataSlug = (string) ($data['slug'] ?? $data['id'] ?? '');
+                if (in_array($dataSlug, ['solar-industry', 'solar_industry', 'solar-energy', 'solar_energy', '8'], true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * فعال بودن ماژول فروشگاه: اول از لایسنس/پلتفرم، در غیر صورت از config و .env.
      */
     public static function shopEnabled(): bool

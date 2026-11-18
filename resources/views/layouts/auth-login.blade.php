@@ -221,6 +221,9 @@
         .auth-login-hero-blob:nth-child(1) { width: 320px; height: 320px; top: -80px; left: -60px; }
         .auth-login-hero-blob:nth-child(2) { width: 220px; height: 220px; bottom: -40px; right: -40px; }
     </style>
+    @if(\App\Helpers\SiteHelper::isSolarTheme() && view()->exists('themes.solar-industry.auth-styles'))
+        @include('themes.solar-industry.auth-styles')
+    @endif
     @stack('head')
 </head>
 <body class="auth-login-body">
@@ -243,13 +246,25 @@
                 </div>
             </div>
             <div class="auth-login-hero" aria-hidden="true">
-                <span class="auth-login-hero-blob"></span>
-                <span class="auth-login-hero-blob"></span>
-                <div class="auth-login-hero-inner">
-                    <x-core-ui::icon name="shield" />
-                    <h2>ورود امن به پنل</h2>
-                    <p>اطلاعات شما با رمزنگاری استاندارد محافظت می‌شود. از موبایل و رمز عبور معتبر خود استفاده کنید.</p>
-                </div>
+                @if(\App\Helpers\SiteHelper::isSolarTheme())
+                    <span class="auth-solar-glow auth-solar-glow-1"></span>
+                    <span class="auth-solar-glow auth-solar-glow-2"></span>
+                    <div class="auth-login-hero-inner">
+                        <div class="auth-solar-sun-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        </div>
+                        <h2>پلتفرم یکپارچه <span>صنعت برق</span></h2>
+                        <p>دسترسی امن به پنل کاربری، سفارش تجهیزات خورشیدی، دوره‌های آکادمی تخصصی و پشتیبانی آنلاین پروژه‌های نیروگاهی.</p>
+                    </div>
+                @else
+                    <span class="auth-login-hero-blob"></span>
+                    <span class="auth-login-hero-blob"></span>
+                    <div class="auth-login-hero-inner">
+                        <x-core-ui::icon name="shield" />
+                        <h2>ورود امن به پنل</h2>
+                        <p>اطلاعات شما با رمزنگاری استاندارد محافظت می‌شود. از موبایل و رمز عبور معتبر خود استفاده کنید.</p>
+                    </div>
+                @endif
             </div>
         </div>
     @endif

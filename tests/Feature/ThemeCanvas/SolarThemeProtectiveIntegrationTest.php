@@ -25,6 +25,45 @@ class SolarThemeProtectiveIntegrationTest extends TestCase
         $this->assertStringContainsString('--auth-login-primary', $content);
     }
 
+    public function test_login_and_register_pages_render_solar_styles_when_solar_theme_active(): void
+    {
+        \App\Models\Setting::set('active_canvas_theme_slug', 'solar-industry');
+
+        $loginResponse = $this->get(route('login'));
+        $loginResponse->assertOk();
+        $loginContent = $loginResponse->getContent();
+        $this->assertStringContainsString('auth-solar-industrial-css', $loginContent);
+        $this->assertStringContainsString('--auth-solar-primary: #FF7900', $loginContent);
+        $this->assertStringContainsString('پلتفرم یکپارچه', $loginContent);
+
+        $registerResponse = $this->get(route('register'));
+        $registerResponse->assertOk();
+        $registerContent = $registerResponse->getContent();
+        $this->assertStringContainsString('auth-solar-industrial-css', $registerContent);
+        $this->assertStringContainsString('--auth-solar-primary: #FF7900', $registerContent);
+    }
+
+    public function test_login_and_register_pages_do_not_leak_solar_styles_on_neutral_theme(): void
+    {
+        \App\Models\Setting::set('active_canvas_theme_slug', 'default');
+        \App\Models\Setting::set('active_canvas_theme_name', 'قالب پیش‌فرض');
+        \App\Models\Setting::set('active_canvas_theme_id', '1');
+
+        $loginResponse = $this->get(route('login'));
+        $loginResponse->assertOk();
+        $loginContent = $loginResponse->getContent();
+        $this->assertStringNotContainsString('auth-solar-industrial-css', $loginContent);
+        $this->assertStringNotContainsString('--auth-solar-primary: #FF7900', $loginContent);
+        $this->assertStringNotContainsString('پلتفرم یکپارچه', $loginContent);
+        $this->assertStringContainsString('ورود امن به پنل', $loginContent);
+
+        $registerResponse = $this->get(route('register'));
+        $registerResponse->assertOk();
+        $registerContent = $registerResponse->getContent();
+        $this->assertStringNotContainsString('auth-solar-industrial-css', $registerContent);
+        $this->assertStringNotContainsString('--auth-solar-primary: #FF7900', $registerContent);
+    }
+
     public function test_solar_industry_home_page_json_contains_slider_block(): void
     {
         $homeJsonPath = resource_path('views/themes/solar-industry/solar-page-home.json');
