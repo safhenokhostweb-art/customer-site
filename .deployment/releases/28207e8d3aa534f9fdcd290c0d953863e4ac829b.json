@@ -1,0 +1,79 @@
+{
+    "status": "READY",
+    "project_key": "customer-site",
+    "task_id": "WU-THEME-CANVAS-SOLAR-ISOLATION-ASSETS",
+    "summary": "fix(theme-canvas): isolate auth login layout, homepage slider, solar_calculator widget and auto-index theme assets",
+    "base_sha": "3ecdaa35478ee34a24c442dd971aaaa242a53fb4",
+    "branch": "main",
+    "changed_files": [
+        "app/Services/ThemeCanvas/ThemeInstanceRevisionService.php",
+        "resources/views/layouts/auth-login.blade.php",
+        "resources/views/themes/solar-industry/solar-page-home.json",
+        "resources/views/themes/solar-industry/solar-page-solar_calculator.json",
+        "tests/Feature/ThemeCanvas/SolarThemeProtectiveIntegrationTest.php"
+    ],
+    "migration_files": [],
+    "reviewed_migrations": [],
+    "dependency_commits": {
+        "saas-platform": "682c7de59d56f64d367cb85adf160f030c8a7ded"
+    },
+    "test_results": [
+        {
+            "name": "syntax:app/Services/ThemeCanvas/ThemeInstanceRevisionService.php",
+            "type": "syntax",
+            "command": "php -l app/Services/ThemeCanvas/ThemeInstanceRevisionService.php",
+            "exit_code": 0,
+            "duration_ms": 119
+        },
+        {
+            "name": "syntax:resources/views/layouts/auth-login.blade.php",
+            "type": "syntax",
+            "command": "php -l resources/views/layouts/auth-login.blade.php",
+            "exit_code": 0,
+            "duration_ms": 121
+        },
+        {
+            "name": "syntax:tests/Feature/ThemeCanvas/SolarThemeProtectiveIntegrationTest.php",
+            "type": "syntax",
+            "command": "php -l tests/Feature/ThemeCanvas/SolarThemeProtectiveIntegrationTest.php",
+            "exit_code": 0,
+            "duration_ms": 122
+        },
+        {
+            "name": "known-issue-guard-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/known-issues.php && php tests/ReleaseGate/known-issue-groups.php",
+            "exit_code": 0,
+            "duration_ms": 6329
+        },
+        {
+            "name": "theme-canvas-regression",
+            "type": "test",
+            "command": "php scripts/verify-release-known-issues.php --run-tests",
+            "exit_code": 0,
+            "duration_ms": 355043
+        },
+        {
+            "name": "artifact-gate-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/run.php",
+            "exit_code": 0,
+            "duration_ms": 3016
+        }
+    ],
+    "build_result": {
+        "required": true,
+        "status": "pending",
+        "contract": "server-managed-exact-commit"
+    },
+    "health_contract": {
+        "required": true,
+        "endpoint_source": "deployment-system project http_health_check"
+    },
+    "risk_flags": [],
+    "excluded_untracked_files": [],
+    "release_ready": true,
+    "commit_sha": "28207e8d3aa534f9fdcd290c0d953863e4ac829b",
+    "created_timestamp": "2026-11-18T11:47:31+00:00",
+    "metadata_version": 1
+}
