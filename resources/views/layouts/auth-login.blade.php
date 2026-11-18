@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'ورود') — {{ \App\Helpers\PlatformUx::platformName() }}</title>
+    {{-- The one head-tag renderer. This layout previously hand-wrote only the
+         robots directive and emitted no <meta name="description"> and no
+         <link rel="canonical"> at all. An auth surface is never indexable, so
+         the directive is pinned here rather than inherited from the tenant's
+         seo_robots setting; include-organization-json-ld is off because
+         Organization/WebSite is public-site structured data. --}}
     <x-seo-meta robots="noindex, nofollow" :include-organization-json-ld="false" />
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Regular.woff2') }}" type="font/woff2" crossorigin>
     <link rel="preload" as="font" href="{{ asset('assets/fonts/vazirmatn/Vazirmatn-Bold.woff2') }}" type="font/woff2" crossorigin>
@@ -13,26 +19,18 @@
         @vite(['resources/css/app.css'])
     @endif
     @include('partials.platform-styles')
-    <style id="auth-solar-industrial-css">
+    <style id="auth-login-layout-css">
         :root {
-            --auth-solar-primary: #FF7900;
-            --auth-solar-primary-hover: #E06600;
-            --auth-solar-primary-soft: rgba(255, 121, 0, 0.2);
-            --auth-solar-bg: #0B0B0B;
-            --auth-solar-surface: #1E1E1E;
-            --auth-solar-surface-card: #151515;
-            --auth-solar-input: #12121F;
-            --auth-solar-border: #2A2A2A;
-            --auth-solar-border-hover: rgba(255, 121, 0, 0.5);
-            --auth-solar-text: #F5F5F5;
-            --auth-solar-text-muted: #A3A3A3;
+            --auth-login-primary: var(--ds-primary, #4f46e5);
+            --auth-login-primary-soft: color-mix(in srgb, var(--auth-login-primary) 12%, white);
+            --auth-login-hero-end: color-mix(in srgb, var(--auth-login-primary) 45%, #0f172a);
         }
         .auth-login-body {
             margin: 0;
             min-height: 100vh;
             font-family: Vazirmatn, Tahoma, sans-serif;
-            background: var(--auth-solar-bg);
-            color: var(--auth-solar-text);
+            background: #f8fafc;
+            color: #0f172a;
         }
         .auth-login-grid {
             min-height: 100vh;
@@ -41,7 +39,7 @@
         }
         @media (min-width: 900px) {
             .auth-login-grid {
-                grid-template-columns: minmax(440px, 1.05fr) minmax(0, 1.2fr);
+                grid-template-columns: minmax(420px, 1fr) minmax(0, 1.15fr);
             }
         }
         .auth-login-panel {
@@ -49,9 +47,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1.25rem 2.5rem;
+            padding: 1.75rem 1.25rem 2.5rem;
             box-sizing: border-box;
-            background: var(--auth-solar-bg);
         }
         .auth-login-card-wrap {
             width: 100%;
@@ -61,109 +58,96 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            gap: 0.65rem;
+            margin-bottom: 1.35rem;
             flex-wrap: wrap;
+        }
+        .auth-login-brand img {
+            height: 2.25rem;
+            width: auto;
+            object-fit: contain;
         }
         .auth-login-brand span {
             font-weight: 800;
-            font-size: 1.25rem;
-            color: #fff;
+            font-size: 1.05rem;
+            color: var(--auth-login-primary);
             letter-spacing: -0.02em;
         }
-        .auth-login-brand span strong {
-            color: var(--auth-solar-primary);
-        }
         .auth-login-card {
-            background: var(--auth-solar-surface);
+            background: #fff;
             border-radius: 1.25rem;
-            padding: 2rem 1.75rem 1.75rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--auth-solar-border);
-            border: 1px solid var(--auth-solar-border);
+            padding: 1.75rem 1.5rem 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 20px 40px -12px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(15, 23, 42, 0.06);
             box-sizing: border-box;
         }
         .auth-login-card h1 {
-            margin: 0 0 0.4rem;
-            font-size: 1.4rem;
+            margin: 0 0 0.35rem;
+            font-size: 1.35rem;
             font-weight: 800;
             text-align: center;
-            color: #fff;
+            color: #0f172a;
         }
         .auth-login-card .auth-login-lead {
-            margin: 0 0 1.5rem;
+            margin: 0 0 1.25rem;
             text-align: center;
             font-size: 0.875rem;
-            color: var(--auth-solar-text-muted);
+            color: #64748b;
             line-height: 1.6;
         }
         .auth-login-body .form-label {
             display: block;
             font-size: 0.8125rem;
             font-weight: 600;
-            color: var(--auth-solar-text);
+            color: #334155;
             margin-bottom: 0.4rem;
         }
         .auth-login-body .form-control {
             width: 100%;
-            padding: 0.75rem 0.95rem;
-            background: var(--auth-solar-input);
-            border: 1px solid var(--auth-solar-border);
-            border-radius: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.65rem;
             font-size: 1rem;
-            color: #fff;
             box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
-        .auth-login-body .form-control::placeholder {
-            color: #666;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .auth-login-body .form-control:focus {
             outline: none;
-            border-color: var(--auth-solar-primary);
-            box-shadow: 0 0 0 3px var(--auth-solar-primary-soft);
-            background: #181828;
+            border-color: var(--auth-login-primary);
+            box-shadow: 0 0 0 3px var(--auth-login-primary-soft);
         }
-        .auth-login-body .space-y-4 > * + * { margin-top: 1.15rem; }
+        .auth-login-body .space-y-4 > * + * { margin-top: 1rem; }
         .auth-login-remember {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             font-size: 0.875rem;
-            color: var(--auth-solar-text-muted);
-            cursor: pointer;
+            color: #475569;
         }
         .auth-login-remember input {
-            width: 1.1rem;
-            height: 1.1rem;
-            accent-color: var(--auth-solar-primary);
-            cursor: pointer;
+            width: 1.05rem;
+            height: 1.05rem;
+            accent-color: var(--auth-login-primary);
         }
         .auth-login-body .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.8rem 1.25rem;
-            border-radius: 0.75rem;
-            font-weight: 700;
-            font-size: 1rem;
+            padding: 0.7rem 1.25rem;
+            border-radius: 0.65rem;
+            font-weight: 600;
+            font-size: 0.95rem;
             border: none;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: opacity 0.15s, transform 0.1s;
         }
+        .auth-login-body .btn:active { transform: scale(0.99); }
         .auth-login-body .btn-primary {
-            background: var(--auth-solar-primary);
+            background: var(--auth-login-primary);
             color: #fff;
             width: 100%;
-            box-shadow: 0 4px 14px rgba(255, 121, 0, 0.4);
         }
-        .auth-login-body .btn-primary:hover {
-            background: var(--auth-solar-primary-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(255, 121, 0, 0.5);
-        }
-        .auth-login-body .btn-primary:active {
-            transform: translateY(0);
-        }
+        .auth-login-body .btn-primary:hover { opacity: 0.94; }
         .auth-login-body .alert {
             padding: 0.75rem 1rem;
             border-radius: 0.65rem;
@@ -172,35 +156,31 @@
             line-height: 1.5;
         }
         .auth-login-body .alert-danger {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
         }
         .auth-login-body .alert-success {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            color: #86efac;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
         }
         .auth-login-footer-text {
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
             text-align: center;
-            font-size: 0.875rem;
-            color: var(--auth-solar-text-muted);
+            font-size: 0.8125rem;
+            color: #64748b;
         }
         .auth-login-footer-text a {
-            color: var(--auth-solar-primary);
-            font-weight: 700;
+            color: var(--auth-login-primary);
+            font-weight: 600;
             text-decoration: none;
-            margin-right: 0.35rem;
         }
-        .auth-login-footer-text a:hover {
-            text-decoration: underline;
-        }
+        .auth-login-footer-text a:hover { text-decoration: underline; }
         .auth-login-hero {
             display: none;
             position: relative;
-            background: linear-gradient(135deg, #12121F 0%, #050508 100%);
-            border-right: 1px solid var(--auth-solar-border);
+            background: linear-gradient(145deg, var(--auth-login-primary) 0%, var(--auth-login-hero-end) 100%);
             color: #fff;
             overflow: hidden;
         }
@@ -211,58 +191,36 @@
             position: relative;
             z-index: 1;
             padding: 3rem 2.5rem;
-            max-width: 440px;
+            max-width: 420px;
             text-align: center;
         }
-        .auth-solar-sun-icon {
-            width: 80px;
-            height: 80px;
-            padding: 12px;
-            box-sizing: border-box;
-            overflow: visible;
-            margin: 0 auto 1.5rem;
-            background: rgba(255, 121, 0, 0.15);
-            border: 1px solid rgba(255, 121, 0, 0.3);
-            border-radius: 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--auth-solar-primary);
-            box-shadow: 0 0 30px rgba(255, 121, 0, 0.2);
-        }
-        .auth-solar-sun-icon svg {
-            overflow: visible;
+        .auth-login-hero-inner svg {
+            width: min(280px, 70vw);
+            height: auto;
+            margin: 0 auto 1.25rem;
+            opacity: 0.95;
+            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.2));
         }
         .auth-login-hero h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.6rem;
+            margin: 0 0 0.5rem;
+            font-size: 1.35rem;
             font-weight: 800;
-            color: #fff;
-        }
-        .auth-login-hero h2 span {
-            color: var(--auth-solar-primary);
         }
         .auth-login-hero p {
             margin: 0;
-            color: var(--auth-solar-text-muted);
-            font-size: 0.95rem;
-            line-height: 1.8;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            line-height: 1.75;
         }
-        .auth-solar-glow {
+        .auth-login-hero-blob {
             position: absolute;
-            width: 450px;
-            height: 450px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 121, 0, 0.15) 0%, transparent 70%);
+            background: rgba(255,255,255,0.08);
             pointer-events: none;
         }
-        .auth-solar-glow-1 { top: -100px; left: -100px; }
-        .auth-solar-glow-2 { bottom: -100px; right: -100px; }
-        .tb-logo-anim--rotate_pop { display: inline-block; transform-origin: center center; animation: tb-anim-rotate-pop 5s cubic-bezier(.34,1.56,.64,1) infinite; will-change: transform; }
-        @keyframes tb-anim-rotate-pop { 0% { transform: rotate(0deg) scale(1); } 45% { transform: rotate(360deg) scale(1); } 55% { transform: rotate(360deg) scale(1.28); } 70% { transform: rotate(360deg) scale(.92); } 85% { transform: rotate(360deg) scale(1.06); } 95%, 100% { transform: rotate(360deg) scale(1); } }
+        .auth-login-hero-blob:nth-child(1) { width: 320px; height: 320px; top: -80px; left: -60px; }
+        .auth-login-hero-blob:nth-child(2) { width: 220px; height: 220px; bottom: -40px; right: -40px; }
     </style>
-    <style>@include('theme-runtime::css.contract')</style>
-    <style>@include('theme-runtime::css.blocks')</style>
     @stack('head')
 </head>
 <body class="auth-login-body">
@@ -285,15 +243,12 @@
                 </div>
             </div>
             <div class="auth-login-hero" aria-hidden="true">
-                <span class="auth-solar-glow auth-solar-glow-1"></span>
-                <span class="auth-solar-glow auth-solar-glow-2"></span>
+                <span class="auth-login-hero-blob"></span>
+                <span class="auth-login-hero-blob"></span>
                 <div class="auth-login-hero-inner">
-                    <div class="auth-solar-sun-icon">
-                        {{-- White-label (every tenant's sign-in): a neutral catalog icon and copy, no industry. --}}
-                        {!! \SaaSPlatform\ThemeRuntime\Support\IconLibrary::svg('shield-check') !!}
-                    </div>
-                    <h2>ورود امن به <span>حساب کاربری</span></h2>
-                    <p>دسترسی امن به پنل کاربری، سفارش‌ها، دوره‌ها و پشتیبانی آنلاین، همه در یک حساب.</p>
+                    <x-core-ui::icon name="shield" />
+                    <h2>ورود امن به پنل</h2>
+                    <p>اطلاعات شما با رمزنگاری استاندارد محافظت می‌شود. از موبایل و رمز عبور معتبر خود استفاده کنید.</p>
                 </div>
             </div>
         </div>
@@ -301,3 +256,5 @@
     @stack('scripts')
 </body>
 </html>
+
+

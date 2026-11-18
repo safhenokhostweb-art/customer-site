@@ -195,8 +195,87 @@ class ThemeInstanceRevisionService
                 Setting::set('active_canvas_theme_id', $context['active_theme_id'], 'theme');
             }
 
+            $activeId = (string) ($context['active_theme_id'] ?? '');
+            if ($activeId === 'solar-industry' || $activeId === '8') {
+                $this->indexThemeStaticAssets('solar-assets');
+            }
+
             return $revision;
         });
+    }
+
+    /**
+     * Index a static theme asset folder (e.g. storage/app/public/solar-assets)
+     * into customer_media if not already indexed, so they appear in Media Library.
+     */
+    public function indexThemeStaticAssets(?string $folder = null): int
+    {
+        if ($folder === null) {
+            return 0;
+        }
+
+        try {
+            $siteId = (int) config('site.platform_site_id', 0);
+            if ($siteId <= 0) {
+                return 0;
+            }
+
+            $dir = storage_path('app/public/' . $folder);
+            if (!is_dir($dir)) {
+                return 0;
+            }
+
+            $dirName = basename($dir);
+            $files = glob($dir . '/*.*') ?: [];
+            $indexedCount = 0;
+
+            foreach ($files as $filePath) {
+                if (is_dir($filePath)) {
+                    continue;
+                }
+                $filename = basename($filePath);
+                $storageKey = $dirName . '/' . $filename;
+
+                $exists = \App\Models\CustomerMedia::where('site_id', $siteId)
+                    ->where('storage_key', $storageKey)
+                    ->exists();
+
+                if (!$exists) {
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    $mime = match ($ext) {
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'png'         => 'image/png',
+                        'webp'        => 'image/webp',
+                        'gif'         => 'image/gif',
+                        'svg'         => 'image/svg+xml',
+                        default       => 'application/octet-stream',
+                    };
+                    $dims = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) ? @getimagesize($filePath) : null;
+
+                    \App\Models\CustomerMedia::create([
+                        'site_id'           => $siteId,
+                        'uuid'              => (string) \Illuminate\Support\Str::uuid(),
+                        'disk'              => 'public',
+                        'storage_key'       => $storageKey,
+                        'original_filename' => $filename,
+                        'extension'         => $ext,
+                        'category'          => 'image',
+                        'mime_type'         => $mime,
+                        'size_bytes'        => filesize($filePath) ?: 0,
+                        'title'             => pathinfo($filename, PATHINFO_FILENAME),
+                        'alt_text'          => pathinfo($filename, PATHINFO_FILENAME),
+                        'width'             => $dims[0] ?? null,
+                        'height'            => $dims[1] ?? null,
+                    ]);
+                    $indexedCount++;
+                }
+            }
+
+            return $indexedCount;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('indexThemeStaticAssets skipped: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**
