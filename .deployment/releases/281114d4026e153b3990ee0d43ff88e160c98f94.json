@@ -1,0 +1,48 @@
+{
+    "status": "READY",
+    "project_key": "customer-site",
+    "task_id": "WU-CUSTOMER-SITE-RESOURCE-GOVERNANCE-WIDGET-THRESHOLDS",
+    "summary": "feat(resources): upgrade customer resource governance widget, soft disk 70% threshold banner and cards",
+    "base_sha": "90bfba331c79860b72ebecb4a390886ff0ce3015",
+    "branch": "main",
+    "changed_files": [
+        "resources/views/admin/account/resources.blade.php",
+        "resources/views/admin/partials/resource-widget.blade.php"
+    ],
+    "migration_files": [],
+    "reviewed_migrations": [],
+    "dependency_commits": {
+        "saas-platform": "1e11bd2bf92ae1758f5539fa07fef7b538f9b9f7"
+    },
+    "test_results": [
+        {
+            "name": "blade-syntax-check",
+            "type": "syntax",
+            "command": "php -l resources/views/admin/account/resources.blade.php",
+            "exit_code": 0,
+            "duration_ms": 120
+        },
+        {
+            "name": "widget-syntax-check",
+            "type": "syntax",
+            "command": "php -l resources/views/admin/partials/resource-widget.blade.php",
+            "exit_code": 0,
+            "duration_ms": 110
+        }
+    ],
+    "build_result": {
+        "required": true,
+        "status": "pending",
+        "contract": "server-managed-exact-commit"
+    },
+    "health_contract": {
+        "required": true,
+        "endpoint_source": "deployment-system project http_health_check"
+    },
+    "risk_flags": [],
+    "excluded_untracked_files": [],
+    "release_ready": true,
+    "commit_sha": "281114d4026e153b3990ee0d43ff88e160c98f94",
+    "created_timestamp": "2026-11-19T10:17:38+00:00",
+    "metadata_version": 1
+}
