@@ -1,0 +1,61 @@
+{
+    "status": "READY",
+    "project_key": "customer-site",
+    "task_id": "WU-CUSTOMER-SITE-AUTH-CANVAS-CSS-CONTRACT",
+    "summary": "fix(auth): load theme canvas style contract and engine tokens for rendered auth canvas",
+    "base_sha": "71382e95f70756c55176fbfdf595f7fc3428f53d",
+    "branch": "main",
+    "changed_files": [
+        "resources/views/layouts/auth-login.blade.php"
+    ],
+    "migration_files": [],
+    "reviewed_migrations": [],
+    "dependency_commits": {
+        "saas-platform": "1891f7f22e7dacf4d2686bf30256f3077b9eeab0"
+    },
+    "test_results": [
+        {
+            "name": "syntax:resources/views/layouts/auth-login.blade.php",
+            "type": "syntax",
+            "command": "php -l resources/views/layouts/auth-login.blade.php",
+            "exit_code": 0,
+            "duration_ms": 106
+        },
+        {
+            "name": "known-issue-guard-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/known-issues.php && php tests/ReleaseGate/known-issue-groups.php",
+            "exit_code": 0,
+            "duration_ms": 3234
+        },
+        {
+            "name": "theme-canvas-regression",
+            "type": "test",
+            "command": "php scripts/verify-release-known-issues.php --run-tests",
+            "exit_code": 0,
+            "duration_ms": 224024
+        },
+        {
+            "name": "artifact-gate-tests",
+            "type": "test",
+            "command": "php tests/ReleaseGate/run.php",
+            "exit_code": 0,
+            "duration_ms": 3177
+        }
+    ],
+    "build_result": {
+        "required": true,
+        "status": "pending",
+        "contract": "server-managed-exact-commit"
+    },
+    "health_contract": {
+        "required": true,
+        "endpoint_source": "deployment-system project http_health_check"
+    },
+    "risk_flags": [],
+    "excluded_untracked_files": [],
+    "release_ready": true,
+    "commit_sha": "c4cfc7670bb41d599ef764f091d521349ad77835",
+    "created_timestamp": "2026-11-19T04:16:09+00:00",
+    "metadata_version": 1
+}
