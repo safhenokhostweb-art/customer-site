@@ -222,6 +222,7 @@
         .auth-login-hero-blob:nth-child(2) { width: 220px; height: 220px; bottom: -40px; right: -40px; }
     </style>
     @if(!empty($renderedAuthHtml))
+        @include('partials.theme-engine-tokens')
         @php
             $__canvasThemeRaw = \App\Models\Setting::get('active_canvas_theme_data');
             $__canvasThemeData = !empty($__canvasThemeRaw) && is_string($__canvasThemeRaw) ? json_decode($__canvasThemeRaw, true) : [];
