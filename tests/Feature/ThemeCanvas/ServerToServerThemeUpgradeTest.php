@@ -253,4 +253,66 @@ class ServerToServerThemeUpgradeTest extends TestCase
         $currentLiveTheme = json_decode(Setting::get('active_canvas_theme_data'), true);
         $this->assertSame('نسخه یک', $currentLiveTheme['pages']['home']['blocks'][0]['props']['heading']);
     }
+
+    /** @return array{0: ThemeInstanceRevision, 1: ThemeInstanceRevision} [install, upgrade] */
+    private function installThenUpgrade(): array
+    {
+        $service = app(ThemeInstanceRevisionService::class);
+        $meta = ['theme_identifier' => 'solar-industry', 'theme_name' => 'Solar Industry'];
+        $install = $service->record(['name' => 'Solar Industry', 'slug' => 'solar-industry', 'pages' => [
+            'home' => ['title' => 'v1', 'blocks' => [['id' => 'hero-1', 'type' => 'hero', 'props' => ['heading' => 'نسخه یک']]]],
+        ]], ThemeInstanceRevision::TYPE_INSTALL, $meta + ['source_theme_version' => '1.0.0']);
+        $upgrade = $service->record(['name' => 'Solar Industry', 'slug' => 'solar-industry', 'pages' => [
+            'home' => ['title' => 'v2', 'blocks' => [['id' => 'hero-1', 'type' => 'hero', 'props' => ['heading' => 'نسخه دو']]]],
+        ]], ThemeInstanceRevision::TYPE_CUSTOMER_EDIT, $meta);
+
+        return [$install, $upgrade];
+    }
+
+    private function liveHeading(): string
+    {
+        return json_decode(Setting::get('active_canvas_theme_data'), true)['pages']['home']['blocks'][0]['props']['heading'];
+    }
+
+    public function test_rollback_without_any_revision_is_refused_and_changes_nothing(): void
+    {
+        $this->installThenUpgrade();
+
+        $this->postJson('/builder/api/theme/rollback', ['theme_id' => 'solar-industry'], ['X-Provision-Secret' => 'test-secret-12345'])
+            ->assertStatus(422)
+            ->assertJson(['success' => false, 'error' => 'revision_required']);
+
+        $this->assertSame('نسخه دو', $this->liveHeading());
+    }
+
+    public function test_undo_of_the_active_update_revision_restores_the_revision_before_it(): void
+    {
+        [$install, $upgrade] = $this->installThenUpgrade();
+
+        $this->postJson('/builder/api/theme/rollback', [
+            'theme_id' => 'solar-industry', 'undo_revision_number' => $upgrade->revision_number,
+        ], ['X-Provision-Secret' => 'test-secret-12345'])
+            ->assertOk()
+            ->assertJson(['success' => true, 'restored_from_revision_id' => $install->id]);
+
+        $this->assertSame('نسخه یک', $this->liveHeading());
+    }
+
+    public function test_undo_is_refused_once_the_customer_edited_after_the_update(): void
+    {
+        [, $upgrade] = $this->installThenUpgrade();
+        app(ThemeInstanceRevisionService::class)->record(['name' => 'Solar Industry', 'slug' => 'solar-industry', 'pages' => [
+            'home' => ['title' => 'edit', 'blocks' => [['id' => 'hero-1', 'type' => 'hero', 'props' => ['heading' => 'ویرایش مشتری']]]],
+        ]], ThemeInstanceRevision::TYPE_CUSTOMER_EDIT, ['theme_identifier' => 'solar-industry', 'theme_name' => 'Solar Industry']);
+
+        // The pre-fix code restored the update revision itself here (re-applying
+        // the update and discarding the customer's edit).
+        $this->postJson('/builder/api/theme/rollback', [
+            'theme_id' => 'solar-industry', 'undo_revision_number' => $upgrade->revision_number, 'revision_number' => $upgrade->revision_number,
+        ], ['X-Provision-Secret' => 'test-secret-12345'])
+            ->assertStatus(409)
+            ->assertJson(['success' => false, 'error' => 'revision_superseded']);
+
+        $this->assertSame('ویرایش مشتری', $this->liveHeading());
+    }
 }

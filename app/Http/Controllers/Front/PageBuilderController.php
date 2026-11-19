@@ -637,13 +637,48 @@ class PageBuilderController extends Controller
 
         $targetRevision = null;
 
+        // 2026-11-19: no silent fallback. A request naming no revision used
+        // to restore "the revision before the active one", so a rollback of
+        // a package update (which carries no theme revision) reverted the
+        // customer's pages. The caller must say what to undo or restore.
+        if (! $request->filled('revision_id') && ! $request->filled('revision_number') && ! $request->filled('undo_revision_number')) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'revision_required',
+                'message' => 'برای بازگشت باید شمارهٔ نسخه مشخص شود؛ بازگشت بدون نسخه انجام نمی‌شود.',
+            ], 422);
+        }
+
+        // 0. Undo the revision an update produced (what the platform sends).
+        // Only while that revision is still the active one: once the customer
+        // has edited after the update, restoring the pre-update state would
+        // silently discard those edits, so it is refused instead.
+        if ($request->filled('undo_revision_number')) {
+            $undoNumber = (int) $request->input('undo_revision_number');
+            $activeRevision = ThemeInstanceRevision::find((int) Setting::get('active_theme_revision_id'));
+
+            if (! $activeRevision || $activeRevision->theme_identifier !== $targetIdentifier || (int) $activeRevision->revision_number !== $undoNumber) {
+                return response()->json([
+                    'success'                => false,
+                    'error'                  => 'revision_superseded',
+                    'message'                => 'پس از این به‌روزرسانی، صفحات سایت ویرایش شده‌اند؛ برای حفظ ویرایش‌های مشتری، بازگشت خودکار انجام نشد.',
+                    'active_revision_number' => $activeRevision?->revision_number,
+                ], 409);
+            }
+
+            $targetRevision = ThemeInstanceRevision::where('theme_identifier', $targetIdentifier)
+                ->where('revision_number', '<', $undoNumber)
+                ->orderByDesc('revision_number')
+                ->first();
+        }
+
         // 1. Check if an explicit revision_id was provided
-        if ($request->filled('revision_id')) {
+        if (!$targetRevision && $request->filled('revision_id')) {
             $targetRevision = ThemeInstanceRevision::find($request->input('revision_id'));
         }
 
-        // 2. If revision_number was provided
-        if (!$targetRevision && $request->filled('revision_number')) {
+        // 2. If revision_number was provided (explicit restore target)
+        if (!$targetRevision && ! $request->filled('undo_revision_number') && $request->filled('revision_number')) {
             $reqRevisionNum = (int) $request->input('revision_number');
             $activeRevisionId = (int) Setting::get('active_theme_revision_id');
             $activeRevision = ThemeInstanceRevision::find($activeRevisionId);
@@ -660,18 +695,6 @@ class PageBuilderController extends Controller
                     ->where('revision_number', $reqRevisionNum)
                     ->first();
             }
-        }
-
-        // 3. Fallback: rollback to the previous revision before the active one
-        if (!$targetRevision) {
-            $activeRevisionId = (int) Setting::get('active_theme_revision_id');
-            $activeRevision = ThemeInstanceRevision::find($activeRevisionId);
-            $activeRevisionNumber = $activeRevision ? $activeRevision->revision_number : PHP_INT_MAX;
-
-            $targetRevision = ThemeInstanceRevision::where('theme_identifier', $targetIdentifier)
-                ->where('revision_number', '<', $activeRevisionNumber)
-                ->orderByDesc('revision_number')
-                ->first();
         }
 
         if (!$targetRevision) {
