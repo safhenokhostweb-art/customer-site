@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SfUploadedFile;
 
@@ -144,7 +143,7 @@ class SubscriptionPlanController extends Controller
 
         // حذف تصویر
         if ($request->boolean('remove_image') && $subscription->image) {
-            Storage::disk('public')->delete($subscription->image);
+            $subscription->deleteStoredImage();
             $data['image'] = null;
         }
 
@@ -152,7 +151,7 @@ class SubscriptionPlanController extends Controller
         $newImage = $this->storeImage($request);
         if ($newImage !== null) {
             if ($subscription->image) {
-                Storage::disk('public')->delete($subscription->image);
+                $subscription->deleteStoredImage();
             }
             $data['image'] = $newImage;
         }
@@ -187,7 +186,7 @@ class SubscriptionPlanController extends Controller
         }
 
         if ($subscription->image) {
-            Storage::disk('public')->delete($subscription->image);
+            $subscription->deleteStoredImage();
         }
 
         $subscription->delete();
@@ -224,9 +223,22 @@ class SubscriptionPlanController extends Controller
             return null;
         }
 
+        // Media disk (MEDIA_DISK), under SubscriptionPlan::IMAGE_PREFIX so the
+        // model can tell these from older paths on the local "public" disk.
+        app(\App\Services\MediaQuota::class)->assertCanStore((int) $file->getSize(), 'image');
+
         try {
-            $path = $file->store('subscriptions', 'public');
-            return $path ?: null;
+            $extension = strtolower($file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'jpg'));
+            $path = SubscriptionPlan::IMAGE_PREFIX . Str::random(40) . '.' . $extension;
+            $stream = fopen($file->getRealPath() ?: $file->getPathname(), 'rb');
+            try {
+                $ok = $stream !== false && app(\App\Services\MediaStorage::class)->disk('uploads')->put($path, $stream, ['visibility' => 'public']);
+            } finally {
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }
+            return $ok ? $path : null;
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('SubscriptionPlan image upload failed', [
                 'error'    => $e->getMessage(),

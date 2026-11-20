@@ -81,11 +81,30 @@ class BackupDatabaseCommandTest extends TestCase
     }
 
     /** @test */
-    public function retention_option_is_accepted(): void
+    public function retention_option_is_accepted_up_to_the_local_cap(): void
     {
-        $this->artisan('db:backup', ['--dry-run' => true, '--retention' => 3])
-             ->expectsOutputToContain('retention: 3')
+        $this->artisan('db:backup', ['--dry-run' => true, '--retention' => 1])
+             ->expectsOutputToContain('retention: 1')
              ->assertSuccessful();
+    }
+
+    /** @test */
+    public function local_retention_is_capped_at_two_whatever_is_requested(): void
+    {
+        // The schedule still passes DB_BACKUP_RETENTION (7): only 2 stay on disk.
+        $this->artisan('db:backup', ['--dry-run' => true, '--retention' => 7])
+             ->expectsOutputToContain('retention: 2')
+             ->assertSuccessful();
+        $this->assertSame(2, \App\Console\Commands\BackupDatabaseCommand::MAX_LOCAL_RETENTION);
+    }
+
+    /** @test */
+    public function the_site_never_uploads_backups_to_object_storage_itself(): void
+    {
+        // Phase 2: the platform pulls dumps over SSH; no bucket key on the site.
+        $source = file_get_contents((new \ReflectionClass(\App\Console\Commands\BackupDatabaseCommand::class))->getFileName());
+        $this->assertStringNotContainsString('arvan_backup', $source);
+        $this->assertStringNotContainsString('Storage::disk', $source);
     }
 
     /** @test */

@@ -32,6 +32,41 @@ class SubscriptionPlan extends Model
         'loyalty_multiplier'  => 'float',
     ];
 
+    /** Key prefix of plan images stored on the media disk (Phase 4). */
+    public const IMAGE_PREFIX = 'plans/';
+
+    /**
+     * Public URL of the plan image. Images stored since Phase 4 live on the
+     * media disk (MEDIA_DISK: local uploads or object storage) under
+     * "plans/..."; older values are paths on the local "public" disk.
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        $image = (string) ($this->image ?? '');
+        if ($image === '') {
+            return null;
+        }
+
+        if (str_starts_with($image, self::IMAGE_PREFIX)) {
+            return app(\App\Services\MediaStorage::class)->url($image, 'uploads') ?: null;
+        }
+
+        return asset('storage/' . $image);
+    }
+
+    /** Delete the stored image wherever it lives (best effort). */
+    public function deleteStoredImage(): void
+    {
+        $image = (string) ($this->image ?? '');
+        if ($image === '') {
+            return;
+        }
+
+        str_starts_with($image, self::IMAGE_PREFIX)
+            ? app(\App\Services\MediaStorage::class)->delete($image, 'uploads')
+            : \Illuminate\Support\Facades\Storage::disk('public')->delete($image);
+    }
+
     // ─── Relations ────────────────────────────────────────────────────────
 
     public function subscriptions(): HasMany

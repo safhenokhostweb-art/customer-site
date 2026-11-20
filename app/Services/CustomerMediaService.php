@@ -42,6 +42,7 @@ class CustomerMediaService
     {
         $siteId = $this->siteId();
         [$category, $extension, $mime] = $this->validate($file);
+        app(MediaQuota::class)->assertCanStore((int) $file->getSize());
         $uuid = (string) Str::uuid();
         $disk = $this->storage->diskNameFor('uploads');
         $key = $this->remoteImportStorageKey($siteId, $uuid, $extension, $metadata);
@@ -462,6 +463,8 @@ class CustomerMediaService
                 'file' => 'نوع فایل جایگزین باید با نوع رسانه اصلی («' . $media->category . '») سازگار باشد.',
             ]);
         }
+        // Only the growth counts: the old binary is deleted afterwards.
+        app(MediaQuota::class)->assertCanStore((int) $file->getSize() - (int) $media->size_bytes);
 
         $oldDisk = $media->disk;
         $oldKey = $media->storage_key;
@@ -542,17 +545,25 @@ class CustomerMediaService
         }
 
         $disk = Storage::disk($media->disk);
-        $realPath = $disk->path($media->storage_key);
-        $size = @getimagesize($realPath);
-        if (! is_array($size)) {
-            throw new \RuntimeException('Image could not be read for editing.');
-        }
-        [$sourceWidth, $sourceHeight] = $size;
-        if ($sourceWidth * $sourceHeight > self::MAX_IMAGE_PIXELS) {
-            throw ValidationException::withMessages(['file' => 'ابعاد تصویر بیش از حد مجاز برای ویرایش است.']);
-        }
 
-        $source = $this->loadGdImage($realPath, $media->mime_type);
+        // Works for local and object-storage disks alike: GD needs a file
+        // path, so the binary is copied into a temp file that is always
+        // removed (a remote disk has no local path() at all).
+        $realPath = $this->downloadToTemp($disk, $media->storage_key);
+        try {
+            $size = @getimagesize($realPath);
+            if (! is_array($size)) {
+                throw new \RuntimeException('Image could not be read for editing.');
+            }
+            [$sourceWidth, $sourceHeight] = $size;
+            if ($sourceWidth * $sourceHeight > self::MAX_IMAGE_PIXELS) {
+                throw ValidationException::withMessages(['file' => 'ابعاد تصویر بیش از حد مجاز برای ویرایش است.']);
+            }
+
+            $source = $this->loadGdImage($realPath, $media->mime_type);
+        } finally {
+            @unlink($realPath);
+        }
         if ($source === null) {
             throw new \RuntimeException('Image could not be decoded for editing.');
         }
@@ -598,6 +609,31 @@ class CustomerMediaService
         $disk->delete($oldKey);
 
         return $media->fresh();
+    }
+
+    /** Copy a stored binary into a new temp file; the caller unlinks it. */
+    private function downloadToTemp(\Illuminate\Contracts\Filesystem\Filesystem $disk, string $key): string
+    {
+        $source = $disk->readStream($key);
+        if (! is_resource($source)) {
+            throw new \RuntimeException('Image could not be read for editing.');
+        }
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'cm-edit-');
+        $target = $tempPath !== false ? @fopen($tempPath, 'wb') : false;
+        if ($target === false) {
+            fclose($source);
+            throw new \RuntimeException('Temporary file for image editing could not be created.');
+        }
+
+        try {
+            stream_copy_to_stream($source, $target);
+        } finally {
+            fclose($source);
+            fclose($target);
+        }
+
+        return $tempPath;
     }
 
     private function loadGdImage(string $path, string $mime): ?\GdImage

@@ -187,22 +187,9 @@ class UserTicketController extends Controller
         foreach ($uploadedFiles as $file) {
             if (!$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid() || $file->getSize() === 0) continue;
             try {
-                $subdir   = 'tickets/' . now()->format('Y/m');
-                $destDir  = public_path('uploads/' . $subdir);
-                if (!is_dir($destDir)) { mkdir($destDir, 0775, true); }
-                $ext      = $file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'bin');
-                $origName = $file->getClientOriginalName();
-                $origMime = $file->getMimeType();
-                $origSize = $file->getSize();
-                $filename = \Illuminate\Support\Str::random(32) . '.' . $ext;
-                $file->move($destDir, $filename);
-                $attachments[] = [
-                    'name' => $origName,
-                    'path' => 'uploads/' . $subdir . '/' . $filename,
-                    'url'  => url('uploads/' . $subdir . '/' . $filename),
-                    'size' => $origSize,
-                    'mime' => $origMime,
-                ];
+                $attachments[] = app(\App\Services\TicketAttachmentStorage::class)->store($file);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw $e;
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('UserTicketController file upload error: ' . $e->getMessage());
             }
