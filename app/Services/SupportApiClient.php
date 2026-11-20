@@ -74,24 +74,9 @@ class SupportApiClient
                 continue;
             }
             try {
-                $subdir   = 'tickets/' . now()->format('Y/m');
-                $destDir  = public_path('uploads/' . $subdir);
-                if (!is_dir($destDir)) {
-                    mkdir($destDir, 0775, true);
-                }
-                $ext      = $file->guessExtension() ?: ($file->getClientOriginalExtension() ?: 'bin');
-                $origName = $file->getClientOriginalName();
-                $origMime = $file->getMimeType();
-                $origSize = $file->getSize();
-                $filename = \Illuminate\Support\Str::random(32) . '.' . $ext;
-                $file->move($destDir, $filename);
-                $uploadedFiles[] = [
-                    'name' => $origName,
-                    'path' => 'uploads/' . $subdir . '/' . $filename,
-                    'url'  => url('uploads/' . $subdir . '/' . $filename),
-                    'size' => $origSize,
-                    'mime' => $origMime,
-                ];
+                $uploadedFiles[] = app(\App\Services\TicketAttachmentStorage::class)->store($file);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw $e;
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('SupportApiClient::uploadAttachments error: ' . $e->getMessage());
             }
@@ -101,9 +86,12 @@ class SupportApiClient
 
     public function deleteUploadedFiles(array $uploadedFiles): void
     {
+        // TicketAttachmentStorage knows where uploadAttachments() put them;
+        // the old disk('public') delete never matched an "uploads/..." path.
+        $storage = app(\App\Services\TicketAttachmentStorage::class);
         foreach ($uploadedFiles as $file) {
             if (!empty($file['path'])) {
-                Storage::disk('public')->delete($file['path']);
+                $storage->delete($file);
             }
         }
     }

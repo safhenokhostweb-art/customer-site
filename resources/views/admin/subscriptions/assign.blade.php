@@ -63,7 +63,7 @@
                        class="assign-plan-radio" required>
                 <div class="assign-plan-card__inner" style="border-top:3px solid {{ $plan->color ?? '#4f46e5' }}">
                     @if($plan->image)
-                    <img src="{{ asset('storage/' . $plan->image) }}" alt="{{ $plan->name }}"
+                    <img src="{{ $plan->image_url }}" alt="{{ $plan->name }}"
                          class="assign-plan-card__img">
                     @endif
                     <p class="assign-plan-card__name">{{ $plan->name }}</p>

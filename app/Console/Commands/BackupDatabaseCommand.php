@@ -5,12 +5,18 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class BackupDatabaseCommand extends Command
 {
+    /**
+     * Local copies are a short safety net on the site's own disk; the
+     * durable, offsite copies are pulled by the platform (db:backup-sites)
+     * into its private bucket. The site never holds a backup-bucket key.
+     */
+    public const MAX_LOCAL_RETENTION = 2;
+
     protected $signature = 'db:backup
-                            {--retention=7 : تعداد نسخه‌های نگه‌داری (پیش‌فرض: ۷)}
+                            {--retention=2 : تعداد نسخه‌های محلی (حداکثر ۲)}
                             {--no-compress : بدون فشرده‌سازی gzip}
                             {--dry-run : نمایش مسیر بدون اجرا}';
 
@@ -19,7 +25,8 @@ class BackupDatabaseCommand extends Command
     public function handle(): int
     {
         $dryRun    = $this->option('dry-run');
-        $retention = max(1, (int) ($this->option('retention') ?: config('deployment.database_backup_retention', 7)));
+        // Capped whatever the schedule or DB_BACKUP_RETENTION asks for.
+        $retention = min(self::MAX_LOCAL_RETENTION, max(1, (int) ($this->option('retention') ?: config('deployment.database_backup_retention', self::MAX_LOCAL_RETENTION))));
         $compress  = ! $this->option('no-compress');
 
         $backupDir = storage_path('backups');
@@ -90,8 +97,8 @@ class BackupDatabaseCommand extends Command
 
         $this->info('پشتیبان‌گیری با موفقیت انجام شد.');
 
-        // ARVAN: Upload backup to ArvanCloud offsite storage (tenant-isolated path)
-        $this->uploadToArvan($filepath, $filename);
+        // No offsite upload from here (Phase 2): the platform pulls a dump
+        // over SSH into its private bucket, so this site needs no bucket key.
 
         return self::SUCCESS;
     }
@@ -206,80 +213,5 @@ class BackupDatabaseCommand extends Command
             return round($bytes / 1024, 1) . ' KB';
         }
         return $bytes . ' B';
-    }
-
-    /**
-     * Upload backup to ArvanCloud using tenant-isolated path.
-     * Non-blocking: failure is logged but does not affect backup success verdict.
-     * Path: customer-sites/tenant-{PLATFORM_SITE_ID}/database/{filename}
-     */
-    private function uploadToArvan(string $localPath, string $filename): void
-    {
-        $siteId = (int) config('site.platform_site_id', 0);
-
-        if ($siteId <= 0) {
-            Log::warning('db:backup arvan skipped — PLATFORM_SITE_ID not set');
-            return;
-        }
-
-        $remotePath = "customer-sites/tenant-{$siteId}/database/{$filename}";
-        $maxRetries = 3;
-        $localSize  = filesize($localPath);
-        $lastError  = '';
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            try {
-                $stream = fopen($localPath, 'r');
-                if ($stream === false) {
-                    throw new \RuntimeException('Cannot open backup file for reading');
-                }
-
-                Storage::disk('arvan_backup')->put($remotePath, $stream);
-
-                if (is_resource($stream)) {
-                    fclose($stream);
-                }
-
-                // Verify remote existence
-                if (! Storage::disk('arvan_backup')->exists($remotePath)) {
-                    throw new \RuntimeException('File not found on remote after upload');
-                }
-
-                // Verify remote size
-                $remoteSize = Storage::disk('arvan_backup')->size($remotePath);
-                if ($remoteSize === null) {
-                    throw new \RuntimeException('Cannot verify remote file size');
-                }
-                if ($remoteSize !== $localSize) {
-                    throw new \RuntimeException("Size mismatch: local={$localSize} remote={$remoteSize}");
-                }
-
-                $this->info("Arvan offsite backup: آپلود به {$remotePath} ({$localSize} bytes)");
-                Log::info('db:backup arvan success', [
-                    'filename'    => $filename,
-                    'remote_path' => $remotePath,
-                    'size'        => $localSize,
-                    'attempt'     => $attempt,
-                ]);
-                return;
-
-            } catch (\Throwable $e) {
-                $lastError = $e->getMessage();
-                Log::warning("db:backup arvan attempt {$attempt}/{$maxRetries} failed", [
-                    'remote_path' => $remotePath,
-                    'error'       => $lastError,
-                ]);
-                if ($attempt < $maxRetries) {
-                    usleep(1000 * 1000);
-                }
-            }
-        }
-
-        $this->warn("Arvan offsite backup failed: {$lastError}");
-        Log::error('db:backup arvan failed', [
-            'filename'    => $filename,
-            'remote_path' => $remotePath,
-            'error'       => $lastError,
-        ]);
     }
 }

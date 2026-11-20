@@ -57,12 +57,18 @@ class NotificationController extends Controller
             $storagePath = $dir . '/' . \Illuminate\Support\Str::random(40) . '.' . $ext;
             // Use getPathname() instead of store() — on Windows, getRealPath() can return false
             // for PHP temp files on junction-pointed paths, causing fopen() to throw ValueError.
+            // Through MediaStorage so the image follows MEDIA_DISK (local
+            // uploads or object storage) instead of a hard-coded disk/URL.
+            $media = app(\App\Services\MediaStorage::class);
+            app(\App\Services\MediaQuota::class)->assertCanStore((int) $uploadedFile->getSize(), 'image');
             $stream = fopen($uploadedFile->getPathname(), 'r');
             if ($stream !== false) {
-                $stored = \Illuminate\Support\Facades\Storage::disk('uploads')->put($storagePath, $stream);
-                fclose($stream);
+                $stored = $media->disk('uploads')->put($storagePath, $stream, ['visibility' => 'public']);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
                 if ($stored) {
-                    $imageUrl = asset('uploads/' . $storagePath);
+                    $imageUrl = $media->url($storagePath, 'uploads');
                 }
             }
         }

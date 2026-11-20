@@ -133,20 +133,9 @@ class CustomerMobileTicketController extends Controller
                 continue;
             }
             try {
-                $subdir   = 'tickets/' . now()->format('Y/m');
-                $destDir  = public_path('uploads/' . $subdir);
-                if (!is_dir($destDir)) {
-                    mkdir($destDir, 0775, true);
-                }
-                $filename = Str::random(32) . '.' . ($file->guessExtension() ?: 'bin');
-                $file->move($destDir, $filename);
-                $attachments[] = [
-                    'name' => $file->getClientOriginalName(),
-                    'path' => 'uploads/' . $subdir . '/' . $filename,
-                    'url'  => url('uploads/' . $subdir . '/' . $filename),
-                    'size' => $file->getSize(),
-                    'mime' => $file->getMimeType() ?? 'application/octet-stream',
-                ];
+                $attachments[] = app(\App\Services\TicketAttachmentStorage::class)->store($file);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw $e;
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('CustomerMobileTicketController file upload error: ' . $e->getMessage());
             }

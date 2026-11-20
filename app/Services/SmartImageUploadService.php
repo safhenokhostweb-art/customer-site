@@ -43,6 +43,8 @@ class SmartImageUploadService
     {
         // GAP-H07 — Storage limit enforcement
         $this->enforceStorageLimit($file->getSize());
+        // Phase 4 — the platform's disk quota (local + object storage).
+        app(MediaQuota::class)->assertCanStore((int) $file->getSize());
 
         if (!array_key_exists($context, self::CONTEXTS)) {
             $context = self::DEFAULT_CONTEXT;

@@ -68,7 +68,7 @@
         {{-- تصویر --}}
         @if($plan->image)
         <div class="plan-card__img-wrap">
-            <img src="{{ asset('storage/' . $plan->image) }}" alt="{{ $plan->name }}" class="plan-card__img-full" loading="lazy">
+            <img src="{{ $plan->image_url }}" alt="{{ $plan->name }}" class="plan-card__img-full" loading="lazy">
             @if($discountSaving > 0)
             <div class="plan-card__discount-ribbon">{{ \App\Helpers\NumberHelper::formatFa($discountSaving) }}٪ تخفیف</div>
             @endif

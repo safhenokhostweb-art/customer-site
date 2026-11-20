@@ -257,7 +257,7 @@
             <div class="plnfrm__preview-top" id="prev-top" style="border-top:4px solid {{ $subscription->color ?? '#4f46e5' }}">
                 @if($subscription->image)
                 <div id="prev-img-wrap">
-                    <img id="prev-img" src="{{ asset('storage/' . $subscription->image) }}" alt="{{ $subscription->name }}" class="plnfrm__preview-img">
+                    <img id="prev-img" src="{{ $subscription->image_url }}" alt="{{ $subscription->name }}" class="plnfrm__preview-img">
                 </div>
                 @else
                 <div id="prev-img-wrap" style="display:none">
@@ -290,7 +290,7 @@
                     <label class="plnfrm__label">تصویر کارت پلن</label>
                     @if($subscription->image)
                     <div class="plnfrm__current-img">
-                        <img src="{{ asset('storage/' . $subscription->image) }}" alt="" class="plnfrm__current-img__preview">
+                        <img src="{{ $subscription->image_url }}" alt="" class="plnfrm__current-img__preview">
                         <label class="plnfrm__check" style="margin-top:.5rem">
                             <input type="checkbox" name="remove_image" value="1">
                             <span style="color:#be123c">حذف تصویر فعلی</span>
