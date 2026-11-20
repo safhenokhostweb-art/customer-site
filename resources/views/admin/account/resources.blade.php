@@ -11,9 +11,16 @@
   </div>
 
   @php
+    // 2026-11-19: interpreted by App\Support\ResourceSummary (platform thresholds,
+    // measured/unmeasured state, real soft-quota grace dates).
+    $rs        = \App\Support\ResourceSummary::fromSettings();
     $summary   = \App\Models\Setting::get('site_resource_summary', null);
     $data      = $summary ? json_decode($summary, true) : null;
-    $pct       = $data ? (float) ($data['storage_pct'] ?? 0) : 0;
+    $measured  = $rs?->isMeasured() ?? false;
+    $level     = $rs?->level();
+    $graceEnds = $rs?->graceEndsAt();
+    $graceExpired = $rs?->graceExpired() ?? false;
+    $pct       = $rs?->percent() ?? 0;
     $used      = $data ? (int)   ($data['storage_bytes'] ?? 0) : 0;
     $limit     = $data ? (int)   ($data['storage_limit'] ?? 1073741824) : 1073741824;
     $softLimit = $data ? (int)   ($data['disk_soft_limit_bytes'] ?? ($limit * 0.70)) : (int) ($limit * 0.70);
@@ -24,7 +31,7 @@
     $cpuCores  = $data ? (float) ($data['cpu_cores_limit'] ?? 1.0) : 1.0;
     $calcAt    = $data['calculated_at'] ?? null;
 
-    $isSoftExceeded = $softLimit > 0 && $used >= $softLimit;
+    $isSoftExceeded = $rs?->softExceeded() ?? false;
   @endphp
 
   @if(!$data)
@@ -33,21 +40,36 @@
     </div>
   @else
 
+    @if(!$measured)
+      <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700" data-resource-unmeasured>
+        مصرف واقعی دیسک سایت هنوز اندازه‌گیری نشده است؛ ارقام زیر پس از اولین اندازه‌گیری به‌روز می‌شوند.
+      </div>
+    @elseif($rs?->isStale())
+      <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700" data-resource-stale>
+        آخرین اندازه‌گیری مصرف دیسک {{ $rs->measuredAt() ? date_fa($rs->measuredAt()) : '' }} انجام شده و ممکن است به‌روز نباشد.
+      </div>
+    @endif
+
     {{-- Alert banner --}}
-    @if($pct >= 95)
+    @if($level === 'critical')
       <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
         <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         <p class="text-sm text-red-800"><strong>بحران فضا!</strong> ظرفیت دیسک سخت سایت شما به {{ $pct }}٪ رسیده است. جهت جلوگیری از عدم امکان آپلود سریعاً ارتقا دهید.</p>
       </div>
-    @elseif($pct >= 80)
+    @elseif($level === 'warning')
       <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex items-center gap-3">
         <svg class="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         <p class="text-sm text-yellow-800"><strong>هشدار مصرف فضا:</strong> {{ $pct }}٪ از کل سقف دیسک سخت مصرف شده است.</p>
       </div>
-    @elseif($isSoftExceeded)
-      <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-3">
+    @elseif($level === 'soft' && $graceExpired)
+      <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3" data-resource-grace="expired">
+        <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-sm text-red-800"><strong>پایان مهلت سقف نرم:</strong> مهلت {{ num_fa($rs->graceDays()) }} روزه مدیریت فضا{{ $graceEnds ? ' (' . date_fa($graceEnds) . ')' : '' }} به پایان رسیده و مصرف هنوز بالای سقف نرم است. لطفاً فضا را آزاد یا ارتقا دهید.</p>
+      </div>
+    @elseif($level === 'soft')
+      <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center gap-3" data-resource-grace="active">
         <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <p class="text-sm text-blue-800"><strong>سقف نرم (Soft Quota):</strong> مصرف فایل‌ها از ۷۰٪ رد شده و سایت در دوره مهلت ۷ روزه مدیریت فضا قرار دارد (سایت بدون قطعی فعال است).</p>
+        <p class="text-sm text-blue-800"><strong>سقف نرم (Soft Quota):</strong> مصرف فایل‌ها از سقف نرم گذشته است؛ مهلت مدیریت فضا{{ $graceEnds ? ' تا ' . date_fa($graceEnds) : '' }} فعال است (سایت بدون قطعی فعال است).</p>
       </div>
     @endif
 
