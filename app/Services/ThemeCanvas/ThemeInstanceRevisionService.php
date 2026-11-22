@@ -195,20 +195,52 @@ class ThemeInstanceRevisionService
                 Setting::set('active_canvas_theme_id', $context['active_theme_id'], 'theme');
             }
 
-            $activeId = (string) ($context['active_theme_id'] ?? '');
-            if ($activeId === 'solar-industry' || $activeId === '8') {
-                $this->indexThemeStaticAssets('solar-assets');
-            }
+            // Index demo static assets for the active theme into customer_media
+            // and sync them to the active media disk (e.g. 'arvan' if enabled)
+            $themeSlug = (string) ($identifier ?: ($context['active_theme_id'] ?? ''));
+            $this->indexThemeStaticAssetsForSlug($themeSlug);
 
             return $revision;
         });
     }
 
     /**
-     * Index a static theme asset folder (e.g. storage/app/public/solar-assets)
-     * into customer_media if not already indexed, so they appear in Media Library.
+     * Locate and index demo assets for any given theme slug (e.g. solar-industry -> solar-assets)
      */
-    public function indexThemeStaticAssets(?string $folder = null): int
+    public function indexThemeStaticAssetsForSlug(string $themeSlug): int
+    {
+        if (empty($themeSlug)) {
+            return 0;
+        }
+
+        $candidates = [
+            $themeSlug . '-assets',
+            'theme-assets/' . $themeSlug,
+            preg_replace('/-theme$/', '', $themeSlug) . '-assets',
+        ];
+
+        // Known alias mappings
+        if ($themeSlug === 'solar-industry' || $themeSlug === '8') {
+            $candidates[] = 'solar-assets';
+        }
+
+        $totalIndexed = 0;
+        foreach (array_unique($candidates) as $folder) {
+            $dir = storage_path('app/public/' . $folder);
+            if (is_dir($dir)) {
+                $totalIndexed += $this->indexThemeStaticAssets($folder, $themeSlug);
+            }
+        }
+
+        return $totalIndexed;
+    }
+
+    /**
+     * Index a static theme asset folder (e.g. storage/app/public/solar-assets)
+     * into customer_media on the active media disk (MEDIA_DISK, e.g. arvan)
+     * if not already indexed, so they appear in Media Library and are served properly.
+     */
+    public function indexThemeStaticAssets(?string $folder = null, ?string $themeSlug = null): int
     {
         if ($folder === null) {
             return 0;
@@ -225,6 +257,9 @@ class ThemeInstanceRevisionService
                 return 0;
             }
 
+            $mediaStorage = app(\App\Services\MediaStorage::class);
+            $targetDisk = $mediaStorage->diskNameFor('uploads');
+
             $dirName = basename($dir);
             $files = glob($dir . '/*.*') ?: [];
             $indexedCount = 0;
@@ -237,42 +272,65 @@ class ThemeInstanceRevisionService
                 $storageKey = $dirName . '/' . $filename;
                 $sourceUrl = '/storage/' . $dirName . '/' . $filename;
 
-                $exists = \App\Models\CustomerMedia::where('site_id', $siteId)
+                $existing = \App\Models\CustomerMedia::where('site_id', $siteId)
                     ->where(function ($q) use ($storageKey, $sourceUrl) {
                         $q->where('storage_key', $storageKey)
                           ->orWhereJsonContains('metadata->source_url', $sourceUrl);
                     })
-                    ->exists();
+                    ->first();
 
-                if (!$exists) {
-                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                    $mime = match ($ext) {
-                        'jpg', 'jpeg' => 'image/jpeg',
-                        'png'         => 'image/png',
-                        'webp'        => 'image/webp',
-                        'gif'         => 'image/gif',
-                        'svg'         => 'image/svg+xml',
-                        default       => 'application/octet-stream',
-                    };
-                    $dims = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) ? @getimagesize($filePath) : null;
-
-                    \App\Models\CustomerMedia::create([
-                        'site_id'           => $siteId,
-                        'uuid'              => (string) \Illuminate\Support\Str::uuid(),
-                        'disk'              => 'public',
-                        'storage_key'       => $storageKey,
-                        'original_filename' => $filename,
-                        'extension'         => $ext,
-                        'category'          => 'image',
-                        'mime_type'         => $mime,
-                        'size_bytes'        => filesize($filePath) ?: 0,
-                        'title'             => pathinfo($filename, PATHINFO_FILENAME),
-                        'alt_text'          => pathinfo($filename, PATHINFO_FILENAME),
-                        'width'             => $dims[0] ?? null,
-                        'height'            => $dims[1] ?? null,
-                    ]);
-                    $indexedCount++;
+                $fileBytes = @file_get_contents($filePath);
+                if ($fileBytes === false || $fileBytes === '') {
+                    continue;
                 }
+
+                // If targetDisk is not local public disk (e.g. 'arvan' or 's3'), ensure physical file exists on targetDisk
+                if ($targetDisk !== 'public' && !\Illuminate\Support\Facades\Storage::disk($targetDisk)->exists($storageKey)) {
+                    \Illuminate\Support\Facades\Storage::disk($targetDisk)->put($storageKey, $fileBytes, ['visibility' => 'public']);
+                }
+
+                if ($existing) {
+                    // If media record exists but points to local public while active disk is now arvan, sync disk
+                    if ($existing->disk !== $targetDisk) {
+                        $existing->update(['disk' => $targetDisk]);
+                    }
+                    continue;
+                }
+
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                $mime = match ($ext) {
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'png'         => 'image/png',
+                    'webp'        => 'image/webp',
+                    'gif'         => 'image/gif',
+                    'svg'         => 'image/svg+xml',
+                    'mp4'         => 'video/mp4',
+                    'webm'        => 'video/webm',
+                    default       => 'application/octet-stream',
+                };
+                $dims = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) ? @getimagesize($filePath) : null;
+                $category = in_array($mime, ['video/mp4', 'video/webm'], true) ? 'video' : 'image';
+
+                \App\Models\CustomerMedia::create([
+                    'site_id'           => $siteId,
+                    'uuid'              => (string) \Illuminate\Support\Str::uuid(),
+                    'disk'              => $targetDisk,
+                    'storage_key'       => $storageKey,
+                    'original_filename' => $filename,
+                    'extension'         => $ext,
+                    'category'          => $category,
+                    'mime_type'         => $mime,
+                    'size_bytes'        => filesize($filePath) ?: strlen($fileBytes),
+                    'title'             => pathinfo($filename, PATHINFO_FILENAME),
+                    'alt_text'          => pathinfo($filename, PATHINFO_FILENAME),
+                    'width'             => $dims[0] ?? null,
+                    'height'            => $dims[1] ?? null,
+                    'metadata'          => [
+                        'source_url'       => $sourceUrl,
+                        'theme_identifier' => $themeSlug ?: $dirName,
+                    ],
+                ]);
+                $indexedCount++;
             }
 
             return $indexedCount;
