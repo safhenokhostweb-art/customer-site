@@ -112,9 +112,6 @@ class ThemeMediaLocalizationService
     public function localize(array $themeData, array $context = []): array
     {
         $origin = $this->trustedOrigin();
-        if ($origin === null) {
-            return $themeData; // no trusted Platform origin configured/resolvable — feature stays inert, install is never blocked by it
-        }
 
         // A scoped service instance can live for more than one install in a
         // queue/Octane process. Per-run caches must never carry a media UUID
@@ -182,8 +179,8 @@ class ThemeMediaLocalizationService
         }
     }
 
-    /** @param array{scheme: string, host: string, port: int} $origin */
-    private function localizeBlockList(array $blocks, array $origin): array
+    /** @param array{scheme: string, host: string, port: int}|null $origin */
+    private function localizeBlockList(array $blocks, ?array $origin): array
     {
         foreach ($blocks as $index => $block) {
             if (!is_array($block)) {
@@ -252,8 +249,8 @@ class ThemeMediaLocalizationService
         return $blocks;
     }
 
-    /** @param array{scheme: string, host: string, port: int} $origin */
-    private function localizeBlockProps(string $type, array $props, array $origin): array
+    /** @param array{scheme: string, host: string, port: int}|null $origin */
+    private function localizeBlockProps(string $type, array $props, ?array $origin): array
     {
         return SchemaFieldMap::transform(
             $type,
@@ -264,10 +261,10 @@ class ThemeMediaLocalizationService
     }
 
     /**
-     * @param array{scheme: string, host: string, port: int} $origin
+     * @param array{scheme: string, host: string, port: int}|null $origin
      * @return string|array{media_id: string}
      */
-    private function localizeUrl(string $url, array $origin): string|array
+    private function localizeUrl(string $url, ?array $origin): string|array
     {
         if (array_key_exists($url, $this->resolved)) {
             return $this->resolved[$url];
@@ -277,7 +274,7 @@ class ThemeMediaLocalizationService
     }
 
     /**
-     * @param array{scheme: string, host: string, port: int} $origin
+     * @param array{scheme: string, host: string, port: int}|null $origin
      * @return array{media_id: string}|null null ONLY when $url never
      *   matched the trusted origin at all (genuinely not our concern —
      *   left untouched). Once a URL matches, every further failure throws
@@ -285,8 +282,18 @@ class ThemeMediaLocalizationService
      *   the class docblock's atomic-failure policy.
      * @throws ThemeMediaLocalizationException
      */
-    private function attemptLocalize(string $url, array $origin): ?array
+    private function attemptLocalize(string $url, ?array $origin): ?array
     {
+        // 1. Check if $url is a local demo static file asset (e.g. /storage/solar-assets/...)
+        if ($localAsset = $this->resolveLocalDemoBytes($url)) {
+            return $this->localizeLocalDemoAsset($url, $localAsset['bytes'], $localAsset['filename']);
+        }
+
+        // 2. Remote Platform media URL check
+        if ($origin === null) {
+            return null;
+        }
+
         $parts = parse_url($url);
         if ($parts === false || isset($parts['user']) || isset($parts['pass'])) {
             return null;
@@ -340,6 +347,112 @@ class ThemeMediaLocalizationService
                 );
         } catch (Throwable $e) {
             throw new ThemeMediaLocalizationException("Failed to store trusted Platform media \"{$url}\": {$e->getMessage()}", previous: $e);
+        }
+
+        $this->newlyWrittenFiles[] = [$media->disk, $media->storage_key];
+
+        return ['media_id' => $media->uuid];
+    }
+
+    /**
+     * @return array{bytes: string, filename: string}|null
+     */
+    private function resolveLocalDemoBytes(string $url): ?array
+    {
+        if (preg_match('#^[a-z]+://#i', $url)) {
+            return null;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path || !is_string($path)) {
+            return null;
+        }
+
+        $relPath = ltrim(preg_replace('#^/?storage/#', '', $path), '/');
+        $rawRelPath = ltrim($path, '/');
+
+        // 1. Check Storage::disk('public') (supports fake storage in tests)
+        try {
+            if ($relPath !== '' && Storage::disk('public')->exists($relPath)) {
+                $bytes = Storage::disk('public')->get($relPath);
+                if ($bytes !== null && $bytes !== '') {
+                    return ['bytes' => $bytes, 'filename' => basename($relPath)];
+                }
+            }
+        } catch (Throwable) {
+        }
+
+        // 2. Check storage_path('app/public/' . $relPath)
+        if ($relPath !== '') {
+            $localDiskFile = storage_path('app/public/' . $relPath);
+            if (is_file($localDiskFile) && is_readable($localDiskFile)) {
+                $bytes = @file_get_contents($localDiskFile);
+                if ($bytes !== false && $bytes !== '') {
+                    return ['bytes' => $bytes, 'filename' => basename($localDiskFile)];
+                }
+            }
+        }
+
+        // 3. Check public_path
+        foreach (array_unique([$rawRelPath, $relPath]) as $p) {
+            if ($p !== '') {
+                $pubFile = public_path($p);
+                if (is_file($pubFile) && is_readable($pubFile)) {
+                    $bytes = @file_get_contents($pubFile);
+                    if ($bytes !== false && $bytes !== '') {
+                        return ['bytes' => $bytes, 'filename' => basename($pubFile)];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{media_id: string}
+     * @throws ThemeMediaLocalizationException
+     */
+    private function localizeLocalDemoAsset(string $url, string $bytes, string $filename): array
+    {
+        if ($existing = $this->media->findBySourceUrl($url, $this->importScope)) {
+            return ['media_id' => $existing->uuid];
+        }
+
+        $probe = @getimagesizefromstring($bytes);
+        $mime = is_array($probe) ? ($probe['mime'] ?? '') : '';
+        $isVideo = in_array($mime, self::ALLOWED_VIDEO_CONTENT_TYPES, true);
+
+        if (!$isVideo && !in_array($mime, self::ALLOWED_CONTENT_TYPES, true)) {
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png'         => 'image/png',
+                'webp'        => 'image/webp',
+                'gif'         => 'image/gif',
+                'webm'        => 'video/webm',
+                'mp4'         => 'video/mp4',
+                default       => $mime ?: 'application/octet-stream',
+            };
+            $isVideo = in_array($mime, self::ALLOWED_VIDEO_CONTENT_TYPES, true);
+        }
+
+        try {
+            $media = $isVideo
+                ? $this->media->importVideoFromRemoteBytes(
+                    $bytes,
+                    $filename,
+                    $mime,
+                    array_merge(['source_url' => $url], $this->importScope)
+                )
+                : $this->media->importFromRemoteBytes(
+                    $bytes,
+                    $filename,
+                    $mime,
+                    array_merge(['source_url' => $url], $this->importScope)
+                );
+        } catch (Throwable $e) {
+            throw new ThemeMediaLocalizationException("Failed to store local demo media \"{$url}\": {$e->getMessage()}", previous: $e);
         }
 
         $this->newlyWrittenFiles[] = [$media->disk, $media->storage_key];

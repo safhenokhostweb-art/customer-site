@@ -235,9 +235,13 @@ class ThemeInstanceRevisionService
                 }
                 $filename = basename($filePath);
                 $storageKey = $dirName . '/' . $filename;
+                $sourceUrl = '/storage/' . $dirName . '/' . $filename;
 
                 $exists = \App\Models\CustomerMedia::where('site_id', $siteId)
-                    ->where('storage_key', $storageKey)
+                    ->where(function ($q) use ($storageKey, $sourceUrl) {
+                        $q->where('storage_key', $storageKey)
+                          ->orWhereJsonContains('metadata->source_url', $sourceUrl);
+                    })
                     ->exists();
 
                 if (!$exists) {
