@@ -368,6 +368,12 @@ class ThemeMediaLocalizationService
             return null;
         }
 
+        // Static theme assets (/theme-assets/...) are served directly from public webroot
+        // and vector assets (.svg) are not bitmap CustomerMedia uploads.
+        if (str_starts_with(ltrim($path, '/'), 'theme-assets/') || str_ends_with(strtolower($path), '.svg')) {
+            return null;
+        }
+
         $relPath = ltrim(preg_replace('#^/?storage/#', '', $path), '/');
         $rawRelPath = ltrim($path, '/');
 

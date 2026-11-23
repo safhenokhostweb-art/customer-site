@@ -2428,7 +2428,9 @@ function canvasEditor() {
         ...window.CanvasControls.editorMixin(),
         // ── State ──────────────────────────────────────────────
         pages:         normalizePageProps(JSON.parse(JSON.stringify(INITIAL_PAGES))),
-        currentPage:   Object.keys(INITIAL_PAGES)[0] ?? '__header__',
+        currentPage:   (new URLSearchParams(window.location.search).get('page') && INITIAL_PAGES[new URLSearchParams(window.location.search).get('page')])
+            ? new URLSearchParams(window.location.search).get('page')
+            : (Object.keys(INITIAL_PAGES)[0] ?? '__header__'),
         selectedPath:  null,          // null | [0] | [0, 1] | ...
         selectedLogicalItem: null,
         leftPanelTab:  'blocks',      // 'blocks' | 'tree' | 'health' (WU-3)
@@ -3563,8 +3565,9 @@ function canvasEditor() {
             return rawKey || 'صفحه بدون نام';
         },
 
-        switchPage(key) {
-            if (this.isDirty) this.saveCurrentPage();
+        async switchPage(key) {
+            if (this.currentPage === key) return;
+            if (this.isDirty) await this.saveCurrentPage();
             this.currentPage  = key;
             try {
                 const u = new URL(window.location.href);
@@ -3582,39 +3585,28 @@ function canvasEditor() {
                 if (!this.pages[key]) {
                     this.pages[key] = { title: key === '__header__' ? 'هدر سایت' : 'فوتر سایت', slug: key, blocks: [] };
                 }
-                if (!Array.isArray(this.pages[key].blocks) || this.pages[key].blocks.length === 0) {
-                    this.pages[key].blocks = [this.normalizeBlock({
-                        id: (key === '__header__' ? 'hdr_' : 'ftr_') + Math.random().toString(36).substr(2, 9),
-                        type: key === '__header__' ? 'nav_header' : 'site_footer',
-                        props: key === '__header__' ? { brand_text: 'برند شما', logo_text: 'برند شما' } : { copyright: 'تمامی حقوق محفوظ است.' }
-                    })];
-                }
-                this.selectedPath = [0];
-                this.$nextTick(() => {
+                if (Array.isArray(this.pages[key].blocks) && this.pages[key].blocks.length > 0) {
                     this.selectedPath = [0];
-                    this.selectedTab = 'content';
-                    if (this.selectedBlock) {
-                        this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
-                    }
-                });
+                    this.$nextTick(() => {
+                        this.selectedPath = [0];
+                        this.selectedTab = 'content';
+                        if (this.selectedBlock) {
+                            this.sendToIframe({ action: 'select', blockId: this.selectedBlock.id });
+                        }
+                    });
+                }
             }
         },
 
-        selectHeaderNode() {
+        async selectHeaderNode() {
             this.showLeftSidebar = true;
             if (this.currentPage !== '__header__') {
-                this.switchPage('__header__');
-            } else {
-                if (!this.pages['__header__']) {
-                    this.pages['__header__'] = { title: 'هدر سایت', slug: '__header__', blocks: [] };
-                }
-                if (!Array.isArray(this.pages['__header__'].blocks) || this.pages['__header__'].blocks.length === 0) {
-                    this.pages['__header__'].blocks = [this.normalizeBlock({
-                        id: 'hdr_' + Math.random().toString(36).substr(2, 9),
-                        type: 'nav_header',
-                        props: { brand_text: 'برند شما', logo_text: 'برند شما' }
-                    })];
-                }
+                await this.switchPage('__header__');
+            }
+            if (!this.pages['__header__']) {
+                this.pages['__header__'] = { title: 'هدر سایت', slug: '__header__', blocks: [] };
+            }
+            if (Array.isArray(this.pages['__header__'].blocks) && this.pages['__header__'].blocks.length > 0) {
                 this.selectedPath = [0];
                 this.selectedTab = 'content';
                 this.$nextTick(() => {
@@ -3627,21 +3619,15 @@ function canvasEditor() {
             }
         },
 
-        selectFooterNode() {
+        async selectFooterNode() {
             this.showLeftSidebar = true;
             if (this.currentPage !== '__footer__') {
-                this.switchPage('__footer__');
-            } else {
-                if (!this.pages['__footer__']) {
-                    this.pages['__footer__'] = { title: 'فوتر سایت', slug: '__footer__', blocks: [] };
-                }
-                if (!Array.isArray(this.pages['__footer__'].blocks) || this.pages['__footer__'].blocks.length === 0) {
-                    this.pages['__footer__'].blocks = [this.normalizeBlock({
-                        id: 'ftr_' + Math.random().toString(36).substr(2, 9),
-                        type: 'site_footer',
-                        props: { copyright: 'تمامی حقوق محفوظ است.' }
-                    })];
-                }
+                await this.switchPage('__footer__');
+            }
+            if (!this.pages['__footer__']) {
+                this.pages['__footer__'] = { title: 'فوتر سایت', slug: '__footer__', blocks: [] };
+            }
+            if (Array.isArray(this.pages['__footer__'].blocks) && this.pages['__footer__'].blocks.length > 0) {
                 this.selectedPath = [0];
                 this.selectedTab = 'content';
                 this.$nextTick(() => {
@@ -3785,7 +3771,7 @@ function canvasEditor() {
 
         onIframeLoad() { setTimeout(() => { this.iframeLoading = false; }, 150); },
 
-        handleIframeMessage(e) {
+        async handleIframeMessage(e) {
             // Phase 3C: only ever trust messages from this app's own origin
             // — the live-preview iframe is same-origin by design, so a
             // message from anywhere else is not the preview iframe.
@@ -3816,7 +3802,25 @@ function canvasEditor() {
                     if (iframe) iframe.style.height = Math.max(400, d.height || 400) + 'px';
                     break;
                 case 'blockSelected': {
-                    const path = this.findBlockPath(d.blockId);
+                    let path = this.findBlockPath(d.blockId);
+                    if (!path && this.pages['__header__']?.blocks?.length) {
+                        const hdrFound = this.findBlockPath(d.blockId, this.pages['__header__'].blocks);
+                        if (hdrFound || d.blockId === 'header' || this.pages['__header__'].blocks.some(b => b.id === d.blockId)) {
+                            if (this.currentPage !== '__header__') {
+                                await this.switchPage('__header__');
+                            }
+                            path = this.findBlockPath(d.blockId) || [0];
+                        }
+                    }
+                    if (!path && this.pages['__footer__']?.blocks?.length) {
+                        const ftrFound = this.findBlockPath(d.blockId, this.pages['__footer__'].blocks);
+                        if (ftrFound || d.blockId === 'footer' || this.pages['__footer__'].blocks.some(b => b.id === d.blockId)) {
+                            if (this.currentPage !== '__footer__') {
+                                await this.switchPage('__footer__');
+                            }
+                            path = this.findBlockPath(d.blockId) || [0];
+                        }
+                    }
                     if (path) {
                         this.showLeftSidebar = true;
                         this.selectedPath = path;
@@ -4563,9 +4567,9 @@ confirmMotionSelect() {
                 }
                 const zonePage = { header: '__header__', footer: '__footer__' }[json.zone] ?? null;
                 if (zonePage && this.currentPage !== zonePage && this.pages[zonePage]) {
-                    this.switchPage(zonePage);
+                    await this.switchPage(zonePage);
                 } else if (!zonePage && this.currentPage.startsWith('__')) {
-                    this.switchPage(Object.keys(this.pages).find(k => !k.startsWith('__')) ?? 'home');
+                    await this.switchPage(Object.keys(this.pages).find(k => !k.startsWith('__')) ?? 'home');
                 }
                 const replace = !!zonePage && this.blocks.length > 0;
                 if (replace && !confirm(`${json.zone === 'header' ? 'هدر' : 'فوتر'} فعلی با این قالب جایگزین شود؟ (با «بازگردانی» قابل برگشت است)`)) return;
@@ -4740,6 +4744,14 @@ confirmMotionSelect() {
             // TB3-S2: Initialize undo history with current state
             this.history = [JSON.parse(JSON.stringify(this.blocks))];
             this.historyIndex = 0;
+
+            if (this.currentPage === '__header__' || this.currentPage === '__footer__') {
+                this.showLeftSidebar = true;
+                if (Array.isArray(this.pages[this.currentPage]?.blocks) && this.pages[this.currentPage].blocks.length > 0) {
+                    this.selectedPath = [0];
+                    this.selectedTab = 'content';
+                }
+            }
 
             // TB3-02: postMessage bridge
             window.addEventListener('message', (e) => this.handleIframeMessage(e));

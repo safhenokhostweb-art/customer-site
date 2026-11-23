@@ -364,7 +364,7 @@ class ThemeDesignController extends Controller
 
         // Merge requested page directly if not present or empty
         $requestedPage = trim((string) ($request->query('page') ?? ''));
-        if ($requestedPage !== '') {
+        if ($requestedPage !== '' && !in_array($requestedPage, ['__header__', '__footer__', 'login', 'register'], true)) {
             if (str_starts_with($requestedPage, 'post_')) {
                 $postId = (int) substr($requestedPage, 5);
                 $p = $postId > 0 ? \App\Models\Post::find($postId) : null;
@@ -619,7 +619,13 @@ class ThemeDesignController extends Controller
                     ]),
             ],
         ];
-        $pages = $pages + $virtualPages;
+        foreach ($virtualPages as $vKey => $vPage) {
+            if (empty($pages[$vKey]['blocks']) && !empty($vPage['blocks'])) {
+                $pages[$vKey] = $vPage;
+            } elseif (!isset($pages[$vKey])) {
+                $pages[$vKey] = $vPage;
+            }
+        }
         $themeData['pages'] = $pages;
 
         $themeSlug  = $themeData['slug']
@@ -977,7 +983,7 @@ class ThemeDesignController extends Controller
             }
         }
 
-        return [];
+        return $themeData[$region === 'header' ? 'header_blocks' : 'footer_blocks'] ?? [];
     }
 
     public function canvasSaveGlobalStyles(Request $request): JsonResponse
