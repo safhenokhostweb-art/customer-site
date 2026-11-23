@@ -21,7 +21,7 @@ return [
     'upload_disk' => env('MEDIA_DISK', env('UPLOAD_DISK', 'uploads')),
 
     // دیسک محتوای خصوصی (پیوست پشتیبانی/تننت) — هرگز web-accessible نیست.
-    'media_private_disk' => env('MEDIA_PRIVATE_DISK', 'private'),
+    'media_private_disk' => env('MEDIA_PRIVATE_DISK', env('MEDIA_DISK') === 'arvan' ? 'arvan_private' : 'private'),
 
     /*
     |--------------------------------------------------------------------------
@@ -112,7 +112,7 @@ return [
             'secret'                  => env('ARVAN_SECRET_KEY'),
             'region'                  => env('ARVAN_REGION', 'ir-thr-at1'),
             'bucket'                  => env('ARVAN_MEDIA_BUCKET', env('ARVAN_BUCKET', 'safhenokhost-media')),
-            'root'                    => env('ARVAN_MEDIA_PREFIX', 'media'),
+            'root'                    => env('ARVAN_MEDIA_PREFIX') ?: (env('PLATFORM_SITE_ID') ? 'sites/' . env('PLATFORM_SITE_ID') . '/media' : 'media'),
             'endpoint'                => env('ARVAN_ENDPOINT'),
             'url'                     => env('ARVAN_MEDIA_URL', env('ARVAN_URL')),
             'use_path_style_endpoint' => true,
@@ -128,7 +128,7 @@ return [
             'secret'                  => env('ARVAN_SECRET_KEY'),
             'region'                  => env('ARVAN_REGION', 'ir-thr-at1'),
             'bucket'                  => env('ARVAN_MEDIA_BUCKET', env('ARVAN_BUCKET', 'safhenokhost-media')),
-            'root'                    => env('ARVAN_MEDIA_PRIVATE_PREFIX', 'media-private'),
+            'root'                    => env('ARVAN_MEDIA_PRIVATE_PREFIX') ?: (env('PLATFORM_SITE_ID') ? 'sites/' . env('PLATFORM_SITE_ID') . '/private' : 'media-private'),
             'endpoint'                => env('ARVAN_ENDPOINT'),
             'use_path_style_endpoint' => true,
             'throw'                   => false,

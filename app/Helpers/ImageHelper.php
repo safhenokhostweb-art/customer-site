@@ -31,6 +31,8 @@ class ImageHelper
         $url = match (true) {
             str_starts_with($path, 'uploads/admin-avatars/') => $media->url(substr($path, strlen('uploads/')), 'uploads'),
             str_starts_with($path, 'uploads/') => $media->url($path, 'legacy'),
+            str_starts_with($path, 'storage/uploads/') => $media->url(substr($path, strlen('storage/uploads/')), 'uploads'),
+            str_starts_with($path, 'storage/') => $media->url(substr($path, strlen('storage/')), 'uploads'),
             default => $media->url($path, 'uploads'),
         };
 

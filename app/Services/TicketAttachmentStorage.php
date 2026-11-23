@@ -71,6 +71,8 @@ class TicketAttachmentStorage
         try {
             if (str_starts_with($path, 'uploads/')) {
                 $this->storage->delete(substr($path, strlen('uploads/')), 'uploads');
+            } elseif ($this->storage->exists($path, 'legacy')) {
+                $this->storage->delete($path, 'legacy');
             } else {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
             }

@@ -335,7 +335,7 @@
                                             @foreach($reply->attachments as $file)
                                             @if(isset($file['url']) || isset($file['path']))
                                             @php
-                                                $attUrl  = $file['url'] ?? asset('storage/' . $file['path']);
+                                                $attUrl  = $file['url'] ?? \App\Helpers\ImageHelper::url($file['path']) ?? asset('storage/' . $file['path']);
                                                 $attName = $file['name'] ?? 'فایل';
                                                 $attIsImg = preg_match('/^image\//i', $file['mime'] ?? '') || preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)$/i', $attName);
                                             @endphp

@@ -181,7 +181,12 @@ class SettingController extends Controller
             return;
         }
 
-        if (Storage::disk('public')->exists($value)) {
+        $mediaStorage = app(\App\Services\MediaStorage::class);
+        if ($mediaStorage->exists($value, 'uploads')) {
+            $mediaStorage->delete($value, 'uploads');
+        } elseif ($mediaStorage->exists($value, 'legacy')) {
+            $mediaStorage->delete($value, 'legacy');
+        } elseif (Storage::disk('public')->exists($value)) {
             Storage::disk('public')->delete($value);
         }
     }

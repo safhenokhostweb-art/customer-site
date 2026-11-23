@@ -299,6 +299,14 @@ class CustomerMediaService
             }
         }
 
+        if ($this->storage->exists($value, 'uploads')) {
+            return $this->storage->url($value, 'uploads');
+        }
+
+        if ($this->storage->exists($value, 'legacy')) {
+            return $this->storage->url($value, 'legacy');
+        }
+
         return Storage::disk('public')->exists($value) ? Storage::disk('public')->url($value) : null;
     }
 
@@ -468,6 +476,7 @@ class CustomerMediaService
 
         $oldDisk = $media->disk;
         $oldKey = $media->storage_key;
+        $targetDisk = $this->storage->diskNameFor('uploads');
         // A random suffix guarantees the new key always differs from the
         // old one, even for a same-extension replacement within the same
         // month — otherwise the storage_key (and therefore the public URL)
@@ -486,7 +495,7 @@ class CustomerMediaService
         }
 
         try {
-            $written = Storage::disk($oldDisk)->put($newKey, $stream, ['visibility' => 'public']);
+            $written = Storage::disk($targetDisk)->put($newKey, $stream, ['visibility' => 'public']);
         } finally {
             if (is_resource($stream)) {
                 fclose($stream);
@@ -500,17 +509,18 @@ class CustomerMediaService
         try {
             [$width, $height] = $category === 'image' ? $this->imageDimensions($file) + [null, null] : [null, null];
             $media->fill([
+                'disk' => $targetDisk,
                 'storage_key' => $newKey, 'extension' => $extension, 'mime_type' => $mime,
                 'original_filename' => $file->getClientOriginalName(), 'size_bytes' => $file->getSize(),
                 'width' => $width, 'height' => $height,
             ]);
             $media->save();
         } catch (\Throwable $exception) {
-            Storage::disk($oldDisk)->delete($newKey);
+            Storage::disk($targetDisk)->delete($newKey);
             throw $exception;
         }
 
-        if ($newKey !== $oldKey) {
+        if ($newKey !== $oldKey || $targetDisk !== $oldDisk) {
             Storage::disk($oldDisk)->delete($oldKey);
         }
 

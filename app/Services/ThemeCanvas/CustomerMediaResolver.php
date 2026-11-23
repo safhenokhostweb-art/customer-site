@@ -75,6 +75,12 @@ class CustomerMediaResolver
     public function resolveValue(mixed $value): string
     {
         if (is_string($value)) {
+            if (str_starts_with($value, '/storage/') || str_starts_with($value, 'storage/')) {
+                $found = $this->media->findBySourceUrl($value);
+                if ($found) {
+                    return $this->media->publicUrl($found);
+                }
+            }
             return $value;
         }
         if (!is_array($value) || !is_string($value['media_id'] ?? null) || $value['media_id'] === '') {
