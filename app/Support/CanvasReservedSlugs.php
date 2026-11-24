@@ -81,13 +81,25 @@ final class CanvasReservedSlugs
      *
      * @return array<int, string>
      */
-    public static function collidingWithExistingPages(array $themeData): array
+    public static function collidingWithExistingPages(array $themeData, ?string $type = null, array $context = []): array
     {
         $slugs = self::fromThemeData($themeData);
         if ($slugs === []) {
             return [];
         }
 
-        return Page::whereIn('slug', $slugs)->pluck('slug')->all();
+        $query = Page::whereIn('slug', $slugs);
+
+        // When publishing an active theme draft (TYPE_PUBLISH), pages actively
+        // authored or managed by the site in the canvas builder (builder_type = 'builder')
+        // are part of the unified canvas lifecycle and must not trigger conflict exceptions.
+        if ($type === \App\Models\ThemeInstanceRevision::TYPE_PUBLISH) {
+            $query->where(function ($q) {
+                $q->whereNull('builder_type')
+                  ->orWhere('builder_type', '!=', Page::BUILDER_TYPE_BUILDER);
+            });
+        }
+
+        return $query->pluck('slug')->all();
     }
 }

@@ -36,15 +36,17 @@ class NoParallelMasterThemeAuthoringTest extends TestCase
 
     public function test_no_registered_route_accepts_a_theme_creation_or_publication_request(): void
     {
-        // admin/theme-design/canvas/publish is a REQUIRED, CANONICAL_CUSTOMER_INSTANCE
-        // action (Admin\ThemeDesignController) — it moves THIS site's own
-        // canvas_draft_data into active_canvas_theme_data, i.e. the
-        // customer publishing their OWN draft live. It never creates a
-        // master Theme, ThemeRelease, or anything saas-platform's own
-        // catalog would see — see Phase 6.5's audit for the traced
+        // admin/theme-design/canvas/publish and create-blank are REQUIRED, CANONICAL_CUSTOMER_INSTANCE
+        // actions (Admin\ThemeDesignController) — they manage THIS site's own
+        // canvas state (publishing a draft or seeding a blank baseline canvas).
+        // They never create a master Theme, ThemeRelease, or anything saas-platform's
+        // own catalog would see — see Phase 6.5's audit for the traced
         // controller behavior. Explicitly allow-listed here, not excluded
         // by accident.
-        $knownLegitimateCustomerInstancePublish = ['admin/theme-design/canvas/publish'];
+        $knownLegitimateCustomerInstancePublish = [
+            'admin/theme-design/canvas/publish',
+            'admin/theme-design/canvas/create-blank',
+        ];
 
         $suspiciousActions = collect(Route::getRoutes())->filter(function ($route) use ($knownLegitimateCustomerInstancePublish) {
             $uri = strtolower($route->uri());

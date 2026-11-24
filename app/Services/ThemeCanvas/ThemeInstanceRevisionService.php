@@ -106,7 +106,7 @@ class ThemeInstanceRevisionService
      */
     public function record(array $themeData, string $type, array $context = []): ThemeInstanceRevision
     {
-        $shadowed = CanvasReservedSlugs::collidingWithExistingPages($themeData);
+        $shadowed = CanvasReservedSlugs::collidingWithExistingPages($themeData, $type, $context);
         if ($shadowed !== []) {
             throw new ConflictHttpException(
                 'این عملیات صفحه(های) موجود را با این آدرس‌ها نامرئی می‌کند و انجام نشد: '

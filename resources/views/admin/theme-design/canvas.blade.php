@@ -25,8 +25,16 @@
         از مارکت‌پلیس یکی را خریداری یا یک فایل JSON وارد کنید.
       </p>
       <div class="flex items-center justify-center gap-3 flex-wrap">
+        <form method="POST" action="{{ route('admin.theme-design.canvas.create-blank') }}" class="inline">
+          @csrf
+          <button type="submit"
+             class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition hover:shadow-indigo-200 hover:shadow-md ring-1 ring-indigo-500">
+            <x-core-ui::icon name="plus" class="w-4 h-4" />
+            شروع با بوم خالی (طراحی قالب از صفر)
+          </button>
+        </form>
         <a href="{{ route('admin.theme-marketplace.index') }}"
-           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">
+           class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-5 py-2.5 rounded-xl border border-gray-200 transition">
           <x-core-ui::icon name="store" class="w-4 h-4" />
           مارکت‌پلیس قالب‌ها
         </a>
@@ -312,10 +320,78 @@
               </div>
               <div class="flex items-center gap-3 shrink-0">
                 <span class="text-xs text-gray-400">{{ $blockCount }} بلاک</span>
+                <a href="{{ route('admin.theme-design.canvas-edit', ['page' => $pageSlug ?: 'home']) }}"
+                   class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition">
+                  <x-core-ui::icon name="pencil" class="w-3.5 h-3.5" />
+                  ویرایش با Canvas
+                </a>
                 <a href="{{ $previewUrl }}" target="_blank"
-                   class="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 text-sm font-medium transition">
+                   class="inline-flex items-center gap-1.5 text-gray-600 hover:text-indigo-800 text-sm font-medium transition">
                   <x-core-ui::icon name="external-link" class="w-4 h-4" />
                   پیش‌نمایش
+                </a>
+              </div>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @endif
+
+    {{-- ─── Site Database Pages (Pages Module) ────────────────────────── --}}
+    @if(isset($sitePages) && count($sitePages) > 0)
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <x-core-ui::icon name="document-text" class="w-5 h-5 text-indigo-500" />
+            <h2 class="text-base font-bold text-gray-800">صفحات ماژول صفحات (Pages)</h2>
+            <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ count($sitePages) }}</span>
+          </div>
+          <a href="{{ route('admin.pages.create') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition">
+            + ایجاد صفحه جدید
+          </a>
+        </div>
+        <div class="divide-y divide-gray-100">
+          @foreach($sitePages as $sp)
+            @php
+              $spBlocks = $sp->builder_content_v2['blocks']
+                  ?? $sp->builder_content_v2['sections']
+                  ?? $sp->builder_content['blocks']
+                  ?? $sp->builder_content['sections']
+                  ?? [];
+              $spBlockCount = is_array($spBlocks) ? count($spBlocks) : 0;
+            @endphp
+            <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 text-gray-600">
+                  <x-core-ui::icon name="document" class="w-4 h-4" />
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-gray-800 text-sm truncate">{{ $sp->title }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5 font-mono">
+                    /page/{{ $sp->slug }}
+                    @if($sp->is_published)
+                      <span class="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded mr-1">منتشر شده</span>
+                    @else
+                      <span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded mr-1">پیش‌نویس</span>
+                    @endif
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs text-gray-400 ml-1">{{ $spBlockCount }} بلاک</span>
+                <a href="{{ route('admin.theme-design.canvas-edit', ['page' => $sp->slug]) }}"
+                   class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition">
+                  <x-core-ui::icon name="pencil" class="w-3.5 h-3.5" />
+                  ویرایش با Canvas
+                </a>
+                <a href="{{ route('admin.pages.edit', $sp) }}"
+                   class="inline-flex items-center gap-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-lg transition" title="تنظیمات صفحه">
+                  <x-core-ui::icon name="adjustments" class="w-3.5 h-3.5" />
+                  تنظیمات
+                </a>
+                <a href="{{ url('/page/' . $sp->slug) }}" target="_blank"
+                   class="inline-flex items-center gap-1 text-gray-400 hover:text-indigo-600 text-xs font-medium p-1 transition" title="مشاهده در سایت">
+                  <x-core-ui::icon name="external-link" class="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>

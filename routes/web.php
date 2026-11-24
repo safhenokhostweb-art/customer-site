@@ -436,6 +436,7 @@ Route::middleware('install.check')->group(function () {
             Route::post('theme-design/dashboard-preset',     [ThemeDesignController::class, 'activateDashboardPreset'])->name('theme-design.dashboard-preset');
             Route::put('theme-design/dashboard-custom',      [ThemeDesignController::class, 'updateDashboardCustom'])->name('theme-design.dashboard-custom');
             Route::get('theme-design/canvas',              [ThemeDesignController::class, 'canvasTheme'])->name('theme-design.canvas');
+            Route::post('theme-design/canvas/create-blank', [ThemeDesignController::class, 'canvasCreateBlank'])->name('theme-design.canvas.create-blank');
             Route::post('theme-design/canvas/deactivate',  [ThemeDesignController::class, 'canvasDeactivate'])->name('theme-design.canvas-deactivate');
             Route::get('theme-design/canvas/export',        [ThemeDesignController::class, 'canvasExport'])->name('theme-design.canvas-export');
             Route::post('theme-design/canvas/import',       [ThemeDesignController::class, 'canvasImport'])->name('theme-design.canvas-import');

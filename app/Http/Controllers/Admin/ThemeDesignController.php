@@ -135,6 +135,8 @@ class ThemeDesignController extends Controller
             }
         }
 
+        $sitePages = \App\Models\Page::orderBy('id')->get();
+
         return view('admin.theme-design.canvas', [
             'themeData'  => $themeData,
             'themeName'  => Setting::get('active_canvas_theme_name', ''),
@@ -143,7 +145,34 @@ class ThemeDesignController extends Controller
             'backupName' => Setting::get('canvas_theme_backup_name', ''),
             'backupAt'   => Setting::get('canvas_theme_backup_at', ''),
             'hasBackup'  => (bool) Setting::get('canvas_theme_backup_data'),
+            'sitePages'  => $sitePages,
         ]);
+    }
+
+    public function canvasCreateBlank(Request $request): RedirectResponse
+    {
+        $themeName = trim((string) $request->input('theme_name', 'قالب اختصاصی')) ?: 'قالب اختصاصی';
+        $baseline = \App\Services\ThemeCanvas\CanvasCleanSlate::baselineDocument();
+        $baseline['global_styles']['primary_color'] = '#4f46e5';
+        $baseline['global_styles']['secondary_color'] = '#7c3aed';
+        $baseline['global_styles']['background_color'] = '#f9fafb';
+        $baseline['global_styles']['font_family'] = 'Vazirmatn';
+
+        $this->revisions->record($baseline, ThemeInstanceRevision::TYPE_INSTALL, [
+            'theme_identifier' => ThemeInstanceRevisionService::DEFAULT_IDENTIFIER,
+            'theme_name' => $themeName,
+            'active_theme_id' => 'custom',
+            'metadata' => ['baseline' => 'custom-scratch'],
+        ]);
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        $page = $request->input('page');
+        $params = $page ? ['page' => $page] : [];
+
+        return redirect()->route('admin.theme-design.canvas-edit', $params)
+            ->with('success', 'قالب اختصاصی با بوم خالی با موفقیت ایجاد شد و آماده ویرایش است.');
     }
 
     public function canvasDeactivate(): RedirectResponse
@@ -311,8 +340,30 @@ class ThemeDesignController extends Controller
         $request = $request ?: request();
         $activeRaw = Setting::get('active_canvas_theme_data');
         if (empty($activeRaw)) {
-            return redirect()->route('admin.theme-design.canvas')
-                ->with('error', 'ابتدا یک قالب Canvas نصب کنید.');
+            $requestedPage = trim((string) ($request->query('page') ?? ''));
+            // If the user arrived requesting to edit a specific page or explicitly requested a blank canvas,
+            // bootstrap the empty baseline canvas automatically so they can continue working smoothly.
+            if ($requestedPage !== '' || $request->boolean('create_blank')) {
+                $baseline = \App\Services\ThemeCanvas\CanvasCleanSlate::baselineDocument();
+                $baseline['global_styles']['primary_color'] = '#4f46e5';
+                $baseline['global_styles']['secondary_color'] = '#7c3aed';
+                $baseline['global_styles']['background_color'] = '#f9fafb';
+                $baseline['global_styles']['font_family'] = 'Vazirmatn';
+
+                $this->revisions->record($baseline, ThemeInstanceRevision::TYPE_INSTALL, [
+                    'theme_identifier' => ThemeInstanceRevisionService::DEFAULT_IDENTIFIER,
+                    'theme_name' => 'قالب اختصاصی',
+                    'active_theme_id' => 'custom',
+                    'metadata' => ['baseline' => 'auto-blank-canvas'],
+                ]);
+                Cache::forget('canvas_theme_data');
+                $this->resolver->clearCache();
+
+                $activeRaw = Setting::get('active_canvas_theme_data');
+            } else {
+                return redirect()->route('admin.theme-design.canvas')
+                    ->with('error', 'ابتدا یک قالب Canvas نصب کنید یا با بوم خالی شروع کنید.');
+            }
         }
 
         // Draft system: load draft if exists, else seed draft from active
@@ -1040,6 +1091,29 @@ class ThemeDesignController extends Controller
         // provenance is carried forward from whatever is currently active
         // (Phase 3D-B) — resolves to null if it was already unresolvable.
         $decoded = json_decode($draft, true) ?: [];
+
+        // Ensure database pages that were authored in Canvas are unified as builder pages
+        try {
+            if (!empty($decoded['pages']) && is_array($decoded['pages'])) {
+                foreach ($decoded['pages'] as $pSlug => $pData) {
+                    if (is_array($pData) && !empty($pData['blocks'])) {
+                        $targetSlug = $pData['slug'] ?? (is_string($pSlug) ? $pSlug : '');
+                        if ($targetSlug !== '' && !str_starts_with($targetSlug, '__')) {
+                            if ($dbPage = \App\Models\Page::where('slug', $targetSlug)->first()) {
+                                if ($dbPage->builder_type !== \App\Models\Page::BUILDER_TYPE_BUILDER) {
+                                    $dbPage->builder_type = \App\Models\Page::BUILDER_TYPE_BUILDER;
+                                    $dbPage->builder_content_v2 = ['blocks' => $pData['blocks'], 'sections' => $pData['blocks']];
+                                    $dbPage->save();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Error syncing page builder_type on publish: ' . $e->getMessage());
+        }
+
         try {
             $this->revisions->record($decoded, ThemeInstanceRevision::TYPE_PUBLISH, [
                 'resolve_provenance_from' => (int) Setting::get('active_theme_revision_id'),
