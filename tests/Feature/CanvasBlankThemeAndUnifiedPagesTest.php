@@ -133,4 +133,97 @@ class CanvasBlankThemeAndUnifiedPagesTest extends TestCase
         $publicResponse->assertOk();
         $publicResponse->assertSee('بلوک طراحی شده با کانواس');
     }
+
+    public function test_default_theme_renders_home_and_db_pages_cleanly_when_no_canvas_theme_is_active(): void
+    {
+        // 1. Ensure active_canvas_theme_data is empty (Zero theme installed)
+        Setting::set('active_canvas_theme_data', '', 'theme');
+        Setting::set('active_canvas_theme_name', '', 'theme');
+        Setting::set('active_canvas_theme_slug', '', 'theme');
+        \Illuminate\Support\Facades\Cache::forget('canvas_theme_data');
+
+        // Create a published database page
+        $page = Page::create([
+            'title' => 'تماس با ما ویژه',
+            'slug' => 'contact-special',
+            'body' => 'متن رسمی صفحه تماس با ما در تم پیش‌فرض',
+            'is_published' => true,
+            'show_in_menu' => true,
+        ]);
+
+        // 2. Public Home route GET / should render 200 OK with default layout
+        $homeResponse = $this->get('/');
+        $homeResponse->assertOk();
+        $homeResponse->assertSee(\App\Helpers\SiteHelper::siteName());
+
+        // 3. Public DB page route GET /page/contact-special should render 200 OK with default layout
+        $pageResponse = $this->get('/page/contact-special');
+        $pageResponse->assertOk();
+        $pageResponse->assertSee('تماس با ما ویژه');
+        $pageResponse->assertSee('متن رسمی صفحه تماس با ما در تم پیش‌فرض');
+
+        // 4. Admin surfaces work without error in default theme mode
+        $admin = $this->createAdmin();
+
+        $adminPagesResponse = $this->actingAs($admin)->get(route('admin.pages.index'));
+        $adminPagesResponse->assertOk();
+        $adminPagesResponse->assertSee('تماس با ما ویژه');
+
+        $adminCanvasResponse = $this->actingAs($admin)->get(route('admin.theme-design.canvas'));
+        $adminCanvasResponse->assertOk();
+        $adminCanvasResponse->assertSee('قالب Canvas فعال نیست');
+        $adminCanvasResponse->assertSee('شروع با بوم خالی');
+    }
+
+    public function test_transition_from_default_theme_to_canvas_theme_and_graceful_fallback_on_deactivation(): void
+    {
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+
+        // 1. Start with Default Theme (no canvas active)
+        Setting::set('active_canvas_theme_data', '', 'theme');
+        \Illuminate\Support\Facades\Cache::forget('canvas_theme_data');
+
+        $initialHome = $this->get('/');
+        $initialHome->assertOk();
+
+        // 2. Install / assign a Canvas theme (e.g. baseline with custom header & home)
+        $admin = $this->createAdmin();
+        $canvasData = \App\Services\ThemeCanvas\CanvasCleanSlate::baselineDocument();
+        $canvasData['pages']['home']['blocks'] = [
+            [
+                'id' => 'c-hero-1',
+                'type' => 'text',
+                'props' => ['content' => 'محتوای صفحه اصلی قالب بوم'],
+            ],
+        ];
+
+        app(\App\Services\ThemeCanvas\ThemeInstanceRevisionService::class)->record(
+            $canvasData,
+            \App\Models\ThemeInstanceRevision::TYPE_INSTALL,
+            [
+                'theme_identifier' => 'test-theme',
+                'theme_name'       => 'قالب تستی بوم',
+                'active_theme_id'  => 'test-theme',
+            ]
+        );
+        \Illuminate\Support\Facades\Cache::forget('canvas_theme_data');
+
+        // 3. Home now renders through Canvas theme
+        $canvasHome = $this->get('/');
+        $canvasHome->assertOk();
+        $canvasHome->assertSee('محتوای صفحه اصلی قالب بوم');
+
+        // 4. Deactivate Canvas theme -> must gracefully fall back to default theme
+        $deactivateResponse = $this->actingAs($admin)->post(route('admin.theme-design.canvas-deactivate'));
+        $deactivateResponse->assertRedirect(route('admin.theme-design.canvas'));
+        $deactivateResponse->assertSessionHas('success');
+
+        $this->assertEmpty(Setting::get('active_canvas_theme_data'));
+
+        // 5. Public site immediately and cleanly falls back to default theme
+        $fallbackHome = $this->get('/');
+        $fallbackHome->assertOk();
+        $fallbackHome->assertDontSee('محتوای صفحه اصلی قالب بوم');
+        $fallbackHome->assertSee(\App\Helpers\SiteHelper::siteName());
+    }
 }
