@@ -375,6 +375,14 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
             </button>
 
             {{-- Discard draft --}}
+            @if(($canvasMode ?? 'theme') === 'maintenance')
+                <button type="button"
+                        @click="resetMaintenanceTemplate()"
+                        data-testid="tb-canvas-reset-maintenance-button"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium transition">
+                    بازنشانی به قالب حرفه‌ای تعمیرات
+                </button>
+            @else
             <form method="POST" action="{{ route('admin.theme-design.canvas-discard-draft') }}" onsubmit="return confirm('تغییرات پیش‌نویس رد شود؟')">
                 @csrf
                 <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition">
@@ -382,6 +390,7 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                     رد تغییرات
                 </button>
             </form>
+            @endif
 
             {{-- Publish --}}
             <button
@@ -531,10 +540,10 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                     <template x-for="node in flattenTree()" :key="node.block.id + node.depth">
                         <div
                             @click="selectBlock(node.path)"
-                            @dragstart="startTreeDrag(node.block.id, node.path)"
-                            @dragover.prevent="onTreeDragOver(node.block.id, node.path, $event.offsetY < $event.target.offsetHeight / 2 ? 'before' : 'after', $event)"
-                            @dragleave="onTreeDragLeave()"
-                            @drop="onTreeDrop(node.block.id, node.path)"
+                            @dragstart="startTreeDrag(node.block.id, node.path); $event.dataTransfer && ($event.dataTransfer.effectAllowed = 'move', $event.dataTransfer.setData('text/plain', String(node.block.id)))"
+                            @dragover.prevent="onTreeDragOver(node.block.id, node.path, computeTreeDropPosition($event, isContainerType(node.block.type)), $event)"
+                            @dragleave="onTreeDragLeave($event)"
+                            @drop.prevent="onTreeDrop(node.block.id, node.path)"
                             @dragend="endTreeDrag()"
                             draggable="true"
                             :data-testid="'tb-tree-node-' + node.block.id"
@@ -542,11 +551,11 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                             :style="'padding-right:' + (12 + node.depth * 14) + 'px'"
                             :class="[
                                 isSelectedPath(node.path) ? 'bg-indigo-50 border-r-2 border-indigo-500' : 'hover:bg-slate-50',
-                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'before' ? 'border-t-2 border-indigo-500' : '',
-                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'after' ? 'border-b-2 border-indigo-500' : '',
-                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'inside' ? 'bg-indigo-100' : '',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'before' ? 'border-t-2 border-indigo-600 bg-indigo-50/40' : '',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'after' ? 'border-b-2 border-indigo-600 bg-indigo-50/40' : '',
+                                treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition === 'inside' ? 'bg-indigo-100 ring-2 ring-indigo-500 ring-inset' : '',
                             ]"
-                            class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
+                            class="relative flex items-center gap-2 px-3 py-1.5 cursor-pointer transition text-xs">
                             <span :class="blockCategoryColor(node.block.type)" class="w-2 h-2 rounded-full shrink-0"></span>
                             <template x-if="isContainerType(node.block.type)">
                                 <svg @click.stop="toggleTreeNode(node.block.id)"
@@ -570,6 +579,9 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                 class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                             {{-- Drag handle --}}
                             <svg class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                            <span x-show="treeDragState.dragOverBlockId === node.block.id && treeDragState.dropPosition"
+                                  class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-600 text-white shrink-0"
+                                  x-text="treeDragState.dropPosition === 'inside' ? 'زیرمجموعه داخل این ویجت' : (treeDragState.dropPosition === 'before' ? 'قبل از این ویجت' : 'بعد از این ویجت')"></span>
                         </div>
                     </template>
 
@@ -2368,8 +2380,9 @@ const ROUTES = {
     deletePage:   '{{ url('admin/theme-design/canvas/pages') }}',
     globalStyles: '{{ route('admin.theme-design.canvas-global-styles', $modeQuery) }}',
     publish:      '{{ route('admin.theme-design.canvas-publish', $modeQuery) }}',
-    livePreview:  '{{ route('admin.theme-design.canvas-live-preview') }}',
-    renderBlock:  '{{ route('admin.theme-design.canvas-render-block') }}',
+    livePreview:  '{{ route('admin.theme-design.canvas-live-preview', $modeQuery) }}',
+    renderBlock:  '{{ route('admin.theme-design.canvas-render-block', $modeQuery) }}',
+    resetMaintenance: '{{ route('admin.theme-design.canvas-reset-maintenance') }}',
     mediaIndex:   '{{ route('admin.theme-design.media-index') }}',
     mediaUpload:  '{{ route('admin.theme-design.media-upload') }}',
     mediaDestroy: '{{ route('admin.theme-design.media-destroy') }}',
@@ -3729,6 +3742,26 @@ function canvasEditor() {
             finally { this.publishing = false; }
         },
 
+        async resetMaintenanceTemplate() {
+            if (!confirm('صفحه تعمیرات به قالب حرفه‌ای پیش‌فرض بازنشانی شود؟')) return;
+            try {
+                const r = await fetch(ROUTES.resetMaintenance, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+                });
+                const d = await r.json();
+                if (d.success && d.blocks) {
+                    this.pages.maintenance = { ...(this.pages.maintenance || {}), blocks: d.blocks };
+                    this.currentPage = 'maintenance';
+                    this.isDirty = false;
+                    this.reloadIframe();
+                    this.showToast('قالب حرفه‌ای تعمیرات بارگذاری شد ✓', 'success');
+                }
+            } catch {
+                this.showToast('خطا در بازنشانی قالب تعمیرات', 'error');
+            }
+        },
+
         async saveGlobalStylesAndReload() {
             if (this.gsSaving) return;
             this.gsSaving = true;
@@ -3747,7 +3780,8 @@ function canvasEditor() {
 
         // ── TB3-02: Live Iframe ───────────────────────────────
         livePreviewUrl() {
-            return ROUTES.livePreview + '?page=' + encodeURIComponent(this.currentPage) + '&t=' + this.iframeTimestamp;
+            const sep = ROUTES.livePreview.includes('?') ? '&' : '?';
+            return ROUTES.livePreview + sep + 'page=' + encodeURIComponent(this.currentPage) + '&t=' + this.iframeTimestamp;
         },
 
         reloadIframe() {
@@ -4133,6 +4167,19 @@ confirmMotionSelect() {
             return true;
         },
 
+        computeTreeDropPosition(event, isContainer) {
+            const el = event?.currentTarget;
+            if (!el) return 'after';
+            const rect = el.getBoundingClientRect();
+            const ratio = (event.clientY - rect.top) / Math.max(rect.height, 1);
+            if (isContainer) {
+                if (ratio < 0.25) return 'before';
+                if (ratio > 0.75) return 'after';
+                return 'inside';
+            }
+            return ratio < 0.5 ? 'before' : 'after';
+        },
+
         // Handle drag start on a block in the tree
         startTreeDrag(blockId, path) {
             this.treeDragState = {
@@ -4178,8 +4225,9 @@ confirmMotionSelect() {
         },
 
         // Handle drag leave
-        onTreeDragLeave() {
+        onTreeDragLeave(event) {
             if (!this.treeDragState.isDragging) return;
+            if (event && event.currentTarget && event.relatedTarget && event.currentTarget.contains(event.relatedTarget)) return;
             this.treeDragState.dragOverBlockId = null;
             this.treeDragState.dragOverPath = null;
             this.treeDragState.dropPosition = null;

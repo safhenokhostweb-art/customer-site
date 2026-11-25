@@ -1141,6 +1141,16 @@ class ThemeDesignController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function canvasResetMaintenance(): JsonResponse
+    {
+        $doc = app(\App\Services\MaintenanceModeService::class)->resetToDefault();
+
+        return response()->json([
+            'success' => true,
+            'blocks'  => $doc['pages']['maintenance']['blocks'] ?? [],
+        ]);
+    }
+
     public function canvasPublish(Request $request): JsonResponse
     {
         if ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance') {
@@ -1467,16 +1477,21 @@ class ThemeDesignController extends Controller
      */
     public function canvasLivePreview(Request $request)
     {
-        $pageKey = $request->input('page', 'home');
+        $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
+        $pageKey = $request->input('page', $isMaintenance ? 'maintenance' : 'home');
 
-        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
-            return response('<p>قالب Canvas یافت نشد</p>', 404);
-        }
+        if ($isMaintenance) {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+        } else {
+            $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+            if (empty($raw)) {
+                return response('<p>قالب Canvas یافت نشد</p>', 404);
+            }
 
-        $themeData = json_decode($raw, true);
-        if (!is_array($themeData)) {
-            return response('<p>داده قالب معتبر نیست</p>', 422);
+            $themeData = json_decode($raw, true);
+            if (!is_array($themeData)) {
+                return response('<p>داده قالب معتبر نیست</p>', 422);
+            }
         }
 
         // Resolve blocks for the requested page key
@@ -1585,7 +1600,8 @@ class ThemeDesignController extends Controller
             $pageKey,
             editorPreview: true,
             editorRegion: $editorRegion,
-        ) + ['themeName' => Setting::get('active_canvas_theme_name', '')];
+            renderChrome: !$isMaintenance,
+        ) + ['themeName' => $isMaintenance ? 'maintenance-standalone' : Setting::get('active_canvas_theme_name', '')];
 
         return response()
             ->view('admin.theme-design.canvas-live-preview', $viewData)

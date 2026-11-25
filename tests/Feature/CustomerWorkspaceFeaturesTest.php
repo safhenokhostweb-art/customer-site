@@ -133,12 +133,21 @@ class CustomerWorkspaceFeaturesTest extends TestCase
             ->assertSee('maintenance_mode_enabled')
             ->assertSee(route('admin.settings.maintenance-canvas'));
 
-        // Canvas editor opens maintenance mode even with NO theme installed
+        // Canvas editor opens maintenance mode even with NO theme installed and supports 3-zone tree reparenting
         $this->get(route('admin.theme-design.canvas-edit', ['mode' => 'maintenance', 'page' => 'maintenance']))
             ->assertOk()
-            ->assertSee('mode=maintenance', false);
+            ->assertSee('mode=maintenance', false)
+            ->assertSee('computeTreeDropPosition', false)
+            ->assertSee('زیرمجموعه داخل این ویجت')
+            ->assertSee('tb-canvas-reset-maintenance-button', false);
 
-        // Save custom maintenance block in Canvas
+        // Live Preview in maintenance mode renders default professional template without active theme
+        $this->get(route('admin.theme-design.canvas-live-preview', ['mode' => 'maintenance', 'page' => 'maintenance']))
+            ->assertOk()
+            ->assertSee('در حال به‌روزرسانی زیرساخت و ارتقای تجربه کاربری')
+            ->assertSee('پشتیبانی تلفنی');
+
+        // Save custom maintenance block in Canvas and verify Live Preview renders it immediately
         $this->putJson(route('admin.theme-design.canvas-save-blocks', ['mode' => 'maintenance']), [
             'page_key' => 'maintenance',
             'blocks'   => [[
@@ -150,6 +159,10 @@ class CustomerWorkspaceFeaturesTest extends TestCase
                 ],
             ]],
         ])->assertOk()->assertJsonPath('success', true);
+
+        $this->get(route('admin.theme-design.canvas-live-preview', ['mode' => 'maintenance', 'page' => 'maintenance']))
+            ->assertOk()
+            ->assertSee('در حال ارتقای سرورها هستیم');
 
         // Enable maintenance mode via Settings
         $this->post(route('admin.settings.update'), [

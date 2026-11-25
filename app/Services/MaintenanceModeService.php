@@ -51,15 +51,99 @@ class MaintenanceModeService
                     'slug'   => 'maintenance',
                     'blocks' => [
                         [
-                            'id'   => 'maint-hero-1',
-                            'type' => 'hero',
+                            'id'    => 'maint-badge-1',
+                            'type'  => 'badge',
                             'props' => [
-                                'title'       => 'در حال بروزرسانی و بهبود سرویس هستیم',
-                                'subtitle'    => 'سایت موقتاً در حالت تعمیرات قرار دارد و به‌زودی با امکانات جدید در دسترس خواهد بود. از شکیبایی شما سپاسگزاریم.',
+                                'text'  => '● در حال به‌روزرسانی زیرساخت و ارتقای تجربه کاربری',
+                                'style' => 'primary',
+                            ],
+                            'style' => [
+                                'textAlign'     => 'center',
+                                'paddingTop'    => '32px',
+                                'paddingBottom' => '8px',
+                            ],
+                        ],
+                        [
+                            'id'    => 'maint-hero-1',
+                            'type'  => 'hero',
+                            'props' => [
+                                'title'       => 'در حال ارتقای سرویس هستیم؛ به‌زودی با تجربه‌ای سریع‌تر برمی‌گردیم',
+                                'subtitle'    => 'تیم فنی ما در حال انجام به‌روزرسانی‌های زیرساختی و بهبود سرعت و امنیت سامانه است. تمام اطلاعات و سفارش‌های شما کاملاً محفوظ است.',
                                 'button_text' => '',
                                 'button_url'  => '',
                                 'background'  => 'light',
                                 'align'       => 'center',
+                            ],
+                        ],
+                        [
+                            'id'    => 'maint-timeline-1',
+                            'type'  => 'text',
+                            'props' => [
+                                'content' => '<div dir="rtl" style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:20px 24px;box-shadow:0 4px 20px rgba(15,23,42,0.05);">'
+                                    . '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700;color:#1e293b;font-size:14px;">'
+                                    . '<span>وضعیت پیشرفت به‌روزرسانی</span><span style="color:#4f46e5;">۷۵٪ تکمیل شده</span>'
+                                    . '</div>'
+                                    . '<div style="width:100%;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-bottom:12px;">'
+                                    . '<div style="width:75%;height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:999px;"></div>'
+                                    . '</div>'
+                                    . '<p style="margin:0;color:#64748b;font-size:13px;line-height:1.8;">زمان تقریبی بازگشت سرویس: کمتر از ۳۰ دقیقه — از شکیبایی و همراهی شما سپاسگزاریم.</p>'
+                                    . '</div>',
+                            ],
+                            'style' => [
+                                'paddingTop'    => '8px',
+                                'paddingBottom' => '24px',
+                            ],
+                        ],
+                        [
+                            'id'       => 'maint-support-grid',
+                            'type'     => 'container',
+                            'props'    => [
+                                'columns' => 3,
+                                'gap'     => '16px',
+                            ],
+                            'style'    => [
+                                'maxWidth'      => '920px',
+                                'marginLeft'    => 'auto',
+                                'marginRight'   => 'auto',
+                                'paddingBottom' => '40px',
+                            ],
+                            'children' => [
+                                [
+                                    'id'    => 'maint-contact-phone',
+                                    'type'  => 'icon_box',
+                                    'props' => [
+                                        'icon'  => 'phone',
+                                        'title' => 'پشتیبانی تلفنی',
+                                        'text'  => 'پاسخگویی سریع در ساعات کاری — شماره تماس: ۰۲۱-۰۰۰۰۰۰۰۰',
+                                        'link'  => 'tel:+982100000000',
+                                        'align' => 'center',
+                                        'style' => 'card',
+                                    ],
+                                ],
+                                [
+                                    'id'    => 'maint-contact-email',
+                                    'type'  => 'icon_box',
+                                    'props' => [
+                                        'icon'  => 'mail',
+                                        'title' => 'پست الکترونیک',
+                                        'text'  => 'ارسال پیام به تیم پشتیبانی: support@example.ir',
+                                        'link'  => 'mailto:support@example.ir',
+                                        'align' => 'center',
+                                        'style' => 'card',
+                                    ],
+                                ],
+                                [
+                                    'id'    => 'maint-contact-social',
+                                    'type'  => 'icon_box',
+                                    'props' => [
+                                        'icon'  => 'message-circle',
+                                        'title' => 'شبکه‌های اجتماعی',
+                                        'text'  => 'پیگیری آخرین وضعیت سرویس در کانال رسمی ما',
+                                        'link'  => '#',
+                                        'align' => 'center',
+                                        'style' => 'card',
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -67,6 +151,13 @@ class MaintenanceModeService
             ],
             'settings' => [],
         ];
+    }
+
+    public function resetToDefault(): array
+    {
+        $doc = $this->defaultDocument();
+        $this->saveDocument($doc);
+        return $doc;
     }
 
     public function getDocument(): array

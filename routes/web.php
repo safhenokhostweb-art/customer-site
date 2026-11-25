@@ -449,6 +449,7 @@ Route::middleware('install.check')->group(function () {
             Route::delete('theme-design/canvas/pages/{key}',              [ThemeDesignController::class, 'canvasDeletePage'])->name('theme-design.canvas-delete-page');
             Route::put('theme-design/canvas/global-styles',               [ThemeDesignController::class, 'canvasSaveGlobalStyles'])->name('theme-design.canvas-global-styles');
             Route::post('theme-design/canvas/publish',                    [ThemeDesignController::class, 'canvasPublish'])->name('theme-design.canvas-publish');
+            Route::post('theme-design/canvas/reset-maintenance',          [ThemeDesignController::class, 'canvasResetMaintenance'])->name('theme-design.canvas-reset-maintenance');
             Route::post('theme-design/canvas/discard-draft',              [ThemeDesignController::class, 'canvasDiscardDraft'])->name('theme-design.canvas-discard-draft');
             // Motion Picker — this site's own permitted Motion assets (from the existing runtime manifest)
             Route::get('theme-design/canvas/motion-assets',               [ThemeDesignController::class, 'canvasMotionAssets'])->name('theme-design.canvas-motion-assets');
