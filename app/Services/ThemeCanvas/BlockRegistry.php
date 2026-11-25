@@ -182,22 +182,51 @@ final class BlockRegistry
      *
      * @return array<string, array<string, mixed>>
      */
-    public static function forTheme(?string $themeSlug = null): array
+    /**
+     * Filters blocks and their schema fields by theme scope.
+     *
+     * @param list<string> $unlockedScopes
+     * @return array<string, array<string, mixed>>
+     */
+    public static function forTheme(?string $themeSlug = null, array $unlockedScopes = []): array
     {
         $all = self::all();
-        return array_filter($all, function (array $def) use ($themeSlug) {
+        $filtered = [];
+
+        foreach ($all as $type => $def) {
             $scope = $def['theme_scope'] ?? null;
-            if ($scope === null || $scope === '') {
-                return true;
+            if ($scope !== null && $scope !== '') {
+                $allowed = ($themeSlug !== null && $scope === $themeSlug)
+                    || in_array($scope, $unlockedScopes, true);
+                if (!$allowed) {
+                    continue;
+                }
             }
-            return $themeSlug !== null && $scope === $themeSlug;
-        });
+
+            if (isset($def['schema']) && is_array($def['schema'])) {
+                $def['schema'] = array_filter($def['schema'], function ($field) use ($themeSlug, $unlockedScopes) {
+                    if (!is_array($field)) {
+                        return true;
+                    }
+                    $fieldScope = $field['theme_scope'] ?? null;
+                    if ($fieldScope === null || $fieldScope === '') {
+                        return true;
+                    }
+                    return ($themeSlug !== null && $fieldScope === $themeSlug)
+                        || in_array($fieldScope, $unlockedScopes, true);
+                });
+            }
+
+            $filtered[$type] = $def;
+        }
+
+        return $filtered;
     }
 
-    public static function byCategory(?string $themeSlug = null): array
+    public static function byCategory(?string $themeSlug = null, array $unlockedScopes = []): array
     {
         $byCat = [];
-        $blocks = self::forTheme($themeSlug);
+        $blocks = self::forTheme($themeSlug, $unlockedScopes);
         foreach ($blocks as $type => $def) {
             $cat = $def['category'] ?? 'content';
             $byCat[$cat][$type] = $def;

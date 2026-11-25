@@ -270,7 +270,13 @@
                     برای بررسی آخرین نسخه و بروزرسانی امن، از بخش «لایسنس → بررسی بروزرسانی» استفاده کنید.
                 </p>
             @else
-                <p class="admin-muted-note">اطلاعات تم فعال از پلتفرم در دسترس نیست (لایسنس یا ارتباط با پلتفرم را بررسی کنید).</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+                    <div>
+                        <p style="margin:0 0 0.25rem;font-size:.95rem;font-weight:600;color:#111827;">بدون قالب (تم پیشفرض پایه)</p>
+                        <p class="admin-muted-note" style="margin:0;">سایت در حال حاضر با تم پیشفرض پایه اجرا می‌شود و هیچ قالب اختصاصی‌ای روی آن فعال نیست.</p>
+                    </div>
+                    <a href="{{ route('admin.theme-design.index') }}" class="btn btn-sm btn-secondary">مدیریت ظاهر و تم</a>
+                </div>
             @endif
         </div>
     </div>

@@ -35,6 +35,24 @@ class SettingController extends Controller
         $modules = Module::all();
         $themeBuilder = PlatformUx::themeBuilder();
         $themeMeta = $themeBuilder['meta'] ?? ($themeBuilder['settings']['meta'] ?? []);
+        $localCanvasData = Setting::get('active_canvas_theme_data', '');
+        $localCanvasSlug = (string) Setting::get('active_canvas_theme_slug', '');
+        $localCanvasName = (string) Setting::get('active_canvas_theme_name', '');
+        $hasLocalCanvasTheme = !empty($localCanvasData) && ($localCanvasSlug !== '' || $localCanvasName !== '');
+
+        if ($hasLocalCanvasTheme && (empty($themeMeta) || ($themeMeta['id'] ?? '') === 'default')) {
+            $activeRevisionId = Setting::get('active_theme_revision_id');
+            $activeRevision = $activeRevisionId ? \App\Models\ThemeInstanceRevision::find($activeRevisionId) : null;
+            $themeMeta = [
+                'id' => $localCanvasSlug !== '' ? $localCanvasSlug : 'custom',
+                'name' => $localCanvasName !== '' ? $localCanvasName : 'قالب سفارشی',
+                'version' => $activeRevision?->source_theme_version ?? '1.0.0',
+            ];
+        } elseif (!$hasLocalCanvasTheme && (empty($themeMeta) || ($themeMeta['id'] ?? '') === 'default')) {
+            $themeMeta = [];
+        }
+        $hasActiveTheme = !empty($themeMeta);
+
         $currentLogo = Setting::get('site_logo', '');
         $currentLogoUrl = $this->media->resolveSiteAssetUrl($currentLogo);
         $currentFavicon = Setting::get('site_favicon', '');
@@ -57,7 +75,8 @@ class SettingController extends Controller
             'footerOptions',
             'modules',
             'themeMeta',
-            'themeBuilder'
+            'themeBuilder',
+            'hasActiveTheme'
         ));
     }
 

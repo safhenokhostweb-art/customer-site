@@ -3,12 +3,14 @@
 namespace App\Services\ThemeCanvas;
 
 use App\Models\Setting;
+use App\Models\SiteTheme;
 use App\Models\ThemeInstanceRevision;
 use App\Services\CustomerMediaService;
 use App\Support\CanvasReservedSlugs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -199,6 +201,8 @@ class ThemeInstanceRevisionService
             // and sync them to the active media disk (e.g. 'arvan' if enabled)
             $themeSlug = (string) ($identifier ?: ($context['active_theme_id'] ?? ''));
             $this->indexThemeStaticAssetsForSlug($themeSlug);
+
+            $this->syncSiteThemeOwnership($identifier, $themeName, $revision, $context);
 
             return $revision;
         });
@@ -391,7 +395,97 @@ class ThemeInstanceRevisionService
             Setting::set('active_canvas_theme_slug', '', 'theme');
             Setting::set('active_canvas_theme_id', '', 'theme');
             Setting::set('active_theme_revision_id', '', 'theme');
+
+            if (Schema::hasTable('site_themes')) {
+                SiteTheme::query()->update(['is_active' => false]);
+            }
         });
+    }
+
+    /**
+     * Record/update theme ownership in `site_themes` so installing a new theme
+     * never deletes previously owned themes, and customers can switch freely.
+     */
+    private function syncSiteThemeOwnership(string $identifier, ?string $themeName, ThemeInstanceRevision $revision, array $context): void
+    {
+        if (!Schema::hasTable('site_themes')) {
+            return;
+        }
+
+        $isSwitchingOrInstalling = array_key_exists('theme_identifier', $context)
+            || in_array($revision->type, [
+                ThemeInstanceRevision::TYPE_INSTALL,
+                ThemeInstanceRevision::TYPE_UPDATE,
+                ThemeInstanceRevision::TYPE_UPGRADE_RECONCILED,
+            ], true);
+
+        if ($isSwitchingOrInstalling) {
+            SiteTheme::where('theme_slug', '!=', $identifier)->update(['is_active' => false]);
+        }
+
+        $existing = SiteTheme::where('theme_slug', $identifier)->first();
+
+        $attrs = [
+            'theme_name' => $themeName ?: ($existing?->theme_name ?? $identifier),
+            'active_revision_id' => $revision->id,
+            'is_active' => true,
+        ];
+
+        if ($revision->source_theme_id !== null) {
+            $attrs['source_theme_id'] = (string) $revision->source_theme_id;
+        }
+        if ($revision->source_theme_version !== null) {
+            $attrs['source_theme_version'] = $revision->source_theme_version;
+        }
+        if ($revision->source_release_id !== null) {
+            $attrs['source_release_id'] = $revision->source_release_id;
+        }
+        if ($existing === null || $existing->installed_at === null) {
+            $attrs['installed_at'] = now();
+        }
+        if ($isSwitchingOrInstalling || $existing === null || !$existing->is_active) {
+            $attrs['activated_at'] = now();
+        }
+
+        SiteTheme::updateOrCreate(['theme_slug' => $identifier], $attrs);
+    }
+
+    /**
+     * Switch the active Canvas theme to another owned theme in `site_themes`.
+     *
+     * @throws ModelNotFoundException
+     */
+    public function activateTheme(string $themeSlug): ThemeInstanceRevision
+    {
+        $siteTheme = SiteTheme::where('theme_slug', $themeSlug)->firstOrFail();
+
+        $sourceRevision = $siteTheme->active_revision_id
+            ? ThemeInstanceRevision::find($siteTheme->active_revision_id)
+            : null;
+
+        if (!$sourceRevision) {
+            $sourceRevision = ThemeInstanceRevision::where('theme_identifier', $siteTheme->theme_slug)
+                ->orderByDesc('revision_number')
+                ->firstOrFail();
+        }
+
+        $revision = $this->record(
+            $sourceRevision->theme_data ?? [],
+            ThemeInstanceRevision::TYPE_ROLLBACK_SNAPSHOT,
+            [
+                'theme_identifier'     => $siteTheme->theme_slug,
+                'theme_name'           => $siteTheme->theme_name,
+                'active_theme_id'      => $siteTheme->source_theme_id ?? $siteTheme->theme_slug,
+                'source_theme_id'      => $siteTheme->source_theme_id,
+                'source_theme_version' => $siteTheme->source_theme_version,
+                'source_release_id'    => $siteTheme->source_release_id,
+                'metadata'             => ['activated_from_my_themes' => true, 'restored_from_revision_id' => $sourceRevision->id],
+            ]
+        );
+
+        Setting::set('canvas_draft_data', json_encode($revision->theme_data ?? [], JSON_UNESCAPED_UNICODE), 'theme');
+
+        return $revision;
     }
 
     /**

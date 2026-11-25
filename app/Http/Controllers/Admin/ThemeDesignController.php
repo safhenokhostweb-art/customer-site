@@ -73,6 +73,10 @@ class ThemeDesignController extends Controller
             'admin_sidebar_border' => Setting::get('admin_sidebar_border', '#334155'),
         ];
 
+        $myThemes = \Illuminate\Support\Facades\Schema::hasTable('site_themes')
+            ? \App\Models\SiteTheme::orderByDesc('is_active')->orderByDesc('activated_at')->orderByDesc('id')->get()
+            : collect();
+
         return view('admin.theme-design.index', compact(
             'settings',
             'buttonStyles',
@@ -81,7 +85,8 @@ class ThemeDesignController extends Controller
             'presets',
             'canvasActive',
             'canvasName',
-            'dashCustomColors'
+            'dashCustomColors',
+            'myThemes'
         ));
     }
 
@@ -136,6 +141,9 @@ class ThemeDesignController extends Controller
         }
 
         $sitePages = \App\Models\Page::orderBy('id')->get();
+        $myThemes = \Illuminate\Support\Facades\Schema::hasTable('site_themes')
+            ? \App\Models\SiteTheme::orderByDesc('is_active')->orderByDesc('activated_at')->orderByDesc('id')->get()
+            : collect();
 
         return view('admin.theme-design.canvas', [
             'themeData'  => $themeData,
@@ -146,7 +154,27 @@ class ThemeDesignController extends Controller
             'backupAt'   => Setting::get('canvas_theme_backup_at', ''),
             'hasBackup'  => (bool) Setting::get('canvas_theme_backup_data'),
             'sitePages'  => $sitePages,
+            'myThemes'   => $myThemes,
         ]);
+    }
+
+    public function activateMyTheme(Request $request, string $slug): RedirectResponse
+    {
+        try {
+            $this->revisions->activateTheme($slug);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return back()->with('error', 'قالب مورد نظر در مجموعه قالب‌های شما یافت نشد.');
+        }
+
+        Cache::forget('canvas_theme_data');
+        $this->resolver->clearCache();
+
+        if ($request->boolean('open_canvas')) {
+            return redirect()->route('admin.theme-design.canvas-edit')
+                ->with('success', 'قالب با موفقیت فعال شد و آماده ویرایش است.');
+        }
+
+        return back()->with('success', 'قالب با موفقیت فعال شد.');
     }
 
     public function canvasCreateBlank(Request $request): RedirectResponse
@@ -589,6 +617,11 @@ class ThemeDesignController extends Controller
         if (empty($ftrBlocks) && !empty($themeData['footer_blocks']) && is_array($themeData['footer_blocks'])) {
             $ftrBlocks = $themeData['footer_blocks'];
         }
+        $isSolar = \App\Helpers\SiteHelper::isSolarTheme();
+        $defaultAuthColors = $isSolar
+            ? ['page_bg_color' => '#0B0B0B', 'hero_bg_color' => '#12121F', 'hero_accent_color' => '#FF7900', 'btn_bg_color' => '#FF7900']
+            : ['page_bg_color' => '#f8fafc', 'hero_bg_color' => '#1e1b4b', 'hero_accent_color' => '#4f46e5', 'btn_bg_color' => '#4f46e5'];
+
         $virtualPages = [
             '__header__' => [
                 'title'      => 'هدر سایت',
@@ -615,7 +648,7 @@ class ThemeDesignController extends Controller
                         [
                             'id' => 'auth-login-canvas',
                             'type' => 'auth_canvas',
-                            'props' => [
+                            'props' => array_merge([
                                 'auth_mode' => 'login_only',
                                 'layout_type' => 'split',
                                 'brand_name' => \App\Helpers\SiteHelper::siteName(),
@@ -629,11 +662,7 @@ class ThemeDesignController extends Controller
                                 'hero_title' => 'به حساب کاربری خود خوش آمدید',
                                 'hero_subtitle' => 'دسترسی امن به سفارش‌ها، دوره‌ها و پشتیبانی، همه در یک حساب.',
                                 'hero_icon' => 'user',
-                                'page_bg_color' => '#0B0B0B',
-                                'hero_bg_color' => '#12121F',
-                                'hero_accent_color' => '#FF7900',
-                                'btn_bg_color' => '#FF7900',
-                            ],
+                            ], $defaultAuthColors),
                         ],
                     ]),
             ],
@@ -648,7 +677,7 @@ class ThemeDesignController extends Controller
                         [
                             'id' => 'auth-register-canvas',
                             'type' => 'auth_canvas',
-                            'props' => [
+                            'props' => array_merge([
                                 'auth_mode' => 'register_only',
                                 'layout_type' => 'split',
                                 'brand_name' => \App\Helpers\SiteHelper::siteName(),
@@ -661,11 +690,7 @@ class ThemeDesignController extends Controller
                                 'hero_title' => 'به جمع کاربران ما بپیوندید',
                                 'hero_subtitle' => 'ثبت سفارش، پیگیری خرید و دسترسی به دوره‌ها با یک حساب.',
                                 'hero_icon' => 'user',
-                                'page_bg_color' => '#0B0B0B',
-                                'hero_bg_color' => '#12121F',
-                                'hero_accent_color' => '#FF7900',
-                                'btn_bg_color' => '#FF7900',
-                            ],
+                            ], $defaultAuthColors),
                         ],
                     ]),
             ],
@@ -683,10 +708,12 @@ class ThemeDesignController extends Controller
             ?? ($themeData['settings']['meta']['id']
             ?? ($themeData['id']
             ?? (Setting::get('active_canvas_theme_slug') ?: \App\Helpers\SiteHelper::theme())));
-        $byCategory = BlockRegistry::byCategory($themeSlug);
+        $siteEntitlements = $this->assetEntitlements()->refresh();
+        $unlockedScopes = AssetAccessGate::unlockedThemeScopes($siteEntitlements);
+        $byCategory = BlockRegistry::byCategory($themeSlug, $unlockedScopes);
         $catLabels  = BlockRegistry::categoryLabels($themeSlug);
         $catIcons   = BlockRegistry::categoryIcons($themeSlug);
-        $registry   = BlockRegistry::forTheme($themeSlug);
+        $registry   = BlockRegistry::forTheme($themeSlug, $unlockedScopes);
         // Host-only authoring type for nested columns: a real multi-child
         // container (HasContainerCapability) that the shared canonical
         // registry does not publish, so a customer can put several widgets —
@@ -719,7 +746,7 @@ class ThemeDesignController extends Controller
         // this site (hidden widgets dropped, locked ones badged). Opening the
         // editor re-syncs, so a grant or revoke shows on the next visit.
         // $registry stays whole: existing blocks must still open in the inspector.
-        [$byCategory, $assetAccess] = AssetAccessGate::filterPalette($byCategory, $this->assetEntitlements()->refresh());
+        [$byCategory, $assetAccess] = AssetAccessGate::filterPalette($byCategory, $siteEntitlements);
         $modulePresentations = $this->presentationCapabilities->availableFor($themeData);
 
         $gs = $themeData['global_styles'] ?? [];
@@ -1441,10 +1468,10 @@ class ThemeDesignController extends Controller
                             'hero_title' => $pageKey === 'login' ? 'به حساب کاربری خود خوش آمدید' : 'به جمع کاربران ما بپیوندید',
                             'hero_subtitle' => 'دسترسی امن به سفارش‌ها، دوره‌ها و پشتیبانی، همه در یک حساب.',
                             'hero_icon' => 'user',
-                            'page_bg_color' => '#0B0B0B',
-                            'hero_bg_color' => '#12121F',
-                            'hero_accent_color' => '#FF7900',
-                            'btn_bg_color' => '#FF7900',
+                            'page_bg_color' => \App\Helpers\SiteHelper::isSolarTheme() ? '#0B0B0B' : '#f8fafc',
+                            'hero_bg_color' => \App\Helpers\SiteHelper::isSolarTheme() ? '#12121F' : '#1e1b4b',
+                            'hero_accent_color' => \App\Helpers\SiteHelper::isSolarTheme() ? '#FF7900' : '#4f46e5',
+                            'btn_bg_color' => \App\Helpers\SiteHelper::isSolarTheme() ? '#FF7900' : '#4f46e5',
                         ],
                     ],
                 ];
@@ -1869,17 +1896,23 @@ class ThemeDesignController extends Controller
 
     public function canvasTemplates(Request $request): JsonResponse
     {
+        $entitlements = $this->assetEntitlements()->current();
+        $activeSlug = Setting::get('active_canvas_theme_slug') ?: null;
+        $unlockedScopes = AssetAccessGate::unlockedThemeScopes($entitlements);
+
         // No default type/category: an unfiltered request must return every
         // template, not only the header/navigation slice.
         $templates = $this->templateSvc->list(
             type: $request->query('type') ?: null,
             category: $request->query('category') ?: null,
             term: $request->query('search') ?: null,
+            activeThemeSlug: $activeSlug,
+            unlockedScopes: $unlockedScopes,
         );
 
         // ADR-087: library cards the platform has not provisioned for this
         // site are dropped (another vertical's kit) or badged as locked.
-        return response()->json(['templates' => AssetAccessGate::annotateTemplateCards($templates, $this->assetEntitlements()->current())]);
+        return response()->json(['templates' => AssetAccessGate::annotateTemplateCards($templates, $entitlements)]);
     }
 
     public function canvasSaveAsTemplate(Request $request): JsonResponse

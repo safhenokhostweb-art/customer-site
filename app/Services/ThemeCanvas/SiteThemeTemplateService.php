@@ -12,7 +12,7 @@ class SiteThemeTemplateService
      * Canvas overhaul Unit 5 (ADR-075): the package's ready-made library
      * first, then this site's own saved templates, in one card shape.
      */
-    public function list(?string $type = null, ?string $category = null, ?string $term = null): array
+    public function list(?string $type = null, ?string $category = null, ?string $term = null, ?string $activeThemeSlug = null, array $unlockedScopes = []): array
     {
         // No implicit defaults: a null type/category means "no filter", so an
         // unfiltered call returns every template (footer, hero, …), never
@@ -23,7 +23,16 @@ class SiteThemeTemplateService
         if ($category) $q->byCategory($category);
         if ($term)     $q->where('name', 'like', "%{$term}%");
 
+        $allowedThemes = array_filter(array_unique(array_merge([$activeThemeSlug], $unlockedScopes)));
+
         $saved = $q->get(['id', 'name', 'description', 'type', 'category', 'thumbnail_url', 'tags', 'usage_count'])
+            ->filter(function ($t) use ($allowedThemes) {
+                $tags = is_array($t->tags) ? $t->tags : [];
+                if (in_array('solar-industry', $tags, true) && !in_array('solar-industry', $allowedThemes, true)) {
+                    return false;
+                }
+                return true;
+            })
             ->map(fn($t) => [
                 'id'            => $t->id,
                 'source'        => 'saved',

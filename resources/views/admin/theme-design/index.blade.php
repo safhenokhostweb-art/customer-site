@@ -41,6 +41,85 @@
     </div>
     @endif
 
+    {{-- ═══ My Themes (قالب‌های من — مالکیت چندقالبی) ═══ --}}
+    <div class="card" style="margin-bottom:1.75rem;" data-testid="my-themes-section">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:2rem;height:2rem;background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <x-core-ui::icon name="layout" class="w-4 h-4" style="color:#fff;" />
+                </div>
+                <div>
+                    <span style="font-weight:700;font-size:1rem;display:block;">قالب‌های من</span>
+                    <span style="font-size:0.78rem;color:#6b7280;">مدیریت تمام قالب‌های خریداری‌شده، تخصیص‌داده‌شده یا ساخته‌شده با بوم خالی</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <form action="{{ route('admin.theme-design.canvas.create-blank') }}" method="POST" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-secondary" style="font-size:0.78rem;padding:0.35rem 0.75rem;">
+                        ساخت قالب با بوم خالی
+                    </button>
+                </form>
+                <a href="{{ route('admin.theme-marketplace.index') }}" class="btn btn-sm btn-primary" style="font-size:0.78rem;padding:0.35rem 0.75rem;text-decoration:none;">
+                    خرید قالب جدید
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if(isset($myThemes) && $myThemes->isNotEmpty())
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+                    @foreach($myThemes as $item)
+                        <div style="border:2px solid {{ $item->is_active ? '#4f46e5' : '#e5e7eb' }};border-radius:0.875rem;padding:1rem;background:{{ $item->is_active ? '#eef2ff' : '#fff' }};display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+                            <div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.4rem;">
+                                    <strong style="font-size:0.95rem;color:#111827;">{{ $item->theme_name }}</strong>
+                                    @if($item->is_active)
+                                        <span style="background:#4f46e5;color:#fff;font-size:0.7rem;font-weight:700;padding:0.15rem 0.55rem;border-radius:99px;">فعال</span>
+                                    @else
+                                        <span style="background:#f3f4f6;color:#6b7280;font-size:0.7rem;font-weight:600;padding:0.15rem 0.55rem;border-radius:99px;">غیرفعال</span>
+                                    @endif
+                                </div>
+                                <div style="font-size:0.75rem;color:#6b7280;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                                    <code>{{ $item->theme_slug }}</code>
+                                    @if($item->source_theme_version)
+                                        <span>• نسخه {{ $item->source_theme_version }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;padding-top:0.5rem;border-top:1px solid {{ $item->is_active ? '#c7d2fe' : '#f3f4f6' }};">
+                                @if($item->is_active)
+                                    <a href="{{ route('admin.theme-design.canvas-edit') }}"
+                                       class="btn btn-sm btn-primary"
+                                       style="flex:1;text-align:center;text-decoration:none;font-size:0.78rem;padding:0.4rem 0.75rem;">
+                                        ویرایش با Canvas
+                                    </a>
+                                @else
+                                    <form action="{{ route('admin.theme-design.my-themes.activate', $item->theme_slug) }}" method="POST" style="flex:1;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="width:100%;font-size:0.78rem;padding:0.4rem 0.75rem;">
+                                            فعالسازی
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.theme-design.my-themes.activate', $item->theme_slug) }}" method="POST" style="flex:1;">
+                                        @csrf
+                                        <input type="hidden" name="open_canvas" value="1">
+                                        <button type="submit" class="btn btn-sm btn-primary" style="width:100%;font-size:0.78rem;padding:0.4rem 0.75rem;">
+                                            ویرایش با Canvas
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p style="font-size:0.85rem;color:#6b7280;margin:0;">
+                    هنوز قالبی در مجموعه «قالب‌های من» ثبت نشده است و سایت از تم پیش‌فرض پایه استفاده می‌کند. می‌توانید از مارکت‌پلیس قالب بخرید یا یک قالب با بوم خالی بسازید.
+                </p>
+            @endif
+        </div>
+    </div>
+
     {{-- Phase 3H-B: legacy 5-slot rotating "Canvas Revision History" UI
          de-exposed here — superseded by the canonical, append-only permanent
          revision history/rollback panel on the Canvas dashboard itself
