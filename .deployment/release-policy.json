@@ -76,6 +76,13 @@
                                                   "reviewed_by":  "safhenokhostweb-art",
                                                   "reviewed_at":  "2026-10-27",
                                                   "reason":  "Create-only migration: up() creates newsletter_subscribers (guarded by hasTable); down() drops only that table (rollback of its own creation). No existing data is altered."
+                                              },
+                                              {
+                                                  "path":  "database/migrations/2026_11_24_100000_create_site_themes_table.php",
+                                                  "sha256":  "9260b07074e1903828485891ff21075a794b865159981e23a9bc6c366c2ac0d1",
+                                                  "reviewed_by":  "safhenokhostweb-art",
+                                                  "reviewed_at":  "2026-11-25",
+                                                  "reason":  "Create-only migration: up() creates site_themes (guarded by hasTable); down() drops only that table (rollback of its own creation). No existing data is altered."
                                               }
                                           ]
                          },
