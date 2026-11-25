@@ -357,7 +357,10 @@ class MenuController extends Controller
         $this->menuService->clearMenuCache($menu->id);
         $this->logChange($request->user()?->id, $menu->id, 'item_updated', ['item_id' => $item->id]);
 
-        return back()->with('success', 'آیتم به‌روزرسانی شد.');
+        return back()
+            ->with('success', 'آیتم به‌روزرسانی شد.')
+            ->with('edited_item_id', $item->id)
+            ->withFragment('menu-item-' . $item->id);
     }
 
     public function destroyItem(Menu $menu, MenuItem $item): RedirectResponse

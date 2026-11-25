@@ -408,6 +408,7 @@ Route::middleware('install.check')->group(function () {
         });
         Route::middleware('permission:settings')->group(function () {
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
+            Route::get('settings/maintenance-canvas', [AdminSettingController::class, 'maintenanceCanvas'])->name('settings.maintenance-canvas');
             Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
             Route::post('settings/favicon', [AdminSettingController::class, 'uploadFavicon'])->name('settings.favicon');
             Route::post('settings/logo', [AdminSettingController::class, 'uploadLogo'])->name('settings.logo');

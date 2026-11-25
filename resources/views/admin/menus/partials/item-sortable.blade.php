@@ -8,7 +8,7 @@
     $blogTags = $blogTags ?? collect();
 @endphp
 @foreach($items as $item)
-    <li data-item-id="{{ $item->id }}" class="menu-sort-li border border-slate-200 rounded-lg bg-slate-50 p-2 mb-2 cursor-grab">
+    <li id="menu-item-{{ $item->id }}" data-item-id="{{ $item->id }}" class="menu-sort-li border border-slate-200 rounded-lg bg-slate-50 p-2 mb-2 cursor-grab">
         <div class="flex flex-wrap justify-between gap-2 items-center">
             <span class="drag-handle text-slate-400 select-none" title="جابه‌جایی">⠿</span>
             <div class="flex-1 min-w-0">
@@ -32,7 +32,7 @@
             </div>
         </div>
         <div id="edit-{{ $item->id }}" class="hidden mt-3 p-3 bg-white rounded border border-slate-100">
-            <form action="{{ route('admin.menus.items.update', [$menu, $item]) }}" method="post" class="admin-form-stack text-sm">
+            <form action="{{ route('admin.menus.items.update', [$menu, $item]) }}" method="post" class="admin-form-stack text-sm" data-preserve-scroll>
                 @csrf
                 @method('PUT')
                 <div class="form-group">

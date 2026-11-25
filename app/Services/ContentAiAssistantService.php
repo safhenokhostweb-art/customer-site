@@ -184,19 +184,20 @@ class ContentAiAssistantService
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // اولویت: GapGPT → DeepSeek → Claude
+    // اتصال انحصاری به GapGPT (پیکربندی همگام از پلتفرم ساس یا .env محلی)
     // ──────────────────────────────────────────────────────────────────────────
 
     private function tryServerDirect(string $system, string $user, bool $jsonMode = false): array
     {
-        // ── ۱. GapGPT — مستقیم از VPS ایران ─────────────────────────────────
-        $gapKey = config('ai_assistant.gapgpt.api_key');
-        if (!empty($gapKey)) {
+        $cfg = app(PlatformUxService::class)->getGapGptConfig();
+        $gapKey = (string) ($cfg['api_key'] ?? '');
+
+        if ($gapKey !== '') {
             $result = $this->callOpenAiCompatible(
                 $gapKey,
-                config('ai_assistant.gapgpt.base_url', 'https://api.gapgpt.app/v1'),
-                config('ai_assistant.gapgpt.model', 'gpt-4o-mini'),
-                config('ai_assistant.gapgpt.timeout', 60),
+                $cfg['base_url'] ?: 'https://api.gapgpt.app/v1',
+                $cfg['model'] ?: 'gpt-4o-mini',
+                (int) ($cfg['timeout'] ?? 60),
                 $system, $user, $jsonMode,
                 'gapgpt'
             );
@@ -204,33 +205,6 @@ class ContentAiAssistantService
                 return $result;
             }
             Log::info('GapGPT failed: ' . ($result['error'] ?? ''));
-        }
-
-        // ── ۲. DeepSeek — اگر اینترنت بین‌الملل وصل باشد ────────────────────
-        $dsKey = config('ai_assistant.deepseek.api_key');
-        if (!empty($dsKey)) {
-            $result = $this->callOpenAiCompatible(
-                $dsKey,
-                config('ai_assistant.deepseek.base_url', 'https://api.deepseek.com/v1'),
-                config('ai_assistant.deepseek.model', 'deepseek-chat'),
-                config('ai_assistant.deepseek.timeout', 60),
-                $system, $user, $jsonMode,
-                'deepseek'
-            );
-            if ($result['success']) {
-                return $result;
-            }
-            Log::info('DeepSeek failed: ' . ($result['error'] ?? ''));
-        }
-
-        // ── ۳. Claude fallback ────────────────────────────────────────────────
-        $claudeKey = config('ai_assistant.claude.api_key');
-        if (!empty($claudeKey)) {
-            $result = $this->callClaude($claudeKey, $system, $user, $jsonMode);
-            if ($result['success']) {
-                return $result;
-            }
-            Log::info('Claude failed: ' . ($result['error'] ?? ''));
         }
 
         return ['success' => false, 'error' => 'no_provider'];
@@ -274,40 +248,6 @@ class ContentAiAssistantService
             }
 
             return ['success' => false, 'error' => $providerName . ' HTTP ' . $response->status()];
-        } catch (\Throwable $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-
-    private function callClaude(string $key, string $system, string $user, bool $jsonMode): array
-    {
-        try {
-            $payload = [
-                'model'      => config('ai_assistant.claude.model', 'claude-sonnet-4-6'),
-                'max_tokens' => config('ai_assistant.max_tokens', 4096),
-                'system'     => $system,
-                'messages'   => [['role' => 'user', 'content' => $user]],
-            ];
-
-            $response = Http::withHeaders([
-                    'x-api-key'         => $key,
-                    'anthropic-version' => '2023-06-01',
-                    'content-type'      => 'application/json',
-                ])
-                ->timeout(config('ai_assistant.claude.timeout', 60))
-                ->post(config('ai_assistant.claude.base_url') . '/messages', $payload);
-
-            if ($response->successful()) {
-                $content = $response->json('content.0.text', '');
-                if ($jsonMode) {
-                    $content = preg_replace('/^```(?:json)?\s*/m', '', $content);
-                    $content = preg_replace('/\s*```$/m', '', $content);
-                    $content = trim($content);
-                }
-                return ['success' => true, 'content' => $content, 'provider' => 'claude'];
-            }
-
-            return ['success' => false, 'error' => 'Claude HTTP ' . $response->status()];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }

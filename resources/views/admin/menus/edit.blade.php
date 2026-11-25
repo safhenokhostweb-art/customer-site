@@ -49,7 +49,7 @@
                     <span class="text-xs text-slate-500">حداکثر عمق: {{ $maxDepth }}</span>
                 </div>
                 <div class="card-body">
-                    <form id="menu-reorder-form" action="{{ route('admin.menus.reorder-tree', $menu) }}" method="post" class="mb-3">
+                    <form id="menu-reorder-form" action="{{ route('admin.menus.reorder-tree', $menu) }}" method="post" class="mb-3" data-preserve-scroll>
                         @csrf
                         <input type="hidden" name="nodes" id="menu-nodes-json" value="">
                         <button type="submit" class="btn btn-secondary btn-sm">ذخیرهٔ ترتیب درخت</button>
@@ -77,7 +77,7 @@
             <div class="card">
                 <div class="card-header">تنظیمات انتشار و پیش‌نمایش</div>
                 <div class="card-body space-y-4">
-                    <form action="{{ route('admin.menus.update', $menu) }}" method="post" class="admin-form-stack">
+                    <form action="{{ route('admin.menus.update', $menu) }}" method="post" class="admin-form-stack" data-preserve-scroll>
                         @csrf
                         @method('PUT')
                         <div class="form-group">
@@ -215,9 +215,17 @@
 @push('scripts')
 <script defer src="{{ asset('vendor/sortablejs/Sortable.min.js') }}"></script>
 <script>
+var MENU_EDIT_OPEN_KEY = 'menu_edit_open_item_{{ $menu->id }}';
 function toggleEdit(id) {
     var el = document.getElementById('edit-' + id);
-    if (el) el.classList.toggle('hidden');
+    if (!el) return;
+    var willOpen = el.classList.contains('hidden');
+    el.classList.toggle('hidden');
+    if (willOpen) {
+        sessionStorage.setItem(MENU_EDIT_OPEN_KEY, String(id));
+    } else if (sessionStorage.getItem(MENU_EDIT_OPEN_KEY) === String(id)) {
+        sessionStorage.removeItem(MENU_EDIT_OPEN_KEY);
+    }
 }
 function toggleNewItemRefs() {
     var type = document.getElementById('new-item-type').value;
@@ -228,6 +236,25 @@ function toggleNewItemRefs() {
     document.getElementById('new-url').style.display = (type === 'custom_url') ? 'block' : 'none';
 }
 document.addEventListener('DOMContentLoaded', function() {
+    // Restore open menu item & highlight after save/refresh
+    var flashItemId = @json(session('edited_item_id'));
+    var hashMatch = (window.location.hash || '').match(/^#menu-item-(\d+)$/);
+    var openItemId = flashItemId || (hashMatch ? hashMatch[1] : null) || sessionStorage.getItem(MENU_EDIT_OPEN_KEY);
+    if (openItemId) {
+        var editBox = document.getElementById('edit-' + openItemId);
+        var li = document.getElementById('menu-item-' + openItemId);
+        if (editBox) {
+            editBox.classList.remove('hidden');
+            sessionStorage.setItem(MENU_EDIT_OPEN_KEY, String(openItemId));
+        }
+        if (li) {
+            li.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50/40');
+            if (flashItemId) {
+                requestAnimationFrame(function() { li.scrollIntoView({ block: 'center', behavior: 'instant' }); });
+            }
+        }
+    }
+
     var nt = document.getElementById('new-item-type');
     if (nt) { nt.addEventListener('change', toggleNewItemRefs); toggleNewItemRefs(); }
 

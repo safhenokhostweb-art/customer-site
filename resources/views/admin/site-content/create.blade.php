@@ -21,7 +21,7 @@ $hasSteps = in_array($type, ['training','workflow','procedure']);
         <div class="flex items-center gap-2 mb-3">
             <span class="text-xl">✨</span>
             <span class="font-semibold text-indigo-800">دستیار هوشمند AI</span>
-            <span class="text-xs text-indigo-500">(GapGPT + DeepSeek)</span>
+            <span class="text-xs text-indigo-500">(GapGPT)</span>
         </div>
         <div class="flex gap-3">
             <input x-model="aiPrompt" type="text"
@@ -260,7 +260,7 @@ function contentEditor(type, hasSteps) {
                             success: true, mode,
                             content: isString ? rawData : rawData,
                             data: rawData,
-                            provider: 'deepseek'
+                            provider: 'gapgpt'
                         }, mode);
 
                     } else if (data.status === 'failed') {
@@ -276,7 +276,7 @@ function contentEditor(type, hasSteps) {
                             clearInterval(this.aiPollTimer);
                             this.aiQueued  = false;
                             this.aiLoading = false;
-                            this.aiError   = 'پاسخ AI دریافت نشد. لطفاً ai-worker.ps1 را روی ویندوز اجرا کنید یا DEEPSEEK_API_KEY را در .env سرور تنظیم کنید.';
+                            this.aiError   = 'پاسخ AI دریافت نشد. لطفاً کلید GapGPT را در تنظیمات پلتفرم یا .env تنظیم کنید.';
                         }
                     }
                 } catch(e) { /* شبکه قطع — دوباره تلاش می‌کند */ }

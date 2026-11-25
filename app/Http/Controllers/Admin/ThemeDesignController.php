@@ -366,6 +366,17 @@ class ThemeDesignController extends Controller
     public function canvasEdit(?Request $request = null)
     {
         $request = $request ?: request();
+        $canvasMode = $request->query('mode') === 'maintenance' ? 'maintenance' : 'theme';
+
+        if ($canvasMode === 'maintenance') {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+            $hasDraft = false;
+            $previewToken = Setting::get('canvas_preview_token');
+            if (empty($previewToken)) {
+                $previewToken = Str::random(40);
+                Setting::set('canvas_preview_token', $previewToken, 'theme');
+            }
+        } else {
         $activeRaw = Setting::get('active_canvas_theme_data');
         if (empty($activeRaw)) {
             $requestedPage = trim((string) ($request->query('page') ?? ''));
@@ -416,6 +427,7 @@ class ThemeDesignController extends Controller
             return redirect()->route('admin.theme-design.canvas')
                 ->with('error', 'داده قالب Canvas معتبر نیست.');
         }
+        } // end else ($canvasMode !== 'maintenance')
 
         // Normalize pages to keyed array
         $raw_pages = isset($themeData['pages']) && is_array($themeData['pages']) ? $themeData['pages'] : [];
@@ -768,7 +780,8 @@ class ThemeDesignController extends Controller
             'hasDraft',
             'previewToken',
             'modulePresentations',
-            'assetAccess'
+            'assetAccess',
+            'canvasMode'
         ));
     }
 
@@ -779,14 +792,19 @@ class ThemeDesignController extends Controller
             'blocks'   => 'required|array',
         ]);
 
-        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
-            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
-        }
+        $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
+        if ($isMaintenance) {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+        } else {
+            $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+            if (empty($raw)) {
+                return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+            }
 
-        $themeData = json_decode($raw, true);
-        if (!is_array($themeData)) {
-            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            $themeData = json_decode($raw, true);
+            if (!is_array($themeData)) {
+                return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            }
         }
 
         $key = $validated['page_key'];
@@ -910,6 +928,11 @@ class ThemeDesignController extends Controller
         }
         $themeData['pages'][$key]['blocks'] = $reconciled;
 
+        if ($isMaintenance) {
+            app(\App\Services\MaintenanceModeService::class)->saveDocument($themeData);
+            return response()->json(['success' => true, 'block_count' => count($themeData['pages'][$key]['blocks'])]);
+        }
+
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
         // If this page corresponds to a Page model, also persist to Page model
@@ -951,14 +974,19 @@ class ThemeDesignController extends Controller
             'slug'  => 'nullable|string|max:128|regex:/^[a-z0-9-]*$/',
         ]);
 
-        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
-            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
-        }
+        $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
+        if ($isMaintenance) {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+        } else {
+            $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+            if (empty($raw)) {
+                return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+            }
 
-        $themeData = json_decode($raw, true);
-        if (!is_array($themeData)) {
-            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            $themeData = json_decode($raw, true);
+            if (!is_array($themeData)) {
+                return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            }
         }
 
         $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
@@ -1009,14 +1037,19 @@ class ThemeDesignController extends Controller
             return response()->json(['success' => false, 'error' => 'صفحه اصلی قابل حذف نیست.'], 422);
         }
 
-        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
-            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
-        }
+        $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
+        if ($isMaintenance) {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+        } else {
+            $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+            if (empty($raw)) {
+                return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+            }
 
-        $themeData = json_decode($raw, true);
-        if (!is_array($themeData)) {
-            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            $themeData = json_decode($raw, true);
+            if (!is_array($themeData)) {
+                return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            }
         }
 
         $themeData['pages'] = $this->normalizePagesKeyed($themeData['pages'] ?? []);
@@ -1073,14 +1106,19 @@ class ThemeDesignController extends Controller
             'font_family'      => 'nullable|string|max:128',
         ]);
 
-        $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
-        if (empty($raw)) {
-            return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
-        }
+        $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
+        if ($isMaintenance) {
+            $themeData = app(\App\Services\MaintenanceModeService::class)->getDocument();
+        } else {
+            $raw = Setting::get('canvas_draft_data') ?: Setting::get('active_canvas_theme_data');
+            if (empty($raw)) {
+                return response()->json(['success' => false, 'error' => 'قالب Canvas یافت نشد.'], 404);
+            }
 
-        $themeData = json_decode($raw, true);
-        if (!is_array($themeData)) {
-            return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            $themeData = json_decode($raw, true);
+            if (!is_array($themeData)) {
+                return response()->json(['success' => false, 'error' => 'داده قالب معتبر نیست.'], 422);
+            }
         }
 
         if (!isset($themeData['global_styles'])) {
@@ -1093,13 +1131,21 @@ class ThemeDesignController extends Controller
             }
         }
 
+        if ($isMaintenance) {
+            app(\App\Services\MaintenanceModeService::class)->saveDocument($themeData);
+            return response()->json(['success' => true]);
+        }
+
         Setting::set('canvas_draft_data', json_encode($themeData, JSON_UNESCAPED_UNICODE), 'theme');
 
         return response()->json(['success' => true]);
     }
 
-    public function canvasPublish(): JsonResponse
+    public function canvasPublish(Request $request): JsonResponse
     {
+        if ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance') {
+            return response()->json(['success' => true, 'message' => 'صفحه تعمیرات با موفقیت منتشر شد.']);
+        }
         $draft = Setting::get('canvas_draft_data');
         if (empty($draft)) {
             return response()->json(['success' => false, 'error' => 'پیش‌نویسی برای انتشار وجود ندارد.'], 404);

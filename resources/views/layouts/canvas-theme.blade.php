@@ -203,6 +203,7 @@
          behavior. Skip-link and <main> below are untouched either way —
          "theme owns chrome" means the header/footer PRESENTATION only,
          never the surrounding accessibility structure. --}}
+    @unless($omitChrome ?? false)
     @if(($chromeOwner ?? 'platform') === 'theme')
         {!! $headerHtml !!}
     @elseif(!empty(trim($headerHtml)))
@@ -313,6 +314,7 @@
             </div>
         </header>
     @endif
+    @endunless
 
     {{-- ─── محتوای اصلی ─── --}}
     <main id="canvas-main" class="canvas-main" tabindex="-1">
@@ -340,6 +342,7 @@
 
     {{-- ─── فوتر canvas ─── --}}
     {{-- Same generic capability as the header above — see that comment. --}}
+    @unless($omitChrome ?? false)
     @if(($chromeOwner ?? 'platform') === 'theme')
         {!! $footerHtml !!}
     @elseif(!empty(trim($footerHtml)))
@@ -356,6 +359,7 @@
             </div>
         </footer>
     @endif
+    @endunless
 
     {{-- ─── Alpine.js برای تب‌ها، آکوردئون و منوی موبایل ─── --}}
     <script>

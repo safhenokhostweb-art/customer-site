@@ -2,8 +2,7 @@
 
 return [
     /*
-    | دستیار هوشمند محتوا
-    | اولویت: GapGPT (ایران) → DeepSeek (اینترنت بین‌الملل) → Claude → Windows Worker queue
+    | دستیار هوشمند محتوا — اتصال انحصاری به GapGPT
     */
 
     // GapGPT — OpenAI-compatible، در دسترس از VPS ایران
@@ -11,20 +10,6 @@ return [
         'api_key'  => env('GAPGPT_API_KEY', ''),
         'base_url' => env('GAPGPT_BASE_URL', 'https://api.gapgpt.app/v1'),
         'model'    => env('GAPGPT_MODEL', 'gpt-4o-mini'),
-        'timeout'  => 60,
-    ],
-
-    'deepseek' => [
-        'api_key'  => env('DEEPSEEK_API_KEY', ''),
-        'base_url' => env('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1'),
-        'model'    => env('DEEPSEEK_MODEL', 'deepseek-chat'),
-        'timeout'  => 60,
-    ],
-
-    'claude' => [
-        'api_key'  => env('CLAUDE_API_KEY', ''),
-        'base_url' => 'https://api.anthropic.com/v1',
-        'model'    => env('CLAUDE_MODEL', 'claude-sonnet-4-6'),
         'timeout'  => 60,
     ],
 

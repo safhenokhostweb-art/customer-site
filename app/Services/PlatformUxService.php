@@ -115,6 +115,30 @@ class PlatformUxService
     }
 
     /**
+     * تنظیمات سرویس انحصاری GapGPT: اولویت با کلید همگام‌سازی‌شده از پلتفرم ساس، سپس .env محلی.
+     *
+     * @return array{api_key: string, base_url: string, model: string, timeout: int}
+     */
+    public function getGapGptConfig(): array
+    {
+        $config = $this->getSiteConfig();
+        $ai = is_array($config['ai'] ?? null) ? $config['ai'] : [];
+        $platformKey = trim((string) ($ai['api_key'] ?? ''));
+
+        $localKey = trim((string) config('ai_assistant.gapgpt.api_key', ''));
+        $baseUrl  = trim((string) ($ai['base_url'] ?? '')) ?: trim((string) config('ai_assistant.gapgpt.base_url', 'https://api.gapgpt.app/v1'));
+        $model    = trim((string) ($ai['model'] ?? '')) ?: trim((string) config('ai_assistant.gapgpt.model', 'gpt-4o-mini'));
+        $timeout  = (int) config('ai_assistant.gapgpt.timeout', 60);
+
+        return [
+            'api_key'  => $platformKey !== '' ? $platformKey : $localKey,
+            'base_url' => rtrim($baseUrl ?: 'https://api.gapgpt.app/v1', '/'),
+            'model'    => $model ?: 'gpt-4o-mini',
+            'timeout'  => $timeout > 0 ? $timeout : 60,
+        ];
+    }
+
+    /**
      * پریست تم اختصاص‌داده‌شده توسط ادمین پلتفرم به این سایت.
      * اگر ادمین از پنل saas-platform یک ThemeProfile به این سایت اختصاص داده باشد،
      * slug آن پریست اینجا برگردانده می‌شود.

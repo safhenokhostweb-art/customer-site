@@ -122,8 +122,9 @@ class ContentTranslationService
 
     private function callAi(string $text, string $locale, string $field): ?string
     {
-        $apiKey = config('services.anthropic.key', '');
-        if (!$apiKey) {
+        $cfg = app(PlatformUxService::class)->getGapGptConfig();
+        $apiKey = (string) ($cfg['api_key'] ?? '');
+        if ($apiKey === '') {
             return null;
         }
 
@@ -142,27 +143,26 @@ class ContentTranslationService
         $userPrompt = "Translate this {$fieldLabel} from Persian to {$targetLang}:\n\n{$text}";
 
         try {
+            $endpoint = rtrim((string) ($cfg['base_url'] ?: 'https://api.gapgpt.app/v1'), '/') . '/chat/completions';
             $response = Http::withHeaders([
-                'x-api-key'         => $apiKey,
-                'anthropic-version' => '2023-06-01',
-                'Content-Type'      => 'application/json',
-            ])->timeout(30)->post('https://api.anthropic.com/v1/messages', [
-                'model'      => 'claude-haiku-4-5-20251001',
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout((int) ($cfg['timeout'] ?? 30))->post($endpoint, [
+                'model'      => $cfg['model'] ?: 'gpt-4o-mini',
                 'max_tokens' => 4096,
-                'system'     => $systemPrompt,
                 'messages'   => [
+                    ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userPrompt],
                 ],
             ]);
 
             if (!$response->successful()) {
-                Log::warning('TranslationService: AI API error', ['status' => $response->status()]);
+                Log::warning('TranslationService: GapGPT API error', ['status' => $response->status()]);
                 return null;
             }
 
-            $data = $response->json();
-            $translated = $data['content'][0]['text'] ?? null;
-            return $translated ? trim($translated) : null;
+            $translated = $response->json('choices.0.message.content');
+            return $translated ? trim((string) $translated) : null;
         } catch (\Throwable $e) {
             Log::error('TranslationService: HTTP error', ['error' => $e->getMessage()]);
             return null;
@@ -171,7 +171,7 @@ class ContentTranslationService
 
     private function modelName(): string
     {
-        return 'claude-haiku-4-5-20251001';
+        return app(PlatformUxService::class)->getGapGptConfig()['model'] ?: 'gpt-4o-mini';
     }
 
     public static function supportedLocales(): array

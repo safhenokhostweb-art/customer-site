@@ -59,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TrackPageView::class,
             \App\Http\Middleware\CheckSiteLifecycle::class,
+            \App\Http\Middleware\CheckMaintenanceMode::class,
             // Canvas Slot Binding — annotates canvas-theme chrome <header>/<footer>
             // with data-layout-slot markers (config('canvas.slot_binding_enabled')).
             \App\Http\Middleware\DecorateCanvasLayoutSlots::class,

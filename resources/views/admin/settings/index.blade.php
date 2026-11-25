@@ -80,6 +80,25 @@
                     </select>
                 </div>
 
+                <hr>
+                <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3" id="maintenance-mode-settings" data-testid="maintenance-mode-settings">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="admin-page-title mb-1">حالت تعمیرات سایت (Maintenance Mode)</h3>
+                            <p class="text-xs text-slate-600">
+                                هنگام فعال بودن، فقط بازدیدکنندگان عادی صفحه تعمیرات را (بدون هدر و فوتر قالب) می‌بینند و شما به عنوان ادمین همچنان سایت اصلی را مشاهده می‌کنید.
+                            </p>
+                        </div>
+                        <a href="{{ route('admin.settings.maintenance-canvas') }}" class="btn btn-outline-primary btn-sm">
+                            🎨 طراحی صفحه تعمیرات در Canvas
+                        </a>
+                    </div>
+                    <label class="admin-form-inline-check">
+                        <input type="checkbox" name="maintenance_mode_enabled" value="1" {{ ($maintenanceModeEnabled ?? false) ? 'checked' : '' }}>
+                        <span>فعال‌سازی حالت تعمیرات برای بازدیدکنندگان</span>
+                    </label>
+                </div>
+
                 <div>
                     <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
                 </div>

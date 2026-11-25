@@ -106,7 +106,7 @@
                         </p>
                     @endunless
 
-                    <form method="post" action="{{ route('admin.modules.update', $slug) }}">
+                    <form method="post" action="{{ route('admin.modules.update', $slug) }}" data-preserve-scroll>
                     @csrf
 
                     <div class="mb-4">

@@ -2361,12 +2361,13 @@ const HEADER_ORDER_ITEMS = [
     { key: 'burger',  label: 'منوی همبرگری (موبایل)' },
     { key: 'dark_toggle', label: 'دکمه تغییر حالت تاریک' },
 ];
+@php $modeQuery = ($canvasMode ?? 'theme') === 'maintenance' ? ['mode' => 'maintenance'] : []; @endphp
 const ROUTES = {
-    saveBlocks:   '{{ route('admin.theme-design.canvas-save-blocks') }}',
+    saveBlocks:   '{{ route('admin.theme-design.canvas-save-blocks', $modeQuery) }}',
     addPage:      '{{ route('admin.theme-design.canvas-add-page') }}',
     deletePage:   '{{ url('admin/theme-design/canvas/pages') }}',
-    globalStyles: '{{ route('admin.theme-design.canvas-global-styles') }}',
-    publish:      '{{ route('admin.theme-design.canvas-publish') }}',
+    globalStyles: '{{ route('admin.theme-design.canvas-global-styles', $modeQuery) }}',
+    publish:      '{{ route('admin.theme-design.canvas-publish', $modeQuery) }}',
     livePreview:  '{{ route('admin.theme-design.canvas-live-preview') }}',
     renderBlock:  '{{ route('admin.theme-design.canvas-render-block') }}',
     mediaIndex:   '{{ route('admin.theme-design.media-index') }}',

@@ -36,7 +36,7 @@
       دستیار هوش مصنوعی — تولید محتوای SEO-محور
     </span>
     <span style="font-size:0.72rem;color:#818cf8;margin-right:0.25rem;">
-      (GapGPT · DeepSeek · Claude)
+      (GapGPT)
     </span>
   </div>
 

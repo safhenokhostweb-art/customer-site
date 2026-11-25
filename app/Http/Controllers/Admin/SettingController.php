@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\BuilderLayoutService;
 use App\Services\CustomerMediaService;
+use App\Services\MaintenanceModeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -57,6 +58,7 @@ class SettingController extends Controller
         $currentLogoUrl = $this->media->resolveSiteAssetUrl($currentLogo);
         $currentFavicon = Setting::get('site_favicon', '');
         $currentFaviconUrl = $this->media->resolveSiteAssetUrl($currentFavicon);
+        $maintenanceModeEnabled = app(MaintenanceModeService::class)->isEnabled();
         return view('admin.settings.index', compact(
             'siteName',
             'theme',
@@ -76,7 +78,8 @@ class SettingController extends Controller
             'modules',
             'themeMeta',
             'themeBuilder',
-            'hasActiveTheme'
+            'hasActiveTheme',
+            'maintenanceModeEnabled'
         ));
     }
 
@@ -101,7 +104,13 @@ class SettingController extends Controller
         Setting::set(BuilderLayoutService::SETTING_HEADER_TEMPLATE, $request->input('builder_header_template', ''));
         Setting::set(BuilderLayoutService::SETTING_FOOTER_TEMPLATE, $request->input('builder_footer_template', ''));
         Setting::set(BuilderLayoutService::SETTING_STICKY_HEADER, $request->boolean('builder_sticky_header', true) ? '1' : '0');
+        app(MaintenanceModeService::class)->setEnabled($request->boolean('maintenance_mode_enabled'));
         return back()->with('success', 'تنظیمات ذخیره شد.');
+    }
+
+    public function maintenanceCanvas()
+    {
+        return redirect()->route('admin.theme-design.canvas-edit', ['mode' => 'maintenance', 'page' => 'maintenance']);
     }
 
     /**
