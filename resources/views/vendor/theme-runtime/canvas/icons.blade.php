@@ -37,4 +37,7 @@
 <script>
 {!! file_get_contents(\SaaSPlatform\ThemeRuntime\Providers\ThemeRuntimeServiceProvider::canvasIconsPath()) !!}
 window.CanvasIcons.load({!! json_encode(\SaaSPlatform\ThemeRuntime\Support\IconLibrary::catalog(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) !!});
+if (window.__GRANTED_ICON_PACKS__ && Array.isArray(window.__GRANTED_ICON_PACKS__)) {
+    window.CanvasIcons.loadCustomPacks(window.__GRANTED_ICON_PACKS__);
+}
 </script>

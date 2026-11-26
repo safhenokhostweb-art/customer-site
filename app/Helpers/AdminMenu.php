@@ -40,6 +40,7 @@ class AdminMenu
         'captcha' => 'تنظیمات کپچا',
         'theme_design' => 'ظاهر و تم',
         'theme_marketplace' => 'فروشگاه قالب‌ها',
+        'canvas_marketplace' => 'مارکت‌پلیس دارایی‌ها (Canvas)',
         'theme_bundles' => 'باندل‌های قالب',
         'builder_health' => 'سلامت سازنده',
         'settings' => 'تنظیمات',
@@ -178,6 +179,7 @@ class AdminMenu
         'captcha' => 'admin.captcha.index',
         'theme_design' => 'admin.theme-design.index',
         'theme_marketplace' => 'admin.theme-marketplace.index',
+        'canvas_marketplace' => 'admin.canvas-marketplace.index',
         'theme_bundles' => 'admin.theme-bundles.index',
         'builder_health' => 'admin.builder-health.index',
         'settings' => 'admin.settings.index',
@@ -291,6 +293,7 @@ class AdminMenu
         'captcha' => 'admin.captcha.*',
         'theme_design' => 'admin.theme-design.index',
         'theme_marketplace' => 'admin.theme-marketplace.*',
+        'canvas_marketplace' => 'admin.canvas-marketplace.*',
         'theme_bundles' => 'admin.theme-bundles.*',
         'builder_health' => 'admin.builder-health.*',
         'settings' => 'admin.settings.*',
@@ -401,7 +404,7 @@ class AdminMenu
             // → به منو اضافه کن → ظاهر/هدر را انتخاب کن)، نه چند حوزهٔ
             // نامرتبط؛ ادغام آن‌ها زیر یک گروه، بار شناختی مشتری را کم
             // می‌کند بدون تغییر هیچ Route/Controller/Authorization.
-            'وبسایت' => ['pages', 'media', 'site_content', 'menu', 'theme_design', 'theme_marketplace', 'theme_bundles', 'advanced_search'],
+            'وبسایت' => ['pages', 'media', 'site_content', 'menu', 'theme_design', 'theme_marketplace', 'canvas_marketplace', 'theme_bundles', 'advanced_search'],
 
             // 3 ─ فروشگاه: سفارشات (اول)، محصولات، دسته‌بندی، ویژگی‌ها، نظرات، کوپن، قسطی، انبار
             'فروشگاه' => ['orders', 'products', 'product_categories', 'product_attributes', 'shop_product_reviews', 'coupon', 'installments', 'inventory'],
@@ -642,7 +645,7 @@ class AdminMenu
         if ($key === 'module_store') {
             return rtrim((string) config('site.platform_url', ''), '/') !== '';
         }
-        if ($key === 'theme_marketplace' || $key === 'theme_bundles') {
+        if ($key === 'theme_marketplace' || $key === 'theme_bundles' || $key === 'canvas_marketplace') {
             return rtrim((string) config('site.platform_url', ''), '/') !== '';
         }
         if ($key === 'categories' || $key === 'posts' || $key === 'post_series') {

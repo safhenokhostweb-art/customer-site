@@ -763,11 +763,38 @@ class ThemeDesignController extends Controller
 
         $gs = $themeData['global_styles'] ?? [];
         $globalStyles = [
-            'primary_color'    => $gs['primary_color']    ?? $gs['colors']['primary']    ?? '#4f46e5',
-            'secondary_color'  => $gs['secondary_color']  ?? $gs['colors']['secondary']  ?? '#7c3aed',
-            'background_color' => $gs['background_color'] ?? $gs['colors']['background'] ?? '#f9fafb',
-            'font_family'      => $gs['font_family']      ?? $gs['fonts']['body']        ?? 'Vazirmatn',
+            'primary_color'         => $gs['primary_color']         ?? $gs['colors']['primary']    ?? '#4f46e5',
+            'secondary_color'       => $gs['secondary_color']       ?? $gs['colors']['secondary']  ?? '#7c3aed',
+            'background_color'      => $gs['background_color']      ?? $gs['colors']['background'] ?? '#f9fafb',
+            'font_family'           => $gs['font_family']           ?? $gs['fonts']['body']        ?? 'Vazirmatn',
+            'active_button_pack'    => $gs['active_button_pack']    ?? null,
+            'active_button_preset'  => $gs['active_button_preset']  ?? null,
+            'active_button_version' => $gs['active_button_version'] ?? null,
+            'active_button_tokens'  => $gs['active_button_tokens']  ?? null,
         ];
+
+        // Granted button & icon packs for live canvas pickers
+        $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
+        $grantedButtonPacks = [];
+        if (!empty($catalog['buttons'])) {
+            foreach ($catalog['buttons'] as $bp) {
+                $ref = AssetRef::KIND_BUTTON_PACK . ':' . ($bp['slug'] ?? '');
+                if ($siteEntitlements->hasGrant($ref) || !empty($bp['is_granted'])) {
+                    $grantedButtonPacks[] = $bp;
+                }
+            }
+        }
+        $grantedIconPacks = [];
+        if (!empty($catalog['icons'])) {
+            foreach ($catalog['icons'] as $ip) {
+                $ref = AssetRef::KIND_ICON_PACK . ':' . ($ip['slug'] ?? '');
+                if ($siteEntitlements->hasGrant($ref) || !empty($ip['is_granted'])) {
+                    $grantedIconPacks[] = $ip;
+                }
+            }
+        }
+
+        $canvasAssetEntitlements = $siteEntitlements->toPayload();
 
         return view('admin.theme-design.canvas-editor', compact(
             'themeData',
@@ -781,7 +808,10 @@ class ThemeDesignController extends Controller
             'previewToken',
             'modulePresentations',
             'assetAccess',
-            'canvasMode'
+            'canvasMode',
+            'canvasAssetEntitlements',
+            'grantedButtonPacks',
+            'grantedIconPacks'
         ));
     }
 
@@ -1100,10 +1130,14 @@ class ThemeDesignController extends Controller
     public function canvasSaveGlobalStyles(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'primary_color'    => 'nullable|string|max:32',
-            'secondary_color'  => 'nullable|string|max:32',
-            'background_color' => 'nullable|string|max:32',
-            'font_family'      => 'nullable|string|max:128',
+            'primary_color'         => 'nullable|string|max:32',
+            'secondary_color'       => 'nullable|string|max:32',
+            'background_color'      => 'nullable|string|max:32',
+            'font_family'           => 'nullable|string|max:128',
+            'active_button_pack'    => 'nullable|string|max:64',
+            'active_button_preset'  => 'nullable|string|max:64',
+            'active_button_version' => 'nullable|string|max:32',
+            'active_button_tokens'  => 'nullable|array',
         ]);
 
         $isMaintenance = ($request->query('mode') === 'maintenance' || $request->input('mode') === 'maintenance');
@@ -1129,6 +1163,13 @@ class ThemeDesignController extends Controller
             if (!empty($validated[$field])) {
                 $themeData['global_styles'][$field] = $validated[$field];
             }
+        }
+
+        if (array_key_exists('active_button_pack', $validated)) {
+            $themeData['global_styles']['active_button_pack'] = $validated['active_button_pack'];
+            $themeData['global_styles']['active_button_preset'] = $validated['active_button_preset'] ?? null;
+            $themeData['global_styles']['active_button_version'] = $validated['active_button_version'] ?? null;
+            $themeData['global_styles']['active_button_tokens'] = $validated['active_button_tokens'] ?? null;
         }
 
         if ($isMaintenance) {

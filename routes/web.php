@@ -488,6 +488,13 @@ Route::middleware('install.check')->group(function () {
                 Route::get('/my-licenses/{licenseKey}/invoice', [AdminThemeMarketplaceController::class, 'invoiceDownload'])->name('invoice-download');
             });
 
+            // Canvas Asset Marketplace & Licensing
+            Route::prefix('canvas-marketplace')->name('canvas-marketplace.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\CanvasMarketplaceController::class, 'index'])->name('index');
+                Route::post('/claim', [\App\Http\Controllers\Admin\CanvasMarketplaceController::class, 'claim'])->name('claim');
+                Route::post('/purchase', [\App\Http\Controllers\Admin\CanvasMarketplaceController::class, 'purchase'])->name('purchase');
+            });
+
             // Theme Bundles (GAP-010)
             Route::prefix('theme-bundles')->name('theme-bundles.')->group(function () {
                 Route::get('/',                        [AdminThemeBundleController::class, 'index'])->name('index');

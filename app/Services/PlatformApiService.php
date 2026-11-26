@@ -25,6 +25,32 @@ class PlatformApiService
 
     // ── Theme Marketplace (TB-2) ────────────────────────────────────────────
 
+    // ── Canvas Assets Marketplace ──────────────────────────────────────────
+
+    public function canvasMarketplaceAssets(): array
+    {
+        $resp = $this->tenantGet('/api/canvas-marketplace');
+        return $resp->ok() ? ($resp->json('catalog') ?? []) : [];
+    }
+
+    public function canvasMarketplaceClaim(string $kind, string $key): array
+    {
+        $resp = $this->tenantPost('/api/canvas-marketplace/claim', [
+            'asset_kind' => $kind,
+            'asset_key' => $key,
+        ]);
+        return $resp->json() ?? ['success' => false, 'message' => 'خطا در ارتباط با سرور پلتفرم'];
+    }
+
+    public function canvasMarketplacePurchase(string $kind, string $key, array $data = []): array
+    {
+        $resp = $this->tenantPost('/api/canvas-marketplace/purchase', [
+            'asset_kind' => $kind,
+            'asset_key' => $key,
+        ] + $data);
+        return $resp->json() ?? ['success' => false, 'message' => 'خطا در ارتباط با سرور پلتفرم'];
+    }
+
     public function marketplaceThemes(): array
     {
         $resp = $this->tenantGet('/api/theme-marketplace');

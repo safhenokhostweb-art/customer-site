@@ -392,6 +392,14 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
             </form>
             @endif
 
+            {{-- Canvas Assets Marketplace Shortcut --}}
+            <a href="{{ route('admin.canvas-marketplace.index') }}" target="_blank"
+               title="دریافت و خرید دارایی‌های جدید Canvas"
+               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100 text-indigo-700 text-xs font-medium transition">
+                <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span>مارکت‌پلیس دارایی‌ها</span>
+            </a>
+
             {{-- Publish --}}
             <button
                 @click="publishDraft()"
@@ -445,6 +453,40 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
         <div>
             <label class="text-[11px] text-slate-500 block mb-1">فونت</label>
             <input type="text" x-model="globalStyles.font_family" @input="gsIsDirty=true" class="w-40 text-xs px-2 py-1.5 rounded-lg border border-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-violet-300" placeholder="Vazirmatn">
+        </div>
+        <div class="border-r border-violet-200 pr-3 mr-1 min-w-[220px]">
+            <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-500 font-medium">استایل سراسری دکمه‌ها</label>
+                <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'buttons']) }}" target="_blank"
+                   class="text-[10px] text-indigo-600 hover:text-indigo-800 transition">
+                    مارکت‌پلیس ↗
+                </a>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <select
+                    :value="(globalStyles.active_button_pack && globalStyles.active_button_preset) ? (globalStyles.active_button_pack + '|' + globalStyles.active_button_preset) : ''"
+                    @change="onGlobalButtonPresetChange($event.target.value)"
+                    class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-violet-300">
+                    <option value="">پیش‌فرض قالب سایت (کلاسیک)</option>
+                    @foreach($grantedButtonPacks ?? [] as $bp)
+                        <optgroup label="{{ $bp['title'] }}">
+                            @foreach($bp['presets'] ?? [] as $pr)
+                                <option value="{{ $bp['slug'] }}|{{ $pr['slug'] }}">
+                                    {{ $pr['title'] ?? $pr['slug'] }} ({{ $bp['title'] }})
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+                <button
+                    type="button"
+                    x-show="globalStyles.active_button_pack"
+                    @click="rollbackGlobalButtonPreset()"
+                    class="shrink-0 text-xs px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition"
+                    title="بازگشت به استایل کلاسیک قالب">
+                    بازنشانی
+                </button>
+            </div>
         </div>
         <button
             @click="saveGlobalStylesAndReload()"
@@ -1233,7 +1275,7 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                      typography and shadow — the shared controls. --}}
                                 @include('theme-runtime::canvas.control-field')
 
-                                <template x-if="schemaDef.type === 'string' && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
+                                <template x-if="schemaDef.type === 'string' && !['pack_slug', 'preset_slug', 'asset_version', 'preset_snapshot', 'icon_slug', 'svg_snapshot'].includes(propKey) && !isMediaControl(schemaDef, propKey, selectedBlock?.type) && !isColorControl(schemaDef, propKey, selectedBlock?.type)">
                                     <input
                                         type="text"
                                         x-model="selectedBlock.props[propKey]"
@@ -1248,7 +1290,7 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                 <template x-if="schemaDef.type === 'icon'">
                                     @include('theme-runtime::canvas.icon-picker', [
                                         'value' => "selectedBlock.props[propKey] ?? schemaDef.default ?? ''",
-                                        'set' => "selectedBlock.props[propKey] = __icon; schedulePropUpdate()",
+                                        'set' => "onIconSelected(propKey, __icon)",
                                         'id' => 'propKey',
                                         'label' => "schemaDef.label || propKey",
                                     ])
@@ -1628,6 +1670,32 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                             <option :value="val" :selected="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val)" x-text="label"></option>
                                         </template>
                                     </select>
+                                </template>
+
+                                <template x-if="selectedBlock?.type === 'button' && propKey === 'style_mode' && selectedBlock.props?.style_mode === 'custom'">
+                                    <div class="mt-2.5 p-3 rounded-xl bg-violet-50/70 border border-violet-100 space-y-2" data-testid="tb-button-custom-preset-box">
+                                        <div class="flex items-center justify-between">
+                                            <label class="block text-xs font-semibold text-violet-800">استایل اختصاصی این دکمه:</label>
+                                            <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'buttons']) }}" target="_blank"
+                                               class="text-[10px] text-violet-600 hover:text-violet-800 font-medium">کتابخانه دکمه‌ها ↗</a>
+                                        </div>
+                                        <select
+                                            :value="(selectedBlock.props.pack_slug && selectedBlock.props.preset_slug) ? (selectedBlock.props.pack_slug + '|' + selectedBlock.props.preset_slug) : ''"
+                                            @change="onCustomButtonPresetChange($event.target.value)"
+                                            class="w-full text-xs px-2.5 py-2 rounded-lg border border-violet-200 bg-white focus:outline-none focus:ring-1 focus:ring-violet-400">
+                                            <option value="">-- انتخاب پریست استایل --</option>
+                                            @foreach($grantedButtonPacks ?? [] as $bp)
+                                                <optgroup label="{{ $bp['title'] }}">
+                                                    @foreach($bp['presets'] ?? [] as $pr)
+                                                        <option value="{{ $bp['slug'] }}|{{ $pr['slug'] }}">
+                                                            {{ $pr['title'] ?? $pr['slug'] }} ({{ $bp['title'] }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-[11px] text-violet-600 leading-4">این استایل به صورت کاملاً ایزوله روی همین دکمه ذخیره و اعمال می‌شود و طراحی سایر بخش‌ها را دستکاری نمی‌کند.</p>
+                                    </div>
                                 </template>
 
                                 {{-- Phase 0.5 (ADR-064): the same colour control as the platform
@@ -2341,6 +2409,9 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
 @endsection
 
 @push('scripts')
+<script>
+window.__GRANTED_ICON_PACKS__ = @json($grantedIconPacks ?? []);
+</script>
 {{-- Phase 6.1-B: one include = runtime -> identity (version-gated) -> interaction.
      No host structural services on this surface yet ([]), kept in sync with
      the platform's own editor pages which use the same bootstrap partial. --}}
@@ -2358,6 +2429,11 @@ const MODULE_PRESENTATIONS = @json($modulePresentations);
 const BINDING_CAPABILITIES = @json(\App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry::capabilities());
 const INITIAL_PAGES = @json($pages);
 const GLOBAL_STYLES = @json($globalStyles);
+const GRANTED_BUTTON_PACKS = @json($grantedButtonPacks ?? []);
+const GRANTED_ICON_PACKS = @json($grantedIconPacks ?? []);
+if (window.CanvasIcons && Array.isArray(GRANTED_ICON_PACKS)) {
+    window.CanvasIcons.loadCustomPacks(GRANTED_ICON_PACKS);
+}
 // Header element order controlled by the header block's `header_order` prop.
 // Kept here so the drag list always offers every known element, even when the
 // stored order is partial or empty.
@@ -3772,10 +3848,101 @@ function canvasEditor() {
                     body: JSON.stringify(this.globalStyles)
                 });
                 const d = await r.json();
-                if (d.success) { this.gsIsDirty = false; this.showToast('رنگ‌ها ذخیره شد ✓', 'success'); this.reloadIframe(); }
+                if (d.success) { this.gsIsDirty = false; this.showToast('استایل‌های سراسری ذخیره شد ✓', 'success'); this.reloadIframe(); }
                 else this.showToast(d.error ?? 'خطا', 'error');
             } catch { this.showToast('خطای شبکه', 'error'); }
             finally { this.gsSaving = false; }
+        },
+
+        onGlobalButtonPresetChange(val) {
+            this.gsIsDirty = true;
+            if (!val) {
+                this.globalStyles.active_button_pack = null;
+                this.globalStyles.active_button_preset = null;
+                this.globalStyles.active_button_version = null;
+                this.globalStyles.active_button_tokens = null;
+                this.applyLiveGlobalButtonTokens(null);
+                return;
+            }
+            const [packSlug, presetSlug] = val.split('|');
+            const pack = (GRANTED_BUTTON_PACKS || []).find(p => p.slug === packSlug);
+            const preset = pack ? (pack.presets || []).find(pr => pr.slug === presetSlug) : null;
+            if (pack && preset) {
+                this.globalStyles.active_button_pack = pack.slug;
+                this.globalStyles.active_button_preset = preset.slug;
+                this.globalStyles.active_button_version = pack.current_version || '1.0.0';
+                this.globalStyles.active_button_tokens = preset.css_tokens || {};
+                this.applyLiveGlobalButtonTokens(preset.css_tokens);
+            }
+        },
+
+        rollbackGlobalButtonPreset() {
+            this.onGlobalButtonPresetChange('');
+        },
+
+        applyLiveGlobalButtonTokens(tokens) {
+            const iframe = document.getElementById('previewIframe');
+            if (!iframe || !iframe.contentDocument) return;
+            const doc = iframe.contentDocument;
+            const root = doc.documentElement;
+            const vars = [
+                '--tb-btn-global-padding', '--tb-btn-global-radius', '--tb-btn-global-font-weight',
+                '--tb-btn-global-font-size', '--tb-btn-global-border', '--tb-btn-global-shadow',
+                '--tb-btn-global-bg', '--tb-btn-global-text', '--tb-btn-global-hover-bg', '--tb-btn-global-hover-text'
+            ];
+            if (!tokens) {
+                vars.forEach(v => root.style.removeProperty(v));
+                return;
+            }
+            if (tokens.padding) root.style.setProperty('--tb-btn-global-padding', tokens.padding);
+            if (tokens.border_radius) root.style.setProperty('--tb-btn-global-radius', tokens.border_radius);
+            if (tokens.font_weight) root.style.setProperty('--tb-btn-global-font-weight', tokens.font_weight);
+            if (tokens.font_size) root.style.setProperty('--tb-btn-global-font-size', tokens.font_size);
+            if (tokens.border) root.style.setProperty('--tb-btn-global-border', tokens.border);
+            if (tokens.shadow) root.style.setProperty('--tb-btn-global-shadow', tokens.shadow);
+            if (tokens.background) root.style.setProperty('--tb-btn-global-bg', tokens.background);
+            if (tokens.text_color) root.style.setProperty('--tb-btn-global-text', tokens.text_color);
+            if (tokens.hover_styles?.background) root.style.setProperty('--tb-btn-global-hover-bg', tokens.hover_styles.background);
+            if (tokens.hover_styles?.text_color) root.style.setProperty('--tb-btn-global-hover-text', tokens.hover_styles.text_color);
+        },
+
+        onCustomButtonPresetChange(val) {
+            if (!val) {
+                this.selectedBlock.props.pack_slug = '';
+                this.selectedBlock.props.preset_slug = '';
+                this.selectedBlock.props.asset_version = '1.0.0';
+                this.selectedBlock.props.preset_snapshot = null;
+                this.schedulePropUpdate();
+                return;
+            }
+            const [packSlug, presetSlug] = val.split('|');
+            const pack = (GRANTED_BUTTON_PACKS || []).find(p => p.slug === packSlug);
+            const preset = pack ? (pack.presets || []).find(pr => pr.slug === presetSlug) : null;
+            if (pack && preset) {
+                this.selectedBlock.props.pack_slug = pack.slug;
+                this.selectedBlock.props.preset_slug = preset.slug;
+                this.selectedBlock.props.asset_version = pack.current_version || '1.0.0';
+                this.selectedBlock.props.preset_snapshot = preset.css_tokens || {};
+                this.schedulePropUpdate();
+            }
+        },
+
+        onIconSelected(propKey, __icon) {
+            this.selectedBlock.props[propKey] = __icon;
+            if (window.CanvasIcons && window.CanvasIcons.getCustomItem) {
+                const item = window.CanvasIcons.getCustomItem(__icon);
+                if (item) {
+                    this.selectedBlock.props.pack_slug = item.pack_slug || '';
+                    this.selectedBlock.props.icon_slug = item.item_slug || '';
+                    this.selectedBlock.props.asset_version = item.version || '1.0.0';
+                    this.selectedBlock.props.svg_snapshot = item.body || '';
+                } else {
+                    this.selectedBlock.props.pack_slug = '';
+                    this.selectedBlock.props.icon_slug = '';
+                    this.selectedBlock.props.svg_snapshot = '';
+                }
+            }
+            this.schedulePropUpdate();
         },
 
         // ── TB3-02: Live Iframe ───────────────────────────────
