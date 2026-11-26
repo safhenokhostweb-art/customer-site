@@ -17,6 +17,7 @@ use App\Services\ThemeEngine\TenantThemeResolver;
 use App\Services\AssetProvisioning\AssetEntitlementClient;
 use App\Services\BuilderLayoutService;
 use SaaSPlatform\ThemeRuntime\Access\AssetAccessGate;
+use SaaSPlatform\ThemeRuntime\Access\AssetRef;
 use App\Services\MotionGraphics\MotionRuntimeManifestReader;
 use App\Services\ThemeCanvas\DataBinding\ThemeDataBindingRegistry;
 use Illuminate\Http\JsonResponse;
@@ -773,28 +774,36 @@ class ThemeDesignController extends Controller
             'active_button_tokens'  => $gs['active_button_tokens']  ?? null,
         ];
 
-        // Granted button & icon packs for live canvas pickers
-        $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
+        // Granted button & icon packs for live canvas pickers (fail-safe)
         $grantedButtonPacks = [];
-        if (!empty($catalog['buttons'])) {
-            foreach ($catalog['buttons'] as $bp) {
-                $ref = AssetRef::KIND_BUTTON_PACK . ':' . ($bp['slug'] ?? '');
-                if ($siteEntitlements->hasGrant($ref) || !empty($bp['is_granted'])) {
-                    $grantedButtonPacks[] = $bp;
-                }
-            }
-        }
         $grantedIconPacks = [];
-        if (!empty($catalog['icons'])) {
-            foreach ($catalog['icons'] as $ip) {
-                $ref = AssetRef::KIND_ICON_PACK . ':' . ($ip['slug'] ?? '');
-                if ($siteEntitlements->hasGrant($ref) || !empty($ip['is_granted'])) {
-                    $grantedIconPacks[] = $ip;
+        try {
+            $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
+            if (!empty($catalog['buttons'])) {
+                foreach ($catalog['buttons'] as $bp) {
+                    $ref = AssetRef::KIND_BUTTON_PACK . ':' . ($bp['slug'] ?? '');
+                    if ($siteEntitlements->hasGrant($ref) || !empty($bp['is_granted'])) {
+                        $grantedButtonPacks[] = $bp;
+                    }
                 }
             }
+            if (!empty($catalog['icons'])) {
+                foreach ($catalog['icons'] as $ip) {
+                    $ref = AssetRef::KIND_ICON_PACK . ':' . ($ip['slug'] ?? '');
+                    if ($siteEntitlements->hasGrant($ref) || !empty($ip['is_granted'])) {
+                        $grantedIconPacks[] = $ip;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Canvas asset marketplace resolution failed: ' . $e->getMessage());
         }
 
-        $canvasAssetEntitlements = $siteEntitlements->toPayload();
+        try {
+            $canvasAssetEntitlements = $siteEntitlements->toPayload();
+        } catch (\Throwable $e) {
+            $canvasAssetEntitlements = [];
+        }
 
         return view('admin.theme-design.canvas-editor', compact(
             'themeData',

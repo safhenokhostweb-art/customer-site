@@ -267,6 +267,7 @@ class PlatformApiService
 
     public function isConfigured(): bool
     {
-        return ! empty($this->baseUrl) && ! empty($this->token);
+        [$licenseKey] = $this->resolveTenantCredentials();
+        return ! empty($this->baseUrl) && (! empty($this->token) || ! empty($licenseKey));
     }
 }

@@ -186,4 +186,19 @@ class CanvasMarketplaceTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
     }
+
+    public function test_canvas_editor_renders_safely_even_if_platform_throws_exception(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $platform = $this->mock(PlatformApiService::class);
+        $platform->shouldReceive('canvasMarketplaceAssets')
+            ->andThrow(new \RuntimeException('Connection timed out to panel.safhenokhost.ir'));
+
+        $response = $this->actingAs($admin)->get(route('admin.theme-design.canvas', ['page' => 'home']));
+
+        // Must never be 500! Failsafe renders cleanly
+        $response->assertOk();
+        $response->assertViewIs('admin.theme-design.canvas');
+    }
 }

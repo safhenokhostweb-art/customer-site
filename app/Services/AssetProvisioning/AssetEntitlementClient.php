@@ -39,8 +39,12 @@ class AssetEntitlementClient
     /** @var SiteAssetEntitlements|null per-request memo */
     private ?SiteAssetEntitlements $memo = null;
 
-    public function current(): SiteAssetEntitlements
+    public function current(bool $fresh = false): SiteAssetEntitlements
     {
+        if ($fresh) {
+            $this->forget();
+            return $this->refresh();
+        }
         if ($this->memo !== null) {
             return $this->memo;
         }
@@ -82,7 +86,7 @@ class AssetEntitlementClient
     protected function fetch(): ?array
     {
         $license = License::current();
-        $platform = rtrim((string) config('site.platform_url'), '/');
+        $platform = rtrim((string) (config('site.platform_url') ?: config('platform.api_url')), '/');
         if (!$license?->license_key || $platform === '') {
             return null;
         }

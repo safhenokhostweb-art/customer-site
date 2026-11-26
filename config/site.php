@@ -25,7 +25,7 @@ return [
     | مثال (محلی):  http://saas-platform.test
     | مثال (سرور):  https://panel.example.com
     */
-    'platform_url' => rtrim(env('PLATFORM_URL', ''), '/'),
+    'platform_url' => rtrim(env('PLATFORM_URL', env('PLATFORM_API_URL', '')), '/'),
 
     /*
     | شناسهٔ این سایت در جدول sites پلتفرم اصلی.
@@ -38,7 +38,7 @@ return [
     | با این توکن از api/v1/education/sync/{siteId}/... احراز هویت می‌شود.
     | هرگز این مقدار را مستقیم در کد یا config ننویسید؛ فقط در .env تعریف کنید.
     */
-    'platform_api_token' => env('PLATFORM_API_TOKEN', ''),
+    'platform_api_token' => env('PLATFORM_API_TOKEN', env('PLATFORM_ADMIN_TOKEN', '')),
 
     /*
     | مدت کش تنظیمات و اعلان‌های پلتفرم (ثانیه).
