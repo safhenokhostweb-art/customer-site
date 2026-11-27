@@ -73,6 +73,12 @@ class BlogController extends Controller
             ->get();
         $pages = Page::published()->menu()->get();
 
+        if (! $request->hasAny(['q', 'category', 'tag'])) {
+            if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('blog', 'وبلاگ')) {
+                return $canvasView;
+            }
+        }
+
         return view(SiteHelper::view('blog.index'), compact('posts', 'categories', 'popularPosts', 'featuredPosts', 'popularTags', 'pages'));
     }
 
@@ -189,6 +195,10 @@ class BlogController extends Controller
         }
 
         $pages = Page::published()->menu()->get();
+
+        if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('post_detail', $post->title)) {
+            return $canvasView;
+        }
 
         return view(SiteHelper::view('blog.show'), compact('post', 'relatedPosts', 'seriesSiblings', 'pages'));
     }

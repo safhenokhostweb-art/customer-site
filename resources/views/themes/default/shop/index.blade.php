@@ -11,34 +11,56 @@
 @section('content')
 @push('head')
 <style>
-.module-shop-page .module-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem; }
-.module-shop-page .module-filter-card { border:1px solid #e5e7eb; border-radius:.75rem; padding:.85rem; margin-bottom:1rem; background:#fff; }
-.module-shop-page a:focus-visible, .module-shop-page button:focus-visible, .module-shop-page input:focus-visible, .module-shop-page select:focus-visible { outline:2px solid var(--platform-primary,#4f46e5); outline-offset:2px; }
-@media (max-width: 768px){ .module-shop-page .module-filter-grid { grid-template-columns: 1fr !important; } }
+.module-shop-page { width: 100%; max-width: 100%; overflow-x: hidden; }
+.module-shop-page .module-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; }
+.module-shop-page .module-filter-card { border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; margin-bottom: 1.5rem; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
+.module-shop-page .module-filter-grid { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; align-items: center; }
+.module-shop-page .module-filter-grid input,
+.module-shop-page .module-filter-grid select { width: 100%; min-width: 0; box-sizing: border-box; padding: 0.625rem 0.875rem; border: 1px solid #d1d5db; border-radius: 0.625rem; font-size: 0.875rem; background: #fff; }
+.module-shop-page .module-filter-grid button { padding: 0.625rem 1.5rem; border-radius: 0.625rem; font-weight: 600; font-size: 0.875rem; background: var(--platform-primary, #4f46e5); color: #fff; border: none; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+.module-shop-page .module-filter-grid button:hover { opacity: 0.9; }
+.module-shop-page .attr-filters-bar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1.25rem; }
+.module-shop-page .attr-filter-item { display: inline-flex; align-items: center; gap: 0.35rem; }
+.module-shop-page a:focus-visible, .module-shop-page button:focus-visible, .module-shop-page input:focus-visible, .module-shop-page select:focus-visible { outline: 2px solid var(--platform-primary, #4f46e5); outline-offset: 2px; }
+@media (max-width: 1024px) {
+    .module-shop-page .module-filter-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .module-shop-page .module-filter-grid button { grid-column: 1 / -1; width: 100%; }
+}
+@media (max-width: 640px) {
+    .module-shop-page .module-filter-grid { grid-template-columns: 1fr; }
+}
 </style>
 @endpush
 <div class="module-shop-page">
-<h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">فروشگاه</h1>
-<p style="margin-bottom: 1rem;">
-    <a href="{{ route('shop.wishlist') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none; margin-left: 1rem;">علاقه‌مندی‌ها</a>
-    <a href="{{ route('shop.compare') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none;">مقایسه</a>
-</p>
+<div class="flex items-center justify-between flex-wrap gap-4 mb-4">
+    <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0;">فروشگاه</h1>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <a href="{{ route('shop.wishlist') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+            <span>♥</span>
+            <span>علاقه‌مندی‌ها</span>
+        </a>
+        <a href="{{ route('shop.compare') }}" style="font-weight: 600; color: var(--platform-link-color, #4f46e5); text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+            <span>⇄</span>
+            <span>مقایسه</span>
+        </a>
+    </div>
+</div>
 
 @if(isset($categories) && $categories->isNotEmpty())
-<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-    <a href="{{ route('shop.index', array_filter(['q' => request('q'), 'tag' => request('tag'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')])) }}" style="padding: 0.5rem 1rem; border-radius: 0.5rem; text-decoration: none; {{ !request('category') ? 'background: #1f2937; color: white;' : 'background: #f3f4f6; color: #374151;' }}">همه</a>
+<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;">
+    <a href="{{ route('shop.index', array_filter(['q' => request('q'), 'tag' => request('tag'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')])) }}" style="padding: 0.45rem 1rem; border-radius: 9999px; font-size: 0.875rem; text-decoration: none; transition: all 0.2s; {{ !request('category') ? 'background: #1f2937; color: white;' : 'background: #f3f4f6; color: #374151;' }}">همه دسته‌ها</a>
     @foreach($categories as $c)
-        <a href="{{ route('shop.index', array_merge(array_filter(['q' => request('q'), 'tag' => request('tag'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')]), ['category' => $c->slug])) }}" style="padding: 0.5rem 1rem; border-radius: 0.5rem; text-decoration: none; {{ request('category') === $c->slug ? 'background: #1f2937; color: white;' : 'background: #f3f4f6; color: #374151;' }}">{{ $c->name }}</a>
+        <a href="{{ route('shop.index', array_merge(array_filter(['q' => request('q'), 'tag' => request('tag'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')]), ['category' => $c->slug])) }}" style="padding: 0.45rem 1rem; border-radius: 9999px; font-size: 0.875rem; text-decoration: none; transition: all 0.2s; {{ request('category') === $c->slug ? 'background: #1f2937; color: white;' : 'background: #f3f4f6; color: #374151;' }}">{{ $c->name }}</a>
     @endforeach
 </div>
 @endif
 
 @if(isset($tags) && $tags->isNotEmpty())
-<div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem; align-items: center;">
-    <span style="font-size: 0.85rem; color: #6b7280;">برچسب:</span>
-    <a href="{{ route('shop.index', array_filter(['category' => request('category'), 'q' => request('q'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')])) }}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 999px; background: {{ !request('tag') ? '#1f2937' : '#e5e7eb' }}; color: {{ !request('tag') ? '#fff' : '#374151' }}; text-decoration: none;">همه</a>
+<div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1.25rem; align-items: center;">
+    <span style="font-size: 0.85rem; color: #6b7280; margin-left: 0.25rem;">برچسب:</span>
+    <a href="{{ route('shop.index', array_filter(['category' => request('category'), 'q' => request('q'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')])) }}" style="font-size: 0.8rem; padding: 0.25rem 0.6rem; border-radius: 9999px; background: {{ !request('tag') ? '#1f2937' : '#e5e7eb' }}; color: {{ !request('tag') ? '#fff' : '#374151' }}; text-decoration: none;">همه</a>
     @foreach($tags as $tg)
-        <a href="{{ route('shop.index', array_merge(array_filter(['category' => request('category'), 'q' => request('q'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')]), ['tag' => $tg->slug])) }}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; border-radius: 999px; background: {{ request('tag') === $tg->slug ? '#1f2937' : '#e5e7eb' }}; color: {{ request('tag') === $tg->slug ? '#fff' : '#374151' }}; text-decoration: none;">{{ $tg->name }}</a>
+        <a href="{{ route('shop.index', array_merge(array_filter(['category' => request('category'), 'q' => request('q'), 'min_price' => request('min_price'), 'max_price' => request('max_price'), 'sort' => request('sort'), 'attr' => request('attr')]), ['tag' => $tg->slug])) }}" style="font-size: 0.8rem; padding: 0.25rem 0.6rem; border-radius: 9999px; background: {{ request('tag') === $tg->slug ? '#1f2937' : '#e5e7eb' }}; color: {{ request('tag') === $tg->slug ? '#fff' : '#374151' }}; text-decoration: none;">{{ $tg->name }}</a>
     @endforeach
 </div>
 @endif
@@ -49,23 +71,24 @@
     @foreach(request('attr', []) as $ak => $av)
         <input type="hidden" name="attr[{{ $ak }}]" value="{{ $av }}">
     @endforeach
-    <div class="module-filter-grid" style="display: grid; gap: 0.5rem; grid-template-columns: 2fr 1fr 1fr 1fr auto;">
-        <input id="shop-filter-q" type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در محصولات..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;" aria-label="جستجو در محصولات">
-        <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="حداقل قیمت" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
-        <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="حداکثر قیمت" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
-        <select name="sort" style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+    <div class="module-filter-grid">
+        <input id="shop-filter-q" type="text" name="q" value="{{ request('q') }}" placeholder="جستجو در محصولات..." aria-label="جستجو در محصولات">
+        <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="حداقل قیمت (ریال)">
+        <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="حداکثر قیمت (ریال)">
+        <select name="sort">
             <option value="recommended" {{ ($sort ?? request('sort', 'recommended')) === 'recommended' ? 'selected' : '' }}>مرتب‌سازی پیشنهادی</option>
             <option value="newest" {{ ($sort ?? request('sort')) === 'newest' ? 'selected' : '' }}>جدیدترین</option>
             <option value="price_asc" {{ ($sort ?? request('sort')) === 'price_asc' ? 'selected' : '' }}>ارزان‌ترین</option>
             <option value="price_desc" {{ ($sort ?? request('sort')) === 'price_desc' ? 'selected' : '' }}>گران‌ترین</option>
         </select>
-        <button type="submit" style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; background: var(--platform-primary, #4f46e5); color: white; border: none; cursor: pointer;">جستجو</button>
+        <button type="submit">اعمال فیلتر</button>
     </div>
 </form>
 
 @if(isset($attributeFilters) && $attributeFilters->isNotEmpty())
+<div class="attr-filters-bar">
 @foreach($attributeFilters as $attr)
-<form method="get" action="{{ route('shop.index') }}" style="display: inline-block; margin-left: 0.5rem; margin-bottom: 0.5rem;">
+<form method="get" action="{{ route('shop.index') }}" class="attr-filter-item">
     <input type="hidden" name="category" value="{{ request('category') }}">
     <input type="hidden" name="tag" value="{{ request('tag') }}">
     <input type="hidden" name="q" value="{{ request('q') }}">
@@ -77,8 +100,8 @@
             <input type="hidden" name="attr[{{ $ak }}]" value="{{ $av }}">
         @endif
     @endforeach
-    <label style="font-size: 0.85rem; color: #374151;">{{ $attr->name }}:</label>
-    <select name="attr[{{ $attr->slug }}]" onchange="this.form.submit()" style="padding: 0.35rem 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db;">
+    <label style="font-size: 0.85rem; color: #374151; white-space: nowrap;">{{ $attr->name }}:</label>
+    <select name="attr[{{ $attr->slug }}]" onchange="this.form.submit()" style="padding: 0.35rem 0.6rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 0.85rem;">
         <option value="">— همه —</option>
         @foreach($attr->values as $val)
             <option value="{{ $val->slug ?: $val->value }}" @selected(request()->input('attr.'.$attr->slug) == ($val->slug ?: $val->value))>{{ $val->value }}</option>
@@ -86,6 +109,7 @@
     </select>
 </form>
 @endforeach
+</div>
 @endif
 
 <div class="card-grid card-grid-3">

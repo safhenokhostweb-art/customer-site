@@ -33,6 +33,15 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ThemeDesignController extends Controller
 {
+    public const STANDARD_COMMERCIAL_PAGES = [
+        'shop'           => ['title' => 'فروشگاه', 'slug' => 'shop', 'is_home' => false, 'icon' => '🛍️'],
+        'product_detail' => ['title' => 'محصول تکی', 'slug' => 'product_detail', 'is_home' => false, 'icon' => '📦'],
+        'cart'           => ['title' => 'سبد خرید', 'slug' => 'cart', 'is_home' => false, 'icon' => '🛒'],
+        'checkout'       => ['title' => 'تسویه حساب', 'slug' => 'checkout', 'is_home' => false, 'icon' => '💳'],
+        'blog'           => ['title' => 'وبلاگ', 'slug' => 'blog', 'is_home' => false, 'icon' => '📰'],
+        'post_detail'    => ['title' => 'مطلب تکی', 'slug' => 'post_detail', 'is_home' => false, 'icon' => '📝'],
+    ];
+
     public function __construct(
         private TenantThemeResolver $resolver,
         private SiteThemeTemplateService $templateSvc,
@@ -454,6 +463,17 @@ class ThemeDesignController extends Controller
             $pages['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
         }
 
+        foreach (self::STANDARD_COMMERCIAL_PAGES as $commKey => $commMeta) {
+            if (!isset($pages[$commKey])) {
+                $pages[$commKey] = [
+                    'title'   => $commMeta['title'],
+                    'slug'    => $commMeta['slug'],
+                    'is_home' => false,
+                    'blocks'  => [],
+                ];
+            }
+        }
+
         // Merge requested page directly if not present or empty
         $requestedPage = trim((string) ($request->query('page') ?? ''));
         if ($requestedPage !== '' && !in_array($requestedPage, ['__header__', '__footer__', 'login', 'register'], true)) {
@@ -777,12 +797,15 @@ class ThemeDesignController extends Controller
         // Granted button & icon packs for live canvas pickers (fail-safe)
         $grantedButtonPacks = [];
         $grantedIconPacks = [];
+        $grantedHeaders = [];
+        $grantedFooters = [];
+        $grantedSections = [];
         try {
             $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
             if (!empty($catalog['buttons'])) {
                 foreach ($catalog['buttons'] as $bp) {
                     $ref = AssetRef::KIND_BUTTON_PACK . ':' . ($bp['slug'] ?? '');
-                    if ($siteEntitlements->hasGrant($ref) || !empty($bp['is_granted'])) {
+                    if ($siteEntitlements->hasGrant($ref) || !empty($bp['is_granted']) || ($bp['access_type'] ?? '') === 'free') {
                         $grantedButtonPacks[] = $bp;
                     }
                 }
@@ -790,8 +813,32 @@ class ThemeDesignController extends Controller
             if (!empty($catalog['icons'])) {
                 foreach ($catalog['icons'] as $ip) {
                     $ref = AssetRef::KIND_ICON_PACK . ':' . ($ip['slug'] ?? '');
-                    if ($siteEntitlements->hasGrant($ref) || !empty($ip['is_granted'])) {
+                    if ($siteEntitlements->hasGrant($ref) || !empty($ip['is_granted']) || ($ip['access_type'] ?? '') === 'free') {
                         $grantedIconPacks[] = $ip;
+                    }
+                }
+            }
+            if (!empty($catalog['headers'])) {
+                foreach ($catalog['headers'] as $hp) {
+                    $ref = AssetRef::KIND_HEADER . ':' . ($hp['slug'] ?? '');
+                    if ($siteEntitlements->hasGrant($ref) || !empty($hp['is_granted']) || ($hp['access_type'] ?? '') === 'free') {
+                        $grantedHeaders[] = $hp;
+                    }
+                }
+            }
+            if (!empty($catalog['footers'])) {
+                foreach ($catalog['footers'] as $fp) {
+                    $ref = AssetRef::KIND_FOOTER . ':' . ($fp['slug'] ?? '');
+                    if ($siteEntitlements->hasGrant($ref) || !empty($fp['is_granted']) || ($fp['access_type'] ?? '') === 'free') {
+                        $grantedFooters[] = $fp;
+                    }
+                }
+            }
+            if (!empty($catalog['sections'])) {
+                foreach ($catalog['sections'] as $sp) {
+                    $ref = AssetRef::KIND_SECTION . ':' . ($sp['slug'] ?? '');
+                    if ($siteEntitlements->hasGrant($ref) || !empty($sp['is_granted']) || ($sp['access_type'] ?? '') === 'free') {
+                        $grantedSections[] = $sp;
                     }
                 }
             }
@@ -820,7 +867,10 @@ class ThemeDesignController extends Controller
             'canvasMode',
             'canvasAssetEntitlements',
             'grantedButtonPacks',
-            'grantedIconPacks'
+            'grantedIconPacks',
+            'grantedHeaders',
+            'grantedFooters',
+            'grantedSections'
         ));
     }
 
@@ -2022,6 +2072,83 @@ class ThemeDesignController extends Controller
             unlockedScopes: $unlockedScopes,
         );
 
+        // Incorporate granted remote presets (headers, footers, sections)
+        try {
+            $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
+            $typeFilter = $request->query('type');
+
+            // Remote Headers
+            if ((!$typeFilter || $typeFilter === 'header') && !empty($catalog['headers'])) {
+                foreach ($catalog['headers'] as $hp) {
+                    $ref = AssetRef::KIND_HEADER . ':' . ($hp['slug'] ?? '');
+                    if ($entitlements->hasGrant($ref) || !empty($hp['is_granted']) || ($hp['access_type'] ?? '') === 'free') {
+                        $templates[] = [
+                            'id'            => 'remote:header:' . $hp['slug'],
+                            'source'        => 'remote_granted',
+                            'name'          => $hp['title'],
+                            'description'   => $hp['description'] ?? 'قالب آماده هدر دریافتی از پلتفرم',
+                            'type'          => 'header',
+                            'type_label'    => 'قالب هدر',
+                            'category'      => $hp['category_label'] ?? 'ناوبری',
+                            'category_label'=> $hp['category_label'] ?? 'ناوبری',
+                            'zone'          => 'header',
+                            'thumbnail_url' => $hp['preview_image'] ?? null,
+                            'tags'          => ['remote', 'header'],
+                            'usage_count'   => 0,
+                        ];
+                    }
+                }
+            }
+
+            // Remote Footers
+            if ((!$typeFilter || $typeFilter === 'footer') && !empty($catalog['footers'])) {
+                foreach ($catalog['footers'] as $fp) {
+                    $ref = AssetRef::KIND_FOOTER . ':' . ($fp['slug'] ?? '');
+                    if ($entitlements->hasGrant($ref) || !empty($fp['is_granted']) || ($fp['access_type'] ?? '') === 'free') {
+                        $templates[] = [
+                            'id'            => 'remote:footer:' . $fp['slug'],
+                            'source'        => 'remote_granted',
+                            'name'          => $fp['title'],
+                            'description'   => $fp['description'] ?? 'قالب آماده فوتر دریافتی از پلتفرم',
+                            'type'          => 'footer',
+                            'type_label'    => 'قالب فوتر',
+                            'category'      => $fp['category_label'] ?? 'فوتر',
+                            'category_label'=> $fp['category_label'] ?? 'فوتر',
+                            'zone'          => 'footer',
+                            'thumbnail_url' => $fp['preview_image'] ?? null,
+                            'tags'          => ['remote', 'footer'],
+                            'usage_count'   => 0,
+                        ];
+                    }
+                }
+            }
+
+            // Remote Sections
+            if ((!$typeFilter || $typeFilter === 'section') && !empty($catalog['sections'])) {
+                foreach ($catalog['sections'] as $sp) {
+                    $ref = AssetRef::KIND_SECTION . ':' . ($sp['slug'] ?? '');
+                    if ($entitlements->hasGrant($ref) || !empty($sp['is_granted']) || ($sp['access_type'] ?? '') === 'free') {
+                        $templates[] = [
+                            'id'            => 'remote:section:' . $sp['slug'],
+                            'source'        => 'remote_granted',
+                            'name'          => $sp['title'],
+                            'description'   => $sp['description'] ?? 'سکشن آماده دریافتی از پلتفرم',
+                            'type'          => 'section',
+                            'type_label'    => 'سکشن آماده',
+                            'category'      => $sp['category_label'] ?? 'سکشن',
+                            'category_label'=> $sp['category_label'] ?? 'سکشن',
+                            'zone'          => 'content',
+                            'thumbnail_url' => $sp['preview_image'] ?? null,
+                            'tags'          => ['remote', 'section'],
+                            'usage_count'   => 0,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Remote template merge failed: ' . $e->getMessage());
+        }
+
         // ADR-087: library cards the platform has not provisioned for this
         // site are dropped (another vertical's kit) or badged as locked.
         return response()->json(['templates' => AssetAccessGate::annotateTemplateCards($templates, $entitlements)]);
@@ -2043,9 +2170,79 @@ class ThemeDesignController extends Controller
 
     public function canvasInsertTemplate(Request $request): JsonResponse
     {
+        $id = $request->input('template_id');
+
+        // Handle remote granted assets (headers, footers, sections)
+        if (is_string($id) && str_starts_with($id, 'remote:')) {
+            $parts = explode(':', $id, 3);
+            $remoteKind = $parts[1] ?? '';
+            $remoteSlug = $parts[2] ?? '';
+
+            $catalog = app(\App\Services\PlatformApiService::class)->canvasMarketplaceAssets();
+            $groupKey = match ($remoteKind) {
+                'header'  => 'headers',
+                'footer'  => 'footers',
+                'section' => 'sections',
+                default   => null,
+            };
+
+            $matched = null;
+            if ($groupKey && !empty($catalog[$groupKey])) {
+                foreach ($catalog[$groupKey] as $item) {
+                    if (($item['slug'] ?? '') === $remoteSlug) {
+                        $matched = $item;
+                        break;
+                    }
+                }
+            }
+
+            if (!$matched) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'دارایی مورد نظر در مارکت‌پلیس یافت نشد.',
+                ], 404);
+            }
+
+            $rawBlocks = $matched['blocks'] ?? [];
+            if (is_string($rawBlocks)) {
+                $rawBlocks = json_decode($rawBlocks, true) ?: [];
+            }
+
+            if (empty($rawBlocks)) {
+                if ($remoteKind === 'header') {
+                    $rawBlocks = [['id' => 'hdr_' . uniqid(), 'type' => 'nav_menu', 'props' => ['title' => $matched['title']]]];
+                } elseif ($remoteKind === 'footer') {
+                    $rawBlocks = [['id' => 'ftr_' . uniqid(), 'type' => 'text', 'props' => ['content' => $matched['title']]]];
+                } else {
+                    $rawBlocks = [['id' => 'sec_' . uniqid(), 'type' => 'section', 'props' => [], 'children' => []]];
+                }
+            }
+
+            $zone = match ($remoteKind) {
+                'header' => 'header',
+                'footer' => 'footer',
+                default  => 'content',
+            };
+
+            $regen = function (array $blocks) use (&$regen) {
+                foreach ($blocks as &$b) {
+                    $b['id'] = 'blk_' . bin2hex(random_bytes(6));
+                    if (!empty($b['children']) && is_array($b['children'])) {
+                        $b['children'] = $regen($b['children']);
+                    }
+                }
+                return $blocks;
+            };
+
+            return response()->json([
+                'success' => true,
+                'zone'    => $zone,
+                'blocks'  => $regen($rawBlocks),
+            ]);
+        }
+
         // Canvas overhaul Unit 5 (ADR-075): a library id ("lib:<key>") or a
         // saved template's integer id.
-        $id = $request->input('template_id');
         if (!TemplateLibrary::isLibraryId($id)) {
             $id = (int) $request->validate([
                 'template_id' => 'required|integer|exists:site_theme_templates,id',
@@ -2124,6 +2321,17 @@ class ThemeDesignController extends Controller
 
         if (!isset($keyed['home'])) {
             $keyed['home'] = ['title' => 'صفحه اصلی', 'slug' => 'home', 'is_home' => true, 'blocks' => []];
+        }
+
+        foreach (self::STANDARD_COMMERCIAL_PAGES as $commKey => $commMeta) {
+            if (!isset($keyed[$commKey])) {
+                $keyed[$commKey] = [
+                    'title'   => $commMeta['title'],
+                    'slug'    => $commMeta['slug'],
+                    'is_home' => false,
+                    'blocks'  => [],
+                ];
+            }
         }
 
         return $keyed;

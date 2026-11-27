@@ -69,7 +69,15 @@ class CanvasCleanSlate
             'global_styles' => ['chrome_owner' => 'theme', 'locale' => 'fa', 'direction' => 'rtl', 'presentation_css_owner' => 'platform'],
             'header_blocks' => [],
             'footer_blocks' => [],
-            'pages' => ['home' => ['title' => 'صفحه اصلی', 'slug' => '', 'is_home' => true, 'blocks' => []]],
+            'pages' => [
+                'home'           => ['title' => 'صفحه اصلی', 'slug' => '', 'is_home' => true, 'blocks' => []],
+                'shop'           => ['title' => 'فروشگاه', 'slug' => 'shop', 'is_home' => false, 'blocks' => []],
+                'product_detail' => ['title' => 'محصول تکی', 'slug' => 'product_detail', 'is_home' => false, 'blocks' => []],
+                'cart'           => ['title' => 'سبد خرید', 'slug' => 'cart', 'is_home' => false, 'blocks' => []],
+                'checkout'       => ['title' => 'تسویه حساب', 'slug' => 'checkout', 'is_home' => false, 'blocks' => []],
+                'blog'           => ['title' => 'وبلاگ', 'slug' => 'blog', 'is_home' => false, 'blocks' => []],
+                'post_detail'    => ['title' => 'مطلب تکی', 'slug' => 'post_detail', 'is_home' => false, 'blocks' => []],
+            ],
             'theme_assets' => [],
         ];
     }

@@ -342,6 +342,7 @@ Route::middleware('install.check')->group(function () {
         Route::post('/shop/cart/add', [ShopController::class, 'addToCart'])->middleware('throttle:shop-cart')->name('shop.cart.add');
         Route::post('/shop/cart/update', [ShopController::class, 'updateCart'])->middleware('throttle:shop-cart')->name('shop.cart.update');
         Route::post('/shop/cart/remove', [ShopController::class, 'removeFromCart'])->middleware('throttle:shop-cart')->name('shop.cart.remove');
+        Route::get('/shop/checkout', [ShopController::class, 'checkoutPage'])->name('shop.checkout.page');
         Route::post('/shop/checkout', [ShopController::class, 'checkout'])->middleware('throttle:shop-checkout')->name('shop.checkout');
         Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
     });

@@ -107,6 +107,12 @@ class ShopController extends Controller
         $pages = Page::published()->menu()->get();
         $wishlist = app(ShopWishlistService::class);
 
+        if (!request()->hasAny(['q', 'category', 'tag', 'min_price', 'max_price', 'attr', 'sort'])) {
+            if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('shop', 'فروشگاه')) {
+                return $canvasView;
+            }
+        }
+
         return view(SiteHelper::view('shop.index'), compact('products', 'categories', 'pages', 'sort', 'attributeFilters', 'tags', 'wishlist'));
     }
 
@@ -176,6 +182,10 @@ class ShopController extends Controller
                 ->get()
                 ->filter(fn($p) => $p->isEligible($productPrice))
                 ->map(fn($p) => array_merge($p->toArray(), ['calc' => $p->calculate($productPrice)]));
+        }
+
+        if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('product_detail', $product->title)) {
+            return $canvasView;
         }
 
         return view(SiteHelper::view('shop.show'), compact(
@@ -382,10 +392,29 @@ class ShopController extends Controller
             $maxSpendPoints = $pointsSvc->maxSpendablePoints($user, $subtotal);
         }
 
+        if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('cart', 'سبد خرید')) {
+            return $canvasView;
+        }
+
         return view(SiteHelper::view('shop.cart'), compact(
             'cart', 'pages', 'membership', 'subtotal', 'shippingCost',
             'pointsBalance', 'maxSpendPoints'
         ));
+    }
+
+    public function checkoutPage(Request $request)
+    {
+        if (! SiteHelper::shopEnabled()) {
+            abort(404);
+        }
+        $cart = ShopCartHelper::normalizeCart(session()->get('cart', []));
+        if (empty($cart)) {
+            return redirect()->route('shop.cart')->with('error', 'سبد خرید خالی است.');
+        }
+        if ($canvasView = app(\App\Http\Controllers\Front\ThemeCanvasPageController::class)->tryRenderCanvasPage('checkout', 'تسویه حساب')) {
+            return $canvasView;
+        }
+        return redirect()->route('shop.cart');
     }
 
     public function updateCart(Request $request)

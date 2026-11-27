@@ -36,7 +36,7 @@ class CanvasMarketplaceController extends Controller
         if (empty($platformUrl)) {
             return view('admin.canvas-marketplace.index', [
                 'error' => 'اتصال به پلتفرم ابری SaaS پیکربندی نشده است.',
-                'catalog' => ['buttons' => [], 'icons' => [], 'headers' => [], 'motions' => []],
+                'catalog' => ['buttons' => [], 'icons' => [], 'headers' => [], 'footers' => [], 'sections' => [], 'motions' => []],
                 'activeTab' => 'buttons',
             ]);
         }
@@ -49,7 +49,7 @@ class CanvasMarketplaceController extends Controller
         $siteEntitlements = $this->entitlements->current();
 
         // Harmonize entitlement status across catalog
-        foreach (['buttons', 'icons', 'headers', 'motions'] as $group) {
+        foreach (['buttons', 'icons', 'headers', 'footers', 'sections', 'motions'] as $group) {
             if (!isset($catalog[$group]) || !is_array($catalog[$group])) {
                 $catalog[$group] = [];
                 continue;

@@ -184,7 +184,7 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                         class="w-full text-right px-3 py-1.5 flex items-center justify-between gap-2 transition"
                                     >
                                         <div class="flex items-center gap-2 truncate">
-                                            <span x-text="pg.is_home || k === 'home' ? '🏠' : '📄'"></span>
+                                            <span x-text="pg.is_home || k === 'home' ? '🏠' : (k === 'shop' ? '🛍️' : (k === 'product_detail' ? '📦' : (k === 'cart' ? '🛒' : (k === 'checkout' ? '💳' : (k === 'blog' ? '📰' : (k === 'post_detail' ? '📝' : '📄'))))))"></span>
                                             <span class="truncate" x-text="pageDisplayName(k, pg.title)"></span>
                                         </div>
                                         <span class="text-[9px] text-slate-400 font-mono" x-text="k"></span>
@@ -1679,21 +1679,42 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                             <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'buttons']) }}" target="_blank"
                                                class="text-[10px] text-violet-600 hover:text-violet-800 font-medium">کتابخانه دکمه‌ها ↗</a>
                                         </div>
-                                        <select
-                                            :value="(selectedBlock.props.pack_slug && selectedBlock.props.preset_slug) ? (selectedBlock.props.pack_slug + '|' + selectedBlock.props.preset_slug) : ''"
-                                            @change="onCustomButtonPresetChange($event.target.value)"
-                                            class="w-full text-xs px-2.5 py-2 rounded-lg border border-violet-200 bg-white focus:outline-none focus:ring-1 focus:ring-violet-400">
-                                            <option value="">-- انتخاب پریست استایل --</option>
-                                            @foreach($grantedButtonPacks ?? [] as $bp)
-                                                <optgroup label="{{ $bp['title'] }}">
-                                                    @foreach($bp['presets'] ?? [] as $pr)
-                                                        <option value="{{ $bp['slug'] }}|{{ $pr['slug'] }}">
-                                                            {{ $pr['title'] ?? $pr['slug'] }} ({{ $bp['title'] }})
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-                                            @endforeach
-                                        </select>
+                                        @php
+                                            $hasAnyPresets = false;
+                                            foreach ($grantedButtonPacks ?? [] as $bp) {
+                                                if (!empty($bp['presets'])) {
+                                                    $hasAnyPresets = true;
+                                                    break;
+                                                }
+                                            }
+                                        @endphp
+                                        @if(!$hasAnyPresets)
+                                            <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] leading-5 space-y-1">
+                                                <div class="font-bold flex items-center gap-1">
+                                                    <span>⚠️</span>
+                                                    <span>استایل آماده‌ای یافت نشد</span>
+                                                </div>
+                                                <p>بسته‌های دکمه فعال برای سایت شما هنوز فاقد پریست استایل هستند یا هنوز بسته‌ای فعال نشده است. می‌توانید از بخش مارکت‌پلیس دارایی‌ها، استایل‌های جدید را فعال کنید.</p>
+                                            </div>
+                                        @else
+                                            <select
+                                                :value="(selectedBlock.props.pack_slug && selectedBlock.props.preset_slug) ? (selectedBlock.props.pack_slug + '|' + selectedBlock.props.preset_slug) : ''"
+                                                @change="onCustomButtonPresetChange($event.target.value)"
+                                                class="w-full text-xs px-2.5 py-2 rounded-lg border border-violet-200 bg-white focus:outline-none focus:ring-1 focus:ring-violet-400">
+                                                <option value="">-- انتخاب پریست استایل --</option>
+                                                @foreach($grantedButtonPacks ?? [] as $bp)
+                                                    @if(!empty($bp['presets']))
+                                                        <optgroup label="{{ $bp['title'] }}">
+                                                            @foreach($bp['presets'] as $pr)
+                                                                <option value="{{ $bp['slug'] }}|{{ $pr['slug'] }}">
+                                                                    {{ $pr['title'] ?? $pr['slug'] }} ({{ $bp['title'] }})
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                        @endif
                                         <p class="text-[11px] text-violet-600 leading-4">این استایل به صورت کاملاً ایزوله روی همین دکمه ذخیره و اعمال می‌شود و طراحی سایر بخش‌ها را دستکاری نمی‌کند.</p>
                                     </div>
                                 </template>
@@ -2618,7 +2639,7 @@ function canvasEditor() {
             // A `blocks` field is the container's child list, authored in
             // the children panel — it has no content-tab control.
             const schema = BLOCK_SCHEMAS[this.selectedBlock.type]?.schema ?? {};
-            return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks'));
+            return Object.fromEntries(Object.entries(schema).filter(([, def]) => def?.type !== 'blocks' && !def?.hidden));
         },
         // header_order — the element order as a stable, complete list: the
         // stored order first (unknown keys preserved), then every known header

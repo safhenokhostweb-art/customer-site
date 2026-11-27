@@ -110,6 +110,30 @@ class ThemeCanvasPageController extends Controller
         );
     }
 
+    /**
+     * Attempt to render a page from the active Canvas theme.
+     * Returns null if no canvas theme is active, or if the page has no blocks.
+     */
+    public function tryRenderCanvasPage(string $slug, string $fallbackTitle = ''): ?View
+    {
+        $themeData = $this->loadThemeData();
+        if (! $themeData) {
+            return null;
+        }
+
+        [$pageKey, $page] = $this->findPage($themeData['pages'] ?? [], $slug);
+        if (! $page || empty($page['blocks'])) {
+            return null;
+        }
+
+        return $this->renderPage(
+            themeData: $themeData,
+            page: $page,
+            pageKey: $pageKey,
+            fallbackTitle: $fallbackTitle ?: ucfirst($slug),
+        );
+    }
+
     // ── Render ───────────────────────────────────────────────────────────────
 
     /**

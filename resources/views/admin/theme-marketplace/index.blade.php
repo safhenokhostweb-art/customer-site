@@ -105,7 +105,7 @@
       <p class="text-gray-400 text-sm">هنوز قالبی در فروشگاه موجود نیست.</p>
     </div>
   @else
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 {{ count($allThemes) === 1 ? 'max-w-md' : (count($allThemes) === 2 ? 'sm:grid-cols-2 max-w-3xl' : 'sm:grid-cols-2 lg:grid-cols-3') }} gap-6">
       @foreach($allThemes as $theme)
         <div x-show="matchesFilter('{{ $theme['category'] ?? '' }}', '{{ addslashes($theme['name']) }}')"
              class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition group">

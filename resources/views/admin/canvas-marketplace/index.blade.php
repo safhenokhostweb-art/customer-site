@@ -7,6 +7,8 @@
     $buttons = $catalog['buttons'] ?? [];
     $icons = $catalog['icons'] ?? [];
     $headers = $catalog['headers'] ?? [];
+    $footers = $catalog['footers'] ?? [];
+    $sections = $catalog['sections'] ?? [];
     $motions = $catalog['motions'] ?? [];
 @endphp
 
@@ -75,8 +77,20 @@
 
             <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'headers', 'type' => $typeFilter, 'status' => $statusFilter]) }}"
                class="px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 {{ $activeTab === 'headers' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100' }}">
-                <span>قالب‌های آماده هدر</span>
+                <span>قالب‌های هدر</span>
                 <span class="text-xs px-2 py-0.5 rounded-full {{ $activeTab === 'headers' ? 'bg-indigo-700 text-indigo-100' : 'bg-gray-100 text-gray-600' }}">{{ count($headers) }}</span>
+            </a>
+
+            <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'footers', 'type' => $typeFilter, 'status' => $statusFilter]) }}"
+               class="px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 {{ $activeTab === 'footers' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100' }}">
+                <span>قالب‌های فوتر</span>
+                <span class="text-xs px-2 py-0.5 rounded-full {{ $activeTab === 'footers' ? 'bg-indigo-700 text-indigo-100' : 'bg-gray-100 text-gray-600' }}">{{ count($footers) }}</span>
+            </a>
+
+            <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'sections', 'type' => $typeFilter, 'status' => $statusFilter]) }}"
+               class="px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 {{ $activeTab === 'sections' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100' }}">
+                <span>سکشن‌های آماده</span>
+                <span class="text-xs px-2 py-0.5 rounded-full {{ $activeTab === 'sections' ? 'bg-indigo-700 text-indigo-100' : 'bg-gray-100 text-gray-600' }}">{{ count($sections) }}</span>
             </a>
 
             <a href="{{ route('admin.canvas-marketplace.index', ['tab' => 'motions', 'type' => $typeFilter, 'status' => $statusFilter]) }}"
@@ -354,7 +368,153 @@
     @endif
 
     {{-- ===================================================================== --}}
-    {{-- TAB 4: MOTIONS --}}
+    {{-- TAB 4: FOOTERS --}}
+    {{-- ===================================================================== --}}
+    @if($activeTab === 'footers')
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @forelse($footers as $item)
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between hover:border-indigo-200 transition">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-xs px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-medium">{{ $item['category_label'] ?? 'فوتر' }}</span>
+                                <h3 class="font-bold text-gray-900 text-base mt-1.5">{{ $item['title'] }}</h3>
+                                <div class="text-xs text-gray-400 font-mono mt-0.5">{{ $item['slug'] }}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                @if(($item['access_type'] ?? '') === 'free')
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">رایگان</span>
+                                @else
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-medium">{{ number_format($item['price'] ?? 0) }} تومان</span>
+                                @endif
+                                <button type="button" @click="openChangelog({{ json_encode($item) }})"
+                                        class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-mono font-bold transition cursor-pointer"
+                                        title="مشاهده تاریخچه نسخه‌ها و تغییرات">
+                                    <span dir="ltr">v{{ $item['current_version'] ?? '1.0.0' }}</span>
+                                    <span class="text-[10px]">📋</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 text-xs text-gray-600 space-y-1">
+                            <div>نوع: <span class="text-indigo-600 font-medium">{{ $item['category_label'] ?? 'فوتر استاندارد' }}</span></div>
+                            <div>امکان استفاده مستقیم در بخش Footer تمام صفحات Canvas</div>
+                        </div>
+                    </div>
+
+                    {{-- Card Footer --}}
+                    <div class="pt-4 border-t border-gray-100 flex items-center justify-between gap-2 mt-4">
+                        @if(!empty($item['is_granted']))
+                            <div class="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 font-medium w-full justify-center">
+                                <x-core-ui::icon name="check" class="w-4 h-4 text-emerald-600" />
+                                <span>فعال روی سایت شما</span>
+                            </div>
+                        @elseif(($item['access_type'] ?? '') === 'free')
+                            <form method="POST" action="{{ route('admin.canvas-marketplace.claim') }}" class="w-full">
+                                @csrf
+                                <input type="hidden" name="asset_kind" value="{{ AssetRef::KIND_FOOTER }}">
+                                <input type="hidden" name="asset_key" value="{{ $item['slug'] }}">
+                                <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                    <x-core-ui::icon name="download" class="w-4 h-4" />
+                                    <span>دریافت رایگان قالب فوتر</span>
+                                </button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('admin.canvas-marketplace.purchase') }}" class="w-full">
+                                @csrf
+                                <input type="hidden" name="asset_kind" value="{{ AssetRef::KIND_FOOTER }}">
+                                <input type="hidden" name="asset_key" value="{{ $item['slug'] }}">
+                                <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                    <x-core-ui::icon name="shopping-cart" class="w-4 h-4" />
+                                    <span>خرید و فعال‌سازی آنی</span>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-gray-100">
+                    <p class="text-sm text-gray-400">هیچ قالب فوتری یافت نشد.</p>
+                </div>
+            @endforelse
+        </div>
+    @endif
+
+    {{-- ===================================================================== --}}
+    {{-- TAB 5: SECTIONS --}}
+    {{-- ===================================================================== --}}
+    @if($activeTab === 'sections')
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @forelse($sections as $item)
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between hover:border-indigo-200 transition">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-xs px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-medium">{{ $item['category_label'] ?? 'سکشن' }}</span>
+                                <h3 class="font-bold text-gray-900 text-base mt-1.5">{{ $item['title'] }}</h3>
+                                <div class="text-xs text-gray-400 font-mono mt-0.5">{{ $item['slug'] }}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                @if(($item['access_type'] ?? '') === 'free')
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">رایگان</span>
+                                @else
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-medium">{{ number_format($item['price'] ?? 0) }} تومان</span>
+                                @endif
+                                <button type="button" @click="openChangelog({{ json_encode($item) }})"
+                                        class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-mono font-bold transition cursor-pointer"
+                                        title="مشاهده تاریخچه نسخه‌ها و تغییرات">
+                                    <span dir="ltr">v{{ $item['current_version'] ?? '1.0.0' }}</span>
+                                    <span class="text-[10px]">📋</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 text-xs text-gray-600 space-y-1">
+                            <div>دسته‌بندی: <span class="text-indigo-600 font-medium">{{ $item['category_label'] ?? 'بخش عمومی' }}</span></div>
+                            <div>امکان درج مستقیم در بدنه صفحات Canvas</div>
+                        </div>
+                    </div>
+
+                    {{-- Card Footer --}}
+                    <div class="pt-4 border-t border-gray-100 flex items-center justify-between gap-2 mt-4">
+                        @if(!empty($item['is_granted']))
+                            <div class="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 font-medium w-full justify-center">
+                                <x-core-ui::icon name="check" class="w-4 h-4 text-emerald-600" />
+                                <span>فعال روی سایت شما</span>
+                            </div>
+                        @elseif(($item['access_type'] ?? '') === 'free')
+                            <form method="POST" action="{{ route('admin.canvas-marketplace.claim') }}" class="w-full">
+                                @csrf
+                                <input type="hidden" name="asset_kind" value="{{ AssetRef::KIND_SECTION }}">
+                                <input type="hidden" name="asset_key" value="{{ $item['slug'] }}">
+                                <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                    <x-core-ui::icon name="download" class="w-4 h-4" />
+                                    <span>دریافت رایگان سکشن</span>
+                                </button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('admin.canvas-marketplace.purchase') }}" class="w-full">
+                                @csrf
+                                <input type="hidden" name="asset_kind" value="{{ AssetRef::KIND_SECTION }}">
+                                <input type="hidden" name="asset_key" value="{{ $item['slug'] }}">
+                                <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                    <x-core-ui::icon name="shopping-cart" class="w-4 h-4" />
+                                    <span>خرید و فعال‌سازی آنی</span>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-gray-100">
+                    <p class="text-sm text-gray-400">هیچ سکشنی یافت نشد.</p>
+                </div>
+            @endforelse
+        </div>
+    @endif
+
+    {{-- ===================================================================== --}}
+    {{-- TAB 6: MOTIONS --}}
     {{-- ===================================================================== --}}
     @if($activeTab === 'motions')
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
