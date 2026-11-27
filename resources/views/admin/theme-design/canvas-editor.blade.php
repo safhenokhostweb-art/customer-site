@@ -1800,15 +1800,27 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                             <p class="text-xs text-slate-500 py-1">هیچ صفحه منتشرشده‌ای در ماژول «صفحات» یافت نشد.</p>
                                         </template>
                                         <template x-for="p in (window.CANVAS_PUBLISHED_PAGES || [])" :key="p.id">
-                                            <label class="flex items-center gap-2 p-1.5 rounded hover:bg-white text-xs cursor-pointer transition">
-                                                <input type="checkbox"
-                                                    :value="p.id"
-                                                    :checked="Array.isArray(selectedBlock.props.selected_page_ids) && selectedBlock.props.selected_page_ids.map(String).includes(String(p.id))"
-                                                    @change="toggleSelectedPage(p.id)"
-                                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                                <span class="font-medium text-slate-800" x-text="p.title"></span>
-                                                <span class="text-[10px] text-slate-400 ms-auto" x-text="'/' + p.slug"></span>
-                                            </label>
+                                            <div class="flex items-center gap-2 p-1.5 rounded hover:bg-white text-xs transition">
+                                                <label class="flex items-center gap-2 flex-1 cursor-pointer">
+                                                    <input type="checkbox"
+                                                        :value="p.id"
+                                                        :checked="Array.isArray(selectedBlock.props.selected_page_ids) && selectedBlock.props.selected_page_ids.map(String).includes(String(p.id))"
+                                                        @change="toggleSelectedPage(p.id)"
+                                                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                                    <span class="font-medium text-slate-800" x-text="p.title"></span>
+                                                    <span class="text-[10px] text-slate-400 ms-auto" x-text="'/' + p.slug"></span>
+                                                </label>
+                                                <template x-if="Array.isArray(selectedBlock.props.selected_page_ids) && selectedBlock.props.selected_page_ids.map(String).includes(String(p.id))">
+                                                    <div class="w-32">
+                                                        @include('theme-runtime::canvas.icon-picker', [
+                                                            'value' => 'pageIcon(p.id)',
+                                                            'set' => 'setPageIcon(p.id, __icon)',
+                                                            'id' => "'page-icon-' + p.id",
+                                                            'label' => "'آیکون ' + p.title",
+                                                        ])
+                                                    </div>
+                                                </template>
+                                            </div>
                                         </template>
                                     </div>
                                 </template>
@@ -2580,6 +2592,22 @@ function canvasEditor() {
             this.selectedBlock.props.selected_page_ids = current;
             this.schedulePropUpdate();
         },
+        pageIcon(pageId) {
+            return this.selectedBlock?.props?.page_icons?.[pageId] ?? '';
+        },
+        setPageIcon(pageId, icon) {
+            if (!this.selectedBlock) return;
+            if (!this.selectedBlock.props) this.selectedBlock.props = {};
+            if (!this.selectedBlock.props.page_icons || typeof this.selectedBlock.props.page_icons !== 'object' || Array.isArray(this.selectedBlock.props.page_icons)) {
+                this.selectedBlock.props.page_icons = {};
+            }
+            if (icon) {
+                this.selectedBlock.props.page_icons[pageId] = icon;
+            } else {
+                delete this.selectedBlock.props.page_icons[pageId];
+            }
+            this.schedulePropUpdate();
+        },
         getFieldOptions(schemaDef) {
             if (schemaDef?.options_source === 'customer_menus') {
                 const opts = {};
@@ -3126,12 +3154,23 @@ function canvasEditor() {
             for (const [fieldKey, fieldDef] of Object.entries(fields ?? {})) item[fieldKey] = fieldDef?.default ?? '';
             return item;
         },
+        _repeaterKeyMap: new WeakMap(),
         repeaterItemKey(item, index) {
-            if (typeof item?._id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item._id)) return item._id;
-            const source = `${index}|${JSON.stringify(item ?? {})}`;
-            let hash = 2166136261;
-            for (let i = 0; i < source.length; i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619);
-            return `legacy_${(hash >>> 0).toString(16)}`;
+            if (item && typeof item === 'object') {
+                if (typeof item._id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item._id)) {
+                    return item._id;
+                }
+                if (this._repeaterKeyMap.has(item)) {
+                    return this._repeaterKeyMap.get(item);
+                }
+                const id = this.newRepeaterId();
+                this._repeaterKeyMap.set(item, id);
+                try {
+                    item._id = id;
+                } catch (_) {}
+                return id;
+            }
+            return `idx_${index}`;
         },
         addStructuredItem(propKey, schemaDef) {
             const item = this.newRepeaterItem(schemaDef?.fields);
