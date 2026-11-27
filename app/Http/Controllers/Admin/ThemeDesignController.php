@@ -2203,6 +2203,16 @@ class ThemeDesignController extends Controller
                 ], 404);
             }
 
+            $entitlements = $this->assetEntitlements()->current();
+            $ref = AssetRef::make($remoteKind, $remoteSlug);
+            $isPaid = ($matched['access_type'] ?? 'free') === 'paid';
+            if ($isPaid && !$entitlements->hasGrant($ref) && empty($matched['is_granted'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'این دارایی نیازمند خرید یا اختصاص دسترسی از سوی مدیریت ساس است.',
+                ], 403);
+            }
+
             $rawBlocks = $matched['blocks'] ?? [];
             if (is_string($rawBlocks)) {
                 $rawBlocks = json_decode($rawBlocks, true) ?: [];

@@ -81,8 +81,10 @@ class ThemeCanvasPaletteCompatibilityTest extends TestCase
         // types, scroll_to_top and auth_canvas (canonical) and the
         // theme-scoped solar-energy-cycle host type: 165 -> 168 and
         // 130 -> 133; modules unchanged.
-        self::assertCount(168, $registry);
-        self::assertCount(133, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
+        // Nimbus glassmorphic header (header_glass_nimbus): +1 canonical type,
+        // 168 -> 169 and 133 -> 134; modules unchanged.
+        self::assertCount(169, $registry);
+        self::assertCount(134, array_filter(array_keys($registry), fn (string $type) => !str_starts_with($type, 'module:') && !str_starts_with($type, 'ext:')));
         self::assertCount(35, array_filter(array_keys($registry), fn (string $type) => str_starts_with($type, 'module:')));
         self::assertArrayNotHasKey('module:gallery_widget', $registry);
         self::assertArrayNotHasKey('module:portfolio_grid', $registry);
