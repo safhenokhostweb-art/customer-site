@@ -852,6 +852,46 @@ class ThemeDesignController extends Controller
             $canvasAssetEntitlements = [];
         }
 
+        try {
+            $customerMenus = \App\Models\Menu::query()
+                ->select(['id', 'name', 'location'])
+                ->get()
+                ->map(fn ($m) => [
+                    'id' => (string) $m->id,
+                    'name' => $m->name . ' (' . ($m->location ?? 'عمومی') . ')',
+                    'location' => (string) $m->location,
+                ])
+                ->values()
+                ->all();
+            if (empty($customerMenus)) {
+                $customerMenus = [
+                    ['id' => 'primary', 'name' => 'منوی اصلی سایت (پیش‌فرض)', 'location' => 'primary'],
+                ];
+            }
+        } catch (\Throwable $e) {
+            $customerMenus = [
+                ['id' => 'primary', 'name' => 'منوی اصلی سایت (پیش‌فرض)', 'location' => 'primary'],
+            ];
+        }
+
+        try {
+            $customerPages = \App\Models\Page::query()
+                ->published()
+                ->select(['id', 'title', 'slug', 'order'])
+                ->orderBy('order')
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => (string) $p->id,
+                    'title' => $p->title,
+                    'slug' => $p->slug,
+                    'url' => function_exists('route') ? route('page.show', $p->slug) : '/' . $p->slug,
+                ])
+                ->values()
+                ->all();
+        } catch (\Throwable $e) {
+            $customerPages = [];
+        }
+
         return view('admin.theme-design.canvas-editor', compact(
             'themeData',
             'pages',
@@ -870,7 +910,9 @@ class ThemeDesignController extends Controller
             'grantedIconPacks',
             'grantedHeaders',
             'grantedFooters',
-            'grantedSections'
+            'grantedSections',
+            'customerMenus',
+            'customerPages'
         ));
     }
 

@@ -1666,7 +1666,7 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                              x-model alone set the value before x-for had rendered the
                                              options, so the select could show the first option instead
                                              of the stored value. --}}
-                                        <template x-for="(label, val) in schemaDef.options" :key="val">
+                                        <template x-for="(label, val) in getFieldOptions(schemaDef)" :key="val">
                                             <option :value="val" :selected="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val)" x-text="label"></option>
                                         </template>
                                     </select>
@@ -1794,7 +1794,26 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
                                      `fields` — accordion items, manual id lists), the same
                                      guarded JSON editor as the platform Canvas. An invalid
                                      draft is never written to the block. --}}
-                                <template x-if="schemaDef.type === 'array' && propKey !== 'header_order'">
+                                <template x-if="schemaDef.type === 'array' && propKey === 'selected_page_ids'">
+                                    <div class="space-y-1.5 p-2.5 rounded-lg border border-slate-200 bg-slate-50/70 max-h-52 overflow-y-auto" data-testid="tb-selected-pages">
+                                        <template x-if="!window.CANVAS_PUBLISHED_PAGES || window.CANVAS_PUBLISHED_PAGES.length === 0">
+                                            <p class="text-xs text-slate-500 py-1">هیچ صفحه منتشرشده‌ای در ماژول «صفحات» یافت نشد.</p>
+                                        </template>
+                                        <template x-for="p in (window.CANVAS_PUBLISHED_PAGES || [])" :key="p.id">
+                                            <label class="flex items-center gap-2 p-1.5 rounded hover:bg-white text-xs cursor-pointer transition">
+                                                <input type="checkbox"
+                                                    :value="p.id"
+                                                    :checked="Array.isArray(selectedBlock.props.selected_page_ids) && selectedBlock.props.selected_page_ids.map(String).includes(String(p.id))"
+                                                    @change="toggleSelectedPage(p.id)"
+                                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="font-medium text-slate-800" x-text="p.title"></span>
+                                                <span class="text-[10px] text-slate-400 ms-auto" x-text="'/' + p.slug"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template x-if="schemaDef.type === 'array' && propKey !== 'header_order' && propKey !== 'selected_page_ids'">
                                     <div x-data="{ jsonDraft: null, jsonDraftFor: null, jsonError: '' }">
                                         <textarea dir="ltr" rows="5" spellcheck="false" :data-testid="'tb-prop-' + propKey"
                                             :value="(jsonDraftFor === selectedBlock.id && jsonDraft !== null) ? jsonDraft : JSON.stringify(selectedBlock.props[propKey] ?? schemaDef.default ?? [], null, 2)"
@@ -2455,6 +2474,8 @@ const GRANTED_ICON_PACKS = @json($grantedIconPacks ?? []);
 if (window.CanvasIcons && Array.isArray(GRANTED_ICON_PACKS)) {
     window.CanvasIcons.loadCustomPacks(GRANTED_ICON_PACKS);
 }
+window.CANVAS_AVAILABLE_MENUS = @json($customerMenus ?? []);
+window.CANVAS_PUBLISHED_PAGES = @json($customerPages ?? []);
 // Header element order controlled by the header block's `header_order` prop.
 // Kept here so the drag list always offers every known element, even when the
 // stored order is partial or empty.
@@ -2544,6 +2565,38 @@ function canvasEditor() {
             : (Object.keys(INITIAL_PAGES)[0] ?? '__header__'),
         selectedPath:  null,          // null | [0] | [0, 1] | ...
         selectedLogicalItem: null,
+        toggleSelectedPage(pageId) {
+            if (!this.selectedBlock) return;
+            if (!this.selectedBlock.props) this.selectedBlock.props = {};
+            let current = Array.isArray(this.selectedBlock.props.selected_page_ids)
+                ? [...this.selectedBlock.props.selected_page_ids].map(String)
+                : [];
+            const sid = String(pageId);
+            if (current.includes(sid)) {
+                current = current.filter(id => id !== sid);
+            } else {
+                current.push(sid);
+            }
+            this.selectedBlock.props.selected_page_ids = current;
+            this.schedulePropUpdate();
+        },
+        getFieldOptions(schemaDef) {
+            if (schemaDef?.options_source === 'customer_menus') {
+                const opts = {};
+                (window.CANVAS_AVAILABLE_MENUS || []).forEach(m => {
+                    opts[m.id] = m.name;
+                });
+                return opts;
+            }
+            if (schemaDef?.options_source === 'customer_pages') {
+                const opts = {};
+                (window.CANVAS_PUBLISHED_PAGES || []).forEach(p => {
+                    opts[p.id] = p.title;
+                });
+                return opts;
+            }
+            return schemaDef?.options || {};
+        },
         leftPanelTab:  'blocks',      // 'blocks' | 'tree' | 'health' (WU-3)
         treeExpanded:  {},
         showAddChildModal: false,
