@@ -68,8 +68,8 @@ class HeaderGlassNimbusRuntimeTest extends TestCase
         $this->assertStringContainsString('href="/blog" class="tb-nav-header-link is-active" aria-current="page"', $html);
         $this->assertStringContainsString('←', $html);
         $this->assertStringContainsString('شروع سریع', $html);
-        $this->assertStringContainsString('tb-header-nimbus-mobile', $html);
-        $this->assertStringContainsString('popover', $html);
+        $this->assertStringContainsString('tb-nav-header-menu-panel', $html);
+        $this->assertStringContainsString('tb-nav-header-toggle', $html);
         $this->assertStringContainsString('--color-tgn01-cta1:#e20c35', $html);
         $this->assertStringContainsString('--color-tgn01-cta2:#c4008d', $html);
         $this->assertStringContainsString('--color-tgn01-ink:#211c48', $html);

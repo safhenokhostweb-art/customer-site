@@ -41,6 +41,10 @@ class AssetEntitlementClient
 
     public function current(bool $fresh = false): SiteAssetEntitlements
     {
+        if (config('site.owner_site')) {
+            return $this->memo = SiteAssetEntitlements::platformDesigner();
+        }
+
         if ($fresh) {
             $this->forget();
             return $this->refresh();

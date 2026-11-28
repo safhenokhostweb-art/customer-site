@@ -259,6 +259,136 @@
     </div>
 </div>
 
+{{-- ══════════════════════════════════════
+     PLATFORM UPDATE BANNER & CHANGELOG MODAL
+     ══════════════════════════════════════ --}}
+@if(!empty($latestUpdate))
+<div class="cd-section mb-3 border border-indigo-200/80 bg-gradient-to-r from-indigo-50/90 via-sky-50/70 to-indigo-50/90" style="border-radius:0.875rem" id="platform-update-banner">
+    <div class="flex items-center justify-between flex-wrap gap-2.5 py-2 px-3.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs shadow-sm flex-shrink-0 animate-pulse">
+                🚀
+            </span>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-600 text-white font-mono shadow-sm">
+                        {{ $latestUpdate['version'] ?? 'v1.4.0' }}
+                    </span>
+                    <span class="text-xs font-bold text-gray-900 truncate">
+                        {{ $latestUpdate['title'] ?? 'بروزرسانی جدید سامانه' }}
+                    </span>
+                    @if(!empty($latestUpdate['shamsi_date']))
+                        <span class="text-[10px] text-gray-500 font-medium">📅 {{ $latestUpdate['shamsi_date'] }}</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="openUpdateModal()" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 shadow-sm transition">
+                <span>✨</span>
+                <span>امکانات جدید و تاریخچه بروزرسانی‌ها</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Platform Updates Modal --}}
+<div id="platform-updates-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" style="backdrop-filter: blur(4px);">
+    <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden text-right" dir="rtl">
+        {{-- Header --}}
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-l from-indigo-50/50 to-white">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-md">
+                    🚀
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-900">تاریخچه بروزرسانی‌ها و امکانات جدید پلتفرم</h3>
+                    <p class="text-[11px] text-gray-500">مشاهده آخرین ویژگی‌ها، بهبودها و گزارش تغییرات سامانه</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeUpdateModal()" class="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center text-sm font-bold transition">
+                ✕
+            </button>
+        </div>
+
+        {{-- Body: Timeline of updates --}}
+        <div class="p-4 overflow-y-auto space-y-4 flex-1">
+            @forelse($updateHistory ?? [] as $up)
+                <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/70 space-y-2.5">
+                    <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 pb-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-indigo-600 text-white font-mono shadow-sm">
+                                {{ $up['version'] ?? 'نسخه' }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-900">
+                                {{ $up['title'] ?? 'بروزرسانی سامانه' }}
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold {{ ($up['update_type'] ?? '') === 'feature' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }}">
+                                {{ $up['type_label'] ?? 'امکان جدید' }}
+                            </span>
+                        </div>
+                        @if(!empty($up['shamsi_date']))
+                            <span class="text-[11px] text-slate-500 font-medium">📅 {{ $up['shamsi_date'] }}</span>
+                        @endif
+                    </div>
+
+                    @if(!empty($up['notes']))
+                        <p class="text-xs text-slate-600 leading-relaxed">{{ $up['notes'] }}</p>
+                    @endif
+
+                    @if(!empty($up['features']) && is_array($up['features']))
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+                            @foreach($up['features'] as $cat)
+                                <div class="bg-white rounded-lg p-2.5 border border-slate-200 shadow-2xs">
+                                    <div class="text-[11px] font-bold text-indigo-900 mb-1.5 flex items-center gap-1">
+                                        <span class="text-indigo-500">✦</span>
+                                        <span>{{ $cat['category'] ?? 'امکانات' }}</span>
+                                    </div>
+                                    <ul class="text-[11px] text-slate-600 space-y-1">
+                                        @foreach($cat['items'] ?? [] as $featureItem)
+                                            <li class="flex items-start gap-1.5">
+                                                <span class="text-emerald-500 font-bold">✓</span>
+                                                <span>{{ $featureItem }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-8 text-slate-400 text-xs">
+                    اطلاعات تاریخچه بروزرسانی در دسترس نیست.
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Footer --}}
+        <div class="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+            <span class="text-[11px] text-gray-500">پلتفرم مدیریت هوشمند کسب‌وکار</span>
+            <button type="button" onclick="closeUpdateModal()" class="px-4 py-1.5 rounded-lg text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-100 transition shadow-xs">
+                بستن
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openUpdateModal() {
+    var modal = document.getElementById('platform-updates-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+function closeUpdateModal() {
+    var modal = document.getElementById('platform-updates-modal');
+    if (modal) modal.classList.add('hidden');
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeUpdateModal();
+});
+</script>
+@endif
+
 {{-- Lifecycle widget (non-active only) --}}
 @include('admin.partials.lifecycle-widget')
 

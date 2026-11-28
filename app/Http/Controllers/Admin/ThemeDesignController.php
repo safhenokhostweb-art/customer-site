@@ -2338,16 +2338,45 @@ class ThemeDesignController extends Controller
      */
     private function lockedWidgetRefusal(array $current, array $incoming): ?JsonResponse
     {
-        $locked = AssetAccessGate::newlyLockedWidgetTypes($current, $incoming, $this->assetEntitlements()->current());
-        if ($locked === []) {
-            return null;
+        $entitlements = $this->assetEntitlements()->current();
+        $locked = AssetAccessGate::newlyLockedWidgetTypes($current, $incoming, $entitlements);
+        if ($locked !== []) {
+            return response()->json([
+                'success' => false,
+                'error' => 'این ویجت برای سایت شما فعال نیست: ' . implode('، ', $locked),
+                'locked_types' => $locked,
+            ], 403);
         }
 
-        return response()->json([
-            'success' => false,
-            'error' => 'این ویجت برای سایت شما فعال نیست: ' . implode('، ', $locked),
-            'locked_types' => $locked,
-        ], 403);
+        // Commercial skin access check (ADR-087 / ADR-091)
+        $walkBlocks = function (array $blocks) use (&$walkBlocks, $entitlements): ?string {
+            foreach ($blocks as $block) {
+                if (!is_array($block)) continue;
+                $skin = $block['props']['header_skin'] ?? null;
+                if (is_string($skin) && ($skin === 'glass_nimbus' || $skin === 'header_glass_nimbus')) {
+                    if (!AssetAccessGate::isSkinAllowed($skin, $entitlements)) {
+                        return $skin;
+                    }
+                }
+                foreach (['children', 'blocks'] as $subKey) {
+                    if (isset($block[$subKey]) && is_array($block[$subKey])) {
+                        $denied = $walkBlocks($block[$subKey]);
+                        if ($denied !== null) return $denied;
+                    }
+                }
+            }
+            return null;
+        };
+
+        if ($unauthorizedSkin = $walkBlocks($incoming)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'استفاده از پوسته «هدر شیشه‌ای مدرن» مستلزم لایسنس یا اختصاص دارایی از پنل ساس است.',
+                'locked_skin' => $unauthorizedSkin,
+            ], 403);
+        }
+
+        return null;
     }
 
     private function normalizePagesKeyed(array $pages): array

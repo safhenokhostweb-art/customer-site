@@ -59,13 +59,19 @@ class DashboardController extends Controller
             $importantAlerts = $all->filter(fn ($n) => in_array($n['type'] ?? '', ['warning', 'danger']) || in_array($n['priority'] ?? '', ['high', 'urgent']));
         }
 
+        $platformUpdateData = app(\App\Services\UpdateCheckService::class)->getUpdateHistory();
+        $latestUpdate = $platformUpdateData['latest'] ?? null;
+        $updateHistory = $platformUpdateData['history'] ?? [];
+
         return view('admin.dashboard', compact(
             'stats',
             'recentOrders',
             'license',
             'modulesFromPlatform',
             'localModules',
-            'importantAlerts'
+            'importantAlerts',
+            'latestUpdate',
+            'updateHistory'
         ));
     }
 

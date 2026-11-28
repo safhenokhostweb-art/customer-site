@@ -203,12 +203,98 @@ class UpdateCheckService
                 'success' => true,
                 'update_available' => $data['update_available'] ?? false,
                 'latest_version' => $data['latest_version'] ?? null,
+                'title' => $data['title'] ?? null,
+                'shamsi_date' => $data['shamsi_date'] ?? null,
                 'changelog' => $data['changelog'] ?? null,
+                'features' => $data['features'] ?? [],
                 'distributed_at' => $data['distributed_at'] ?? null,
             ];
         } catch (\Throwable $e) {
             Log::error('Update check exception', ['message' => $e->getMessage()]);
             return ['success' => false, 'message' => 'امکان ارتباط با سرور بروزرسانی وجود ندارد.'];
+        }
+    }
+
+    /**
+     * دریافت تاریخچه بروزرسانی‌ها و امکانات جدید از سرور پلتفرم ساس.
+     *
+     * @return array{success: bool, message?: string, history: array, latest: ?array}
+     */
+    public function getUpdateHistory(int $limit = 20, bool $forceRefresh = false): array
+    {
+        $license = License::current();
+        if (!$license || empty($license->license_key)) {
+            return [
+                'success' => false,
+                'message' => 'لایسنس فعال نیست.',
+                'history' => [],
+                'latest' => null,
+            ];
+        }
+
+        $baseUrl = config('site.platform_url');
+        if (empty($baseUrl)) {
+            return [
+                'success' => false,
+                'message' => 'آدرس پلتفرم تنظیم نشده است.',
+                'history' => [],
+                'latest' => null,
+            ];
+        }
+
+        $cacheKey = 'platform_updates_history_' . md5($license->license_key);
+        if (!$forceRefresh && \Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            return \Illuminate\Support\Facades\Cache::get($cacheKey);
+        }
+
+        $url = rtrim($baseUrl, '/') . '/api/updates/history';
+        try {
+            $response = Http::timeout(8)
+                ->withToken($license->license_key)
+                ->withHeaders([
+                    'X-Tenant-Domain' => $this->licenseRequestDomain($license),
+                ])
+                ->get($url, ['limit' => $limit]);
+
+            if (!$response->successful()) {
+                return [
+                    'success' => false,
+                    'message' => 'خطا در برقراری ارتباط با پلتفرم.',
+                    'history' => [],
+                    'latest' => null,
+                ];
+            }
+
+            $data = $response->json();
+            if (empty($data['allowed'])) {
+                return [
+                    'success' => false,
+                    'message' => $data['error'] ?? 'دسترسی مجاز نیست.',
+                    'history' => [],
+                    'latest' => null,
+                ];
+            }
+
+            $history = is_array($data['history'] ?? null) ? $data['history'] : [];
+            $latest = is_array($data['latest'] ?? null) ? $data['latest'] : ($history[0] ?? null);
+
+            $result = [
+                'success' => true,
+                'history' => $history,
+                'latest'  => $latest,
+            ];
+
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $result, now()->addMinutes(10));
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('Get update history exception', ['message' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'message' => 'امکان ارتباط با سرور بروزرسانی وجود ندارد.',
+                'history' => [],
+                'latest'  => null,
+            ];
         }
     }
 
