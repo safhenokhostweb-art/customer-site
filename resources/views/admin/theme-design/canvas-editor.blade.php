@@ -1657,15 +1657,12 @@ $blockEmoji   = ['scroll_to_top'=>'🔝','hero'=>'🌟','section'=>'📦','grid'
 
                                 <template x-if="schemaDef.type === 'select' && schemaDef.ui !== 'segmented' && !ctlIsResponsive(propKey)">
                                     <select
-                                        x-model="selectedBlock.props[propKey]"
-                                        @change="schedulePropUpdate()"
+                                        :id="'ctrl-' + propKey"
+                                        :value="selectedBlock.props[propKey] ?? schemaDef.default ?? ''"
+                                        @change="ctlSetProp(propKey, $event.target.value)"
                                         class="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
                                         :data-testid="'tb-prop-' + propKey"
                                     >
-                                        {{-- Phase 0.2c: each option states its own selected state —
-                                             x-model alone set the value before x-for had rendered the
-                                             options, so the select could show the first option instead
-                                             of the stored value. --}}
                                         <template x-for="(label, val) in getFieldOptions(schemaDef)" :key="val">
                                             <option :value="val" :selected="String(selectedBlock.props[propKey] ?? schemaDef.default ?? '') === String(val)" x-text="label"></option>
                                         </template>
@@ -2750,6 +2747,70 @@ function canvasEditor() {
 
         // ADR-076 section headers (fieldGroupStart) come from the
         // CanvasControls mixin, computed over the active tab's visible fields.
+        focusInspectorTarget(targetKey, preserveCurrentTab = false) {
+            if (!targetKey) return;
+            const currentTab = this.selectedTab || 'content';
+            const targetMap = {
+                'logo': { content: 'logo_image', style: 'logo_height', advanced: 'sticky', altContent: 'logo_text' },
+                'topbar': { content: 'topbar_enable', style: 'topbar_bg', advanced: 'topbar_hide_mobile', altContent: 'topbar_text' },
+                'menu': { content: 'nav_links', style: 'menu_typography', advanced: 'burger_breakpoint', altContent: 'menu_items' },
+                'search': { content: 'show_search', style: 'action_icon_bg', advanced: 'search_scope', altContent: 'search_placeholder' },
+                'cart': { content: 'show_cart', style: 'action_icon_bg', advanced: 'sticky' },
+                'account': { content: 'show_account', style: 'action_icon_bg', advanced: 'sticky' },
+                'dark_toggle': { content: 'show_dark_toggle', style: 'dark_mode_icon', advanced: 'sticky' },
+                'cta': { content: 'cta_text', style: 'cta_style', advanced: 'sticky', altContent: 'cta_url', altStyle: 'cta_glow_enabled' },
+                'login': { content: 'cta2_text', style: 'cta2_style', advanced: 'sticky', altContent: 'show_login_btn' },
+                'phone': { content: 'phone', style: 'phone_glow_enabled', advanced: 'sticky' },
+                'social': { content: 'social_links', style: 'social_icon_size', advanced: 'show_social_in_main_header' },
+                'mobile': { content: 'drawer_show_logo', style: 'burger_color', advanced: 'burger_breakpoint', altContent: 'drawer_action_text', altStyle: 'mobile_drawer_width' },
+                'burger': { content: 'drawer_style', style: 'burger_color', advanced: 'burger_breakpoint' },
+            };
+            const mapping = targetMap[targetKey];
+            let targetField = targetKey;
+            let altField = null;
+
+            if (mapping) {
+                if (preserveCurrentTab) {
+                    if (currentTab === 'style') {
+                        targetField = mapping.style || mapping.content;
+                        altField = mapping.altStyle;
+                    } else if (currentTab === 'advanced') {
+                        targetField = mapping.advanced || mapping.content;
+                        altField = mapping.altAdvanced;
+                    } else {
+                        targetField = mapping.content;
+                        altField = mapping.altContent;
+                    }
+                } else {
+                    targetField = mapping.content;
+                    altField = mapping.altContent;
+                    this.selectedTab = 'content';
+                }
+            } else if (!preserveCurrentTab) {
+                this.selectedTab = 'content';
+            }
+
+            setTimeout(() => {
+                const fieldEl = document.querySelector('[data-testid="tb-field-' + targetField + '"]')
+                    || document.querySelector('[data-testid="tb-prop-' + targetField + '"]')
+                    || (altField ? document.querySelector('[data-testid="tb-field-' + altField + '"]') : null)
+                    || (altField ? document.querySelector('[data-testid="tb-prop-' + altField + '"]') : null)
+                    || document.getElementById('ctrl-' + targetField)
+                    || (altField ? document.getElementById('ctrl-' + altField) : null);
+                if (fieldEl) {
+                    fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    fieldEl.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2', 'rounded-lg', 'transition-all');
+                    setTimeout(() => {
+                        fieldEl.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
+                    }, 2500);
+                    const input = fieldEl.querySelector('input, select, textarea, button') || fieldEl;
+                    if (typeof input.focus === 'function') {
+                        try { input.focus(); } catch (e) {}
+                    }
+                }
+            }, 150);
+        },
+
         // ADR-082: the mixin's prop writer, the same path as the x-model
         // controls (props write + live preview); `undefined` drops a device
         // value back to inheritance.
@@ -4198,6 +4259,46 @@ function canvasEditor() {
                     }
                     break;
                 }
+                case 'blockDblClicked': {
+                    const activeTab = this.selectedTab || 'content';
+                    let target = d.inspectorTarget;
+                    if (activeTab === 'style' && d.targetStyle) {
+                        target = d.targetStyle;
+                    } else if (activeTab === 'advanced' && d.targetAdvanced) {
+                        target = d.targetAdvanced;
+                    } else if (d.targetContent) {
+                        target = d.targetContent;
+                    }
+
+                    let path = this.findBlockPath(d.blockId);
+                    if (!path && this.pages['__header__']?.blocks?.length) {
+                        const hdrFound = this.findBlockPath(d.blockId, this.pages['__header__'].blocks);
+                        if (hdrFound || d.blockId === 'header' || this.pages['__header__'].blocks.some(b => b.id === d.blockId)) {
+                            if (this.currentPage !== '__header__') {
+                                await this.switchPage('__header__');
+                            }
+                            path = this.findBlockPath(d.blockId) || [0];
+                        }
+                    }
+                    if (!path && this.pages['__footer__']?.blocks?.length) {
+                        const ftrFound = this.findBlockPath(d.blockId, this.pages['__footer__'].blocks);
+                        if (ftrFound || d.blockId === 'footer' || this.pages['__footer__'].blocks.some(b => b.id === d.blockId)) {
+                            if (this.currentPage !== '__footer__') {
+                                await this.switchPage('__footer__');
+                            }
+                            path = this.findBlockPath(d.blockId) || [0];
+                        }
+                    }
+                    if (path) {
+                        this.showLeftSidebar = true;
+                        this.selectedPath = path;
+                        this.selectedTab = activeTab;
+                        if (target) {
+                            this.focusInspectorTarget(target, true);
+                        }
+                    }
+                    break;
+                }
                 case 'dropIndexResult':
                     this.dropTargetIndex       = d.index ?? this.blocks.length;
                     this.dropTargetBeforeId    = d.beforeId ?? '__end__';
@@ -4340,7 +4441,15 @@ function canvasEditor() {
         // already uses. There is no code path here that can reach the
         // platform Master Library or another site's assets.
         motionAssetById(assetId) {
-            return this.motionModal.assets.find(a => a.asset_id === assetId) || null;
+            if (!assetId) return null;
+            const cleanId = String(assetId).startsWith('motion:') ? String(assetId).substring(7) : String(assetId);
+            return this.motionModal.assets.find(a =>
+                a.asset_id === assetId ||
+                a.asset_id === cleanId ||
+                (a.asset_id && (a.asset_id.startsWith('motion:') ? a.asset_id.substring(7) : a.asset_id) === cleanId) ||
+                (a.slug && a.slug === cleanId) ||
+                (a.uuid && a.uuid === cleanId)
+            ) || null;
         },
 
         openMotionPicker(propKey) {

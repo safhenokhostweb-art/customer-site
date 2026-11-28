@@ -25,8 +25,20 @@
             return p === 'dark' ? 'dark' : 'light';
         }
         function apply(p) {
-            document.documentElement.setAttribute('data-theme', resolve(p));
+            var resolved = resolve(p);
+            document.documentElement.setAttribute('data-theme', resolved);
             document.documentElement.setAttribute('data-theme-pref', p);
+            if (resolved === 'dark') {
+                document.documentElement.classList.add('dark', 'tb-dark-mode');
+                if (document.body) document.body.classList.add('dark', 'tb-dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark', 'tb-dark-mode');
+                if (document.body) document.body.classList.remove('dark', 'tb-dark-mode');
+            }
+            try {
+                localStorage.setItem('theme', resolved);
+                localStorage.setItem(KEY, p);
+            } catch (e) {}
         }
         var pref = 'system';
         try { pref = localStorage.getItem(KEY) || 'system'; } catch (e) {}

@@ -246,6 +246,19 @@ body.tb-drag-active .tb-drop-zone {
 
     /* Block click & double-click → select */
     function handleBlockSelect(e) {
+        // Item 7: Exclude theme toggle button from selecting block & execute full-page toggle directly
+        var themeToggleEl = e.target.closest('.tb-theme-toggle, [data-tb-action="toggle-theme"], #tb-theme-toggle');
+        if (themeToggleEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.__tbTheme) {
+                var cur = window.__tbTheme.get();
+                var next = cur === 'dark' ? 'light' : 'dark';
+                window.__tbTheme.set(next);
+            }
+            return;
+        }
+
         var blockEl = e.target.closest('[data-tb-block-id], [data-canvas-block-id], .tb-nav-header, [data-layout-slot="header"], [data-layout-slot="footer"]');
         if (blockEl) {
             var logicalItem = e.target.closest('[data-tb-logical-group][data-tb-logical-index]');
@@ -275,8 +288,47 @@ body.tb-drag-active .tb-drop-zone {
     }
     document.addEventListener('click', handleBlockSelect, true);
     document.addEventListener('dblclick', function (e) {
-        e.preventDefault();
-        handleBlockSelect(e);
+        if (e.target.closest('.tb-theme-toggle, [data-tb-action="toggle-theme"], #tb-theme-toggle')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        var editableEl = e.target.closest('[data-tb-editable]');
+        if (editableEl) {
+            e.stopPropagation();
+            enableInlineEditing(editableEl);
+            return;
+        }
+        var blockEl = e.target.closest('[data-tb-block-id], [data-canvas-block-id], .tb-nav-header, [data-layout-slot="header"], [data-layout-slot="footer"]');
+        if (blockEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            var blockId = blockEl.getAttribute('data-tb-block-id')
+                || blockEl.getAttribute('data-canvas-block-id')
+                || (blockEl.closest('[data-tb-block-id]') ? blockEl.closest('[data-tb-block-id]').getAttribute('data-tb-block-id') : null)
+                || (blockEl.querySelector('[data-tb-block-id]') ? blockEl.querySelector('[data-tb-block-id]').getAttribute('data-tb-block-id') : null);
+            if (!blockId && (blockEl.classList.contains('tb-nav-header') || blockEl.getAttribute('data-layout-slot') === 'header')) {
+                blockId = 'header';
+            }
+            if (!blockId && (blockEl.classList.contains('tb-nav-footer') || blockEl.getAttribute('data-layout-slot') === 'footer')) {
+                blockId = 'footer';
+            }
+            if (blockId) {
+                selectBlock(blockId);
+                var targetEl = e.target.closest('[data-tb-target-content], [data-tb-inspector-target]');
+                var targetContent = targetEl ? (targetEl.getAttribute('data-tb-target-content') || targetEl.getAttribute('data-tb-inspector-target')) : null;
+                var targetStyle = targetEl ? targetEl.getAttribute('data-tb-target-style') : null;
+                var targetAdvanced = targetEl ? targetEl.getAttribute('data-tb-target-advanced') : null;
+                notifyParent({
+                    action: 'blockDblClicked',
+                    blockId: state.selectedBlockId || blockId,
+                    inspectorTarget: targetContent,
+                    targetContent: targetContent,
+                    targetStyle: targetStyle,
+                    targetAdvanced: targetAdvanced
+                });
+            }
+        }
     }, true);
 
     function selectBlock(blockId) {

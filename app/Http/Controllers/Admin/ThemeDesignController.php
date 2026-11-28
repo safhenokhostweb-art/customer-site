@@ -1452,6 +1452,8 @@ class ThemeDesignController extends Controller
         $manifest = $reader->read();
         $assets = collect($manifest['assets'] ?? [])->map(fn(array $a): array => [
             'asset_id' => $a['asset_id'] ?? null,
+            'slug'     => $a['slug'] ?? $a['asset_id'] ?? null,
+            'uuid'     => $a['uuid'] ?? $a['asset_id'] ?? null,
             'name'     => $a['name'] ?? null,
             'category' => $a['category'] ?? null,
             'type'     => $a['asset_type'] ?? null,

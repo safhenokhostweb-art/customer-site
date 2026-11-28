@@ -16,12 +16,22 @@ final class MotionRuntimeAssetResolver
      */
     public function resolve(?array $manifest, string $assetId): ?array
     {
-        if ($manifest === null) {
+        if ($manifest === null || $assetId === '') {
             return null;
         }
 
+        $cleanId = str_starts_with($assetId, 'motion:') ? substr($assetId, 7) : $assetId;
+
         foreach ($manifest['assets'] ?? [] as $asset) {
-            if (($asset['asset_id'] ?? null) === $assetId) {
+            $currentId = $asset['asset_id'] ?? null;
+            if ($currentId === null) {
+                continue;
+            }
+            $cleanCurrent = str_starts_with($currentId, 'motion:') ? substr($currentId, 7) : $currentId;
+            if ($currentId === $assetId || $cleanCurrent === $cleanId || $cleanCurrent === $assetId || $currentId === $cleanId) {
+                return $asset;
+            }
+            if (($asset['slug'] ?? null) === $cleanId || ($asset['uuid'] ?? null) === $cleanId) {
                 return $asset;
             }
         }
