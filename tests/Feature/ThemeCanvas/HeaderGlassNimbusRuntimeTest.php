@@ -62,13 +62,13 @@ class HeaderGlassNimbusRuntimeTest extends TestCase
 
         $html = $renderer->renderBlock($block);
 
-        $this->assertStringContainsString('class="tb-header-nimbus', $html);
+        $this->assertStringContainsString('tb-header-nimbus', $html);
         $this->assertStringContainsString('فروشگاه تستی', $html);
         $this->assertStringContainsString('◆', $html);
-        $this->assertStringContainsString('href="/blog" aria-current="page"', $html);
+        $this->assertStringContainsString('href="/blog" class="tb-nav-header-link is-active" aria-current="page"', $html);
         $this->assertStringContainsString('←', $html);
         $this->assertStringContainsString('شروع سریع', $html);
-        $this->assertStringContainsString('class="tb-header-nimbus-mobile', $html);
+        $this->assertStringContainsString('tb-header-nimbus-mobile', $html);
         $this->assertStringContainsString('popover', $html);
         $this->assertStringContainsString('--color-tgn01-cta1:#e20c35', $html);
         $this->assertStringContainsString('--color-tgn01-cta2:#c4008d', $html);
@@ -163,5 +163,72 @@ class HeaderGlassNimbusRuntimeTest extends TestCase
         $insertGrantedResp->assertOk();
         $insertGrantedResp->assertJson(['success' => true]);
         $this->assertSame('header_glass_nimbus', $insertGrantedResp->json('blocks.0.type'));
+    }
+
+    public function test_nav_header_glass_nimbus_renders_pure_css_styles_and_all_unified_features(): void
+    {
+        $renderer = new BlockRenderer();
+        $renderer->setContext(['current_url' => '/shop']);
+
+        $block = [
+            'type' => 'nav_header',
+            'id' => 'cust_glass_test_1',
+            'props' => [
+                'header_skin' => 'glass_nimbus',
+                'logo_text' => 'شیشه نوین',
+                'logo_badge_symbol' => '◆',
+                'logo_url' => '/',
+                'topbar_enable' => true,
+                'topbar_phone' => '09120000000',
+                'nav_source' => 'custom_links',
+                'nav_links' => [
+                    ['label' => 'خانه', 'url' => '/', 'icon' => 'home'],
+                    ['label' => 'فروشگاه', 'url' => '/shop', 'icon' => 'shopping-bag'],
+                ],
+                'show_search' => true,
+                'show_cart' => true,
+                'show_account' => true,
+                'show_dark_toggle' => true,
+                'show_social_in_main_header' => true,
+                'social_links' => [
+                    ['platform' => 'telegram', 'url' => 'https://t.me/example'],
+                    ['platform' => 'eitaa', 'url' => 'https://eitaa.com/example'],
+                ],
+                'cta_text' => 'ثبت سفارش',
+                'cta_url' => '/order',
+                'cta_style' => 'gradient',
+                'cta_color_start' => '#e20c35',
+                'cta_color_end' => '#c4008d',
+                'ink_color' => '#211c48',
+                'backdrop_blur' => 20,
+                'glass_bg_opacity' => 60,
+                'glass_floating_top' => 15,
+                'asset_version' => '1.3.0',
+            ],
+        ];
+
+        $html = $renderer->renderBlock($block);
+
+        $this->assertStringContainsString('tb-header-skin--glass-nimbus', $html);
+        $this->assertStringContainsString('tb-header-cta-primary', $html);
+        $this->assertStringContainsString('←', $html);
+        $this->assertStringContainsString('--color-tgn01-cta1:#e20c35', $html);
+        $this->assertStringContainsString('--color-tgn01-cta2:#c4008d', $html);
+        $this->assertStringContainsString('--color-tgn01-ink:#211c48', $html);
+        $this->assertStringContainsString('--tgn01-glass-blur:20px', $html);
+        $this->assertStringContainsString('--tgn01-glass-top:15px', $html);
+        $this->assertStringContainsString('09120000000', $html);
+        $this->assertStringContainsString('tb-nav-header-search', $html);
+        $this->assertStringContainsString('tb-nav-header-cart', $html);
+        $this->assertStringContainsString('tb-nav-header-account', $html);
+        $this->assertStringContainsString('tb-theme-toggle', $html);
+        $this->assertStringContainsString('telegram', $html);
+        $this->assertStringContainsString('eitaa', $html);
+
+        $css = file_get_contents(\SaaSPlatform\ThemeRuntime\Providers\ThemeRuntimeServiceProvider::cssHeaderPath());
+        $this->assertStringContainsString('.tb-header-skin--glass-nimbus', $css);
+        $this->assertStringContainsString('backdrop-filter: blur(var(--tgn01-glass-blur, 16px)) saturate(180%)', $css);
+        $this->assertStringContainsString('position: sticky', $css);
+        $this->assertStringContainsString('border-radius: 1rem', $css);
     }
 }
