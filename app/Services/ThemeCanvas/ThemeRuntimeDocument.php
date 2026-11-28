@@ -87,6 +87,25 @@ class ThemeRuntimeDocument
             ? $this->layoutService->getFooterBlocks($layoutPage, $themeData)
             : [];
 
+        // ADR-088: Transparent normalization for legacy standalone header blocks
+        $normalizeHeaders = static function (array &$list): void {
+            foreach ($list as &$b) {
+                if (!is_array($b)) continue;
+                $t = $b['type'] ?? '';
+                if ($t === 'header_glass_nimbus') {
+                    $b['type'] = 'nav_header';
+                    $b['props'] = is_array($b['props'] ?? null) ? $b['props'] : [];
+                    $b['props']['header_skin'] = 'glass_nimbus';
+                } elseif ($t === 'header_modern_v1') {
+                    $b['type'] = 'nav_header';
+                    $b['props'] = is_array($b['props'] ?? null) ? $b['props'] : [];
+                    $b['props']['header_skin'] = 'modern';
+                }
+            }
+        };
+        $normalizeHeaders($headerBlocks);
+        $normalizeHeaders($blocks);
+
         $resolvedBindings = $this->dataBindings->resolveBlockLists($headerBlocks, $footerBlocks, $blocks);
         $rendererContext = $this->prepareRenderer($themeData, false, $resolvedBindings);
         $this->renderer->preloadMediaFor($headerBlocks, $footerBlocks, $blocks);

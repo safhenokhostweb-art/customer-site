@@ -3157,7 +3157,11 @@ function canvasEditor() {
         _repeaterKeyMap: new WeakMap(),
         repeaterItemKey(item, index) {
             if (item && typeof item === 'object') {
+                if (typeof item._uid === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item._uid)) {
+                    return item._uid;
+                }
                 if (typeof item._id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item._id)) {
+                    try { item._uid = item._id; } catch (_) {}
                     return item._id;
                 }
                 if (this._repeaterKeyMap.has(item)) {
@@ -3166,6 +3170,7 @@ function canvasEditor() {
                 const id = this.newRepeaterId();
                 this._repeaterKeyMap.set(item, id);
                 try {
+                    item._uid = id;
                     item._id = id;
                 } catch (_) {}
                 return id;
@@ -3184,11 +3189,34 @@ function canvasEditor() {
             items.splice(itemIndex + 1, 0, duplicate);
             this.persistStructuredItems(propKey, schemaDef, items, true);
         },
+        ensureItemIdentity(item) {
+            if (item && typeof item === 'object') {
+                if (!item._uid && !item._id) {
+                    const id = this.newRepeaterId();
+                    try {
+                        item._uid = id;
+                        item._id = id;
+                    } catch (_) {}
+                    this._repeaterKeyMap.set(item, id);
+                } else if (!item._uid && item._id) {
+                    try { item._uid = item._id; } catch (_) {}
+                } else if (item._uid && !item._id) {
+                    try { item._id = item._uid; } catch (_) {}
+                }
+            }
+            return item;
+        },
         updateStructuredField(propKey, itemIndex, fieldKey, value, schemaDef) {
-            const items = this.structuredItems(propKey, schemaDef).map(item => ({ ...item }));
+            const raw = this.selectedBlock?.props?.[propKey];
+            if (Array.isArray(raw) && raw[itemIndex]) {
+                this.ensureItemIdentity(raw[itemIndex]);
+                raw[itemIndex][fieldKey] = value;
+                this.schedulePropUpdate();
+                return;
+            }
+            const items = this.structuredItems(propKey, schemaDef);
             if (!items[itemIndex]) return;
-            // Copying the complete existing object before changing one field
-            // deliberately preserves unknown/unmanaged nested keys.
+            this.ensureItemIdentity(items[itemIndex]);
             items[itemIndex][fieldKey] = value;
             this.persistStructuredItems(propKey, schemaDef, items);
         },
@@ -3242,8 +3270,17 @@ function canvasEditor() {
             this.persistNestedItems(propKey, itemIndex, fieldKey, [...this.nestedItems(propKey, itemIndex, fieldKey), item], schemaDef);
         },
         updateNestedField(propKey, itemIndex, fieldKey, nestedIndex, nestedFieldKey, value, schemaDef) {
-            const nested = this.nestedItems(propKey, itemIndex, fieldKey).map(it => ({ ...it }));
+            const raw = this.selectedBlock?.props?.[propKey];
+            if (Array.isArray(raw) && raw[itemIndex] && Array.isArray(raw[itemIndex][fieldKey]) && raw[itemIndex][fieldKey][nestedIndex]) {
+                const target = raw[itemIndex][fieldKey][nestedIndex];
+                this.ensureItemIdentity(target);
+                target[nestedFieldKey] = value;
+                this.schedulePropUpdate();
+                return;
+            }
+            const nested = this.nestedItems(propKey, itemIndex, fieldKey);
             if (!nested[nestedIndex]) return;
+            this.ensureItemIdentity(nested[nestedIndex]);
             nested[nestedIndex][nestedFieldKey] = value;
             this.persistNestedItems(propKey, itemIndex, fieldKey, nested, schemaDef);
         },
@@ -3289,8 +3326,20 @@ function canvasEditor() {
             this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, [...this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey), item], schemaDef);
         },
         updateDeepNestedField(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deepIndex, deepNestedFieldKey, value, schemaDef) {
-            const deep = this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey).map(it => ({ ...it }));
+            const raw = this.selectedBlock?.props?.[propKey];
+            if (Array.isArray(raw) && raw[itemIndex] && Array.isArray(raw[itemIndex][fieldKey]) && raw[itemIndex][fieldKey][nestedIndex]) {
+                const nestedObj = raw[itemIndex][fieldKey][nestedIndex];
+                if (Array.isArray(nestedObj[deepFieldKey]) && nestedObj[deepFieldKey][deepIndex]) {
+                    const target = nestedObj[deepFieldKey][deepIndex];
+                    this.ensureItemIdentity(target);
+                    target[deepNestedFieldKey] = value;
+                    this.schedulePropUpdate();
+                    return;
+                }
+            }
+            const deep = this.deepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey);
             if (!deep[deepIndex]) return;
+            this.ensureItemIdentity(deep[deepIndex]);
             deep[deepIndex][deepNestedFieldKey] = value;
             this.persistDeepNestedItems(propKey, itemIndex, fieldKey, nestedIndex, deepFieldKey, deep, schemaDef);
         },

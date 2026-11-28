@@ -120,6 +120,24 @@ class BlockRenderer extends \SaaSPlatform\ThemeRuntime\BlockRenderer
     public function renderBlock(array $block): string
     {
         $type = $block['type'] ?? 'text';
+        $props = $block['props'] ?? $block['data'] ?? [];
+        if (!is_array($props)) {
+            $props = [];
+        }
+
+        // ADR-088: Transparent migration and 100% backwards compatibility for legacy standalone header blocks
+        if ($type === 'header_glass_nimbus') {
+            $type = 'nav_header';
+            $props['header_skin'] = 'glass_nimbus';
+            $block['type'] = $type;
+            $block['props'] = $props;
+        } elseif ($type === 'header_modern_v1') {
+            $type = 'nav_header';
+            $props['header_skin'] = 'modern';
+            $block['type'] = $type;
+            $block['props'] = $props;
+        }
+
         $id = $block['id'] ?? Str::random(8);
         $block = $this->prepareBlock($block);
 
